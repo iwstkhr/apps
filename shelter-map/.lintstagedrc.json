@@ -1,0 +1,8 @@
+{
+  ".github/workflows/*.{yml,yaml}": ["mise exec -- actionlint"],
+  "**/Dockerfile*": ["mise exec -- hadolint"],
+  "*.sh": ["mise exec -- shellcheck"],
+  "*.{yml,yaml}": ["mise exec -- yamllint"],
+  "*.md": ["npx markdownlint"],
+  "*": ["npx secretlint"]
+}

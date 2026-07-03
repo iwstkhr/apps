@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "labels": ["dependencies"],
+  "timezone": "Asia/Tokyo",
+  "dependencyDashboard": true,
+  "rebaseWhen": "conflicted",
+  "minimumReleaseAge": "3 days",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "schedule": ["before 5am on monday"]
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "labels": ["breaking-change"]
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "non-major dependencies"
+    }
+  ]
+}

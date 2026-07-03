@@ -1,0 +1,78 @@
+name: Update shelter GeoJSON
+
+on:
+  schedule:
+    # 毎月1日 00:00 UTC（日本時間 09:00）
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-geojson:
+    name: Update GeoJSON
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Setup mise
+        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d  # v4
+        with:
+          cache: true
+
+      - name: Download and compress GeoJSON
+        env:
+          GEOJSON_URL: https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson
+        run: |
+          set -euo pipefail
+
+          mkdir -p public/assets
+          tmp_geojson="$(mktemp)"
+          trap 'rm -f "$tmp_geojson"' EXIT
+
+          headers="$(curl -fsSI "$GEOJSON_URL")"
+          last_modified="$(
+            printf '%s\n' "$headers" \
+              | awk -F': ' 'tolower($1) == "last-modified" { print $2 }' \
+              | tr -d '\r'
+          )"
+
+          curl -fsSL "$GEOJSON_URL" -o "$tmp_geojson"
+          python3 -c "import json; json.load(open('$tmp_geojson'))"
+          gzip -f -c "$tmp_geojson" > public/assets/mergeFromCity_2.geojson.gz
+          DATASET_LAST_MODIFIED="$last_modified" node scripts/write-dataset-meta.mjs
+
+          {
+            echo "source_bytes=$(wc -c < "$tmp_geojson" | tr -d ' ')"
+            echo "compressed_bytes=$(wc -c < public/assets/mergeFromCity_2.geojson.gz | tr -d ' ')"
+            dataset_updated_at="$(
+              {
+                echo 'import { readExistingUpdatedAt } from "./scripts/write-dataset-meta.mjs";'
+                echo 'console.log(readExistingUpdatedAt());'
+              } | node --input-type=module
+            )"
+            echo "dataset_updated_at=$dataset_updated_at"
+            echo "run_date=$(TZ=Asia/Tokyo date +%Y-%m-%d)"
+          } >> "$GITHUB_ENV"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676  # v7
+        with:
+          commit-message: 'chore(data): update shelter GeoJSON data'
+          title: 'chore(data): update shelter GeoJSON data (${{ env.run_date }})'
+          body: |
+            Automated monthly update from 国土地理院 hinanmap.
+
+            - Source: https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson
+            - Uncompressed size: ${{ env.source_bytes }} bytes
+            - Compressed size: ${{ env.compressed_bytes }} bytes
+            - Dataset date: ${{ env.dataset_updated_at }}
+          branch: automated/update-geojson
+          delete-branch: true
+          add-paths: |
+            public/assets/mergeFromCity_2.geojson.gz
+            app/generated/dataset-meta.ts
