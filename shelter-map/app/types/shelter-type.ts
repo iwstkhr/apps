@@ -39,6 +39,9 @@ export function getShelterTypeTableLabel(key: ShelterTypeKey): string {
   if (key === ShelterTypeEnum.Landslide) {
     return '崖崩れ'
   }
+  if (key === ShelterTypeEnum.BigFire) {
+    return '火事'
+  }
 
   return ShelterTypeJapanese.get(key) ?? key
 }
