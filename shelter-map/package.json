@@ -1,0 +1,51 @@
+{
+  "name": "shelter-map",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.23.1"
+  },
+  "scripts": {
+    "build": "react-router build",
+    "dev": "react-router dev",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "start": "react-router-serve ./build/server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "react-router typegen && tsc"
+  },
+  "dependencies": {
+    "@react-router/node": "8.0.0",
+    "@react-router/serve": "8.0.0",
+    "@tanstack/react-table": "8.21.3",
+    "@tanstack/react-virtual": "3.14.5",
+    "isbot": "5.1.44",
+    "leaflet": "1.9.4",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-icons": "5.7.0",
+    "react-router": "8.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.2",
+    "@react-router/dev": "8.0.0",
+    "@tailwindcss/vite": "4.3.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/leaflet": "1.9.21",
+    "@types/node": "22.20.0",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "happy-dom": "^20.10.6",
+    "tailwindcss": "4.3.2",
+    "typescript": "6.0.3",
+    "vite": "8.1.3",
+    "vitest": "^4.1.9"
+  }
+}
