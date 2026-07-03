@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "command": ".cursor/hooks/run-sync-change-artifacts-skill.sh",
+        "matcher": "Write|StrReplace"
+      }
+    ]
+  }
+}
