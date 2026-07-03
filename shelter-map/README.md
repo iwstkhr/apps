@@ -22,11 +22,14 @@
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [Biome](https://biomejs.dev/) — リント・フォーマット
 - [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/docs/react-testing-library/intro/) — テスト
+- [Husky](https://typicode.github.io/husky/) + [lint-staged](https://github.com/lint-staged/lint-staged) — Git hooks
+- [secretlint](https://github.com/secretlint/secretlint) — 秘密情報の検出
+- actionlint / hadolint / shellcheck / yamllint — [mise](https://mise.jdx.dev/) 経由でワークフロー・シェル・YAML を lint
 
 ## 必要条件
 
-- [mise](https://mise.jdx.dev/)（Node.js のバージョン管理）
-- Node.js 22 以上（[`.mise.toml`](.mise.toml) で指定）
+- [mise](https://mise.jdx.dev/)（Node.js と lint ツールのバージョン管理）
+- Node.js（[`mise.toml`](mise.toml) / `package.json` の `engines.node` で指定）
 - npm
 
 ## セットアップ
@@ -56,6 +59,7 @@ npm run dev
 | `npm run typecheck` | TypeScript の型チェックを実行 |
 | `npm run test` | Vitest でテストを実行 |
 | `npm run test:watch` | Vitest をウォッチモードで実行 |
+| `mise run lint` | GitHub Actions ワークフロー、シェル、YAML などを lint |
 
 ## プロジェクト構成
 
@@ -87,9 +91,11 @@ scripts/        # ビルド用スクリプト
 
 GeoJSON は毎月 1 日に GitHub Actions でダウンロード・圧縮され、プルリクエストとして提案されます（[`.github/workflows/update-geojson.yml`](.github/workflows/update-geojson.yml)）。
 
-## デプロイ
+## CI / デプロイ
 
-`main` ブランチへの push は [GitHub Pages](https://pages.github.com/) へ自動デプロイされます（[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)）。
+PR と `main` ブランチへの push では [Check ワークフロー](.github/workflows/check.yml) が `mise run lint`、`npm run check`、`npm run typecheck`、`npm run test` を実行します。
+
+`main` への push で Check が成功すると、[Deploy ワークフロー](.github/workflows/deploy.yml) が起動して [GitHub Pages](https://pages.github.com/) へデプロイされます。
 
 GitHub Pages と同じベースパスでローカルビルドする場合:
 
@@ -98,6 +104,22 @@ BASE_PATH=/shelter-map/ npm run build
 ```
 
 ## コントリビューション
+
+### Git hooks
+
+`npm ci` 後、Husky が Git hooks を有効化します。
+
+- **pre-commit:** `npm run check` と lint-staged（ステージ済みファイルに対する secretlint など）
+- **pre-push:** `npm run test`
+
+CI と同条件で確認する場合:
+
+```bash
+mise run lint
+npm run check
+npm run typecheck
+npm run test
+```
 
 ### コミットメッセージ
 
