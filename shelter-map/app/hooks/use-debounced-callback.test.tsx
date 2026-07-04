@@ -1,47 +1,47 @@
 // @vitest-environment happy-dom
 
-import { act, renderHook } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useDebouncedCallback } from '~/hooks/use-debounced-callback'
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useDebouncedCallback } from '~/hooks/use-debounced-callback';
 
 describe('useDebouncedCallback', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
-  })
+    vi.useFakeTimers();
+  });
 
   afterEach(() => {
-    vi.useRealTimers()
-  })
+    vi.useRealTimers();
+  });
 
   it('calls the callback after the delay', () => {
-    const callback = vi.fn()
+    const callback = vi.fn();
     renderHook(({ value }) => useDebouncedCallback(value, callback, 200), {
       initialProps: { value: 'initial' },
-    })
+    });
 
-    expect(callback).not.toHaveBeenCalled()
+    expect(callback).not.toHaveBeenCalled();
 
     act(() => {
-      vi.advanceTimersByTime(200)
-    })
+      vi.advanceTimersByTime(200);
+    });
 
-    expect(callback).toHaveBeenCalledOnce()
-    expect(callback).toHaveBeenCalledWith('initial')
-  })
+    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith('initial');
+  });
 
   it('debounces rapid value changes', () => {
-    const callback = vi.fn()
+    const callback = vi.fn();
     const { rerender } = renderHook(({ value }) => useDebouncedCallback(value, callback, 200), {
       initialProps: { value: 'first' },
-    })
+    });
 
-    rerender({ value: 'second' })
+    rerender({ value: 'second' });
 
     act(() => {
-      vi.advanceTimersByTime(200)
-    })
+      vi.advanceTimersByTime(200);
+    });
 
-    expect(callback).toHaveBeenCalledOnce()
-    expect(callback).toHaveBeenCalledWith('second')
-  })
-})
+    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith('second');
+  });
+});

@@ -1,16 +1,16 @@
-import { MapHelpHint } from '~/components/map/map-help-hint'
-import { MapTileLayerControl } from '~/components/map/map-tile-layer-control'
-import { MapTable } from '~/components/table/map-table'
-import { ShelterMapProvider } from '~/context/shelter-map-provider'
-import { useShelterMapContext } from '~/hooks/use-shelter-map-context'
-import type { Route } from './+types/home'
+import { MapHelpHint } from '~/components/map/map-help-hint';
+import { MapTileLayerControl } from '~/components/map/map-tile-layer-control';
+import { MapTable } from '~/components/table/map-table';
+import { ShelterMapProvider } from '~/context/shelter-map-provider';
+import { useShelterMapContext } from '~/hooks/use-shelter-map-context';
+import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: '指定緊急避難場所マップ' }]
+  return [{ title: '指定緊急避難場所マップ' }];
 }
 
 function HomeContent() {
-  const { mapContainerRef, isLoading, loadError } = useShelterMapContext()
+  const { mapContainerRef, isLoading, loadError } = useShelterMapContext();
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2">
@@ -38,7 +38,7 @@ function HomeContent() {
         <MapTable />
       </div>
     </section>
-  )
+  );
 }
 
 export default function Home() {
@@ -46,5 +46,5 @@ export default function Home() {
     <ShelterMapProvider>
       <HomeContent />
     </ShelterMapProvider>
-  )
+  );
 }

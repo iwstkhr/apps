@@ -3,44 +3,44 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from '@tanstack/react-table'
-import { useVirtualizer } from '@tanstack/react-virtual'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { DATASET_UPDATED_AT } from '~/generated/dataset-meta'
-import { useDebouncedCallback } from '~/hooks/use-debounced-callback'
-import { useShelterMapContext } from '~/hooks/use-shelter-map-context'
-import type { Shelter } from '~/types/shelter'
+} from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { DATASET_UPDATED_AT } from '~/generated/dataset-meta';
+import { useDebouncedCallback } from '~/hooks/use-debounced-callback';
+import { useShelterMapContext } from '~/hooks/use-shelter-map-context';
+import type { Shelter } from '~/types/shelter';
 import {
   emptyShelterColumnFilters,
   isColumnFilterActive,
   type ShelterColumnFilters,
   type ShelterTypeFilterValue,
-} from '~/types/shelter-filters'
+} from '~/types/shelter-filters';
 import {
   getShelterTypeTableLabel,
   type ShelterTypeKey,
   shelterTypeKeys,
-} from '~/types/shelter-type'
+} from '~/types/shelter-type';
 
-type FilterableColumnId = 'name' | 'address' | ShelterTypeKey
+type FilterableColumnId = 'name' | 'address' | ShelterTypeKey;
 
-const DEBOUNCE_MS = 200
-const ROW_ESTIMATE_HEIGHT = 56
-const GRID_TEMPLATE_COLUMNS = `14rem minmax(16rem,1fr) repeat(${shelterTypeKeys.length}, 3.5rem)`
-const DATASET_SOURCE_URL = 'https://www.gsi.go.jp/bousaichiri/hinanbasho.html'
-const DATASET_SOURCE_LABEL = '国土地理院 指定緊急避難場所データ'
-const SHELTER_TYPE_COLUMN_CLASS = 'px-1 text-center'
-const SHELTER_TYPE_HEADER_CLASS = 'text-xs leading-snug'
+const DEBOUNCE_MS = 200;
+const ROW_ESTIMATE_HEIGHT = 56;
+const GRID_TEMPLATE_COLUMNS = `14rem minmax(16rem,1fr) repeat(${shelterTypeKeys.length}, 3.5rem)`;
+const DATASET_SOURCE_URL = 'https://www.gsi.go.jp/bousaichiri/hinanbasho.html';
+const DATASET_SOURCE_LABEL = '国土地理院 指定緊急避難場所データ';
+const SHELTER_TYPE_COLUMN_CLASS = 'px-1 text-center';
+const SHELTER_TYPE_HEADER_CLASS = 'text-xs leading-snug';
 const NAME_COLUMN_CLASS =
-  'sticky left-0 z-10 bg-white group-hover:bg-blue-50 group-odd:bg-white group-even:bg-slate-50 group-even:group-hover:bg-blue-50'
-const NAME_HEADER_CLASS = 'sticky left-0 z-10 bg-slate-100'
+  'sticky left-0 z-10 bg-white group-hover:bg-blue-50 group-odd:bg-white group-even:bg-slate-50 group-even:group-hover:bg-blue-50';
+const NAME_HEADER_CLASS = 'sticky left-0 z-10 bg-slate-100';
 const FILTER_INPUT_CLASS =
-  'w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs font-normal text-slate-900 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200'
+  'w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs font-normal text-slate-900 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200';
 
-const columnHelper = createColumnHelper<Shelter>()
+const columnHelper = createColumnHelper<Shelter>();
 
 function ShelterTypeCell({ ready }: { ready: boolean }) {
-  return <span className={ready ? 'app-content-ready' : 'app-content-not-ready'} />
+  return <span className={ready ? 'app-content-ready' : 'app-content-not-ready'} />;
 }
 
 function FilterIcon({ active }: { active: boolean }) {
@@ -53,7 +53,7 @@ function FilterIcon({ active }: { active: boolean }) {
     >
       <path d="M3 4.5a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 .53 1.28l-4.72 4.72v4.55a.75.75 0 0 1-1.06.67l-2.5-1.25A.75.75 0 0 1 8 13.25V9.25L3.22 4.53A.75.75 0 0 1 3 4.5Z" />
     </svg>
-  )
+  );
 }
 
 function ColumnFilterInput({
@@ -61,9 +61,9 @@ function ColumnFilterInput({
   placeholder,
   onChange,
 }: {
-  value: string
-  placeholder: string
-  onChange: (value: string) => void
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <input
@@ -73,15 +73,15 @@ function ColumnFilterInput({
       onChange={(event) => onChange(event.target.value)}
       className={FILTER_INPUT_CLASS}
     />
-  )
+  );
 }
 
 function ColumnFilterSelect({
   value,
   onChange,
 }: {
-  value: ShelterTypeFilterValue
-  onChange: (value: ShelterTypeFilterValue) => void
+  value: ShelterTypeFilterValue;
+  onChange: (value: ShelterTypeFilterValue) => void;
 }) {
   return (
     <select
@@ -94,7 +94,7 @@ function ColumnFilterSelect({
       <option value="yes">指定あり (✅)</option>
       <option value="no">指定なし (❌)</option>
     </select>
-  )
+  );
 }
 
 function ColumnHeaderWithFilter({
@@ -108,15 +108,15 @@ function ColumnHeaderWithFilter({
   onToggle,
   onDraftFiltersChange,
 }: {
-  columnId: FilterableColumnId
-  label: string
-  isOpen: boolean
-  isActive: boolean
-  isShelterType: boolean
-  isNameColumn: boolean
-  draftFilters: ShelterColumnFilters
-  onToggle: () => void
-  onDraftFiltersChange: (filters: ShelterColumnFilters) => void
+  columnId: FilterableColumnId;
+  label: string;
+  isOpen: boolean;
+  isActive: boolean;
+  isShelterType: boolean;
+  isNameColumn: boolean;
+  draftFilters: ShelterColumnFilters;
+  onToggle: () => void;
+  onDraftFiltersChange: (filters: ShelterColumnFilters) => void;
 }) {
   return (
     <div
@@ -185,7 +185,7 @@ function ColumnHeaderWithFilter({
         ) : null}
       </div>
     </div>
-  )
+  );
 }
 
 function isFilterableColumnId(columnId: string): columnId is FilterableColumnId {
@@ -193,36 +193,36 @@ function isFilterableColumnId(columnId: string): columnId is FilterableColumnId 
     columnId === 'name' ||
     columnId === 'address' ||
     shelterTypeKeys.includes(columnId as ShelterTypeKey)
-  )
+  );
 }
 
 export function MapTable() {
-  const { displayedShelters, updateColumnFilters } = useShelterMapContext()
-  const tableContainerRef = useRef<HTMLDivElement>(null)
-  const [draftFilters, setDraftFilters] = useState<ShelterColumnFilters>(emptyShelterColumnFilters)
-  const [openFilterColumn, setOpenFilterColumn] = useState<FilterableColumnId | null>(null)
+  const { displayedShelters, updateColumnFilters } = useShelterMapContext();
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [draftFilters, setDraftFilters] = useState<ShelterColumnFilters>(emptyShelterColumnFilters);
+  const [openFilterColumn, setOpenFilterColumn] = useState<FilterableColumnId | null>(null);
 
-  useDebouncedCallback(draftFilters, updateColumnFilters, DEBOUNCE_MS)
+  useDebouncedCallback(draftFilters, updateColumnFilters, DEBOUNCE_MS);
 
   useEffect(() => {
     if (!openFilterColumn) {
-      return
+      return;
     }
 
     const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target
+      const target = event.target;
       if (!(target instanceof Element)) {
-        return
+        return;
       }
       if (target.closest('[data-filter-toggle], [data-filter-popover]')) {
-        return
+        return;
       }
-      setOpenFilterColumn(null)
-    }
+      setOpenFilterColumn(null);
+    };
 
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [openFilterColumn])
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [openFilterColumn]);
 
   const columns = useMemo(
     () => [
@@ -243,24 +243,24 @@ export function MapTable() {
       ),
     ],
     [],
-  )
+  );
 
   const table = useReactTable({
     data: displayedShelters,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row, index) => `${row.name}-${row.latitude}-${row.longitude}-${index}`,
-  })
+  });
 
-  const { rows } = table.getRowModel()
-  const shelterTypeKeySet = useMemo(() => new Set<string>(shelterTypeKeys), [])
+  const { rows } = table.getRowModel();
+  const shelterTypeKeySet = useMemo(() => new Set<string>(shelterTypeKeys), []);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => ROW_ESTIMATE_HEIGHT,
     overscan: 10,
-  })
+  });
 
   const getCellClassName = (columnId: string) =>
     [
@@ -270,7 +270,7 @@ export function MapTable() {
       shelterTypeKeySet.has(columnId) ? SHELTER_TYPE_COLUMN_CLASS : '',
     ]
       .filter(Boolean)
-      .join(' ')
+      .join(' ');
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -304,12 +304,12 @@ export function MapTable() {
             >
               {table.getHeaderGroups()[0]?.headers.map((header) => {
                 if (header.isPlaceholder || !isFilterableColumnId(header.column.id)) {
-                  return null
+                  return null;
                 }
 
-                const columnId = header.column.id
-                const label = flexRender(header.column.columnDef.header, header.getContext())
-                const isShelterType = shelterTypeKeySet.has(columnId)
+                const columnId = header.column.id;
+                const label = flexRender(header.column.columnDef.header, header.getContext());
+                const isShelterType = shelterTypeKeySet.has(columnId);
 
                 return (
                   <ColumnHeaderWithFilter
@@ -326,7 +326,7 @@ export function MapTable() {
                     }
                     onDraftFiltersChange={setDraftFilters}
                   />
-                )
+                );
               })}
             </div>
 
@@ -338,9 +338,9 @@ export function MapTable() {
               }}
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const row = rows[virtualRow.index]
+                const row = rows[virtualRow.index];
                 if (!row) {
-                  return null
+                  return null;
                 }
 
                 return (
@@ -361,12 +361,12 @@ export function MapTable() {
                       </div>
                     ))}
                   </div>
-                )
+                );
               })}
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

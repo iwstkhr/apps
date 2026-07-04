@@ -1,8 +1,8 @@
-import { type RenderOptions, render } from '@testing-library/react'
-import { createRef, type ReactElement } from 'react'
-import { vi } from 'vitest'
-import { ShelterMapContext, type ShelterMapContextValue } from '~/context/shelter-map-context'
-import { createShelter } from '~/test/fixtures'
+import { type RenderOptions, render } from '@testing-library/react';
+import { createRef, type ReactElement } from 'react';
+import { vi } from 'vitest';
+import { ShelterMapContext, type ShelterMapContextValue } from '~/context/shelter-map-context';
+import { createShelter } from '~/test/fixtures';
 
 export function createShelterMapContextValue(
   overrides: Partial<ShelterMapContextValue> = {},
@@ -15,7 +15,7 @@ export function createShelterMapContextValue(
     updateColumnFilters: vi.fn(),
     changeTileLayer: vi.fn(),
     ...overrides,
-  }
+  };
 }
 
 export function renderWithShelterMap(
@@ -23,7 +23,7 @@ export function renderWithShelterMap(
   overrides: Partial<ShelterMapContextValue> = {},
   options?: Omit<RenderOptions, 'wrapper'>,
 ) {
-  const contextValue = createShelterMapContextValue(overrides)
+  const contextValue = createShelterMapContextValue(overrides);
 
   return {
     contextValue,
@@ -33,5 +33,5 @@ export function renderWithShelterMap(
       ),
       ...options,
     }),
-  }
+  };
 }

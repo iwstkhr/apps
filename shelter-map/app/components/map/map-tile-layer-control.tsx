@@ -1,15 +1,15 @@
-import { useState } from 'react'
-import { useDebouncedCallback } from '~/hooks/use-debounced-callback'
-import { useShelterMapContext } from '~/hooks/use-shelter-map-context'
-import type { TileLayerKey } from '~/types/tile-layer'
+import { useState } from 'react';
+import { useDebouncedCallback } from '~/hooks/use-debounced-callback';
+import { useShelterMapContext } from '~/hooks/use-shelter-map-context';
+import type { TileLayerKey } from '~/types/tile-layer';
 
-const DEBOUNCE_MS = 200
+const DEBOUNCE_MS = 200;
 
 export function MapTileLayerControl() {
-  const { changeTileLayer } = useShelterMapContext()
-  const [tileLayer, setTileLayer] = useState<TileLayerKey>('osm')
+  const { changeTileLayer } = useShelterMapContext();
+  const [tileLayer, setTileLayer] = useState<TileLayerKey>('osm');
 
-  useDebouncedCallback(tileLayer, changeTileLayer, DEBOUNCE_MS)
+  useDebouncedCallback(tileLayer, changeTileLayer, DEBOUNCE_MS);
 
   return (
     <fieldset className="m-0 border-0 p-0">
@@ -40,5 +40,5 @@ export function MapTileLayerControl() {
         </label>
       </div>
     </fieldset>
-  )
+  );
 }

@@ -1,1 +1,1 @@
-export type TileLayerKey = 'osm' | 'gia_photo'
+export type TileLayerKey = 'osm' | 'gia_photo';

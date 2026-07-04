@@ -1,4 +1,4 @@
-import type { Shelter, ShelterGeoJsonFeature } from '~/types/shelter'
+import type { Shelter, ShelterGeoJsonFeature } from '~/types/shelter';
 
 export function createGeoJsonFeature(
   overrides: Partial<ShelterGeoJsonFeature['properties']> = {},
@@ -27,7 +27,7 @@ export function createGeoJsonFeature(
       備考: 'テスト備考',
       ...overrides,
     },
-  }
+  };
 }
 
 export function createShelter(overrides: Partial<Shelter> = {}): Shelter {
@@ -48,5 +48,5 @@ export function createShelter(overrides: Partial<Shelter> = {}): Shelter {
     longitude: 139.6,
     note: '',
     ...overrides,
-  }
+  };
 }

@@ -1,15 +1,15 @@
-import { useMemo } from 'react'
+import { useMemo } from 'react';
 
 function getModifierKeyLabel(): string {
   if (typeof navigator === 'undefined') {
-    return 'Ctrl'
+    return 'Ctrl';
   }
 
-  return /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘' : 'Ctrl'
+  return /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘' : 'Ctrl';
 }
 
 export function MapHelpHint() {
-  const modifierKey = useMemo(() => getModifierKeyLabel(), [])
+  const modifierKey = useMemo(() => getModifierKeyLabel(), []);
 
   return (
     <section
@@ -37,5 +37,5 @@ export function MapHelpHint() {
         </li>
       </ul>
     </section>
-  )
+  );
 }

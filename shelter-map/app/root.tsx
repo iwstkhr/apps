@@ -1,11 +1,11 @@
-import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration } from 'react-router'
-import { AppShell } from '~/components/layout/app-shell'
-import type { Route } from './+types/root'
-import './app.css'
+import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration } from 'react-router';
+import { AppShell } from '~/components/layout/app-shell';
+import type { Route } from './+types/root';
+import './app.css';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
-]
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,23 +22,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }
 
 export default function App() {
-  return <AppShell />
+  return <AppShell />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = 'エラーが発生しました'
-  let details = '予期しないエラーが発生しました。'
+  let message = 'エラーが発生しました';
+  let details = '予期しないエラーが発生しました。';
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'エラー'
+    message = error.status === 404 ? '404' : 'エラー';
     details =
-      error.status === 404 ? 'お探しのページは見つかりませんでした。' : error.statusText || details
+      error.status === 404 ? 'お探しのページは見つかりませんでした。' : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message
+    details = error.message;
   }
 
   return (
@@ -46,5 +46,5 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <h1 className="text-3xl font-bold">{message}</h1>
       <p className="mt-2 text-slate-700">{details}</p>
     </main>
-  )
+  );
 }

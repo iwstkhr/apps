@@ -1,6 +1,6 @@
-import { FaGithub } from 'react-icons/fa'
+import { FaGithub } from 'react-icons/fa';
 
-const GITHUB_URL = 'https://github.com/iwstkhr/shelter-map'
+const GITHUB_URL = 'https://github.com/iwstkhr/shelter-map';
 
 export function AppHeader() {
   return (
@@ -27,5 +27,5 @@ export function AppHeader() {
         </a>
       </div>
     </header>
-  )
+  );
 }

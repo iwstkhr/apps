@@ -1,5 +1,5 @@
-import { Outlet } from 'react-router'
-import { AppHeader } from '~/components/layout/app-header'
+import { Outlet } from 'react-router';
+import { AppHeader } from '~/components/layout/app-header';
 
 export function AppShell() {
   return (
@@ -10,5 +10,5 @@ export function AppShell() {
         <Outlet />
       </div>
     </div>
-  )
+  );
 }
