@@ -26,15 +26,14 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
   const columnFiltersRef = useRef<ShelterColumnFilters>(emptyShelterColumnFilters);
   const [displayedShelters, setDisplayedShelters] = useState<Shelter[]>([]);
 
-  const updateDisplayedShelters = useCallback(() => {
+  const updateVisibleMarkers = useCallback(() => {
     const map = mapRef.current;
     if (!map) {
       return;
     }
 
-    const displayed = filterSheltersWithinMap(map, filteredSheltersRef.current);
-    setDisplayedShelters(displayed);
-    shelterMarkersRef.current = renderShelterMarkers(map, displayed, shelterMarkersRef.current);
+    const visible = filterSheltersWithinMap(map, filteredSheltersRef.current);
+    shelterMarkersRef.current = renderShelterMarkers(map, visible, shelterMarkersRef.current);
   }, [mapRef]);
 
   const applyColumnFilters = useCallback(
@@ -47,11 +46,11 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       columnFiltersRef.current = filters;
       const filtered = filterSheltersByColumns(allSheltersRef.current, filters);
       filteredSheltersRef.current = filtered;
+      setDisplayedShelters(filtered);
       shelterCirclesRef.current = renderShelterCircles(map, filtered, shelterCirclesRef.current);
 
-      const displayed = filterSheltersWithinMap(map, filtered);
-      setDisplayedShelters(displayed);
-      shelterMarkersRef.current = renderShelterMarkers(map, displayed, shelterMarkersRef.current);
+      const visible = filterSheltersWithinMap(map, filtered);
+      shelterMarkersRef.current = renderShelterMarkers(map, visible, shelterMarkersRef.current);
     },
     [allSheltersRef, mapRef],
   );
@@ -64,11 +63,11 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
 
     const shelters = allSheltersRef.current;
     filteredSheltersRef.current = shelters;
+    setDisplayedShelters(shelters);
     shelterCirclesRef.current = renderShelterCircles(map, shelters, shelterCirclesRef.current);
 
-    const displayed = filterSheltersWithinMap(map, shelters);
-    setDisplayedShelters(displayed);
-    shelterMarkersRef.current = renderShelterMarkers(map, displayed, shelterMarkersRef.current);
+    const visible = filterSheltersWithinMap(map, shelters);
+    shelterMarkersRef.current = renderShelterMarkers(map, visible, shelterMarkersRef.current);
   }, [allSheltersRef, isLoading, loadError, mapReady, mapRef]);
 
   useEffect(() => {
@@ -77,7 +76,7 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       return;
     }
 
-    const handleMapChange = () => updateDisplayedShelters();
+    const handleMapChange = () => updateVisibleMarkers();
     map.on('zoomlevelschange', handleMapChange);
     map.on('moveend', handleMapChange);
 
@@ -85,7 +84,7 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       map.off('zoomlevelschange', handleMapChange);
       map.off('moveend', handleMapChange);
     };
-  }, [mapReady, mapRef, updateDisplayedShelters]);
+  }, [mapReady, mapRef, updateVisibleMarkers]);
 
   useEffect(() => {
     return () => {

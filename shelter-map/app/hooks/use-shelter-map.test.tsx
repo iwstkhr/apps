@@ -23,7 +23,10 @@ const shelters = [
 const mockMap = {
   on: vi.fn(),
   off: vi.fn(),
-} as unknown as LeafletMap;
+} as unknown as LeafletMap & {
+  on: ReturnType<typeof vi.fn>;
+  off: ReturnType<typeof vi.fn>;
+};
 
 const changeTileLayer = vi.fn();
 
@@ -64,10 +67,6 @@ describe('useShelterMap', () => {
     if (!firstShelter) {
       throw new Error('expected shelter fixture');
     }
-    const filteredShelter = [firstShelter];
-    vi.spyOn(viewportFilter, 'filterSheltersWithinMap')
-      .mockReturnValueOnce(shelters)
-      .mockReturnValue(filteredShelter);
 
     const mapContainerRef = createRef<HTMLDivElement>();
     const { result } = renderHook(() => useShelterMap(mapContainerRef));
@@ -83,10 +82,46 @@ describe('useShelterMap', () => {
       });
     });
 
-    expect(result.current.displayedShelters).toEqual(filteredShelter);
+    expect(result.current.displayedShelters).toEqual([firstShelter]);
     expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(
       mockMap,
-      expect.arrayContaining([shelters[0]]),
+      [firstShelter],
+      expect.any(Array),
+    );
+  });
+
+  it('keeps the full filtered list in the table when the map moves', async () => {
+    const firstShelter = shelters[0];
+    if (!firstShelter) {
+      throw new Error('expected shelter fixture');
+    }
+
+    vi.spyOn(viewportFilter, 'filterSheltersWithinMap')
+      .mockReturnValueOnce(shelters)
+      .mockReturnValue([firstShelter]);
+
+    const mapContainerRef = createRef<HTMLDivElement>();
+    const { result } = renderHook(() => useShelterMap(mapContainerRef));
+
+    await waitFor(() => {
+      expect(result.current.displayedShelters).toEqual(shelters);
+    });
+
+    const moveHandler = mockMap.on.mock.calls.find(
+      (call: unknown[]) => call[0] === 'moveend',
+    )?.[1] as (() => void) | undefined;
+    if (typeof moveHandler !== 'function') {
+      throw new Error('expected moveend handler');
+    }
+
+    act(() => {
+      moveHandler();
+    });
+
+    expect(result.current.displayedShelters).toEqual(shelters);
+    expect(shelterRenderer.renderShelterMarkers).toHaveBeenLastCalledWith(
+      mockMap,
+      [firstShelter],
       expect.any(Array),
     );
   });

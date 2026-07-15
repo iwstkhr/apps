@@ -274,26 +274,21 @@ export function MapTable() {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-      <div className="flex shrink-0 flex-col gap-1.5 text-sm text-slate-700 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <p className="min-w-0 leading-snug">
-          一覧には地図の表示領域内の避難所のみを表示しています。
+      <div className="flex shrink-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm text-slate-700">
+        <p className="min-w-0 break-words">
+          <a
+            href={DATASET_SOURCE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-blue-700 hover:text-blue-800 hover:underline"
+          >
+            {DATASET_SOURCE_LABEL}
+          </a>
+          <span className="text-slate-600"> ({DATASET_UPDATED_AT})</span>
         </p>
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 sm:justify-end sm:text-right">
-          <p className="min-w-0 break-words">
-            <a
-              href={DATASET_SOURCE_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-blue-700 hover:text-blue-800 hover:underline"
-            >
-              {DATASET_SOURCE_LABEL}
-            </a>
-            <span className="text-slate-600"> ({DATASET_UPDATED_AT})</span>
-          </p>
-          <p className="shrink-0 tabular-nums font-medium text-slate-800">
-            {displayedShelters.length.toLocaleString()} 件
-          </p>
-        </div>
+        <p className="shrink-0 tabular-nums font-medium text-slate-800">
+          {displayedShelters.length.toLocaleString()} 件
+        </p>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">

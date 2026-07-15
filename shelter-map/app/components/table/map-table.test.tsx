@@ -26,34 +26,24 @@ describe('MapTable', () => {
     vi.useRealTimers();
   });
 
-  it('shows the displayed shelter count and viewport notice', () => {
+  it('shows the displayed shelter count and dataset source', () => {
     const shelters = [
       createShelter({ name: '横浜避難所' }),
       createShelter({ name: '川崎避難所', address: '神奈川県川崎市' }),
     ];
 
-    const { container } = renderWithShelterMap(
+    renderWithShelterMap(
       <div className="flex h-[32rem] flex-col">
         <MapTable />
       </div>,
       { displayedShelters: shelters },
     );
 
-    expect(
-      screen.getByText('一覧には地図の表示領域内の避難所のみを表示しています。'),
-    ).toBeInTheDocument();
     expect(screen.getByText('2 件')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '国土地理院 指定緊急避難場所データ' })).toHaveAttribute(
       'href',
       'https://www.gsi.go.jp/bousaichiri/hinanbasho.html',
     );
-
-    const metaBar = screen.getByText(
-      '一覧には地図の表示領域内の避難所のみを表示しています。',
-    ).parentElement;
-    expect(metaBar?.className).toContain('flex-col');
-    expect(metaBar?.className).toContain('sm:flex-row');
-    expect(container.querySelector('.min-w-0')).not.toBeNull();
   });
 
   it('debounces column filter changes before updating the map', () => {
