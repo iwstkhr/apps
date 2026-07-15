@@ -1,11 +1,12 @@
 import { decompressGzipResponse } from '~/lib/decompress-gzip';
+import { publicUrl } from '~/lib/public-url';
 import {
   createShelterFromGeoJsonFeature,
   type Shelter,
   type ShelterGeoJsonFeatureCollection,
 } from '~/types/shelter';
 
-const SHELTERS_GEOJSON_URL = `${import.meta.env.BASE_URL}assets/mergeFromCity_2.geojson.gz`;
+const SHELTERS_GEOJSON_URL = publicUrl('assets/mergeFromCity_2.geojson.gz');
 
 let sheltersCache: Shelter[] | null = null;
 

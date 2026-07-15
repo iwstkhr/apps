@@ -126,6 +126,10 @@ GitHub Pages と同じベースパスでローカルビルドする場合:
 BASE_PATH=/shelter-map/ npm run build
 ```
 
+`public/` 以下の静的アセット（favicon や GeoJSON など）は
+`import.meta.env.BASE_URL`（ヘルパー: `app/lib/public-url.ts`）経由で参照し、
+ルート絶対パス（例: `/favicon.svg`）は使わないでください。
+
 ## コントリビューション
 
 ### Git hooks

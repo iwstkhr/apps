@@ -1,10 +1,11 @@
 import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration } from 'react-router';
 import { AppShell } from '~/components/layout/app-shell';
+import { publicUrl } from '~/lib/public-url';
 import type { Route } from './+types/root';
 import './app.css';
 
 export const links: Route.LinksFunction = () => [
-  { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+  { rel: 'icon', href: publicUrl('favicon.svg'), type: 'image/svg+xml' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

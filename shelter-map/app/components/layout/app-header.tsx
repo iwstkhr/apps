@@ -1,4 +1,5 @@
 import { FaGithub } from 'react-icons/fa';
+import { publicUrl } from '~/lib/public-url';
 
 const GITHUB_URL = 'https://github.com/iwstkhr/shelter-map';
 
@@ -8,7 +9,7 @@ export function AppHeader() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-4">
         <h1 className="flex min-w-0 items-center gap-2 text-base font-bold tracking-tight text-slate-900 sm:text-xl">
           <img
-            src="/favicon.svg"
+            src={publicUrl('favicon.svg')}
             alt=""
             aria-hidden="true"
             className="h-7 w-7 shrink-0 sm:h-8 sm:w-8"
