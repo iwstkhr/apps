@@ -19,6 +19,11 @@
     {
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "non-major dependencies"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["pin", "digest"],
+      "automerge": true
     }
   ]
 }
