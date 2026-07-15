@@ -1,8 +1,9 @@
 # 指定緊急避難場所マップ
 
-国土地理院（GSI）の指定緊急避難場所データを、地図とテーブルで閲覧できる Web アプリケーションです。
+国土地理院（GSI）の指定緊急避難場所データを、地図とテーブルで
+閲覧できる Web アプリケーションです。
 
-**デモ:** https://iwstkhr.github.io/shelter-map/
+**デモ:** <https://iwstkhr.github.io/shelter-map/>
 
 ## 機能
 
@@ -11,20 +12,31 @@
 - 名称・住所・災害種別（洪水、地震、津波など）でフィルタリング
 - OpenStreetMap と国土地理院の航空写真の切り替え
 - gzip 圧縮 GeoJSON による高速なデータ読み込み
+- モバイル幅でも地図と一覧が使えるレスポンシブレイアウト
 
 ## 技術スタック
 
-- [React](https://react.dev/) 19 + [TypeScript](https://www.typescriptlang.org/)
-- [React Router](https://reactrouter.com/) 8（SPA、クライアントサイドレンダリング）
+- [React](https://react.dev/) 19 と
+  [TypeScript](https://www.typescriptlang.org/)
+- [React Router](https://reactrouter.com/) 8
+  （SPA、クライアントサイドレンダリング）
 - [Vite](https://vite.dev/) 8
 - [Leaflet](https://leafletjs.com/) — 地図描画
-- [TanStack Table](https://tanstack.com/table) + [TanStack Virtual](https://tanstack.com/virtual) — テーブルと仮想スクロール
+- [TanStack Table](https://tanstack.com/table) と
+  [TanStack Virtual](https://tanstack.com/virtual)
+  — テーブルと仮想スクロール
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [Biome](https://biomejs.dev/) — リント・フォーマット
-- [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/docs/react-testing-library/intro/) — テスト
-- [Husky](https://typicode.github.io/husky/) + [lint-staged](https://github.com/lint-staged/lint-staged) — Git hooks
+- [Vitest](https://vitest.dev/) と
+  [Testing Library](
+  https://testing-library.com/docs/react-testing-library/intro/)
+  — テスト
+- [Husky](https://typicode.github.io/husky/) と
+  [lint-staged](https://github.com/lint-staged/lint-staged)
+  — Git hooks
 - [secretlint](https://github.com/secretlint/secretlint) — 秘密情報の検出
-- actionlint / hadolint / shellcheck / yamllint — [mise](https://mise.jdx.dev/) 経由でワークフロー・シェル・YAML を lint
+- actionlint / hadolint / shellcheck / yamllint
+  — [mise](https://mise.jdx.dev/) 経由でワークフロー・シェル・YAML を lint
 
 ## 必要条件
 
@@ -42,7 +54,7 @@ npm ci
 npm run dev
 ```
 
-開発サーバーは http://localhost:5173 で起動します。
+開発サーバーは <http://localhost:5173> で起動します。
 
 ### スクリプト
 
@@ -83,19 +95,30 @@ scripts/        # ビルド用スクリプト
 
 ## データソース
 
-避難場所データは [国土地理院 指定緊急避難場所](https://www.gsi.go.jp/bousaichiri/hinanbasho.html) に基づいています。
+避難場所データは
+[国土地理院 指定緊急避難場所](https://www.gsi.go.jp/bousaichiri/hinanbasho.html)
+に基づいています。
 
 - リポジトリ内のデータ: `public/assets/mergeFromCity_2.geojson.gz`
-- アプリに表示するデータ更新日: ビルド時に `app/generated/dataset-meta.ts` へ生成
-- 取得元 URL: https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson
+- アプリに表示するデータ更新日:
+  ビルド時に `app/generated/dataset-meta.ts` へ生成
+- 取得元 URL:
+  <https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson>
 
-GeoJSON は毎月 1 日に GitHub Actions でダウンロード・圧縮され、プルリクエストとして提案されます（[`.github/workflows/update-geojson.yml`](.github/workflows/update-geojson.yml)）。
+GeoJSON は毎月 1 日に GitHub Actions でダウンロード・圧縮され、
+プルリクエストとして提案されます
+（[`.github/workflows/update-geojson.yml`](.github/workflows/update-geojson.yml)）。
 
 ## CI / デプロイ
 
-PR と `main` ブランチへの push では [Check ワークフロー](.github/workflows/check.yml) が `mise run lint`、`npm run check`、`npm run typecheck`、`npm run test` を実行します。
+PR と `main` ブランチへの push では
+[Check ワークフロー](.github/workflows/check.yml) が
+`mise run lint`、`npm run check`、`npm run typecheck`、`npm run test`
+を実行します。
 
-`main` への push で Check が成功すると、[Deploy ワークフロー](.github/workflows/deploy.yml) が起動して [GitHub Pages](https://pages.github.com/) へデプロイされます。
+`main` への push で Check が成功すると、
+[Deploy ワークフロー](.github/workflows/deploy.yml) が起動して
+[GitHub Pages](https://pages.github.com/) へデプロイされます。
 
 GitHub Pages と同じベースパスでローカルビルドする場合:
 
@@ -109,7 +132,8 @@ BASE_PATH=/shelter-map/ npm run build
 
 `npm ci` 後、Husky が Git hooks を有効化します。
 
-- **pre-commit:** `npm run check` と lint-staged（ステージ済みファイルに対する secretlint など）
+- **pre-commit:** `npm run check` と lint-staged
+  （ステージ済みファイルに対する secretlint など）
 - **pre-push:** `npm run test`
 
 CI と同条件で確認する場合:
@@ -123,14 +147,17 @@ npm run test
 
 ### コミットメッセージ
 
-このリポジトリは [Conventional Commits](https://www.conventionalcommits.org/) に従います。
+このリポジトリは
+[Conventional Commits](https://www.conventionalcommits.org/)
+に従います。
 
 ```text
 <type>[optional scope]: <description>
 ```
 
 - **description** は英語の命令形・小文字・末尾にピリオドなしで記述
-- 変更内容に合った **type** を使用（`feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`）
+- 変更内容に合った **type** を使用
+  （`feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`）
 - 必要に応じて **scope** を追加（`map`, `table`, `data`, `deploy` など）
 
 例:
@@ -146,4 +173,7 @@ docs: document project setup in readme
 
 本プロジェクトのソースコードは [MIT License](LICENSE) の下で公開されています。
 
-避難場所データは国土地理院（GSI）が提供しています。データの利用条件については [国土地理院の利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei41042.html) を参照してください。
+避難場所データは国土地理院（GSI）が提供しています。
+データの利用条件については
+[国土地理院の利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei41042.html)
+を参照してください。

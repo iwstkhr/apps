@@ -12,6 +12,8 @@ describe('MapHelpHint', () => {
     expect(screen.getByText('地図の操作')).toBeInTheDocument();
     expect(screen.getByText('ドラッグ')).toBeInTheDocument();
     expect(screen.getByText('クリック')).toBeInTheDocument();
+    expect(screen.getByText('タップ')).toBeInTheDocument();
+    expect(screen.getByText('ピンチ')).toBeInTheDocument();
     expect(screen.getByText('+ スクロール')).toBeInTheDocument();
   });
 });
