@@ -24,7 +24,7 @@
     "@react-router/node": "8.2.0",
     "@react-router/serve": "8.2.0",
     "@tanstack/react-table": "8.21.3",
-    "@tanstack/react-virtual": "3.14.6",
+    "@tanstack/react-virtual": "3.14.7",
     "isbot": "5.2.1",
     "leaflet": "1.9.4",
     "react": "19.2.7",
