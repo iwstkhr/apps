@@ -35,7 +35,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.5",
     "@react-router/dev": "8.2.0",
-    "@secretlint/secretlint-rule-preset-recommend": "13.0.3",
+    "@secretlint/secretlint-rule-preset-recommend": "13.0.4",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -48,7 +48,7 @@
     "husky": "9.1.7",
     "lint-staged": "17.1.0",
     "markdownlint": "0.41.1",
-    "secretlint": "13.0.3",
+    "secretlint": "13.0.4",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
     "vite": "8.1.5",
