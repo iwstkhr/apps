@@ -32,16 +32,12 @@
   [Testing Library](
   https://testing-library.com/docs/react-testing-library/intro/)
   — テスト
-- [Husky](https://typicode.github.io/husky/) と
-  [lint-staged](https://github.com/lint-staged/lint-staged)
-  — Git hooks
-- [secretlint](https://github.com/secretlint/secretlint) — 秘密情報の検出
-- actionlint / hadolint / shellcheck / yamllint
-  — [mise](https://mise.jdx.dev/) 経由でワークフロー・シェル・YAML を lint
+- [pre-commit](https://pre-commit.com/) — Git hooks と各種 lint
+  （Biome、actionlint、shellcheck、markdownlint、gitleaks など）
 
 ## 必要条件
 
-- [mise](https://mise.jdx.dev/)（Node.js と lint ツールのバージョン管理）
+- [mise](https://mise.jdx.dev/)（Node.js と pre-commit のバージョン管理）
 - Node.js（[`mise.toml`](mise.toml) / `package.json` の `engines.node` で指定）
 - npm
 
@@ -52,6 +48,7 @@ git clone https://github.com/iwstkhr/shelter-map.git
 cd shelter-map
 mise install
 npm ci
+pre-commit install
 npm run dev
 ```
 
@@ -72,7 +69,7 @@ npm run dev
 | `npm run typecheck` | TypeScript の型チェックを実行 |
 | `npm run test` | Vitest でテストを実行 |
 | `npm run test:watch` | Vitest をウォッチモードで実行 |
-| `mise run lint` | GitHub Actions ワークフロー、シェル、YAML などを lint |
+| `pre-commit run --all-files` | pre-commit の hooks を全ファイルに対して実行 |
 
 ## プロジェクト構成
 
@@ -114,8 +111,8 @@ GeoJSON は毎月 1 日に GitHub Actions でダウンロード・圧縮され�
 
 PR と `main` ブランチへの push では
 [Check ワークフロー](.github/workflows/check.yml) が
-`mise run lint`、`npm run check`、`npm run typecheck`、`npm run test`
-を実行します。
+`pre-commit run --all-files`、`npm run check`、`npm run typecheck`、
+`npm run test` を実行します。
 
 `main` への push で Check が成功すると、
 [Deploy ワークフロー](.github/workflows/deploy.yml) が起動して
@@ -135,16 +132,20 @@ BASE_PATH=/shelter-map/ npm run build
 
 ### Git hooks
 
-`npm ci` 後、Husky が Git hooks を有効化します。
+`mise install` 後に `pre-commit install` を実行すると、
+[`.pre-commit-config.yaml`](.pre-commit-config.yaml) の hooks が
+コミット時に有効になります。
 
-- **pre-commit:** `npm run check` と lint-staged
-  （ステージ済みファイルに対する secretlint など）
-- **pre-push:** `npm run test`
+全ファイルに対して手動実行する場合:
+
+```bash
+pre-commit run --all-files
+```
 
 CI と同条件で確認する場合:
 
 ```bash
-mise run lint
+pre-commit run --all-files
 npm run check
 npm run typecheck
 npm run test
