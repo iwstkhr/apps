@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Run lint
-        run: mise run lint
+        run: pre-commit run --all-files
 
       - name: Run check
         run: npm run check
