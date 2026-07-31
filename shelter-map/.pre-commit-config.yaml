@@ -27,8 +27,6 @@ repos:
     rev: v0.17.0
     hooks:
       - id: markdownlint
-        # YAML frontmatter-only content files trip MD032 on list syntax
-        exclude: ^src/content/
 
   - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.11.0

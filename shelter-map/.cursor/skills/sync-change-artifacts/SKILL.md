@@ -57,7 +57,7 @@ description: コード変更時にテスト・GitHub Actions・ドキュメン�
 
 | ファイル | 役割 | 更新が必要な変更例 |
 | --- | --- | --- |
-| `.github/workflows/check.yml` | PR / `main` push 時の lint / check / typecheck / test | `npm run` スクリプト追加・変更、`mise run lint` の対象、Node バージョン |
+| `.github/workflows/check.yml` | PR / `main` push 時の lint / check / typecheck / test | `npm run` スクリプト追加・変更、`.pre-commit-config.yaml`、Node バージョン |
 | `.github/workflows/deploy.yml` | Check 成功後の GitHub Pages デプロイ | ビルドコマンド、環境変数（`BASE_PATH` 等）、デプロイ先、`workflow_run` のトリガー条件 |
 | `.github/workflows/update-geojson.yml` | 月次 GeoJSON 取得・圧縮 PR | データ取得 URL、圧縮手順、スケジュール、`scripts/` の変更 |
 
@@ -98,5 +98,5 @@ Task Progress:
 - [ ] 影響する GitHub Actions ワークフローを更新
 - [ ] 影響する README セクションを更新
 - [ ] `npm run check` と `npm run typecheck` が通る（CI と同条件）
-- [ ] `mise run lint` が通る（CI と同条件）
+- [ ] `pre-commit run --all-files` が通る（CI と同条件）
 ```
