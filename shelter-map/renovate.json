@@ -23,23 +23,12 @@
     },
     {
       "matchUpdateTypes": ["minor", "patch"],
-      "matchPackageNames": ["!@biomejs/biome", "!biomejs/pre-commit"],
       "groupName": "non-major dependencies",
       "automerge": true
     },
     {
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["pin", "digest"],
-      "automerge": true
-    },
-    {
-      "description": "Keep npm Biome, pre-commit hook, and biome.json $schema in one PR",
-      "matchPackageNames": ["@biomejs/biome", "biomejs/pre-commit"],
-      "groupName": "biome"
-    },
-    {
-      "matchPackageNames": ["@biomejs/biome", "biomejs/pre-commit"],
-      "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     }
   ]
