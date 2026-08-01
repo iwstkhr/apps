@@ -65,7 +65,7 @@ jobs:
           commit-message: 'chore(data): update shelter GeoJSON data'
           title: 'chore(data): update shelter GeoJSON data (${{ env.run_date }})'
           body: |
-            Automated monthly update from 国土地理院 hinanmap.
+            Automated monthly update from 国土地理院 指定緊急避難場所データ.
 
             - Source: https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson
             - Uncompressed size: ${{ env.source_bytes }} bytes
