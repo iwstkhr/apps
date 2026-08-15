@@ -1,9 +1,4 @@
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, flexRender, tableFeatures, useTable } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DATASET_UPDATED_AT } from '~/generated/dataset-meta';
@@ -37,7 +32,11 @@ const NAME_HEADER_CLASS = 'sticky left-0 z-10 bg-slate-100';
 const FILTER_INPUT_CLASS =
   'w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs font-normal text-slate-900 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200';
 
-const columnHelper = createColumnHelper<Shelter>();
+// Rows are filtered upstream in the shelter map context, so this table only
+// needs the core row model and registers no optional features.
+const features = tableFeatures({});
+
+const columnHelper = createColumnHelper<typeof features, Shelter>();
 
 function ShelterTypeCell({ ready }: { ready: boolean }) {
   return <span className={ready ? 'app-content-ready' : 'app-content-not-ready'} />;
@@ -225,30 +224,31 @@ export function MapTable() {
   }, [openFilterColumn]);
 
   const columns = useMemo(
-    () => [
-      columnHelper.accessor('name', {
-        header: '名前',
-        cell: (info) => info.getValue(),
-      }),
-      columnHelper.accessor('address', {
-        header: '住所',
-        cell: (info) => info.getValue(),
-      }),
-      ...shelterTypeKeys.map((key) =>
-        columnHelper.accessor((row) => row.type[key], {
-          id: key,
-          header: getShelterTypeTableLabel(key as ShelterTypeKey),
-          cell: (info) => <ShelterTypeCell ready={info.getValue()} />,
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor('name', {
+          header: '名前',
+          cell: (info) => info.getValue(),
         }),
-      ),
-    ],
+        columnHelper.accessor('address', {
+          header: '住所',
+          cell: (info) => info.getValue(),
+        }),
+        ...shelterTypeKeys.map((key) =>
+          columnHelper.accessor((row) => row.type[key], {
+            id: key,
+            header: getShelterTypeTableLabel(key as ShelterTypeKey),
+            cell: (info) => <ShelterTypeCell ready={info.getValue()} />,
+          }),
+        ),
+      ]),
     [],
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    features,
     data: displayedShelters,
     columns,
-    getCoreRowModel: getCoreRowModel(),
     getRowId: (row, index) => `${row.name}-${row.latitude}-${row.longitude}-${index}`,
   });
 
@@ -352,7 +352,7 @@ export function MapTable() {
                     }}
                     role="row"
                   >
-                    {row.getVisibleCells().map((cell) => (
+                    {row.getAllCells().map((cell) => (
                       <div key={cell.id} className={getCellClassName(cell.column.id)} role="cell">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </div>
