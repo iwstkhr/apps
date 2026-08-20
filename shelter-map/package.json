@@ -35,17 +35,17 @@
     "@biomejs/biome": "2.5.9",
     "@react-router/dev": "8.3.0",
     "@tailwindcss/vite": "4.3.3",
-    "@testing-library/jest-dom": "^7.0.0",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.5",
     "@types/leaflet": "1.9.22",
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
-    "happy-dom": "^20.10.6",
+    "happy-dom": "20.11.6",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
     "vite": "8.2.2",
-    "vitest": "^4.1.9"
+    "vitest": "4.1.11"
   }
 }
