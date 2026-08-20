@@ -9,6 +9,7 @@
   "labels": ["dependencies"],
   "timezone": "Asia/Tokyo",
   "dependencyDashboard": true,
+  "minimumReleaseAge": "7 days",
   "rebaseWhen": "conflicted",
   "lockFileMaintenance": {
     "enabled": true,
