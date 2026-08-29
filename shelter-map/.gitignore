@@ -49,6 +49,9 @@ Thumbs.db
 *.sln
 *.sw?
 
+# AI agent local config (personal overrides, not shared)
+.claude/settings.local.json
+
 # Deploy platform local config
 .vercel
 .netlify
