@@ -1,6 +1,9 @@
 ---
 name: sync-change-artifacts
-description: コード変更時にテスト・GitHub Actions・ドキュメントを同時に更新する。app/ の実装変更、package.json や scripts/ のツール変更、ビルド・デプロイ・データ取得フローの変更時に使用する。
+description: >-
+  コード変更時にテスト・GitHub Actions・ドキュメントを同時に更新する。
+  app/ の実装変更、package.json や scripts/ のツール変更、
+  ビルド・デプロイ・データ取得フローの変更時に使用する。
 ---
 
 # コード変更チェックリスト
@@ -27,7 +30,8 @@ description: コード変更時にテスト・GitHub Actions・ドキュメン�
 
 - ロジック・UI・型の変更には対応する `*.test.ts` / `*.test.tsx` を追加・更新する
 - テストは対象コードと**同じディレクトリ**に配置する
-- ヘルパー・フィクスチャは `app/test/` を使う（`fixtures.ts`, `render-with-shelter-map.tsx`, `setup.ts`）
+- ヘルパー・フィクスチャは `app/test/` を使う
+  （`fixtures.ts`, `render-with-shelter-map.tsx`, `setup.ts`）
 
 ### フレームワーク
 
@@ -44,7 +48,7 @@ description: コード変更時にテスト・GitHub Actions・ドキュメン�
 | データ取得・変換ロジック | `vi.mock` で fetch / gzip をモック（`fetch-shelters.test.ts` を参照） |
 | React コンポーネント | `render-with-shelter-map.tsx` で Context を包んでレンダリング |
 
-### 完了条件
+### テストの完了条件
 
 - [ ] 変更したコードに対応するテストが存在する
 - [ ] `npm run test` が通る
@@ -55,11 +59,15 @@ description: コード変更時にテスト・GitHub Actions・ドキュメン�
 
 ### ワークフロー一覧
 
-| ファイル | 役割 | 更新が必要な変更例 |
-| --- | --- | --- |
-| `.github/workflows/check.yml` | PR / `main` push 時の lint / check / typecheck / test | `npm run` スクリプト追加・変更、`.pre-commit-config.yaml`、Node バージョン |
-| `.github/workflows/deploy.yml` | Check 成功後の GitHub Pages デプロイ | ビルドコマンド、環境変数（`BASE_PATH` 等）、デプロイ先、`workflow_run` のトリガー条件 |
-| `.github/workflows/update-geojson.yml` | 月次 GeoJSON 取得・圧縮 PR | データ取得 URL、圧縮手順、スケジュール、`scripts/` の変更 |
+- `.github/workflows/check.yml`
+   - 役割: PR / `main` push 時の lint / check / typecheck / test
+   - 更新例: `npm run` スクリプト、`.pre-commit-config.yaml`、Node バージョン
+- `.github/workflows/deploy.yml`
+   - 役割: Check 成功後の GitHub Pages デプロイ
+   - 更新例: ビルドコマンド、環境変数、デプロイ先、トリガー条件
+- `.github/workflows/update-geojson.yml`
+   - 役割: 月次 GeoJSON 取得・圧縮 PR
+   - 更新例: データ取得 URL、圧縮手順、スケジュール、`scripts/` の変更
 
 ### チェックポイント
 
@@ -84,7 +92,7 @@ description: コード変更時にテスト・GitHub Actions・ドキュメン�
 | 技術スタックの追加・変更 | 「技術スタック」 |
 | セットアップ手順の変更 | 「セットアップ」「必要条件」 |
 
-### 完了条件
+### ドキュメントの完了条件
 
 - [ ] ユーザーが知るべき挙動変更が README に反映されている
 - [ ] 新しい npm スクリプトがスクリプト表に追加されている

@@ -1,0 +1,18 @@
+{
+  "description": "Keep tests, CI workflows, and documentation synchronized with code changes.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/bash \"$(git rev-parse --show-toplevel)/.codex/hooks/run-sync-change-artifacts-skill.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking related change artifacts"
+          }
+        ]
+      }
+    ]
+  }
+}
