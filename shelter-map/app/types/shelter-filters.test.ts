@@ -4,7 +4,6 @@ import {
   emptyShelterColumnFilters,
   filterSheltersByColumns,
   isColumnFilterActive,
-  isShelterFilterColumnId,
 } from '~/types/shelter-filters';
 
 const sampleShelter = createShelter();
@@ -34,19 +33,6 @@ describe('isColumnFilterActive', () => {
         types: { ...emptyShelterColumnFilters.types, flood: 'yes' },
       }),
     ).toBe(true);
-  });
-});
-
-describe('isShelterFilterColumnId', () => {
-  it('accepts name, address, and disaster type columns', () => {
-    expect(isShelterFilterColumnId('name')).toBe(true);
-    expect(isShelterFilterColumnId('address')).toBe(true);
-    expect(isShelterFilterColumnId('flood')).toBe(true);
-  });
-
-  it('rejects other column ids', () => {
-    expect(isShelterFilterColumnId('latitude')).toBe(false);
-    expect(isShelterFilterColumnId('')).toBe(false);
   });
 });
 

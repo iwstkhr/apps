@@ -1,5 +1,5 @@
 import type { Shelter } from '~/types/shelter';
-import { isShelterTypeKey, type ShelterTypeKey, shelterTypeKeys } from '~/types/shelter-type';
+import { type ShelterTypeKey, shelterTypeKeys } from '~/types/shelter-type';
 
 export type ShelterTypeFilterValue = 'all' | 'yes' | 'no';
 
@@ -29,10 +29,6 @@ function hasActiveShelterTypeFilters(
 }
 
 export type ShelterFilterColumnId = 'name' | 'address' | ShelterTypeKey;
-
-export function isShelterFilterColumnId(columnId: string): columnId is ShelterFilterColumnId {
-  return columnId === 'name' || columnId === 'address' || isShelterTypeKey(columnId);
-}
 
 export function isColumnFilterActive(
   columnId: ShelterFilterColumnId,

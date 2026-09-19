@@ -52,7 +52,9 @@
         "app/components/table/map-table.tsx",
         "app/components/table/map-table.test.tsx",
         "app/components/table/column-header-filter.tsx",
-        "app/components/table/column-header-filter.test.tsx"
+        "app/components/table/column-header-filter.test.tsx",
+        "app/components/table/shelter-table-header.tsx",
+        "app/components/table/shelter-table-rows.tsx"
       ],
       "linter": {
         "rules": {

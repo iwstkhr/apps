@@ -23,9 +23,7 @@
   （SPA、クライアントサイドレンダリング）
 - [Vite](https://vite.dev/) 8
 - [Leaflet](https://leafletjs.com/) — 地図描画
-- [TanStack Table](https://tanstack.com/table) と
-  [TanStack Virtual](https://tanstack.com/virtual)
-  — テーブルと仮想スクロール
+- [TanStack Virtual](https://tanstack.com/virtual) — テーブルの仮想スクロール
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [Biome](https://biomejs.dev/) — リント・フォーマット
 - [Vitest](https://vitest.dev/) と
