@@ -4,11 +4,18 @@ import {
   emptyShelterColumnFilters,
   filterSheltersByColumns,
   isColumnFilterActive,
+  isShelterFilterColumnId,
 } from '~/types/shelter-filters';
 
 const sampleShelter = createShelter();
 
 describe('isColumnFilterActive', () => {
+  it('ignores whitespace-only text filters', () => {
+    expect(isColumnFilterActive('address', { ...emptyShelterColumnFilters, address: '  ' })).toBe(
+      false,
+    );
+  });
+
   it('returns false when no filters are set', () => {
     expect(isColumnFilterActive('name', emptyShelterColumnFilters)).toBe(false);
     expect(isColumnFilterActive('flood', emptyShelterColumnFilters)).toBe(false);
@@ -18,12 +25,28 @@ describe('isColumnFilterActive', () => {
     expect(isColumnFilterActive('name', { ...emptyShelterColumnFilters, name: 'テスト' })).toBe(
       true,
     );
+    expect(isColumnFilterActive('address', { ...emptyShelterColumnFilters, address: '横浜' })).toBe(
+      true,
+    );
     expect(
       isColumnFilterActive('flood', {
         ...emptyShelterColumnFilters,
         types: { ...emptyShelterColumnFilters.types, flood: 'yes' },
       }),
     ).toBe(true);
+  });
+});
+
+describe('isShelterFilterColumnId', () => {
+  it('accepts name, address, and disaster type columns', () => {
+    expect(isShelterFilterColumnId('name')).toBe(true);
+    expect(isShelterFilterColumnId('address')).toBe(true);
+    expect(isShelterFilterColumnId('flood')).toBe(true);
+  });
+
+  it('rejects other column ids', () => {
+    expect(isShelterFilterColumnId('latitude')).toBe(false);
+    expect(isShelterFilterColumnId('')).toBe(false);
   });
 });
 

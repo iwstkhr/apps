@@ -28,17 +28,20 @@ function hasActiveShelterTypeFilters(
   return shelterTypeKeys.some((key) => types[key] !== 'all');
 }
 
-export function isColumnFilterActive(columnId: string, filters: ShelterColumnFilters): boolean {
-  if (columnId === 'name') {
-    return filters.name.trim() !== '';
+export type ShelterFilterColumnId = 'name' | 'address' | ShelterTypeKey;
+
+export function isShelterFilterColumnId(columnId: string): columnId is ShelterFilterColumnId {
+  return columnId === 'name' || columnId === 'address' || isShelterTypeKey(columnId);
+}
+
+export function isColumnFilterActive(
+  columnId: ShelterFilterColumnId,
+  filters: ShelterColumnFilters,
+): boolean {
+  if (columnId === 'name' || columnId === 'address') {
+    return filters[columnId].trim() !== '';
   }
-  if (columnId === 'address') {
-    return filters.address.trim() !== '';
-  }
-  if (isShelterTypeKey(columnId)) {
-    return filters.types[columnId] !== 'all';
-  }
-  return false;
+  return filters.types[columnId] !== 'all';
 }
 
 export function filterSheltersByColumns(

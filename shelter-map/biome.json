@@ -48,7 +48,12 @@
   },
   "overrides": [
     {
-      "includes": ["app/components/table/map-table.tsx", "app/components/table/map-table.test.tsx"],
+      "includes": [
+        "app/components/table/map-table.tsx",
+        "app/components/table/map-table.test.tsx",
+        "app/components/table/column-header-filter.tsx",
+        "app/components/table/column-header-filter.test.tsx"
+      ],
       "linter": {
         "rules": {
           "a11y": {
