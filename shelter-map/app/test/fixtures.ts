@@ -46,7 +46,6 @@ export function createShelter(overrides: Partial<Shelter> = {}): Shelter {
     },
     latitude: 35.4,
     longitude: 139.6,
-    note: '',
     ...overrides,
   };
 }

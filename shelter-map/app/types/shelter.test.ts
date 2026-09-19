@@ -21,7 +21,6 @@ describe('createShelterFromGeoJsonFeature', () => {
       },
       latitude: 35.4,
       longitude: 139.6,
-      note: 'テスト備考',
     });
   });
 

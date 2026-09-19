@@ -28,7 +28,7 @@ describe('useShelterData', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.allSheltersRef.current).toEqual(shelters);
+    expect(result.current.shelters).toEqual(shelters);
     expect(result.current.loadError).toBeNull();
   });
 
@@ -42,6 +42,6 @@ describe('useShelterData', () => {
     });
 
     expect(result.current.loadError).toBe('network error');
-    expect(result.current.allSheltersRef.current).toEqual([]);
+    expect(result.current.shelters).toEqual([]);
   });
 });

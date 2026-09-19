@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchShelters } from '~/data/fetch-shelters';
 import type { Shelter } from '~/types/shelter';
 
 export function useShelterData() {
-  const allSheltersRef = useRef<Shelter[]>([]);
+  const [shelters, setShelters] = useState<Shelter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -11,12 +11,12 @@ export function useShelterData() {
     let cancelled = false;
 
     fetchShelters()
-      .then((shelters) => {
+      .then((loaded) => {
         if (cancelled) {
           return;
         }
 
-        allSheltersRef.current = shelters;
+        setShelters(loaded);
         setIsLoading(false);
       })
       .catch((error: unknown) => {
@@ -33,5 +33,5 @@ export function useShelterData() {
     };
   }, []);
 
-  return { allSheltersRef, isLoading, loadError };
+  return { shelters, isLoading, loadError };
 }

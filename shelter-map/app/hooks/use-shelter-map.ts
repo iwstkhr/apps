@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLeafletMap } from '~/hooks/use-leaflet-map';
 import { useShelterData } from '~/hooks/use-shelter-data';
 import { L } from '~/lib/leaflet';
 import { renderShelterCircles, renderShelterMarkers } from '~/lib/map/shelter-renderer';
 import { filterSheltersWithinMap } from '~/lib/map/viewport-filter';
-import type { Shelter } from '~/types/shelter';
 import {
   emptyShelterColumnFilters,
   filterSheltersByColumns,
@@ -13,15 +12,20 @@ import {
 
 export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | null>) {
   const { mapRef, mapReady, changeTileLayer } = useLeafletMap(mapContainerRef);
-  const { allSheltersRef, isLoading, loadError } = useShelterData();
+  const { shelters, isLoading, loadError } = useShelterData();
 
   const [shelterLayers] = useState(() => ({
     circles: L.layerGroup(),
     markers: L.layerGroup(),
   }));
-  const filteredSheltersRef = useRef<Shelter[]>([]);
-  const columnFiltersRef = useRef<ShelterColumnFilters>(emptyShelterColumnFilters);
-  const [displayedShelters, setDisplayedShelters] = useState<Shelter[]>([]);
+  // Filters are kept even before data loads, so the first render after loading applies them.
+  const [columnFilters, setColumnFilters] =
+    useState<ShelterColumnFilters>(emptyShelterColumnFilters);
+
+  const displayedShelters = useMemo(
+    () => filterSheltersByColumns(shelters, columnFilters),
+    [shelters, columnFilters],
+  );
 
   const updateVisibleMarkers = useCallback(() => {
     const map = mapRef.current;
@@ -29,31 +33,9 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       return;
     }
 
-    const visible = filterSheltersWithinMap(map, filteredSheltersRef.current);
+    const visible = filterSheltersWithinMap(map, displayedShelters);
     renderShelterMarkers(shelterLayers.markers, visible, map.getZoom());
-  }, [mapRef, shelterLayers]);
-
-  const renderFilteredShelters = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) {
-      return;
-    }
-
-    const filtered = filterSheltersByColumns(allSheltersRef.current, columnFiltersRef.current);
-    filteredSheltersRef.current = filtered;
-    setDisplayedShelters(filtered);
-    renderShelterCircles(shelterLayers.circles, filtered);
-    updateVisibleMarkers();
-  }, [allSheltersRef, mapRef, shelterLayers, updateVisibleMarkers]);
-
-  const updateColumnFilters = useCallback(
-    (filters: ShelterColumnFilters) => {
-      // Keep the latest filters even before data loads so the initial render applies them.
-      columnFiltersRef.current = filters;
-      renderFilteredShelters();
-    },
-    [renderFilteredShelters],
-  );
+  }, [displayedShelters, mapRef, shelterLayers]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -71,12 +53,13 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
   }, [mapReady, mapRef, shelterLayers]);
 
   useEffect(() => {
-    if (!mapReady || isLoading || loadError) {
+    if (!mapReady) {
       return;
     }
 
-    renderFilteredShelters();
-  }, [isLoading, loadError, mapReady, renderFilteredShelters]);
+    renderShelterCircles(shelterLayers.circles, displayedShelters);
+    updateVisibleMarkers();
+  }, [displayedShelters, mapReady, shelterLayers, updateVisibleMarkers]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -84,13 +67,12 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       return;
     }
 
-    const handleMapChange = () => updateVisibleMarkers();
-    map.on('zoomlevelschange', handleMapChange);
-    map.on('moveend', handleMapChange);
+    map.on('zoomlevelschange', updateVisibleMarkers);
+    map.on('moveend', updateVisibleMarkers);
 
     return () => {
-      map.off('zoomlevelschange', handleMapChange);
-      map.off('moveend', handleMapChange);
+      map.off('zoomlevelschange', updateVisibleMarkers);
+      map.off('moveend', updateVisibleMarkers);
     };
   }, [mapReady, mapRef, updateVisibleMarkers]);
 
@@ -98,7 +80,7 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
     displayedShelters,
     isLoading,
     loadError,
-    updateColumnFilters,
+    updateColumnFilters: setColumnFilters,
     changeTileLayer,
   };
 }

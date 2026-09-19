@@ -42,7 +42,7 @@ describe('useShelterMap', () => {
       changeTileLayer,
     });
     vi.mocked(useShelterData).mockReturnValue({
-      allSheltersRef: { current: shelters },
+      shelters,
       isLoading: false,
       loadError: null,
     });
@@ -99,9 +99,8 @@ describe('useShelterMap', () => {
       throw new Error('expected shelter fixture');
     }
 
-    const allSheltersRef = { current: [] as typeof shelters };
     vi.mocked(useShelterData).mockReturnValue({
-      allSheltersRef,
+      shelters: [],
       isLoading: true,
       loadError: null,
     });
@@ -117,10 +116,10 @@ describe('useShelterMap', () => {
     });
 
     expect(result.current.displayedShelters).toEqual([]);
+    const updateColumnFiltersWhileLoading = result.current.updateColumnFilters;
 
-    allSheltersRef.current = shelters;
     vi.mocked(useShelterData).mockReturnValue({
-      allSheltersRef,
+      shelters,
       isLoading: false,
       loadError: null,
     });
@@ -132,6 +131,8 @@ describe('useShelterMap', () => {
     expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(expect.anything(), [
       firstShelter,
     ]);
+    // A stable updater keeps the table's debounced filter sync from re-rendering the map on load.
+    expect(result.current.updateColumnFilters).toBe(updateColumnFiltersWhileLoading);
   });
 
   it('keeps the full filtered list in the table when the map moves', async () => {
@@ -199,7 +200,7 @@ describe('useShelterMap', () => {
 
   it('exposes loading and error state from useShelterData', () => {
     vi.mocked(useShelterData).mockReturnValue({
-      allSheltersRef: { current: [] },
+      shelters: [],
       isLoading: true,
       loadError: 'network error',
     });

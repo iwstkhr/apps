@@ -6,7 +6,6 @@ export interface Shelter {
   type: ShelterType;
   latitude: number;
   longitude: number;
-  note: string;
 }
 
 export interface ShelterGeoJsonProperties {
@@ -62,6 +61,5 @@ export function createShelterFromGeoJsonFeature(feature: ShelterGeoJsonFeature):
     ) as ShelterType,
     latitude,
     longitude,
-    note: properties.備考 ?? '',
   };
 }
