@@ -13,6 +13,7 @@ import {
 } from '~/types/shelter-filters';
 import {
   getShelterTypeTableLabel,
+  isShelterTypeKey,
   type ShelterTypeKey,
   shelterTypeKeys,
 } from '~/types/shelter-type';
@@ -101,7 +102,6 @@ function ColumnHeaderWithFilter({
   label,
   isOpen,
   isActive,
-  isShelterType,
   isNameColumn,
   draftFilters,
   onToggle,
@@ -111,12 +111,14 @@ function ColumnHeaderWithFilter({
   label: string;
   isOpen: boolean;
   isActive: boolean;
-  isShelterType: boolean;
   isNameColumn: boolean;
   draftFilters: ShelterColumnFilters;
   onToggle: () => void;
   onDraftFiltersChange: (filters: ShelterColumnFilters) => void;
 }) {
+  const shelterTypeKey = isShelterTypeKey(columnId) ? columnId : null;
+  const isShelterType = shelterTypeKey !== null;
+
   return (
     <div
       className={[
@@ -169,13 +171,13 @@ function ColumnHeaderWithFilter({
                 onChange={(address) => onDraftFiltersChange({ ...draftFilters, address })}
               />
             ) : null}
-            {isShelterType ? (
+            {shelterTypeKey ? (
               <ColumnFilterSelect
-                value={draftFilters.types[columnId as ShelterTypeKey]}
+                value={draftFilters.types[shelterTypeKey]}
                 onChange={(value) =>
                   onDraftFiltersChange({
                     ...draftFilters,
-                    types: { ...draftFilters.types, [columnId as ShelterTypeKey]: value },
+                    types: { ...draftFilters.types, [shelterTypeKey]: value },
                   })
                 }
               />
@@ -188,11 +190,7 @@ function ColumnHeaderWithFilter({
 }
 
 function isFilterableColumnId(columnId: string): columnId is FilterableColumnId {
-  return (
-    columnId === 'name' ||
-    columnId === 'address' ||
-    shelterTypeKeys.includes(columnId as ShelterTypeKey)
-  );
+  return columnId === 'name' || columnId === 'address' || isShelterTypeKey(columnId);
 }
 
 export function MapTable() {
@@ -237,7 +235,7 @@ export function MapTable() {
         ...shelterTypeKeys.map((key) =>
           columnHelper.accessor((row) => row.type[key], {
             id: key,
-            header: getShelterTypeTableLabel(key as ShelterTypeKey),
+            header: getShelterTypeTableLabel(key),
             cell: (info) => <ShelterTypeCell ready={info.getValue()} />,
           }),
         ),
@@ -253,7 +251,6 @@ export function MapTable() {
   });
 
   const { rows } = table.getRowModel();
-  const shelterTypeKeySet = useMemo(() => new Set<string>(shelterTypeKeys), []);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -267,7 +264,7 @@ export function MapTable() {
       'px-3 py-2',
       columnId === 'name' || columnId === 'address' ? 'break-words leading-snug' : '',
       columnId === 'name' ? NAME_COLUMN_CLASS : '',
-      shelterTypeKeySet.has(columnId) ? SHELTER_TYPE_COLUMN_CLASS : '',
+      isShelterTypeKey(columnId) ? SHELTER_TYPE_COLUMN_CLASS : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -306,7 +303,6 @@ export function MapTable() {
 
                 const columnId = header.column.id;
                 const label = flexRender(header.column.columnDef.header, header.getContext());
-                const isShelterType = shelterTypeKeySet.has(columnId);
 
                 return (
                   <ColumnHeaderWithFilter
@@ -315,7 +311,6 @@ export function MapTable() {
                     label={typeof label === 'string' ? label : String(label)}
                     isOpen={openFilterColumn === columnId}
                     isActive={isColumnFilterActive(columnId, draftFilters)}
-                    isShelterType={isShelterType}
                     isNameColumn={columnId === 'name'}
                     draftFilters={draftFilters}
                     onToggle={() =>

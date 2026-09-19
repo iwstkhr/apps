@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   getShelterTypeTableLabel,
+  isShelterTypeKey,
   ShelterTypeEnum,
   ShelterTypeJapanese,
   shelterTypeKeys,
@@ -25,5 +26,19 @@ describe('getShelterTypeTableLabel', () => {
       expect(ShelterTypeJapanese[key]).not.toBe('');
       expect(getShelterTypeTableLabel(key)).not.toBe('');
     }
+  });
+});
+
+describe('isShelterTypeKey', () => {
+  it('accepts every disaster type key', () => {
+    for (const key of shelterTypeKeys) {
+      expect(isShelterTypeKey(key)).toBe(true);
+    }
+  });
+
+  it('rejects other column ids', () => {
+    expect(isShelterTypeKey('name')).toBe(false);
+    expect(isShelterTypeKey('address')).toBe(false);
+    expect(isShelterTypeKey('')).toBe(false);
   });
 });

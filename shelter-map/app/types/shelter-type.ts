@@ -15,6 +15,12 @@ export type ShelterType = Record<ShelterTypeKey, boolean>;
 
 export const shelterTypeKeys = Object.values(ShelterTypeEnum);
 
+const shelterTypeKeySet: ReadonlySet<string> = new Set(shelterTypeKeys);
+
+export function isShelterTypeKey(value: string): value is ShelterTypeKey {
+  return shelterTypeKeySet.has(value);
+}
+
 // These labels are also the disaster type property names in the source GeoJSON.
 export const ShelterTypeJapanese = {
   [ShelterTypeEnum.Flood]: '洪水',
