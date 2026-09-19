@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { decompressGzipResponse } from '~/lib/decompress-gzip';
 import { createGeoJsonFeature } from '~/test/fixtures';
-import type { ShelterGeoJsonFeature } from '~/types/shelter';
 
 vi.mock('~/lib/decompress-gzip', () => ({
   decompressGzipResponse: vi.fn(),
@@ -9,7 +8,7 @@ vi.mock('~/lib/decompress-gzip', () => ({
 
 const fetchMock = vi.fn<typeof fetch>();
 
-function mockGeoJsonResponse(features: ShelterGeoJsonFeature[]) {
+function mockGeoJsonResponse(features: unknown[]) {
   fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
   vi.mocked(decompressGzipResponse).mockResolvedValue(
     JSON.stringify({
@@ -66,7 +65,7 @@ describe('fetchShelters', () => {
           ],
         ],
       },
-    } as unknown as ShelterGeoJsonFeature;
+    };
 
     const invalidPointFeature = createGeoJsonFeature({ '施設・場所名': '無効座標' });
     invalidPointFeature.geometry.coordinates = [Number.NaN, 35.4];
@@ -78,6 +77,16 @@ describe('fetchShelters', () => {
 
     expect(shelters).toHaveLength(1);
     expect(shelters[0]?.name).toBe('テスト避難所');
+  });
+
+  it('rejects malformed GeoJSON collections', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
+    vi.mocked(decompressGzipResponse).mockResolvedValue(JSON.stringify({ features: [] }));
+    const fetchShelters = await importFetchShelters();
+
+    await expect(fetchShelters()).rejects.toThrow(
+      'Invalid shelter GeoJSON: expected a FeatureCollection with a features array',
+    );
   });
 
   it('returns cached shelters without fetching again', async () => {

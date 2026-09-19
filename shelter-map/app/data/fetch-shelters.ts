@@ -1,10 +1,6 @@
 import { decompressGzipResponse } from '~/lib/decompress-gzip';
 import { publicUrl } from '~/lib/public-url';
-import {
-  createShelterFromGeoJsonFeature,
-  type Shelter,
-  type ShelterGeoJsonFeatureCollection,
-} from '~/types/shelter';
+import { parseShelterGeoJson, type Shelter } from '~/types/shelter';
 
 const SHELTERS_GEOJSON_URL = publicUrl('assets/mergeFromCity_2.geojson.gz');
 
@@ -17,12 +13,9 @@ export async function fetchShelters(): Promise<Shelter[]> {
 
   const response = await fetch(SHELTERS_GEOJSON_URL);
   const geojsonText = await decompressGzipResponse(response);
-  const geojson = JSON.parse(geojsonText) as ShelterGeoJsonFeatureCollection;
+  const geojson: unknown = JSON.parse(geojsonText);
 
-  sheltersCache = geojson.features
-    .filter((feature) => feature.geometry?.type === 'Point')
-    .map(createShelterFromGeoJsonFeature)
-    .filter((shelter): shelter is Shelter => shelter != null);
+  sheltersCache = parseShelterGeoJson(geojson);
 
   return sheltersCache;
 }

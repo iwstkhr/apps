@@ -36,32 +36,72 @@ export interface ShelterGeoJsonFeature {
   properties: ShelterGeoJsonProperties;
 }
 
-export interface ShelterGeoJsonFeatureCollection {
-  type: 'FeatureCollection';
-  name: string;
-  features: ShelterGeoJsonFeature[];
-}
-
 function isDesignated(value: string | undefined): boolean {
   return value === '1';
 }
 
-export function createShelterFromGeoJsonFeature(feature: ShelterGeoJsonFeature): Shelter | null {
-  const [longitude, latitude] = feature.geometry.coordinates;
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+export function createShelterFromGeoJsonFeature(feature: unknown): Shelter | null {
+  if (!isRecord(feature) || feature.type !== 'Feature') {
     return null;
   }
 
-  const properties = feature.properties;
+  const { geometry, properties } = feature;
+  if (
+    !isRecord(geometry) ||
+    geometry.type !== 'Point' ||
+    !Array.isArray(geometry.coordinates) ||
+    !isRecord(properties)
+  ) {
+    return null;
+  }
+
+  const [longitude, latitude] = geometry.coordinates;
+  if (
+    typeof latitude !== 'number' ||
+    typeof longitude !== 'number' ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    return null;
+  }
+
+  const id = properties.共通ID;
+  const name = properties['施設・場所名'];
+  const address = properties.住所;
+  if (
+    typeof id !== 'string' ||
+    typeof name !== 'string' ||
+    typeof address !== 'string' ||
+    !shelterTypeKeys.every((key) => typeof properties[ShelterTypeJapanese[key]] === 'string')
+  ) {
+    return null;
+  }
 
   return {
-    id: properties.共通ID,
-    name: properties['施設・場所名'],
-    address: properties.住所,
+    id,
+    name,
+    address,
     type: Object.fromEntries(
-      shelterTypeKeys.map((key) => [key, isDesignated(properties[ShelterTypeJapanese[key]])]),
+      shelterTypeKeys.map((key) => {
+        const value = properties[ShelterTypeJapanese[key]];
+        return [key, isDesignated(typeof value === 'string' ? value : undefined)];
+      }),
     ) as ShelterType,
     latitude,
     longitude,
   };
+}
+
+export function parseShelterGeoJson(value: unknown): Shelter[] {
+  if (!isRecord(value) || value.type !== 'FeatureCollection' || !Array.isArray(value.features)) {
+    throw new Error('Invalid shelter GeoJSON: expected a FeatureCollection with a features array');
+  }
+
+  return value.features
+    .map(createShelterFromGeoJsonFeature)
+    .filter((shelter): shelter is Shelter => shelter !== null);
 }

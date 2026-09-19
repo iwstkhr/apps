@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createGeoJsonFeature } from '~/test/fixtures';
-import { createShelterFromGeoJsonFeature } from '~/types/shelter';
+import { createShelterFromGeoJsonFeature, parseShelterGeoJson } from '~/types/shelter';
 
 describe('createShelterFromGeoJsonFeature', () => {
   it('maps GeoJSON properties to a shelter', () => {
@@ -28,6 +28,15 @@ describe('createShelterFromGeoJsonFeature', () => {
   it('returns null when coordinates are invalid', () => {
     const feature = createGeoJsonFeature();
     feature.geometry.coordinates = [Number.NaN, 35.4];
+
+    expect(createShelterFromGeoJsonFeature(feature)).toBeNull();
+  });
+
+  it('returns null when required properties are missing', () => {
+    const feature = createGeoJsonFeature() as unknown as {
+      properties: Record<string, unknown>;
+    };
+    delete feature.properties.共通ID;
 
     expect(createShelterFromGeoJsonFeature(feature)).toBeNull();
   });
@@ -68,5 +77,25 @@ describe('createShelterFromGeoJsonFeature', () => {
       flood_within_levee: true,
       volcanic_activity: true,
     });
+  });
+});
+
+describe('parseShelterGeoJson', () => {
+  it('maps valid features and ignores unsupported feature shapes', () => {
+    expect(
+      parseShelterGeoJson({
+        type: 'FeatureCollection',
+        features: [createGeoJsonFeature(), { type: 'Feature', geometry: null, properties: {} }],
+      }),
+    ).toHaveLength(1);
+  });
+
+  it('rejects values that are not a feature collection', () => {
+    expect(() => parseShelterGeoJson({ features: [] })).toThrow(
+      'Invalid shelter GeoJSON: expected a FeatureCollection with a features array',
+    );
+    expect(() => parseShelterGeoJson({ type: 'FeatureCollection', features: null })).toThrow(
+      'Invalid shelter GeoJSON: expected a FeatureCollection with a features array',
+    );
   });
 });
