@@ -43,4 +43,30 @@ describe('createShelterFromGeoJsonFeature', () => {
     expect(shelter?.type.flood).toBe(false);
     expect(shelter?.type.tsunami).toBe(false);
   });
+
+  it('reads each disaster type from its own GeoJSON property', () => {
+    const shelter = createShelterFromGeoJsonFeature(
+      createGeoJsonFeature({
+        洪水: '0',
+        '崖崩れ、土石流及び地滑り': '1',
+        高潮: '1',
+        地震: '0',
+        津波: '1',
+        大規模な火事: '1',
+        内水氾濫: '1',
+        火山現象: '1',
+      }),
+    );
+
+    expect(shelter?.type).toEqual({
+      flood: false,
+      landslide: true,
+      storm_surge: true,
+      earthquake: false,
+      tsunami: true,
+      big_fire: true,
+      flood_within_levee: true,
+      volcanic_activity: true,
+    });
+  });
 });

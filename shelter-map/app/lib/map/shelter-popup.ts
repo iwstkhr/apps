@@ -20,7 +20,7 @@ export function getPopupContent(shelter: Shelter): string {
   popup += shelterTypeKeys
     .map((key) => {
       const status = shelter.type[key] ? 'ready' : 'not-ready';
-      const name = escapeHtml(ShelterTypeJapanese.get(key) ?? key);
+      const name = escapeHtml(ShelterTypeJapanese[key]);
       return `<span class="app-content-${status} shelter-type-${status}">${name}</span>`;
     })
     .join('<br/>');

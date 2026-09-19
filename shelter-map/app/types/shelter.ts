@@ -1,4 +1,4 @@
-import type { ShelterType } from '~/types/shelter-type';
+import { type ShelterType, ShelterTypeJapanese, shelterTypeKeys } from '~/types/shelter-type';
 
 export interface Shelter {
   name: string;
@@ -57,16 +57,9 @@ export function createShelterFromGeoJsonFeature(feature: ShelterGeoJsonFeature):
   return {
     name: properties['施設・場所名'],
     address: properties.住所,
-    type: {
-      flood: isDesignated(properties.洪水),
-      landslide: isDesignated(properties['崖崩れ、土石流及び地滑り']),
-      storm_surge: isDesignated(properties.高潮),
-      earthquake: isDesignated(properties.地震),
-      tsunami: isDesignated(properties.津波),
-      big_fire: isDesignated(properties.大規模な火事),
-      flood_within_levee: isDesignated(properties.内水氾濫),
-      volcanic_activity: isDesignated(properties.火山現象),
-    },
+    type: Object.fromEntries(
+      shelterTypeKeys.map((key) => [key, isDesignated(properties[ShelterTypeJapanese[key]])]),
+    ) as ShelterType,
     latitude,
     longitude,
     note: properties.備考 ?? '',
