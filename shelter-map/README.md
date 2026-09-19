@@ -52,6 +52,27 @@ npm run dev
 
 開発サーバーは <http://localhost:5173> で起動します。
 
+### AI エージェントによる開発
+
+コード変更に伴うテスト・GitHub Actions・ドキュメントの更新には、
+[iwstkhr/agent-plugin](https://github.com/iwstkhr/agent-plugin) の
+`code-sync` プラグイン（`code-sync:sync-changes` スキル）を使用します。
+
+Claude Code 用のマーケットプレイスとプラグインは
+`.claude/settings.json` に設定しています。Codex では各開発環境で登録します。
+
+```bash
+codex plugin marketplace add iwstkhr/agent-plugin
+codex plugin add code-sync@agent-plugin
+```
+
+インストール後は新しいタスクを開始してください。自動実行を利用する場合は、
+Codex CLI の `/hooks` でプラグインの Hook を確認し、信頼済みにします。
+手動で適用する場合は「code-sync:sync-changes スキルを使って、
+コード変更に関連ファイルを追従させて」と依頼します。
+
+Cursor 用のプロジェクト固有フックは提供していません。
+
 ### スクリプト
 
 | コマンド | 説明 |
