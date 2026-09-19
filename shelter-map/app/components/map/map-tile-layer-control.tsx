@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useDebouncedCallback } from '~/hooks/use-debounced-callback';
 import { useShelterMapContext } from '~/hooks/use-shelter-map-context';
 import {
   DEFAULT_TILE_LAYER,
@@ -8,13 +7,14 @@ import {
   tileLayerKeys,
 } from '~/types/tile-layer';
 
-const DEBOUNCE_MS = 200;
-
 export function MapTileLayerControl() {
   const { changeTileLayer } = useShelterMapContext();
   const [tileLayer, setTileLayer] = useState<TileLayerKey>(DEFAULT_TILE_LAYER);
 
-  useDebouncedCallback(tileLayer, changeTileLayer, DEBOUNCE_MS);
+  const selectTileLayer = (nextTileLayer: TileLayerKey) => {
+    setTileLayer(nextTileLayer);
+    changeTileLayer(nextTileLayer);
+  };
 
   return (
     <fieldset className="m-0 border-0 p-0">
@@ -28,7 +28,7 @@ export function MapTileLayerControl() {
               name="tile_layer"
               value={key}
               checked={tileLayer === key}
-              onChange={() => setTileLayer(key)}
+              onChange={() => selectTileLayer(key)}
               className="size-3.5"
             />
             {TILE_LAYERS[key].label}

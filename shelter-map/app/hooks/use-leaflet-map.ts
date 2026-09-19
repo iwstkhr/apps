@@ -21,20 +21,20 @@ function createTileLayers(): Record<TileLayerKey, L.TileLayer> {
 export function useLeafletMap(mapContainerRef: React.RefObject<HTMLDivElement | null>) {
   const mapRef = useRef<L.Map | null>(null);
   const tileLayersRef = useRef<Record<TileLayerKey, L.TileLayer> | null>(null);
+  const activeTileLayerRef = useRef<TileLayerKey>(DEFAULT_TILE_LAYER);
   const [mapReady, setMapReady] = useState(false);
 
   const changeTileLayer = useCallback((tileLayer: TileLayerKey) => {
     const map = mapRef.current;
     const tileLayers = tileLayersRef.current;
 
-    if (!map || !tileLayers) {
+    if (!map || !tileLayers || activeTileLayerRef.current === tileLayer) {
       return;
     }
 
-    for (const layer of Object.values(tileLayers)) {
-      layer.remove();
-    }
+    tileLayers[activeTileLayerRef.current].remove();
     map.addLayer(tileLayers[tileLayer]);
+    activeTileLayerRef.current = tileLayer;
   }, []);
 
   useEffect(() => {
@@ -54,6 +54,7 @@ export function useLeafletMap(mapContainerRef: React.RefObject<HTMLDivElement | 
 
     const tileLayers = createTileLayers();
     tileLayersRef.current = tileLayers;
+    activeTileLayerRef.current = DEFAULT_TILE_LAYER;
     map.addLayer(tileLayers[DEFAULT_TILE_LAYER]);
 
     const resizeObserver = new ResizeObserver(() => {
@@ -68,6 +69,7 @@ export function useLeafletMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       map.remove();
       mapRef.current = null;
       tileLayersRef.current = null;
+      activeTileLayerRef.current = DEFAULT_TILE_LAYER;
     };
   }, [mapContainerRef]);
 

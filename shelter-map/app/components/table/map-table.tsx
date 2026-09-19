@@ -3,7 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ColumnHeaderWithFilter } from '~/components/table/column-header-filter';
 import { DATASET_UPDATED_AT } from '~/generated/dataset-meta';
-import { useDebouncedCallback } from '~/hooks/use-debounced-callback';
+import { useDebouncedValueEffect } from '~/hooks/use-debounced-value-effect';
 import { useShelterMapContext } from '~/hooks/use-shelter-map-context';
 import { cn } from '~/lib/cn';
 import type { Shelter } from '~/types/shelter';
@@ -58,7 +58,7 @@ export function MapTable() {
   const [draftFilters, setDraftFilters] = useState<ShelterColumnFilters>(emptyShelterColumnFilters);
   const [openFilterColumn, setOpenFilterColumn] = useState<ShelterFilterColumnId | null>(null);
 
-  useDebouncedCallback(draftFilters, updateColumnFilters, DEBOUNCE_MS);
+  useDebouncedValueEffect(draftFilters, updateColumnFilters, DEBOUNCE_MS);
 
   useEffect(() => {
     if (!openFilterColumn) {

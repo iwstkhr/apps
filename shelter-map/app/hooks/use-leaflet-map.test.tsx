@@ -122,11 +122,35 @@ describe('useLeafletMap', () => {
     api?.changeTileLayer('gia_photo');
 
     expect(tileLayerOsm.remove).toHaveBeenCalled();
-    expect(tileLayerGiaPhoto.remove).toHaveBeenCalled();
+    expect(tileLayerGiaPhoto.remove).not.toHaveBeenCalled();
     expect(mockMap.addLayer).toHaveBeenLastCalledWith(tileLayerGiaPhoto);
 
     api?.changeTileLayer('osm');
 
+    expect(tileLayerGiaPhoto.remove).toHaveBeenCalledOnce();
     expect(mockMap.addLayer).toHaveBeenLastCalledWith(tileLayerOsm);
+  });
+
+  it('ignores requests to select the active tile layer', async () => {
+    let api: ReturnType<typeof useLeafletMap> | undefined;
+
+    render(
+      <MapHarness
+        onReady={(value) => {
+          api = value;
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(api?.mapReady).toBe(true);
+    });
+    mockMap.addLayer.mockClear();
+
+    api?.changeTileLayer('osm');
+
+    expect(tileLayerOsm.remove).not.toHaveBeenCalled();
+    expect(tileLayerGiaPhoto.remove).not.toHaveBeenCalled();
+    expect(mockMap.addLayer).not.toHaveBeenCalled();
   });
 });
