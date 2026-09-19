@@ -36,39 +36,35 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
     shelterMarkersRef.current = renderShelterMarkers(map, visible, shelterMarkersRef.current);
   }, [mapRef]);
 
-  const applyColumnFilters = useCallback(
-    (filters: ShelterColumnFilters) => {
-      const map = mapRef.current;
-      if (!map) {
-        return;
-      }
-
-      columnFiltersRef.current = filters;
-      const filtered = filterSheltersByColumns(allSheltersRef.current, filters);
-      filteredSheltersRef.current = filtered;
-      setDisplayedShelters(filtered);
-      shelterCirclesRef.current = renderShelterCircles(map, filtered, shelterCirclesRef.current);
-
-      const visible = filterSheltersWithinMap(map, filtered);
-      shelterMarkersRef.current = renderShelterMarkers(map, visible, shelterMarkersRef.current);
-    },
-    [allSheltersRef, mapRef],
-  );
-
-  useEffect(() => {
+  const renderFilteredShelters = useCallback(() => {
     const map = mapRef.current;
-    if (!mapReady || !map || isLoading || loadError) {
+    if (!map) {
       return;
     }
 
-    const shelters = allSheltersRef.current;
-    filteredSheltersRef.current = shelters;
-    setDisplayedShelters(shelters);
-    shelterCirclesRef.current = renderShelterCircles(map, shelters, shelterCirclesRef.current);
+    const filtered = filterSheltersByColumns(allSheltersRef.current, columnFiltersRef.current);
+    filteredSheltersRef.current = filtered;
+    setDisplayedShelters(filtered);
+    shelterCirclesRef.current = renderShelterCircles(map, filtered, shelterCirclesRef.current);
+    updateVisibleMarkers();
+  }, [allSheltersRef, mapRef, updateVisibleMarkers]);
 
-    const visible = filterSheltersWithinMap(map, shelters);
-    shelterMarkersRef.current = renderShelterMarkers(map, visible, shelterMarkersRef.current);
-  }, [allSheltersRef, isLoading, loadError, mapReady, mapRef]);
+  const updateColumnFilters = useCallback(
+    (filters: ShelterColumnFilters) => {
+      // Keep the latest filters even before data loads so the initial render applies them.
+      columnFiltersRef.current = filters;
+      renderFilteredShelters();
+    },
+    [renderFilteredShelters],
+  );
+
+  useEffect(() => {
+    if (!mapReady || isLoading || loadError) {
+      return;
+    }
+
+    renderFilteredShelters();
+  }, [isLoading, loadError, mapReady, renderFilteredShelters]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -99,7 +95,7 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
     displayedShelters,
     isLoading,
     loadError,
-    updateColumnFilters: applyColumnFilters,
+    updateColumnFilters,
     changeTileLayer,
   };
 }

@@ -90,6 +90,49 @@ describe('useShelterMap', () => {
     );
   });
 
+  it('applies column filters entered while data is loading once data loads', async () => {
+    const firstShelter = shelters[0];
+    if (!firstShelter) {
+      throw new Error('expected shelter fixture');
+    }
+
+    const allSheltersRef = { current: [] as typeof shelters };
+    vi.mocked(useShelterData).mockReturnValue({
+      allSheltersRef,
+      isLoading: true,
+      loadError: null,
+    });
+
+    const mapContainerRef = createRef<HTMLDivElement>();
+    const { result, rerender } = renderHook(() => useShelterMap(mapContainerRef));
+
+    act(() => {
+      result.current.updateColumnFilters({
+        ...emptyShelterColumnFilters,
+        name: '横浜',
+      });
+    });
+
+    expect(result.current.displayedShelters).toEqual([]);
+
+    allSheltersRef.current = shelters;
+    vi.mocked(useShelterData).mockReturnValue({
+      allSheltersRef,
+      isLoading: false,
+      loadError: null,
+    });
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.displayedShelters).toEqual([firstShelter]);
+    });
+    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(
+      mockMap,
+      [firstShelter],
+      expect.any(Array),
+    );
+  });
+
   it('keeps the full filtered list in the table when the map moves', async () => {
     const firstShelter = shelters[0];
     if (!firstShelter) {
