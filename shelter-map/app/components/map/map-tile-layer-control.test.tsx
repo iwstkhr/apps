@@ -4,6 +4,7 @@ import { cleanup, fireEvent, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MapTileLayerControl } from '~/components/map/map-tile-layer-control';
 import { renderWithShelterMap } from '~/test/render-with-shelter-map';
+import { TILE_LAYERS, tileLayerKeys } from '~/types/tile-layer';
 
 describe('MapTileLayerControl', () => {
   beforeEach(() => {
@@ -21,6 +22,16 @@ describe('MapTileLayerControl', () => {
 
     expect(within(fieldset).getByRole('radio', { name: /OpenStreetMap/i })).toBeChecked();
     expect(within(fieldset).getByRole('radio', { name: /国土地理院 \(写真\)/i })).not.toBeChecked();
+  });
+
+  it('renders one radio per tile layer definition', () => {
+    const { container } = renderWithShelterMap(<MapTileLayerControl />);
+    const radios = within(container).getAllByRole('radio');
+
+    expect(radios.map((radio) => (radio as HTMLInputElement).value)).toEqual(tileLayerKeys);
+    for (const key of tileLayerKeys) {
+      expect(within(container).getByRole('radio', { name: TILE_LAYERS[key].label })).toBeTruthy();
+    }
   });
 
   it('debounces tile layer changes before notifying the map', () => {

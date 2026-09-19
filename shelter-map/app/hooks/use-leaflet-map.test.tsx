@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLeafletMap } from '~/hooks/use-leaflet-map';
 import { INITIAL_ZOOM, MAP_CENTER } from '~/lib/map/constants';
+import { TILE_LAYERS } from '~/types/tile-layer';
 
 const tileLayerOsm = { remove: vi.fn() };
 const tileLayerGiaPhoto = { remove: vi.fn() };
@@ -79,6 +80,28 @@ describe('useLeafletMap', () => {
     expect(L.tileLayer).toHaveBeenCalledTimes(2);
     expect(mockMap.addLayer).toHaveBeenCalledWith(tileLayerOsm);
     expect(bindModifierScrollWheelZoom).toHaveBeenCalledWith(mockMap);
+  });
+
+  it('creates each tile layer from the shared tile layer definitions', async () => {
+    let api: ReturnType<typeof useLeafletMap> | undefined;
+
+    render(
+      <MapHarness
+        onReady={(value) => {
+          api = value;
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(api?.mapReady).toBe(true);
+    });
+
+    const { L } = await import('~/lib/leaflet');
+
+    for (const { url, attribution } of Object.values(TILE_LAYERS)) {
+      expect(L.tileLayer).toHaveBeenCalledWith(url, { minZoom: 5, maxZoom: 18, attribution });
+    }
   });
 
   it('switches between OSM and GSI photo tile layers', async () => {

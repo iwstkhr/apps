@@ -1,31 +1,40 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { bindModifierScrollWheelZoom, L } from '~/lib/leaflet';
 import { INITIAL_ZOOM, MAP_CENTER } from '~/lib/map/constants';
-import type { TileLayerKey } from '~/types/tile-layer';
+import {
+  DEFAULT_TILE_LAYER,
+  TILE_LAYER_ZOOM_OPTIONS,
+  TILE_LAYERS,
+  type TileLayerKey,
+  tileLayerKeys,
+} from '~/types/tile-layer';
+
+function createTileLayers(): Record<TileLayerKey, L.TileLayer> {
+  return Object.fromEntries(
+    tileLayerKeys.map((key) => {
+      const { url, attribution } = TILE_LAYERS[key];
+      return [key, L.tileLayer(url, { ...TILE_LAYER_ZOOM_OPTIONS, attribution })];
+    }),
+  ) as Record<TileLayerKey, L.TileLayer>;
+}
 
 export function useLeafletMap(mapContainerRef: React.RefObject<HTMLDivElement | null>) {
   const mapRef = useRef<L.Map | null>(null);
-  const tileLayerOsmRef = useRef<L.TileLayer | null>(null);
-  const tileLayerGiaPhotoRef = useRef<L.TileLayer | null>(null);
+  const tileLayersRef = useRef<Record<TileLayerKey, L.TileLayer> | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
   const changeTileLayer = useCallback((tileLayer: TileLayerKey) => {
     const map = mapRef.current;
-    const tileLayerOsm = tileLayerOsmRef.current;
-    const tileLayerGiaPhoto = tileLayerGiaPhotoRef.current;
+    const tileLayers = tileLayersRef.current;
 
-    if (!map || !tileLayerOsm || !tileLayerGiaPhoto) {
+    if (!map || !tileLayers) {
       return;
     }
 
-    tileLayerOsm.remove();
-    tileLayerGiaPhoto.remove();
-
-    if (tileLayer === 'osm') {
-      map.addLayer(tileLayerOsm);
-    } else {
-      map.addLayer(tileLayerGiaPhoto);
+    for (const layer of Object.values(tileLayers)) {
+      layer.remove();
     }
+    map.addLayer(tileLayers[tileLayer]);
   }, []);
 
   useEffect(() => {
@@ -43,21 +52,9 @@ export function useLeafletMap(mapContainerRef: React.RefObject<HTMLDivElement | 
     setMapReady(true);
     const unbindModifierScrollWheelZoom = bindModifierScrollWheelZoom(map);
 
-    tileLayerOsmRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      minZoom: 5,
-      maxZoom: 18,
-      attribution: '© OpenStreetMap',
-    });
-    tileLayerGiaPhotoRef.current = L.tileLayer(
-      'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',
-      {
-        minZoom: 5,
-        maxZoom: 18,
-        attribution: '© 国土地理院',
-      },
-    );
-
-    map.addLayer(tileLayerOsmRef.current);
+    const tileLayers = createTileLayers();
+    tileLayersRef.current = tileLayers;
+    map.addLayer(tileLayers[DEFAULT_TILE_LAYER]);
 
     const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
@@ -70,8 +67,7 @@ export function useLeafletMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       unbindModifierScrollWheelZoom();
       map.remove();
       mapRef.current = null;
-      tileLayerOsmRef.current = null;
-      tileLayerGiaPhotoRef.current = null;
+      tileLayersRef.current = null;
     };
   }, [mapContainerRef]);
 
