@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLeafletMap } from '~/hooks/use-leaflet-map';
 import { useShelterData } from '~/hooks/use-shelter-data';
 import { useShelterMap } from '~/hooks/use-shelter-map';
+import { L } from '~/lib/leaflet';
 import * as shelterRenderer from '~/lib/map/shelter-renderer';
 import * as viewportFilter from '~/lib/map/viewport-filter';
 import { createShelter } from '~/test/fixtures';
@@ -23,9 +24,12 @@ const shelters = [
 const mockMap = {
   on: vi.fn(),
   off: vi.fn(),
+  addLayer: vi.fn(),
+  getZoom: vi.fn(() => 15),
 } as unknown as LeafletMap & {
   on: ReturnType<typeof vi.fn>;
   off: ReturnType<typeof vi.fn>;
+  addLayer: ReturnType<typeof vi.fn>;
 };
 
 const changeTileLayer = vi.fn();
@@ -43,9 +47,10 @@ describe('useShelterMap', () => {
       loadError: null,
     });
     vi.spyOn(viewportFilter, 'filterSheltersWithinMap').mockImplementation((_map, items) => items);
-    vi.spyOn(shelterRenderer, 'renderShelterCircles').mockReturnValue([]);
-    vi.spyOn(shelterRenderer, 'renderShelterMarkers').mockReturnValue([]);
+    vi.spyOn(shelterRenderer, 'renderShelterCircles').mockImplementation(() => {});
+    vi.spyOn(shelterRenderer, 'renderShelterMarkers').mockImplementation(() => {});
     changeTileLayer.mockReset();
+    mockMap.addLayer.mockClear();
   });
 
   it('renders shelters when map and data are ready', async () => {
@@ -83,11 +88,9 @@ describe('useShelterMap', () => {
     });
 
     expect(result.current.displayedShelters).toEqual([firstShelter]);
-    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(
-      mockMap,
-      [firstShelter],
-      expect.any(Array),
-    );
+    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(expect.anything(), [
+      firstShelter,
+    ]);
   });
 
   it('applies column filters entered while data is loading once data loads', async () => {
@@ -126,11 +129,9 @@ describe('useShelterMap', () => {
     await waitFor(() => {
       expect(result.current.displayedShelters).toEqual([firstShelter]);
     });
-    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(
-      mockMap,
-      [firstShelter],
-      expect.any(Array),
-    );
+    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(expect.anything(), [
+      firstShelter,
+    ]);
   });
 
   it('keeps the full filtered list in the table when the map moves', async () => {
@@ -163,10 +164,37 @@ describe('useShelterMap', () => {
 
     expect(result.current.displayedShelters).toEqual(shelters);
     expect(shelterRenderer.renderShelterMarkers).toHaveBeenLastCalledWith(
-      mockMap,
+      expect.anything(),
       [firstShelter],
-      expect.any(Array),
+      15,
     );
+  });
+
+  it('adds shelter layer groups to the map and removes them on unmount', async () => {
+    const removeSpy = vi.spyOn(L.LayerGroup.prototype, 'remove');
+
+    const mapContainerRef = createRef<HTMLDivElement>();
+    const { result, unmount } = renderHook(() => useShelterMap(mapContainerRef));
+
+    await waitFor(() => {
+      expect(result.current.displayedShelters).toEqual(shelters);
+    });
+
+    const addedLayers = mockMap.addLayer.mock.calls.map((call: unknown[]) => call[0]);
+    expect(addedLayers).toHaveLength(2);
+    expect(addedLayers.every((layer: unknown) => layer instanceof L.LayerGroup)).toBe(true);
+    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(addedLayers[0], shelters);
+    expect(shelterRenderer.renderShelterMarkers).toHaveBeenLastCalledWith(
+      addedLayers[1],
+      shelters,
+      15,
+    );
+
+    removeSpy.mockClear();
+    unmount();
+
+    expect(removeSpy).toHaveBeenCalledTimes(2);
+    removeSpy.mockRestore();
   });
 
   it('exposes loading and error state from useShelterData', () => {

@@ -17,3 +17,7 @@ export const SHELTER_CIRCLE_STYLE = {
   fillOpacity: 0.8,
   weight: 2,
 } as const;
+
+// Below this zoom, markers are drawn only when few shelters are in view to keep panning responsive.
+export const SHELTER_MARKER_MIN_ZOOM = 15;
+export const SHELTER_MARKER_LIMIT_BELOW_MIN_ZOOM = 100;

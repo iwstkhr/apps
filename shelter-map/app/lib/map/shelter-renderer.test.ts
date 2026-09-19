@@ -1,17 +1,15 @@
-import type { Circle, Map as LeafletMap, Marker } from 'leaflet';
-import { describe, expect, it, vi } from 'vitest';
+import type { LayerGroup } from 'leaflet';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createShelter } from '~/test/fixtures';
 
 const mockCircle = {
   bindPopup: vi.fn().mockReturnThis(),
   addTo: vi.fn().mockReturnThis(),
-  remove: vi.fn(),
 };
 
 const mockMarker = {
   bindPopup: vi.fn().mockReturnThis(),
   addTo: vi.fn().mockReturnThis(),
-  remove: vi.fn(),
 };
 
 vi.mock('~/lib/leaflet', () => ({
@@ -21,68 +19,80 @@ vi.mock('~/lib/leaflet', () => ({
   },
 }));
 
+import { L } from '~/lib/leaflet';
 import {
-  addShelterMarkers,
-  clearShelterCircles,
-  clearShelterMarkers,
+  renderShelterCircles,
   renderShelterMarkers,
+  shouldRenderShelterMarkers,
 } from '~/lib/map/shelter-renderer';
 
-function createMap(zoom: number): LeafletMap {
-  return { getZoom: () => zoom } as LeafletMap;
+function createGroup(): LayerGroup & { clearLayers: ReturnType<typeof vi.fn> } {
+  return { clearLayers: vi.fn() } as unknown as LayerGroup & {
+    clearLayers: ReturnType<typeof vi.fn>;
+  };
 }
 
-describe('clearShelterCircles', () => {
-  it('removes each circle from the map', () => {
-    const circles = [{ remove: vi.fn() }, { remove: vi.fn() }] as unknown as Circle[];
+const shelters = Array.from({ length: 101 }, (_, index) =>
+  createShelter({ name: `避難所${index}`, latitude: 35 + index / 1000 }),
+);
 
-    clearShelterCircles(circles);
-
-    expect(circles[0]?.remove).toHaveBeenCalledOnce();
-    expect(circles[1]?.remove).toHaveBeenCalledOnce();
-  });
+beforeEach(() => {
+  vi.clearAllMocks();
 });
 
-describe('clearShelterMarkers', () => {
-  it('removes each marker from the map', () => {
-    const markers = [{ remove: vi.fn() }, { remove: vi.fn() }] as unknown as Marker[];
-
-    clearShelterMarkers(markers);
-
-    expect(markers[0]?.remove).toHaveBeenCalledOnce();
-    expect(markers[1]?.remove).toHaveBeenCalledOnce();
-  });
-});
-
-describe('addShelterMarkers', () => {
-  const shelters = Array.from({ length: 101 }, (_, index) =>
-    createShelter({ name: `避難所${index}` }),
-  );
-
+describe('shouldRenderShelterMarkers', () => {
   it('skips markers when zoom is below 15 and there are more than 100 shelters', () => {
-    expect(addShelterMarkers(createMap(14), shelters)).toEqual([]);
+    expect(shouldRenderShelterMarkers(14, 101)).toBe(false);
   });
 
-  it('creates markers when zoom is high enough', () => {
-    const markers = addShelterMarkers(createMap(15), [createShelter()]);
-
-    expect(markers).toHaveLength(1);
+  it('renders markers when zoom is high enough', () => {
+    expect(shouldRenderShelterMarkers(15, 101)).toBe(true);
   });
 
-  it('creates markers for large sets when zoom is below 15 but count is 100 or fewer', () => {
-    const markers = addShelterMarkers(createMap(10), shelters.slice(0, 100));
+  it('renders markers when zoom is below 15 but count is 100 or fewer', () => {
+    expect(shouldRenderShelterMarkers(10, 100)).toBe(true);
+  });
+});
 
-    expect(markers).toHaveLength(100);
+describe('renderShelterCircles', () => {
+  it('replaces the group contents with one circle per shelter', () => {
+    const group = createGroup();
+    const [first, second] = shelters;
+
+    renderShelterCircles(group, shelters.slice(0, 2));
+
+    expect(group.clearLayers).toHaveBeenCalledOnce();
+    expect(L.circle).toHaveBeenCalledTimes(2);
+    expect(L.circle).toHaveBeenCalledWith(
+      [first?.latitude, first?.longitude],
+      expect.objectContaining({ radius: 20 }),
+    );
+    expect(L.circle).toHaveBeenCalledWith(
+      [second?.latitude, second?.longitude],
+      expect.any(Object),
+    );
+    expect(mockCircle.bindPopup).toHaveBeenCalledTimes(2);
+    expect(mockCircle.addTo).toHaveBeenCalledWith(group);
   });
 });
 
 describe('renderShelterMarkers', () => {
-  it('clears existing markers before adding new ones', () => {
-    const existing = [{ remove: vi.fn() }] as unknown as Marker[];
-    const map = createMap(15);
+  it('replaces the group contents with one marker per shelter', () => {
+    const group = createGroup();
 
-    renderShelterMarkers(map, [createShelter()], existing);
+    renderShelterMarkers(group, [createShelter()], 15);
 
-    expect(existing[0]?.remove).toHaveBeenCalledOnce();
+    expect(group.clearLayers).toHaveBeenCalledOnce();
+    expect(L.marker).toHaveBeenCalledOnce();
+    expect(mockMarker.addTo).toHaveBeenCalledWith(group);
+  });
+
+  it('only clears the group when too many shelters are visible at low zoom', () => {
+    const group = createGroup();
+
+    renderShelterMarkers(group, shelters, 14);
+
+    expect(group.clearLayers).toHaveBeenCalledOnce();
+    expect(L.marker).not.toHaveBeenCalled();
   });
 });
