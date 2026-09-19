@@ -7,9 +7,9 @@
 
 ## 機能
 
-- インタラクティブな地図上に避難場所を表示
+- インタラクティブな地図上に、表示範囲内の避難場所を描画
 - 避難場所データを仮想スクロール付きテーブルで全件表示
-- 名称・住所・災害種別（洪水、地震、津波など）でフィルタリング
+- 名称・住所・災害種別（洪水、地震、津波など）で地図と一覧を絞り込み
 - OpenStreetMap と国土地理院の航空写真の切り替え
 - gzip 圧縮 GeoJSON による高速なデータ読み込み
 - 避難場所データ読み込み中は地図上にスピナーを表示
@@ -76,18 +76,24 @@ app/
   components/
     layout/     # ヘッダー、アプリシェル
     map/        # 地図 UI（タイル切替、操作ヒント、読込スピナー）
-    table/      # 避難所一覧テーブル
+    table/      # 一覧のヘッダー、行、フィルター、仮想スクロール
   context/      # 地図・データの React Context
-  data/         # 避難場所データの取得
-  generated/    # ビルド時に生成されるメタデータ
-  hooks/        # 地図とデータの連携ロジック
-  lib/          # Leaflet、gzip、地図描画ユーティリティ
+  data/         # 圧縮された避難場所データの取得
+  generated/    # データ更新時に生成されるメタデータ
+  hooks/        # データ読込、地図、フィルターの状態管理
+  lib/
+    map/         # 表示範囲の抽出、レイヤー同期、ポップアップ生成
+    *.ts         # Leaflet、gzip、公開 URL の共通処理
   routes/       # ページルート
   test/         # テスト用ヘルパー・フィクスチャ
-  types/        # 型定義
+  types/        # GeoJSON の検証・変換、フィルターなどのドメイン型
 public/assets/  # 圧縮 GeoJSON などの静的アセット
-scripts/        # ビルド用スクリプト
+scripts/        # データ更新日のメタデータ生成スクリプト
 ```
+
+地図と一覧は同じフィルター状態を共有します。一覧はフィルター後の全件を
+仮想スクロールで表示し、地図はその中から現在の表示範囲に入る避難場所だけを
+抽出して Leaflet レイヤーへ差分反映します。
 
 ## データソース
 
@@ -96,14 +102,19 @@ scripts/        # ビルド用スクリプト
 に基づいています。
 
 - リポジトリ内のデータ: `public/assets/mergeFromCity_2.geojson.gz`
-- アプリに表示するデータ更新日:
-  ビルド時に `app/generated/dataset-meta.ts` へ生成
+- アプリに表示するデータ更新日: `app/generated/dataset-meta.ts`
 - 取得元 URL:
   <https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson>
 
 GeoJSON は毎月 1 日に GitHub Actions でダウンロード・圧縮され、
+配信元の `Last-Modified` からデータ更新日のメタデータも生成したうえで、
 プルリクエストとして提案されます
 （[`.github/workflows/update-geojson.yml`](.github/workflows/update-geojson.yml)）。
+
+アプリは gzip をブラウザー上で展開し、GeoJSON が `FeatureCollection` であることと、
+各避難場所の座標・共通 ID・名称・住所・災害種別を検証してから表示します。
+未対応または必須項目が欠けたフィーチャーは読み飛ばし、
+コレクション自体が不正な場合は画面に読み込みエラーを表示します。
 
 ## CI / デプロイ
 
