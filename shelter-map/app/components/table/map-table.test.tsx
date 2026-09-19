@@ -28,8 +28,8 @@ describe('MapTable', () => {
 
   it('shows the displayed shelter count and dataset source', () => {
     const shelters = [
-      createShelter({ name: '横浜避難所' }),
-      createShelter({ name: '川崎避難所', address: '神奈川県川崎市' }),
+      createShelter({ id: 'yokohama', name: '横浜避難所' }),
+      createShelter({ id: 'kawasaki', name: '川崎避難所', address: '神奈川県川崎市' }),
     ];
 
     renderWithShelterMap(

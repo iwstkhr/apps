@@ -33,7 +33,7 @@ function createGroup(): LayerGroup & { removeLayer: ReturnType<typeof vi.fn> } {
 }
 
 const shelters = Array.from({ length: 101 }, (_, index) =>
-  createShelter({ name: `避難所${index}`, latitude: 35 + index / 1000 }),
+  createShelter({ id: `shelter-${index}`, name: `避難所${index}`, latitude: 35 + index / 1000 }),
 );
 
 beforeEach(() => {
@@ -90,22 +90,23 @@ describe('syncShelterLayers', () => {
   it('keeps unchanged layers and only removes shelters that leave the viewport', () => {
     const group = createGroup();
     const registry = createShelterLayerRegistry();
-    const first = createShelter({ name: '第一避難所' });
-    const second = createShelter({ name: '第二避難所' });
-    const third = createShelter({ name: '第三避難所' });
+    const first = createShelter({ id: 'first', name: '第一避難所' });
+    const firstCopy = { ...first };
+    const second = createShelter({ id: 'second', name: '第二避難所' });
+    const third = createShelter({ id: 'third', name: '第三避難所' });
     const firstLayer = {} as Layer;
     const secondLayer = {} as Layer;
 
-    registry.set(first, { kind: 'marker', layer: firstLayer });
-    registry.set(second, { kind: 'marker', layer: secondLayer });
+    registry.set(first.id, { kind: 'marker', layer: firstLayer });
+    registry.set(second.id, { kind: 'marker', layer: secondLayer });
 
-    syncShelterLayers(group, registry, [first, third], 15);
+    syncShelterLayers(group, registry, [firstCopy, third], 15);
 
     expect(group.removeLayer).toHaveBeenCalledOnce();
     expect(group.removeLayer).toHaveBeenCalledWith(secondLayer);
     expect(L.marker).toHaveBeenCalledOnce();
-    expect(registry.get(first)?.layer).toBe(firstLayer);
-    expect(registry.has(second)).toBe(false);
-    expect(registry.has(third)).toBe(true);
+    expect(registry.get(first.id)?.layer).toBe(firstLayer);
+    expect(registry.has(second.id)).toBe(false);
+    expect(registry.has(third.id)).toBe(true);
   });
 });

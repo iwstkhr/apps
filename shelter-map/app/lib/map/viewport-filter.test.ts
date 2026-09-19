@@ -21,8 +21,14 @@ function createMapContaining(bounds: {
 }
 
 const shelters = [
-  createShelter({ name: '範囲内', latitude: 35.4, longitude: 139.6 }),
-  createShelter({ name: '範囲外', latitude: 43.0, longitude: 141.3, address: '北海道' }),
+  createShelter({ id: 'inside', name: '範囲内', latitude: 35.4, longitude: 139.6 }),
+  createShelter({
+    id: 'outside',
+    name: '範囲外',
+    latitude: 43.0,
+    longitude: 141.3,
+    address: '北海道',
+  }),
 ];
 
 describe('filterSheltersWithinMap', () => {

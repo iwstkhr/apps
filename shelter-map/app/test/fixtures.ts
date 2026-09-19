@@ -32,6 +32,7 @@ export function createGeoJsonFeature(
 
 export function createShelter(overrides: Partial<Shelter> = {}): Shelter {
   return {
+    id: 'test-id',
     name: 'テスト避難所',
     address: '神奈川県横浜市',
     type: {

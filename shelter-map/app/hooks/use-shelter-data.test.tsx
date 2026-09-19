@@ -16,7 +16,7 @@ describe('useShelterData', () => {
   });
 
   it('loads shelters and clears the loading state', async () => {
-    const shelters = [createShelter(), createShelter({ name: '第二避難所' })];
+    const shelters = [createShelter(), createShelter({ id: 'second', name: '第二避難所' })];
     vi.mocked(fetchShelters).mockResolvedValue(shelters);
 
     const { result } = renderHook(() => useShelterData());

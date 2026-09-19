@@ -15,7 +15,7 @@ interface ShelterLayerEntry {
   layer: L.Layer;
 }
 
-export type ShelterLayerRegistry = Map<Shelter, ShelterLayerEntry>;
+export type ShelterLayerRegistry = Map<Shelter['id'], ShelterLayerEntry>;
 
 export function createShelterLayerRegistry(): ShelterLayerRegistry {
   return new Map();
@@ -41,24 +41,24 @@ export function syncShelterLayers(
   const kind: ShelterLayerKind = shouldRenderShelterMarkers(zoom, shelters.length)
     ? 'marker'
     : 'circle';
-  const nextShelters = new Set(shelters);
+  const nextShelterIds = new Set(shelters.map((shelter) => shelter.id));
 
-  for (const [shelter, entry] of registry) {
-    if (nextShelters.has(shelter) && entry.kind === kind) {
+  for (const [shelterId, entry] of registry) {
+    if (nextShelterIds.has(shelterId) && entry.kind === kind) {
       continue;
     }
 
     group.removeLayer(entry.layer);
-    registry.delete(shelter);
+    registry.delete(shelterId);
   }
 
   for (const shelter of shelters) {
-    if (registry.has(shelter)) {
+    if (registry.has(shelter.id)) {
       continue;
     }
 
     const layer = createShelterLayer(shelter, kind);
     layer.addTo(group);
-    registry.set(shelter, { kind, layer });
+    registry.set(shelter.id, { kind, layer });
   }
 }

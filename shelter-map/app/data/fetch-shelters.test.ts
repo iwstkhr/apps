@@ -36,7 +36,7 @@ describe('fetchShelters', () => {
   it('fetches GeoJSON and maps Point features to shelters', async () => {
     mockGeoJsonResponse([
       createGeoJsonFeature(),
-      createGeoJsonFeature({ '施設・場所名': '第二避難所' }),
+      createGeoJsonFeature({ 共通ID: 'second-id', '施設・場所名': '第二避難所' }),
     ]);
     const fetchShelters = await importFetchShelters();
 
@@ -45,7 +45,9 @@ describe('fetchShelters', () => {
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(fetchMock).toHaveBeenCalledWith('/assets/mergeFromCity_2.geojson.gz');
     expect(shelters).toHaveLength(2);
+    expect(shelters[0]?.id).toBe('test-id');
     expect(shelters[0]?.name).toBe('テスト避難所');
+    expect(shelters[1]?.id).toBe('second-id');
     expect(shelters[1]?.name).toBe('第二避難所');
   });
 

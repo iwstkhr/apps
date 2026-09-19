@@ -1,6 +1,7 @@
 import { type ShelterType, ShelterTypeJapanese, shelterTypeKeys } from '~/types/shelter-type';
 
 export interface Shelter {
+  id: string;
   name: string;
   address: string;
   type: ShelterType;
@@ -54,6 +55,7 @@ export function createShelterFromGeoJsonFeature(feature: ShelterGeoJsonFeature):
   const properties = feature.properties;
 
   return {
+    id: properties.共通ID,
     name: properties['施設・場所名'],
     address: properties.住所,
     type: Object.fromEntries(

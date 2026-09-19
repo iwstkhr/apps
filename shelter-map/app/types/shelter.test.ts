@@ -7,6 +7,7 @@ describe('createShelterFromGeoJsonFeature', () => {
     const shelter = createShelterFromGeoJsonFeature(createGeoJsonFeature());
 
     expect(shelter).toEqual({
+      id: 'test-id',
       name: 'テスト避難所',
       address: '神奈川県横浜市',
       type: {

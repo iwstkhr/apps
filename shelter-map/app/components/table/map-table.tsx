@@ -106,7 +106,7 @@ export function MapTable() {
     features,
     data: displayedShelters,
     columns,
-    getRowId: (row, index) => `${row.name}-${row.latitude}-${row.longitude}-${index}`,
+    getRowId: (row) => row.id,
   });
 
   const { rows } = table.getRowModel();
