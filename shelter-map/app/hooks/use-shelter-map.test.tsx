@@ -47,8 +47,7 @@ describe('useShelterMap', () => {
       loadError: null,
     });
     vi.spyOn(viewportFilter, 'filterSheltersWithinMap').mockImplementation((_map, items) => items);
-    vi.spyOn(shelterRenderer, 'renderShelterCircles').mockImplementation(() => {});
-    vi.spyOn(shelterRenderer, 'renderShelterMarkers').mockImplementation(() => {});
+    vi.spyOn(shelterRenderer, 'syncShelterLayers').mockImplementation(() => {});
     changeTileLayer.mockReset();
     mockMap.addLayer.mockClear();
   });
@@ -63,8 +62,7 @@ describe('useShelterMap', () => {
 
     expect(result.current.isLoading).toBe(false);
     expect(result.current.loadError).toBeNull();
-    expect(shelterRenderer.renderShelterCircles).toHaveBeenCalled();
-    expect(shelterRenderer.renderShelterMarkers).toHaveBeenCalled();
+    expect(shelterRenderer.syncShelterLayers).toHaveBeenCalled();
   });
 
   it('updates displayed shelters when column filters change', async () => {
@@ -88,9 +86,12 @@ describe('useShelterMap', () => {
     });
 
     expect(result.current.displayedShelters).toEqual([firstShelter]);
-    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(expect.anything(), [
-      firstShelter,
-    ]);
+    expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.any(Map),
+      [firstShelter],
+      15,
+    );
   });
 
   it('applies column filters entered while data is loading once data loads', async () => {
@@ -128,9 +129,12 @@ describe('useShelterMap', () => {
     await waitFor(() => {
       expect(result.current.displayedShelters).toEqual([firstShelter]);
     });
-    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(expect.anything(), [
-      firstShelter,
-    ]);
+    expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.any(Map),
+      [firstShelter],
+      15,
+    );
     // A stable updater keeps the table's debounced filter sync from re-rendering the map on load.
     expect(result.current.updateColumnFilters).toBe(updateColumnFiltersWhileLoading);
   });
@@ -164,8 +168,9 @@ describe('useShelterMap', () => {
     });
 
     expect(result.current.displayedShelters).toEqual(shelters);
-    expect(shelterRenderer.renderShelterMarkers).toHaveBeenLastCalledWith(
+    expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
       expect.anything(),
+      expect.any(Map),
       [firstShelter],
       15,
     );
@@ -182,11 +187,11 @@ describe('useShelterMap', () => {
     });
 
     const addedLayers = mockMap.addLayer.mock.calls.map((call: unknown[]) => call[0]);
-    expect(addedLayers).toHaveLength(2);
+    expect(addedLayers).toHaveLength(1);
     expect(addedLayers.every((layer: unknown) => layer instanceof L.LayerGroup)).toBe(true);
-    expect(shelterRenderer.renderShelterCircles).toHaveBeenLastCalledWith(addedLayers[0], shelters);
-    expect(shelterRenderer.renderShelterMarkers).toHaveBeenLastCalledWith(
-      addedLayers[1],
+    expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
+      addedLayers[0],
+      expect.any(Map),
       shelters,
       15,
     );
@@ -194,7 +199,7 @@ describe('useShelterMap', () => {
     removeSpy.mockClear();
     unmount();
 
-    expect(removeSpy).toHaveBeenCalledTimes(2);
+    expect(removeSpy).toHaveBeenCalledOnce();
     removeSpy.mockRestore();
   });
 

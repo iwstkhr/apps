@@ -1,4 +1,4 @@
-import type { LayerGroup } from 'leaflet';
+import type { Layer, LayerGroup } from 'leaflet';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createShelter } from '~/test/fixtures';
 
@@ -21,14 +21,14 @@ vi.mock('~/lib/leaflet', () => ({
 
 import { L } from '~/lib/leaflet';
 import {
-  renderShelterCircles,
-  renderShelterMarkers,
+  createShelterLayerRegistry,
   shouldRenderShelterMarkers,
+  syncShelterLayers,
 } from '~/lib/map/shelter-renderer';
 
-function createGroup(): LayerGroup & { clearLayers: ReturnType<typeof vi.fn> } {
-  return { clearLayers: vi.fn() } as unknown as LayerGroup & {
-    clearLayers: ReturnType<typeof vi.fn>;
+function createGroup(): LayerGroup & { removeLayer: ReturnType<typeof vi.fn> } {
+  return { removeLayer: vi.fn() } as unknown as LayerGroup & {
+    removeLayer: ReturnType<typeof vi.fn>;
   };
 }
 
@@ -54,15 +54,16 @@ describe('shouldRenderShelterMarkers', () => {
   });
 });
 
-describe('renderShelterCircles', () => {
-  it('replaces the group contents with one circle per shelter', () => {
+describe('syncShelterLayers', () => {
+  it('renders circles for visible shelters when many are shown below the minimum zoom', () => {
     const group = createGroup();
+    const registry = createShelterLayerRegistry();
     const [first, second] = shelters;
 
-    renderShelterCircles(group, shelters.slice(0, 2));
+    syncShelterLayers(group, registry, shelters, 14);
 
-    expect(group.clearLayers).toHaveBeenCalledOnce();
-    expect(L.circle).toHaveBeenCalledTimes(2);
+    expect(group.removeLayer).not.toHaveBeenCalled();
+    expect(L.circle).toHaveBeenCalledTimes(101);
     expect(L.circle).toHaveBeenCalledWith(
       [first?.latitude, first?.longitude],
       expect.objectContaining({ radius: 20 }),
@@ -71,28 +72,40 @@ describe('renderShelterCircles', () => {
       [second?.latitude, second?.longitude],
       expect.any(Object),
     );
-    expect(mockCircle.bindPopup).toHaveBeenCalledTimes(2);
+    expect(mockCircle.bindPopup).toHaveBeenCalledTimes(101);
     expect(mockCircle.addTo).toHaveBeenCalledWith(group);
+    expect(registry).toHaveLength(101);
   });
-});
 
-describe('renderShelterMarkers', () => {
-  it('replaces the group contents with one marker per shelter', () => {
+  it('renders markers when zoomed in', () => {
     const group = createGroup();
+    const registry = createShelterLayerRegistry();
 
-    renderShelterMarkers(group, [createShelter()], 15);
+    syncShelterLayers(group, registry, [createShelter()], 15);
 
-    expect(group.clearLayers).toHaveBeenCalledOnce();
     expect(L.marker).toHaveBeenCalledOnce();
     expect(mockMarker.addTo).toHaveBeenCalledWith(group);
   });
 
-  it('only clears the group when too many shelters are visible at low zoom', () => {
+  it('keeps unchanged layers and only removes shelters that leave the viewport', () => {
     const group = createGroup();
+    const registry = createShelterLayerRegistry();
+    const first = createShelter({ name: '第一避難所' });
+    const second = createShelter({ name: '第二避難所' });
+    const third = createShelter({ name: '第三避難所' });
+    const firstLayer = {} as Layer;
+    const secondLayer = {} as Layer;
 
-    renderShelterMarkers(group, shelters, 14);
+    registry.set(first, { kind: 'marker', layer: firstLayer });
+    registry.set(second, { kind: 'marker', layer: secondLayer });
 
-    expect(group.clearLayers).toHaveBeenCalledOnce();
-    expect(L.marker).not.toHaveBeenCalled();
+    syncShelterLayers(group, registry, [first, third], 15);
+
+    expect(group.removeLayer).toHaveBeenCalledOnce();
+    expect(group.removeLayer).toHaveBeenCalledWith(secondLayer);
+    expect(L.marker).toHaveBeenCalledOnce();
+    expect(registry.get(first)?.layer).toBe(firstLayer);
+    expect(registry.has(second)).toBe(false);
+    expect(registry.has(third)).toBe(true);
   });
 });
