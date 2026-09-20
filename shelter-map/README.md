@@ -69,63 +69,33 @@ npm run dev
 | `npm run test:watch` | Vitest をウォッチモードで実行 |
 | `pre-commit run --all-files` | pre-commit の hooks を全ファイルに対して実行 |
 
-## プロジェクト構成
+## ドキュメント
 
-```text
-app/
-  components/
-    layout/     # ヘッダー、アプリシェル
-    map/        # 地図 UI（タイル切替、操作ヒント、読込スピナー）
-    table/      # 一覧のヘッダー、行、フィルター、仮想スクロール
-  context/      # 地図・データの React Context
-  data/         # 圧縮された避難場所データの取得
-  generated/    # データ更新時に生成されるメタデータ
-  hooks/        # データ読込、地図、フィルターの状態管理
-  lib/
-    map/         # 表示範囲の抽出、レイヤー同期、ポップアップ生成
-    *.ts         # Leaflet、gzip、公開 URL の共通処理
-  routes/       # ページルート
-  test/         # テスト用ヘルパー・フィクスチャ
-  types/        # GeoJSON の検証・変換、フィルターなどのドメイン型
-public/assets/  # 圧縮 GeoJSON などの静的アセット
-scripts/        # データ更新日のメタデータ生成スクリプト
-```
+仕様・アーキテクチャの詳細は [`docs/`](docs/README.md) を参照してください。
 
-地図と一覧は同じフィルター状態を共有します。一覧はフィルター後の全件を
-仮想スクロールで表示し、地図はその中から現在の表示範囲に入る避難場所だけを
-抽出して Leaflet レイヤーへ差分反映します。
+| 文書 | 内容 |
+| --- | --- |
+| [仕様](docs/specification.md) | 機能・画面・データモデル・フィルター・地図挙動 |
+| [アーキテクチャ](docs/architecture.md) | 構成・データフロー・モジュール責務・CI/CD |
 
 ## データソース
 
 避難場所データは
 [国土地理院 指定緊急避難場所](https://www.gsi.go.jp/bousaichiri/hinanbasho.html)
-に基づいています。
+に基づいています。データ形式・検証ルール・更新フローの詳細は
+[仕様](docs/specification.md) と [アーキテクチャ](docs/architecture.md) を参照してください。
 
 - リポジトリ内のデータ: `public/assets/mergeFromCity_2.geojson.gz`
 - アプリに表示するデータ更新日: `app/generated/dataset-meta.ts`
 - 取得元 URL:
   <https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson>
 
-GeoJSON は毎月 1 日に GitHub Actions でダウンロード・圧縮され、
-配信元の `Last-Modified` からデータ更新日のメタデータも生成したうえで、
-プルリクエストとして提案されます
-（[`.github/workflows/update-geojson.yml`](.github/workflows/update-geojson.yml)）。
-
-アプリは gzip をブラウザー上で展開し、GeoJSON が `FeatureCollection` であることと、
-各避難場所の座標・共通 ID・名称・住所・災害種別を検証してから表示します。
-未対応または必須項目が欠けたフィーチャーは読み飛ばし、
-コレクション自体が不正な場合は画面に読み込みエラーを表示します。
-
 ## CI / デプロイ
 
-PR と `main` ブランチへの push では
-[Check ワークフロー](.github/workflows/check.yml) が
-`pre-commit run --all-files`、`npm run check`、`npm run typecheck`、
-`npm run test` を実行します。
-
-`main` への push で Check が成功すると、
-[Deploy ワークフロー](.github/workflows/deploy.yml) が起動して
-[GitHub Pages](https://pages.github.com/) へデプロイされます。
+PR と `main` への push では [Check](.github/workflows/check.yml) が走り、
+`main` で Check が成功すると [Deploy](.github/workflows/deploy.yml) が
+[GitHub Pages](https://pages.github.com/) へ公開します。詳細は
+[アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
 
 GitHub Pages と同じベースパスでローカルビルドする場合:
 
@@ -133,8 +103,7 @@ GitHub Pages と同じベースパスでローカルビルドする場合:
 BASE_PATH=/shelter-map/ npm run build
 ```
 
-`public/` 以下の静的アセット（favicon や GeoJSON など）は
-`import.meta.env.BASE_URL`（ヘルパー: `app/lib/public-url.ts`）経由で参照し、
+`public/` 以下の静的アセットは `publicUrl()`（`app/lib/public-url.ts`）経由で参照し、
 ルート絶対パス（例: `/favicon.svg`）は使わないでください。
 
 ## コントリビューション
