@@ -1,7 +1,6 @@
 # 仕様
 
-国土地理院（GSI）の指定緊急避難場所データを、地図とテーブルで
-閲覧する Web アプリケーションの仕様です。
+国土地理院（GSI）の指定緊急避難場所データを、地図とテーブルで閲覧する Web アプリケーションの仕様です。
 
 **デモ:** <https://iwstkhr.github.io/shelter-map/>
 
@@ -98,8 +97,7 @@
 
 ## フィルター仕様
 
-地図と一覧は同一の列フィルターを共有する。
-入力は 200ms デバウンス後に反映する。
+地図と一覧は同一の列フィルターを共有する。入力は 200ms デバウンス後に反映する。
 
 ### テキスト列（名称・住所）
 
@@ -153,16 +151,13 @@ GeoJSON 上の指定フラグは文字列 `"1"` を指定あり、それ以外�
 
 - 形式: `FeatureCollection`（各要素は Point `Feature`）
 - リポジトリ内: `public/assets/mergeFromCity_2.geojson.gz`
-- 取得元:
-  <https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson>
-- 出典ページ:
-  <https://www.gsi.go.jp/bousaichiri/hinanbasho.html>
+- 取得元: <https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson>
+- 出典ページ: <https://www.gsi.go.jp/bousaichiri/hinanbasho.html>
 
 ### 検証・変換ルール
 
 1. ルートが `FeatureCollection` で `features` 配列を持つこと
-1. 各 Feature について Point 座標・共通 ID・名称・住所・
-   全災害種別プロパティが妥当であること
+1. 各 Feature について Point 座標・共通 ID・名称・住所・全災害種別プロパティが妥当であること
 1. 妥当な Feature だけを `Shelter` に変換して採用する
 1. 不正な Feature は読み飛ばす
 1. コレクション自体が不正な場合は読み込みエラーとする
@@ -176,10 +171,8 @@ GeoJSON 上の指定フラグは文字列 `"1"` を指定あり、それ以外�
 
 タイル URL:
 
-- `osm`:
-  `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
-- `gia_photo`:
-  `https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg`
+- `osm`: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
+- `gia_photo`: `https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg`
 
 ## 非機能要件
 

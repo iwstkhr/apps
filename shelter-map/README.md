@@ -1,7 +1,6 @@
 # 指定緊急避難場所マップ
 
-国土地理院（GSI）の指定緊急避難場所データを、地図とテーブルで
-閲覧できる Web アプリケーションです。
+国土地理院（GSI）の指定緊急避難場所データを、地図とテーブルで閲覧できる Web アプリケーションです。
 
 **デモ:** <https://iwstkhr.github.io/shelter-map/>
 
@@ -17,21 +16,15 @@
 
 ## 技術スタック
 
-- [React](https://react.dev/) 19 と
-  [TypeScript](https://www.typescriptlang.org/)
-- [React Router](https://reactrouter.com/) 8
-  （SPA、クライアントサイドレンダリング）
+- [React](https://react.dev/) 19 と [TypeScript](https://www.typescriptlang.org/)
+- [React Router](https://reactrouter.com/) 8（SPA、クライアントサイドレンダリング）
 - [Vite](https://vite.dev/) 8
 - [Leaflet](https://leafletjs.com/) — 地図描画
 - [TanStack Virtual](https://tanstack.com/virtual) — テーブルの仮想スクロール
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [Biome](https://biomejs.dev/) — リント・フォーマット
-- [Vitest](https://vitest.dev/) と
-  [Testing Library](
-  https://testing-library.com/docs/react-testing-library/intro/)
-  — テスト
-- [pre-commit](https://pre-commit.com/) — Git hooks と各種 lint
-  （Biome、actionlint、shellcheck、markdownlint、gitleaks など）
+- [Vitest](https://vitest.dev/) と [Testing Library](https://testing-library.com/docs/react-testing-library/intro/) — テスト
+- [pre-commit](https://pre-commit.com/) — Git hooks と各種 lint（Biome、actionlint、shellcheck、markdownlint、gitleaks など）
 
 ## 必要条件
 
@@ -80,22 +73,15 @@ npm run dev
 
 ## データソース
 
-避難場所データは
-[国土地理院 指定緊急避難場所](https://www.gsi.go.jp/bousaichiri/hinanbasho.html)
-に基づいています。データ形式・検証ルール・更新フローの詳細は
-[仕様](docs/specification.md) と [アーキテクチャ](docs/architecture.md) を参照してください。
+避難場所データは [国土地理院 指定緊急避難場所](https://www.gsi.go.jp/bousaichiri/hinanbasho.html) に基づいています。データ形式・検証ルール・更新フローの詳細は [仕様](docs/specification.md) と [アーキテクチャ](docs/architecture.md) を参照してください。
 
 - リポジトリ内のデータ: `public/assets/mergeFromCity_2.geojson.gz`
 - アプリに表示するデータ更新日: `app/generated/dataset-meta.ts`
-- 取得元 URL:
-  <https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson>
+- 取得元 URL: <https://hinanmap.gsi.go.jp/hinanjocp/defaultFtpData/geoJSON/mergeFromCity_2.geojson>
 
 ## CI / デプロイ
 
-PR と `main` への push では [Check](.github/workflows/check.yml) が走り、
-`main` で Check が成功すると [Deploy](.github/workflows/deploy.yml) が
-[GitHub Pages](https://pages.github.com/) へ公開します。詳細は
-[アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
+PR と `main` への push では [Check](.github/workflows/check.yml) が走り、`main` で Check が成功すると [Deploy](.github/workflows/deploy.yml) が [GitHub Pages](https://pages.github.com/) へ公開します。詳細は [アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
 
 GitHub Pages と同じベースパスでローカルビルドする場合:
 
@@ -103,16 +89,13 @@ GitHub Pages と同じベースパスでローカルビルドする場合:
 BASE_PATH=/shelter-map/ npm run build
 ```
 
-`public/` 以下の静的アセットは `publicUrl()`（`app/lib/public-url.ts`）経由で参照し、
-ルート絶対パス（例: `/favicon.svg`）は使わないでください。
+`public/` 以下の静的アセットは `publicUrl()`（`app/lib/public-url.ts`）経由で参照し、ルート絶対パス（例: `/favicon.svg`）は使わないでください。
 
 ## コントリビューション
 
 ### Git hooks
 
-`mise install` 後に `pre-commit install` を実行すると、
-[`.pre-commit-config.yaml`](.pre-commit-config.yaml) の hooks が
-コミット時に有効になります。
+`mise install` 後に `pre-commit install` を実行すると、[`.pre-commit-config.yaml`](.pre-commit-config.yaml) の hooks がコミット時に有効になります。
 
 全ファイルに対して手動実行する場合:
 
@@ -131,17 +114,14 @@ npm run test
 
 ### コミットメッセージ
 
-このリポジトリは
-[Conventional Commits](https://www.conventionalcommits.org/)
-に従います。
+このリポジトリは [Conventional Commits](https://www.conventionalcommits.org/) に従います。
 
 ```text
 <type>[optional scope]: <description>
 ```
 
 - **description** は英語の命令形・小文字・末尾にピリオドなしで記述
-- 変更内容に合った **type** を使用
-  （`feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`）
+- 変更内容に合った **type** を使用（`feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`）
 - 必要に応じて **scope** を追加（`map`, `table`, `data`, `deploy` など）
 
 例:
@@ -157,7 +137,4 @@ docs: document project setup in readme
 
 本プロジェクトのソースコードは [MIT License](LICENSE) の下で公開されています。
 
-避難場所データは国土地理院（GSI）が提供しています。
-データの利用条件については
-[国土地理院の利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei41042.html)
-を参照してください。
+避難場所データは国土地理院（GSI）が提供しています。データの利用条件については [国土地理院の利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei41042.html) を参照してください。
