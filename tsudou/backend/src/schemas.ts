@@ -21,20 +21,23 @@ import { STATUS_BY_CODE } from './http';
 
 export const AnswerStatusSchema = z.enum(['YES', 'NO', 'MAYBE']).meta({
   id: 'AnswerStatus',
-  description: 'YES: 参加 / NO: 不参加 / MAYBE: 未定',
+  description: 'YES: attending / NO: not attending / MAYBE: undecided',
 });
 
 export const CandidateSchema = z
   .object({
-    id: z.string().meta({ description: '候補の識別子' }),
-    startAt: z.string().meta({ format: 'date-time', description: '開始日時 (ISO 8601)' }),
+    id: z.string().meta({ description: 'Candidate ID' }),
+    startAt: z.string().meta({ format: 'date-time', description: 'Start date/time (ISO 8601)' }),
   })
   .meta({ id: 'Candidate' });
 
 export const CandidateInputSchema = z
   .object({
-    id: z.string().nullish().meta({ description: '既存の候補の識別子。無ければ新しく採番する' }),
-    startAt: z.string().meta({ format: 'date-time', description: '開始日時 (ISO 8601)' }),
+    id: z
+      .string()
+      .nullish()
+      .meta({ description: 'Existing candidate ID; a new ID is generated when omitted' }),
+    startAt: z.string().meta({ format: 'date-time', description: 'Start date/time (ISO 8601)' }),
   })
   .meta({ id: 'CandidateInput' });
 
@@ -45,18 +48,20 @@ export const ChoiceSchema = z
   })
   .meta({ id: 'Choice' });
 
-const title = z.string().meta({ maxLength: LIMITS.titleMax, description: 'イベント名' });
+const title = z.string().meta({ maxLength: LIMITS.titleMax, description: 'Event title' });
 const fee = z
   .number()
   .nullable()
-  .meta({ minimum: 0, maximum: LIMITS.feeMax, description: '参加費 (円)。整数' });
+  .meta({ minimum: 0, maximum: LIMITS.feeMax, description: 'Fee in yen, as an integer' });
 const memo = z.string().nullable().meta({ maxLength: LIMITS.memoMax });
 const candidates = z
   .array(CandidateInputSchema)
   .meta({ minItems: 1, maxItems: LIMITS.candidatesMax });
-const name = z.string().meta({ maxLength: LIMITS.nameMax, description: '回答者名' });
+const name = z.string().meta({ maxLength: LIMITS.nameMax, description: 'Respondent name' });
 const message = z.string().nullable().meta({ maxLength: LIMITS.messageMax });
-const choices = z.array(ChoiceSchema).meta({ description: 'すべての候補に過不足なく 1 つずつ' });
+const choices = z
+  .array(ChoiceSchema)
+  .meta({ description: 'Exactly one choice per candidate, with no missing or extra entries' });
 
 // ------------------------------------------------------------ リクエスト
 
@@ -98,25 +103,33 @@ export const EventViewSchema = z
     title: z.string(),
     fee: z.number().int().nullable(),
     memo: z.string().nullable(),
-    candidates: z.array(CandidateSchema).meta({ description: '開始日時の昇順' }),
+    candidates: z
+      .array(CandidateSchema)
+      .meta({ description: 'Sorted by start date/time in ascending order' }),
     closed: z.boolean(),
     createdAt: z.string().meta({ format: 'date-time' }),
-    expiresAt: z.number().int().meta({ description: '自動削除される時刻 (エポック秒)' }),
-    answers: z.array(AnswerViewSchema).meta({ description: '作成日時の昇順' }),
+    expiresAt: z.number().int().meta({ description: 'Automatic deletion time (epoch seconds)' }),
+    answers: z
+      .array(AnswerViewSchema)
+      .meta({ description: 'Sorted by creation time in ascending order' }),
   })
   .meta({ id: 'EventView' });
 
 export const CreateEventResultSchema = z
   .object({
     eventId: z.string(),
-    manageToken: z.string().meta({ description: '管理トークン。平文で返すのはこの一度きり' }),
+    manageToken: z
+      .string()
+      .meta({ description: 'Management token; returned in plaintext only once' }),
   })
   .meta({ id: 'CreateEventResult' });
 
 export const SubmitAnswerResultSchema = z
   .object({
     answer: AnswerViewSchema,
-    editToken: z.string().meta({ description: '回答編集キー。平文で返すのはこの一度きり' }),
+    editToken: z
+      .string()
+      .meta({ description: 'Response edit key; returned in plaintext only once' }),
   })
   .meta({ id: 'SubmitAnswerResult' });
 
@@ -126,7 +139,7 @@ export const ErrorResponseSchema = z
   .object({
     error: z.object({
       code: z.enum(ERROR_CODES),
-      message: z.string().meta({ description: '画面にそのまま表示できる説明' }),
+      message: z.string().meta({ description: 'Message suitable for direct display in the UI' }),
     }),
   })
   .meta({ id: 'ErrorResponse' });

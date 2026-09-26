@@ -1,8 +1,8 @@
-# コントリビューションガイド
+# Contributing
 
-## コミットメッセージ
+## Commit messages
 
-[Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/) に従います。
+Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ```text
 <type>[optional scope]: <description>
@@ -12,34 +12,34 @@
 [optional footer(s)]
 ```
 
-### type
+### Type
 
-| type | 用途 |
+| Type | Purpose |
 | --- | --- |
-| `feat` | ユーザーから見える機能の追加 |
-| `fix` | バグ修正 |
-| `refactor` | 挙動を変えないコードの整理、ライブラリの置き換え |
-| `perf` | パフォーマンス改善 |
-| `test` | テストの追加・修正のみ |
-| `docs` | ドキュメントのみ |
-| `build` | ビルド設定・依存関係（Vite、wrangler、pnpm パッケージなど） |
-| `ci` | CI 設定（`.github/workflows/` など） |
-| `chore` | 上記のいずれにも当てはまらない雑務 |
-| `style` | フォーマットのみ（挙動・意味を変えない） |
+| `feat` | Add a feature visible to users |
+| `fix` | Fix a bug |
+| `refactor` | Reorganize code or replace a library without changing behavior |
+| `perf` | Improve performance |
+| `test` | Add or update tests only |
+| `docs` | Documentation only |
+| `build` | Build configuration or dependencies (Vite, wrangler, pnpm packages, etc.) |
+| `ci` | CI configuration (`.github/workflows/`, etc.) |
+| `chore` | Maintenance that does not fit any category above |
+| `style` | Formatting only, without changing behavior or meaning |
 
-### scope（任意）
+### Scope (optional)
 
-変更範囲が明確なときに付けます。例: `data`（D1 のテーブル・マイグレーション・データ形式）、`api`（Express の API サーバ・HTTP ルート）、`infra`（Worker の設定。`backend/wrangler.jsonc`）、`ui`（画面・コンポーネント）、`hosting`（Cloudflare Workers の配信設定）。
+Include a scope when the affected area is clear. Examples: `data` (D1 tables, migrations, data formats), `api` (Express API server and HTTP routes), `infra` (Worker configuration in `backend/wrangler.jsonc`), `ui` (pages and components), and `hosting` (Cloudflare Workers delivery settings).
 
 ```text
 feat(data): add a maximum number of participants to an event
 fix(ui): prevent answering after the event has been closed
 ```
 
-### 破壊的変更
+### Breaking changes
 
-type の後ろに `!` を付け、フッターに `BREAKING CHANGE:` を書きます。
-このプロジェクトでは、**HTTP API の後方互換性を壊す変更**（ルート・フィールドの削除や必須化、保存済みレコードの形式変更など）と、**すでに発行済みの URL が無効になる変更**が該当します。
+Add `!` after the type and include a `BREAKING CHANGE:` footer.
+In this project, this covers **changes that break HTTP API compatibility** (removing routes or fields, making fields required, changing stored record formats, etc.) and **changes that invalidate URLs already issued**.
 
 ```text
 feat(data)!: require an end time on date candidates
@@ -48,44 +48,44 @@ BREAKING CHANGE: existing Event records have no endAt, so a backfill is
 required before deploying.
 ```
 
-### 本文
+### Body
 
-**何をしたか**は diff を見れば分かるので、**なぜそうしたか**を書きます。
-特に、採用しなかった選択肢がある場合や、一見遠回りに見える実装をした場合は理由を残してください。
+The diff shows **what changed**, so explain **why**.
+Record the reasoning when you reject an alternative or choose an implementation that may seem indirect.
 
-### 英語で書きます
+### Language and style
 
-件名・本文とも英語です。件名は命令形の現在形（`add`、`fix`、`remove`）で書き、先頭は小文字、末尾にピリオドは打ちません。目安は 72 文字以内です。
+Write commit subjects, bodies, PR descriptions, documentation, and Claude skills in English.
+Use the imperative present tense (`add`, `fix`, `remove`) in the subject, start with a lowercase letter, and omit the final period. Aim for no more than 72 characters.
 
-なお、この規約が適用されるのはコミットメッセージと PR の説明だけです。
-コード中のコメントとドキュメントは引き続き日本語で書きます。
+Code comments may remain in Japanese. Preserve actual Japanese UI labels when quoting them in documentation or skills.
 
-## 実装上の約束
+## Implementation conventions
 
-- 入力値の上限は `shared/src/limits.ts` にだけ書きます。
-  サーバ検証（`validate.ts`）とフロント検証（`frontend/src/lib/formValidators.ts`）の両方がここを参照します。
-- **クライアント側の検証は UI の親切さのためのもので、門番ではありません。**
-  新しい入力項目を足すときは、必ずサーバ側（`validate.ts`）にも検証を書いてください。
-- `Event` / `Answer` モデルに `.authorization()` を付けないでください。
-  スキーマレベルの既定（`allow.resource(eventApi)`）が効いており、モデルに個別の認可を書くとクライアントから直接 CRUD できるようになってしまいます。
-- API のルートや入出力を変えたら、`backend/src/schemas.ts` と `backend/src/openapi.ts` を直し、`pnpm run openapi` で `docs/openapi.yaml` を作り直してコミットしてください（忘れると `pnpm test` が失敗します）。
-- 公開 API の戻り値には `a.customType`（`EventView` / `AnswerView`）を使い、モデルを直接返さないでください。トークンのハッシュが漏れる経路を作らないためです。
+- Define input limits only in `shared/src/limits.ts`.
+  Both server validation (`validate.ts`) and frontend validation (`frontend/src/lib/formValidators.ts`) reference this file.
+- **Client validation improves the user experience; it is not an authorization or validation boundary.**
+  Whenever you add an input field, also validate it on the server (`validate.ts`).
+- Do not add `.authorization()` to the `Event` / `Answer` models.
+  The schema-level default (`allow.resource(eventApi)`) applies; individual model authorization would allow clients to perform CRUD directly.
+- When changing API routes or input/output, update `backend/src/schemas.ts` and `backend/src/openapi.ts`, regenerate `docs/openapi.yaml` with `pnpm run openapi`, and include it in the commit. Otherwise, `pnpm test` fails.
+- Use `a.customType` (`EventView` / `AnswerView`) for public API responses instead of returning models directly, to avoid exposing token hashes.
 
-## 開発
+## Development
 
-セットアップ、ローカル実行、デプロイの手順は [README.md](README.md) を参照してください。
+See [README.md](README.md) for setup, local development, and deployment.
 
 ```bash
-pnpm run typecheck   # 型チェック
-pnpm run lint        # Lint + フォーマット検査 (Biome)
-pnpm run lint:fix    # Biome の自動修正
-pnpm test            # ユニットテスト
-pnpm run build       # 本番ビルド
+pnpm run typecheck   # Type checking
+pnpm run lint        # Lint and formatting checks (Biome)
+pnpm run lint:fix    # Apply Biome fixes
+pnpm test            # Unit tests
+pnpm run build       # Production build
 ```
 
-プルリクエストと `main` への push では、GitHub Actions が次を実行します。
+GitHub Actions runs the following on pull requests and pushes to `main`:
 
-| ワークフロー | 内容 |
+| Workflow | Checks |
 | --- | --- |
-| `.github/workflows/test.yml` | 型チェック（`pnpm run typecheck`）とユニットテスト（`pnpm test`） |
-| `.github/workflows/pre-commit.yml` | pre-commit のフック（Biome、markdownlint、actionlint、gitleaks など） |
+| `.github/workflows/test.yml` | Type checking (`pnpm run typecheck`) and unit tests (`pnpm test`) |
+| `.github/workflows/pre-commit.yml` | pre-commit hooks (Biome, markdownlint, actionlint, gitleaks, etc.) |

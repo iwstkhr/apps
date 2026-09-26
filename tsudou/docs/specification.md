@@ -1,336 +1,336 @@
-# 仕様
+# Specification
 
-Tsudou の機能仕様です。画面・URL・API・業務ルール・入力制約をまとめます。
-実装の構成と設計判断は [アーキテクチャ](architecture.md) を参照してください。
+The functional specification for Tsudou: screens, URLs, API, business rules, and input constraints.
+See [Architecture](architecture.md) for implementation structure and design decisions.
 
-## 用語
+## Terminology
 
-| 用語 | 意味 |
+| Term | Meaning |
 | --- | --- |
-| イベント | 日程調整の単位。イベント名・候補日時・参加費・メモを持つ |
-| 候補（Candidate） | イベントが持つ日時の候補。`{ id, startAt }` |
-| 回答（Answer） | 1 人ぶんの出欠。名前・メッセージ・候補ごとの選択を持つ |
-| 選択（Choice） | 候補 1 つに対する `YES` / `MAYBE` / `NO` |
-| 主催者（ホスト） | 管理トークンを持つ人。イベントを編集・締切・削除できる |
-| 参加予定者 | 共有 URL を知っている人。回答の作成・編集・削除ができる |
-| 管理トークン | イベント作成時に 1 度だけ発行される、主催者であることの証明 |
-| 回答編集キー | 回答時に 1 度だけ発行される、その回答の持ち主であることの証明 |
+| Event | A scheduling unit with a title, candidate dates/times, fee, and memo |
+| Candidate | A proposed date/time for an event: `{ id, startAt }` |
+| Answer (response) | One person's attendance response, with a name, message, and choice for each candidate |
+| Choice | `YES` / `MAYBE` / `NO` for one candidate |
+| Host | The person holding the management token, who can edit, close, and delete the event |
+| Participant | Someone who knows the shared URL and can create, edit, and delete their own response |
+| Management token | Proof of host authorization, issued only once at event creation |
+| Response edit key | Proof of response ownership, issued only once at submission |
 
-## アクターとできること
+## Actors and capabilities
 
-| アクター | できること |
+| Actor | Capabilities |
 | --- | --- |
-| 主催者 | イベントの作成、内容の編集、回答の締切・再開、任意の回答の削除、イベントの削除 |
-| 参加予定者 | 候補ごとの回答、メッセージの添付、自分の回答の編集・削除、回答状況の閲覧 |
+| Host | Create events, edit details, close/reopen responses, delete any response, and delete events |
+| Participant | Respond to each candidate, attach a message, edit/delete their own response, and view response status |
 
-主催者であることは管理トークン、回答の持ち主であることは回答編集キーで判定します。
-どちらもサーバ側でハッシュと照合されます。
+The management token identifies the host; the response edit key identifies the response owner.
+The server compares both against stored hashes.
 
-## URL
+## URLs
 
-| パス | 画面 | 備考 |
+| Path | Screen | Notes |
 | --- | --- | --- |
-| `/` | トップ（イベント作成） | |
-| `/guide` | 使い方 | |
-| `/e/<eventId>` | イベントページ | **共有用**。参加予定者に送る |
-| `/e/<eventId>#a=<answerId>&k=<editToken>` | イベントページ（自分の回答を編集） | **回答編集用**。回答者本人だけが持つ |
-| `/e/<eventId>/created` | 作成完了 | 作成直後にのみ意味を持つ |
-| `/e/<eventId>/manage#k=<manageToken>` | 管理ページ | **管理用**。主催者だけが持つ |
-| 上記以外 | 404 | |
+| `/` | Home (event creation) | |
+| `/guide` | User guide | |
+| `/e/<eventId>` | Event page | **Sharing**: send to participants |
+| `/e/<eventId>#a=<answerId>&k=<editToken>` | Event page (edit own response) | **Response editing**: keep private to the respondent |
+| `/e/<eventId>/created` | Creation confirmation | Meaningful only immediately after creation |
+| `/e/<eventId>/manage#k=<manageToken>` | Management page | **Management**: keep private to the host |
+| Any other path | 404 | |
 
-- `eventId` は 128bit 乱数の base64url（22 文字）です。共有 URL を知らない人はイベントに到達できません。
-- 管理トークンはクエリ文字列ではなくハッシュフラグメント（`#k=`）で渡します。フラグメントはサーバへ送信されないため、アクセスログや Referer に残りません。
-- 回答編集キーも同じくフラグメント（`#a=`, `#k=`）で渡します。
-- 共有 PC で他人に使われないよう、管理トークンと回答編集キーは **ブラウザに保存しません**。メモリに取り込んだ直後に `history.replaceState` でフラグメントを URL から取り除きます。アプリ内の画面遷移ではトークンが保たれますが、再読み込みしたりタブを閉じたりすると失われ、管理用 URL / 回答編集 URL を開き直す必要があります。
-- SPA なので、すべてのパスを `/index.html` へ 200 リライトする配信設定が前提です。
+- `eventId` is a 128-bit random value encoded as base64url (22 characters). People who do not know the shared URL cannot reach the event.
+- Management tokens are passed in fragments (`#k=`), rather than query strings. Fragments are not sent to the server and do not appear in access logs or Referer headers.
+- Response edit keys also use fragments (`#a=`, `#k=`).
+- Management tokens and response edit keys are **not persisted in the browser**, preventing reuse by another person on a shared computer. Immediately after loading a token into memory, `history.replaceState` removes the fragment from the URL. Tokens survive navigation within the app but are lost on reload or tab closure; reopen the management or response edit URL to restore them.
+- As an SPA, the app requires hosting that rewrites page paths to `/index.html` with status 200.
 
-## 画面
+## Screens
 
-### トップ（`/`）
+### Home (`/`)
 
-イベント作成フォームを表示します。
+Displays the event creation form.
 
-| 項目 | 必須 | 初期値 | 備考 |
+| Field | Required | Initial value | Notes |
 | --- | --- | --- | --- |
-| イベント名 | 必須 | 空 | 100 文字以内 |
-| 日時の候補 | 必須 | 次の土曜 19:00 が 1 行 | 1〜30 件。行の追加・削除ができる |
-| 参加費 | 任意 | 空（未設定） | 0〜1,000,000 の整数 |
-| メモ | 任意 | 空 | 2000 文字以内 |
+| Event title | Yes | Empty | Up to 100 characters |
+| Candidate dates/times | Yes | One row: next Saturday at 19:00 | 1–30 candidates; rows can be added/deleted |
+| Fee | No | Empty (unset) | Integer from 0 to 1,000,000 |
+| Memo | No | Empty | Up to 2,000 characters |
 
-- 候補の行を追加すると、直前の行の翌日・同時刻が初期値に入ります。連日の候補を並べるときの入力を減らすためです。
-- 過去の日時は候補にできません。入力欄に `min` を付けてピッカーで選べないようにし、入力された場合は行ごとにエラーを表示します。
-- 送信に成功すると管理トークンをメモリに持ったまま `/e/<eventId>/created` へ遷移します。
-- 共有 PC を想定して、作成したイベントや回答したイベントの履歴は記録しません。
+- A new candidate row defaults to the same time on the day after the preceding row, reducing input for consecutive dates.
+- Candidates cannot be in the past. The input's `min` prevents selecting past dates in the picker; manually entered past dates produce errors per row.
+- Successful submission navigates to `/e/<eventId>/created`, keeping the management token in memory.
+- No history of created or answered events is recorded, to support shared computers.
 
-### 使い方（`/guide`）
+### User guide (`/guide`)
 
-主催者と参加者それぞれの操作手順を、サンプルデータで撮った画面キャプチャ付きで説明します。ヘッダーの「使い方」と、トップのフォーム上部からリンクします。
+Explains host and participant workflows with screenshots captured using sample data. Links appear in the header as "使い方" (user guide) and above the home page form.
 
-- 目次（主催者 / 参加者 / よくある質問）はページ内リンク（`#host` / `#guest` / `#faq`）です。フラグメント付きで直接開いた場合も、描画後にその見出しまでスクロールします。
-- 画面キャプチャはタップ（クリック）すると原寸を新しいタブで開きます。
-- 画面キャプチャは `frontend/src/assets/guide/` にあり、`pnpm run guide:capture` で撮り直せます。URL 欄のオリジンは撮影時に `https://tsudou.example.com` へ差し替えています。
+- The table of contents (host / participant / FAQ) uses page anchors (`#host` / `#guest` / `#faq`). Opening a URL with an anchor scrolls to that heading after rendering.
+- Tapping or clicking a screenshot opens the full-size image in a new tab.
+- Screenshots are stored in `frontend/src/assets/guide/` and recaptured with `pnpm run guide:capture`. During capture, URL field origins are replaced with `https://tsudou.example.com`.
 
-### 作成完了（`/e/<eventId>/created`）
+### Creation confirmation (`/e/<eventId>/created`)
 
-共有用 URL と管理用 URL を、コピーボタンと「開く」ボタン付きで表示します。
-「開く」は新しいタブで開くため、作成完了画面は残ります（管理用 URL はトークンをフラグメントに含むので、新しいタブでも管理できます）。
-管理トークンはブラウザに保存しないため、管理用 URL を表示できるのはこの画面だけです。
-見出しの下に、ページを閉じる前にブックマークか自分宛て送信をするよう促す一文を出します。
-管理トークンがメモリに無い場合（再読み込みした、別ブラウザで開いた）は、その旨の警告を表示します。
-管理用 URL を表示している間は `beforeunload` でブラウザ標準の確認ダイアログを出し、控えずに再読み込みしたりタブを閉じたりするのを防ぎます。アプリ内の画面遷移ではトークンが残るため確認しません。
+Displays shared and management URLs with copy and "開く" (open) buttons.
+Opening a URL uses a new tab, leaving the confirmation screen available. Management URLs include the token in a fragment, allowing management in the new tab.
+Because management tokens are not persisted in the browser, this is the only screen where the management URL can be displayed at creation.
+A sentence below the heading asks users to bookmark the URL or send it to themselves before closing the page.
+If the management token is missing from memory (after reloading or opening in another browser), a warning explains this.
+While the management URL is displayed, `beforeunload` triggers the browser's standard confirmation dialog to prevent reloading or closing without saving it. Navigation within the app does not prompt, because the token remains available.
 
-### イベントページ（`/e/<eventId>`）
+### Event page (`/e/<eventId>`)
 
-参加予定者に共有する画面です。次を表示します。
+The screen shared with participants displays:
 
-- イベント名、締切バッジ（締切済みのとき）、参加費、メモ、自動削除日
-- 回答状況のグリッド（回答者 × 候補）と回答者数
-- メッセージ付きの回答の一覧
-- 回答フォーム（回答編集キーを持っていれば編集モード）
-- 回答編集 URL のコピー欄（回答直後、または回答編集 URL から開いたとき）
-- 共有 URL のコピー欄
+- Event title, closed badge when applicable, fee, memo, and automatic deletion date.
+- A response grid (respondents × candidates) and respondent count.
+- A list of responses with messages.
+- A response form, in edit mode when the response edit key is available.
+- A field for copying the response edit URL, immediately after submission or when opened through that URL.
+- A field for copying the shared URL.
 
-管理トークンをメモリに持っていれば（作成直後や管理ページから移ってきた場合）、管理ページへのリンクも表示します。
-リンク先は管理用 URL（`#k=...` 付き）なので、新しいタブで開いても管理できます。
-締切済みの場合、フォームは表示されず「締め切られているため回答できません」と案内します。
+If a management token is in memory (after creation or navigation from the management page), a management page link also appears.
+It points to the management URL with `#k=...`, so it also works in a new tab.
+When responses are closed, the form is hidden and the message "締め切られているため回答できません" explains that responses are no longer accepted.
 
-回答を送信すると、その回答の編集キーを含む回答編集 URL を表示します。
-編集キーはブラウザに保存しないため、後から変更・削除するにはこの URL が必要です。
-ブックマークか自分宛て送信を促し、他人と共有しないよう注意書きを添えます。
-回答編集 URL の回答が削除済み（本人または主催者が削除）の場合は警告を表示し、新規回答のフォームを出します。
-回答の期限はイベントと同じなので、期限切れの場合はイベント自体が見つからない扱いになります。
+Submitting a response displays a response edit URL containing its edit key.
+Because the key is not persisted in the browser, this URL is required for later edits or deletion.
+The page asks users to bookmark it or send it to themselves, and warns them against sharing it.
+If the response referenced by an edit URL has been deleted by its owner or host, a warning and a new response form appear.
+Responses expire with the event, so expiry makes the event itself appear not found.
 
-### 管理ページ（`/e/<eventId>/manage`）
+### Management page (`/e/<eventId>/manage`)
 
-管理トークンがある場合だけ操作できます。トークンが無い場合は「管理用 URL が必要です」という案内とイベントページへのリンクを表示します。
+Operations require a management token. Without one, the page displays "管理用 URL が必要です" (a management URL is required) and a link to the event page.
 
-- 共有用 URL と管理用 URL のコピー欄
-- 内容の編集フォーム（イベント名 / 候補 / 参加費 / メモ）
-- 回答状況のグリッドと、回答ごとの削除ボタン
-- 締切の切り替え（締め切る / 受付を再開する）
-- イベントの削除（確認ダイアログあり）と、自動削除日の表示
+- Fields for copying the shared and management URLs.
+- An edit form (title / candidates / fee / memo).
+- The response grid, with a delete button for each response.
+- Controls to close or reopen responses.
+- Event deletion with a confirmation dialog, and the automatic deletion date.
 
-削除系の操作はいずれも `window.confirm` で確認します。
-イベント削除後はトップへ遷移し、メモリ上のそのイベントのトークンも捨てます。
+All deletion operations use `window.confirm`.
+After event deletion, navigation returns to the home page and the event's token is removed from memory.
 
-## 入力の制約
+## Input constraints
 
-上限は `shared/src/limits.ts` の `LIMITS` が唯一の定義で、サーバ検証とフロント検証の両方が参照します。
+`LIMITS` in `shared/src/limits.ts` is the single definition of limits, used by both server and frontend validation.
 
-| 項目 | 制約 |
+| Field | Constraint |
 | --- | --- |
-| イベント名 | 必須、前後の空白を除いて 1〜100 文字 |
-| メモ | 任意、2000 文字以内 |
-| 回答者名 | 必須、1〜40 文字 |
-| メッセージ | 任意、500 文字以内 |
-| 参加費 | 任意、0〜1,000,000 の整数。空欄は未設定、0 は無料 |
-| 候補の件数 | 1〜30 件 |
-| 候補の日時 | ISO8601 としてパースできること。同一日時の重複は不可。イベント作成時は現在より前の日時も不可（編集では開催済みの候補を残せるよう許可） |
-| 選択 | すべての候補に過不足なく 1 つずつ。値は `YES` / `MAYBE` / `NO` |
+| Event title | Required, 1–100 characters after trimming |
+| Memo | Optional, up to 2,000 characters |
+| Respondent name | Required, 1–40 characters |
+| Message | Optional, up to 500 characters |
+| Fee | Optional integer from 0 to 1,000,000; empty means unset, 0 means free |
+| Candidate count | 1–30 |
+| Candidate date/time | Parseable as ISO 8601; duplicate dates/times are forbidden. Past dates are forbidden at creation but allowed during editing so completed candidates can remain |
+| Choices | Exactly one per candidate, with no missing or extra entries; `YES` / `MAYBE` / `NO` |
 
-正規化の規則は次のとおりです。
+Normalization rules:
 
-- 任意項目の文字列は前後の空白を除き、空文字なら `null` として保存します。
-- 候補は開始日時の昇順に並べ替えて保存します。
-- 選択はイベント側の候補順に並べ替えて保存します。
-- 既存候補の `id` はクライアントから送り返され、そのまま維持されます。`id` が無い候補には新しく採番します。
+- Trim optional strings and store empty strings as `null`.
+- Sort candidates by start time before storing.
+- Sort choices in the event's candidate order before storing.
+- Preserve existing candidate IDs sent back by the client; generate new IDs for candidates without one.
 
-クライアント側の検証は送信前に気づかせるためのもので、最終的な門番は常にサーバ側です。
-各フォーム（イベント作成・編集・回答）は、検証エラーが残っている間は送信ボタンを無効にします。
-まだ触れていないフォームでは押せ、押すと検証が走ってエラーが表示されます。
-検証メッセージは `messages.ts` を共有しているため、両側で文言がズレません。
+Client validation catches issues before submission; the server always performs final validation.
+Every form (event creation, editing, and responses) disables submission while validation errors remain.
+An untouched form can be submitted; doing so runs validation and displays errors.
+Both sides share `messages.ts`, keeping validation wording consistent.
 
 ## API
 
-REST 風の HTTP API で、画面と同じオリジンの `/api` 以下にあります。リクエスト・レスポンスのボディは JSON で、認証はありません。
-実処理は単一の API サーバ（Express。本番では画面と同じ Cloudflare Worker 上で動く）が担い、データベースへの直接アクセスはクライアントに開放されていません。
-トークンはパスやクエリではなく、専用のリクエストヘッダ（`X-Manage-Token` / `X-Edit-Token`）で送ります。
-リクエストとレスポンスの形の詳細は [openapi.yaml](openapi.yaml)（OpenAPI 3.1、実装のスキーマから生成）を参照してください。
-JSON の形が合わないリクエスト（必須項目の欠落、型の違い、`YES` / `MAYBE` / `NO` 以外の選択など）は `VALIDATION` になります。
+A REST-style HTTP API under `/api` on the same origin as the UI. Request and response bodies are JSON; there is no authentication.
+A single API server (Express, running on the same Cloudflare Worker as the UI in production) handles operations. Clients have no direct database access.
+Tokens are sent in dedicated request headers (`X-Manage-Token` / `X-Edit-Token`), rather than paths or query strings.
+See [openapi.yaml](openapi.yaml) for detailed request and response shapes (OpenAPI 3.1, generated from implementation schemas).
+Requests with invalid JSON shapes (missing required fields, incorrect types, or choices other than `YES` / `MAYBE` / `NO`) return `VALIDATION`.
 
-### `GET /api/events/{eventId}`（イベント取得）
+### `GET /api/events/{eventId}` (get event)
 
-| 項目 | 内容 |
+| Item | Details |
 | --- | --- |
-| 入力 | パス: `eventId` |
-| 成功時 | 200 `EventView`（回答を含む）。存在しない・期限切れなら 404 `NOT_FOUND` |
-| 認可 | 不要（URL を知っていること自体が閲覧権限） |
+| Input | Path: `eventId` |
+| Success | 200 `EventView`, including responses; nonexistent or expired events return 404 `NOT_FOUND` |
+| Authorization | None; knowing the URL grants viewing access |
 
-回答は作成日時の昇順で返します。
-`EventView` / `AnswerView` にトークンのハッシュのフィールドは存在しません。
+Responses are returned in ascending creation order.
+`EventView` / `AnswerView` have no token hash fields.
 
-### `POST /api/events`（イベント作成）
+### `POST /api/events` (create event)
 
-| 項目 | 内容 |
+| Item | Details |
 | --- | --- |
-| 入力 | ボディ: `title`, `fee?`, `memo?`, `candidates[]` |
-| 成功時 | 201 `{ eventId, manageToken }` |
-| 認可 | 不要 |
+| Input | Body: `title`, `fee?`, `memo?`, `candidates[]` |
+| Success | 201 `{ eventId, manageToken }` |
+| Authorization | None |
 
-`manageToken` を平文で返すのはこの 1 回だけです。サーバはハッシュしか保持しません。
-`expiresAt` はこの時点で確定します。
+`manageToken` is returned in plaintext only once. The server retains only its hash.
+`expiresAt` is fixed at creation.
 
-### `PATCH /api/events/{eventId}`（イベント更新）
+### `PATCH /api/events/{eventId}` (update event)
 
-| 項目 | 内容 |
+| Item | Details |
 | --- | --- |
-| 入力 | パス: `eventId`、ボディ: `title?`, `fee?`, `memo?`, `candidates?`, `closed?` |
-| 成功時 | 200 更新後の `EventView` |
-| 認可 | 管理トークン（`X-Manage-Token`） |
+| Input | Path: `eventId`; body: `title?`, `fee?`, `memo?`, `candidates?`, `closed?` |
+| Success | 200 updated `EventView` |
+| Authorization | Management token (`X-Manage-Token`) |
 
-ボディに含めなかった項目は変更しません（`fee` と `memo` は `null` を明示すると未設定に戻せます）。
-候補を変更した場合は既存回答の整合を取り直します（後述）。
-保持期間は延長されません。
+Omitted fields remain unchanged; explicitly setting `fee` or `memo` to `null` clears them.
+Candidate changes reconcile existing responses as described below.
+Retention is not extended.
 
-### `DELETE /api/events/{eventId}`（イベント削除）
+### `DELETE /api/events/{eventId}` (delete event)
 
-| 項目 | 内容 |
+| Item | Details |
 | --- | --- |
-| 入力 | パス: `eventId` |
-| 成功時 | 204（ボディなし） |
-| 認可 | 管理トークン（`X-Manage-Token`） |
+| Input | Path: `eventId` |
+| Success | 204, no body |
+| Authorization | Management token (`X-Manage-Token`) |
 
-孤児レコードが残らないよう、回答をすべて削除してからイベントを削除します。
+All responses are deleted before the event to avoid orphaned records.
 
-### `POST /api/events/{eventId}/answers`（回答の作成）
+### `POST /api/events/{eventId}/answers` (create response)
 
-| 項目 | 内容 |
+| Item | Details |
 | --- | --- |
-| 入力 | パス: `eventId`、ボディ: `name`, `message?`, `choices[]` |
-| 成功時 | 201 `{ answer, editToken }` |
-| 認可 | 不要 |
+| Input | Path: `eventId`; body: `name`, `message?`, `choices[]` |
+| Success | 201 `{ answer, editToken }` |
+| Authorization | None |
 
-締切済みなら `CLOSED`、同一イベント内に同じ名前があれば `DUPLICATE_NAME` になります。
-`editToken` を平文で返すのはこの 1 回だけです。クライアントはブラウザに保存せず、回答編集 URL として回答者に渡します。
-回答の `expiresAt` はイベントの値をそのまま引き継ぎます。
+Closed events return `CLOSED`; an existing response with the same name returns `DUPLICATE_NAME`.
+`editToken` is returned in plaintext only once. The client does not persist it in the browser, but gives the respondent a response edit URL.
+The response inherits the event's `expiresAt`.
 
-### `PUT /api/answers/{answerId}`（回答の更新）
+### `PUT /api/answers/{answerId}` (update response)
 
-| 項目 | 内容 |
+| Item | Details |
 | --- | --- |
-| 入力 | パス: `answerId`、ボディ: `name`, `message?`, `choices[]` |
-| 成功時 | 200 更新後の `AnswerView` |
-| 認可 | 回答編集キー（`X-Edit-Token`） |
+| Input | Path: `answerId`; body: `name`, `message?`, `choices[]` |
+| Success | 200 updated `AnswerView` |
+| Authorization | Response edit key (`X-Edit-Token`) |
 
-締切済みなら更新もできません。名前の重複判定では自分自身を除外するため、名前を変えずに保存できます。
+Updates are also forbidden while responses are closed. Duplicate-name checks exclude the response itself, allowing saves without a name change.
 
-### `DELETE /api/answers/{answerId}`（回答の削除）
+### `DELETE /api/answers/{answerId}` (delete response)
 
-| 項目 | 内容 |
+| Item | Details |
 | --- | --- |
-| 入力 | パス: `answerId` |
-| 成功時 | 204（ボディなし） |
-| 認可 | 回答編集キー（本人、`X-Edit-Token`）または管理トークン（主催者、`X-Manage-Token`）のいずれか |
+| Input | Path: `answerId` |
+| Success | 204, no body |
+| Authorization | Either the response edit key (owner, `X-Edit-Token`) or management token (host, `X-Manage-Token`) |
 
-### `GET /api/healthz`（ヘルスチェック）
+### `GET /api/healthz` (health check)
 
-常に 200 `{ "ok": true }` を返します。稼働確認に使います。
+Always returns 200 `{ "ok": true }` for availability checks.
 
-## 業務ルール
+## Business rules
 
-### 締切
+### Closing responses
 
-- 締切中は回答の新規作成と更新ができません（`CLOSED`）。閲覧と、主催者による回答削除は可能です。
-- 締切は主催者がいつでも切り替えられます。再開すると再び回答できます。
+- Closed events do not allow response creation or updates (`CLOSED`). Viewing and host deletion of responses remain available.
+- Hosts can close or reopen responses at any time. Reopening allows responses again.
 
-### 同名回答の禁止
+### Duplicate names
 
-同一イベント内で同じ名前の回答は 1 つだけです。
-同じ人が再度回答しようとすると `DUPLICATE_NAME` になり、回答編集 URL を持つ人だけが編集できます。
-名前は前後の空白を除いたうえで完全一致で比較します。
+Only one response with a given name is allowed per event.
+A second submission returns `DUPLICATE_NAME`; only someone holding the response edit URL can edit it.
+Names are compared exactly after trimming whitespace.
 
-### 候補を編集したときの整合性
+### Consistency after candidate edits
 
-候補の `id` はクライアントから送り返されるため、編集しても既存回答との紐付けは切れません。
-候補の集合が変わった場合だけ、既存のすべての回答を次のように調整します。
+Clients send candidate IDs back, preserving links to existing responses during edits.
+Only when the candidate set changes are all existing responses adjusted:
 
-- 削除された候補への選択は取り除く
-- 追加された候補には `MAYBE`（未定）を入れる
+- Remove choices for deleted candidates.
+- Fill added candidates with `MAYBE`.
 
-### 期限切れの扱い
+### Expired records
 
-期限切れのレコードは 1 日 1 回の定期実行で削除するため、期限から最大 1 日ほどはまだ読めてしまいます。
-アプリ側では `expiresAt` を過ぎたイベントを「存在しない」として扱い、すべての操作で `NOT_FOUND` を返します。
-ユーザーから見れば期限ちょうどに消えます。
+Expired records are removed by a daily scheduled job and may remain readable in storage for up to about one day after expiry.
+The app treats events past `expiresAt` as nonexistent and returns `NOT_FOUND` for all operations.
+To users, events disappear exactly at expiry.
 
-### 保持期間
+### Retention
 
-- イベントと回答は **作成から 3 ヶ月**（`RETENTION_MONTHS`）で自動削除されます。
-- 起算点はイベントの作成時点です。編集や回答があっても延長されません。
-- 回答はイベントと同時に消えます。
-- 自動削除される日付はイベントページと管理ページに表示します。
-- 期間を変えるには `RETENTION_MONTHS` を変更して再デプロイします。すでに作成済みのレコードの `expiresAt` は書き換わりません。
+- Events and responses are automatically deleted **three months after creation** (`RETENTION_MONTHS`).
+- Retention starts at event creation; edits and responses do not extend it.
+- Responses disappear with their event.
+- The automatic deletion date is displayed on event and management pages.
+- Change `RETENTION_MONTHS` and redeploy to adjust retention. Existing records' `expiresAt` values are not rewritten.
 
-## エラー
+## Errors
 
-API はエラー時に `{ "error": { "code": "...", "message": "..." } }` を返し、フロントはコードで分岐して `message` を表示します。
+On failure, the API returns `{ "error": { "code": "...", "message": "..." } }`. The frontend branches on the code and displays `message`.
 
-| コード | ステータス | 意味 | 主な発生条件 |
+| Code | Status | Meaning | Typical trigger |
 | --- | --- | --- | --- |
-| `VALIDATION` | 400 | 入力が不正 | 必須未入力、文字数超過、候補の重複、作成時の過去の候補、選択の過不足、不正な JSON |
-| `NOT_FOUND` | 404 | 対象が無い | 存在しない、削除済み、期限切れ |
-| `FORBIDDEN` | 403 | 権限が無い | 管理トークン / 回答編集キーの不一致 |
-| `CLOSED` | 409 | 締切済み | 締切中の回答・更新 |
-| `DUPLICATE_NAME` | 409 | 名前の重複 | 同一イベント内に同じ名前の回答がある |
-| `RATE_LIMITED` | 429 | リクエストが多すぎる | 同じ IP からのリクエストが 60 秒あたり 100 回を超えた |
-| `INTERNAL` | 500 | 想定外 | 上記以外。詳細は Workers Logs にのみ残す |
-| `NETWORK` | – | 通信失敗 | フロント側でのみ使用 |
+| `VALIDATION` | 400 | Invalid input | Missing required input, excessive length, duplicate candidates, past candidates at creation, missing/extra choices, invalid JSON |
+| `NOT_FOUND` | 404 | Target unavailable | Nonexistent, deleted, or expired record |
+| `FORBIDDEN` | 403 | Permission denied | Management token / response edit key mismatch |
+| `CLOSED` | 409 | Responses closed | Submission or update while closed |
+| `DUPLICATE_NAME` | 409 | Duplicate name | A response with the same name already exists in the event |
+| `RATE_LIMITED` | 429 | Too many requests | More than 100 requests per 60 seconds from the same IP |
+| `INTERNAL` | 500 | Unexpected error | Other failures; details appear only in Workers Logs |
+| `NETWORK` | – | Communication failure | Frontend only |
 
-未知のコードや解釈できないレスポンス（Cloudflare 自体のエラーなど）は `INTERNAL` に丸め、メッセージが無ければ「通信に失敗しました。時間をおいて再度お試しください」を表示します。
+Unknown codes and unparseable responses (such as Cloudflare errors) become `INTERNAL`. If no message is available, the frontend displays "通信に失敗しました。時間をおいて再度お試しください" (communication failed; try again later).
 
-## 回答状況の表示
+## Response status display
 
-### 集計
+### Aggregation
 
-候補ごとに `YES` / `MAYBE` / `NO` の件数を数え、スコアを `YES の数 + MAYBE の数 × 0.5` で算出します。
-最もスコアの高い候補を最有力として強調します（同点なら複数）。
-回答が 0 件、または全員が不参加でスコアが 0 の場合は強調しません。
+Count `YES` / `MAYBE` / `NO` for each candidate and calculate `score = YES count + MAYBE count × 0.5`.
+Highlight the candidate with the highest score; highlight multiple candidates in a tie.
+Do not highlight anything when there are no responses or when everyone declines and the score is zero.
 
-### グリッド
+### Grid
 
-行が回答者、列が候補の表です。列ヘッダに日付・時刻と `○△×` の内訳を出し、自分の回答の行を強調できます（イベントページで使用）。
-候補が多い場合は横スクロールし、回答者の列は左端に固定します。
+Rows are respondents and columns are candidates. Column headers show the date/time and `○△×` counts. The current user's row can be highlighted on the event page.
+With many candidates, the table scrolls horizontally while the respondent column stays fixed on the left.
 
-### 最新の状態への更新
+### Refreshing data
 
-イベントページと管理ページは、画面にフォーカスが戻ったとき（別のタブやアプリから戻ったとき）にイベントを取り直し、他の人が送った回答や主催者の編集を反映します。再読み込みは要りません。
-取り直しに失敗した場合は、エラーにせず直前の内容を表示し続けます。
-入力中の回答フォームは、自分の回答の有無や候補が変わった場合を除き、そのまま残ります。
+Event and management pages refetch when window focus returns (from another tab or app), reflecting other participants' responses and host edits without a reload.
+If refetching fails, the previous content remains visible instead of an error screen.
+A response form in progress is preserved unless the user's response existence or the candidates change.
 
-### 表示の記法
+### Display formats
 
-| 対象 | 記法 | 例 |
+| Item | Format | Example |
 | --- | --- | --- |
-| 状態 | `YES` は `○`（参加）、`MAYBE` は `△`（未定）、`NO` は `×`（不参加） | |
-| 日時 | `M/D(曜) HH:MM`。今年でなければ年を付ける | `10/3(金) 19:00` |
-| 自動削除日 | `YYYY/M/D` | `2026/12/20` |
-| 参加費 | 未設定は「未設定」、0 は「無料」、それ以外は円記号と桁区切り | `¥3,000` |
+| Status | `YES`: `○` (yes), `MAYBE`: `△` (maybe), `NO`: `×` (no) | |
+| Date/time | `M/D(day of week) HH:MM`; include the year when different from the current year | `10/3(金) 19:00` (Friday) |
+| Automatic deletion date | `YYYY/M/D` | `2026/12/20` |
+| Fee | "未設定" (unset), "無料" (free) for 0, otherwise yen symbol and digit grouping | `¥3,000` |
 
-日時はすべて閲覧者のローカルタイムゾーンで表示します。
-保存は ISO8601（UTC）で、入力は `<input type="datetime-local">` を使います。
+All dates/times are displayed in the viewer's local time zone.
+Storage uses ISO 8601 (UTC); input uses `<input type="datetime-local">`.
 
-## ブラウザに保存するもの
+## Browser storage
 
-`localStorage` に保存するのはテーマの選択だけです。読み書きの失敗は無視され、失敗した場合は設定が残らないだけで画面は動作します。
+Only the theme preference is persisted in `localStorage`. Read/write failures are ignored; the UI remains functional, but the preference is not retained.
 
-| キー | 内容 |
+| Key | Contents |
 | --- | --- |
-| `tsudou:theme` | テーマの選択（`light` / `dark`）。「システム」を選んだときはキー自体を消す |
+| `tsudou:theme` | Theme choice (`light` / `dark`); choosing system removes the key |
 
-管理トークンと回答編集キーは **どこにも保存しません**。共有 PC で次の利用者にイベントや回答を書き換えられないようにするためです。
-以前のバージョンが保存していた `tsudou:hosted` / `tsudou:answered` は、起動時に削除します。
+Management tokens and response edit keys are **never persisted**, preventing the next user of a shared computer from changing events or responses.
+Legacy `tsudou:hosted` / `tsudou:answered` entries are deleted at startup.
 
-## 非機能
+## Nonfunctional requirements
 
-- 認証を持たないため、権限は「推測できない URL」と「トークン」で表現します。イベント ID は 128bit、トークンは 256bit の乱数です。
-- トークンは平文で保存せず、SHA-256 のハッシュだけを保存し、`timingSafeEqual` で照合します。
-- `<meta name="referrer" content="no-referrer">` により、外部リンクへ Referer を送りません。あわせて `Referrer-Policy: no-referrer` と HSTS などのセキュリティヘッダを Cloudflare から返します。
-- 検索エンジンに載せるのはトップページ（`/`）だけです。SPA はどのパスにも同じ `index.html` を返すため、HTML の `<meta name="robots">` ではなく `_headers` の `X-Robots-Tag: noindex, nofollow` で制御します。全パスに付けたうえでトップページだけ外すので、ルートを追加しても載せない側に倒れます。`robots.txt` でクロールを禁止すると `noindex` が読まれなくなるため、置きません。
-- メモやメッセージの改行はそのまま表示しますが、HTML としては解釈しません。
-- 画面はモバイル幅から利用でき、ライト / ダークの両方に対応します。ヘッダーで「システム / ライト / ダーク」を切り替えられ、既定の「システム」は OS の設定に追従します。
-- API は認証を持たない代わりに、IP ごとのレート制限（60 秒あたり 100 リクエスト）で濫用を抑えます。他のオリジンに CORS を許可していないため、他サイトのページからブラウザ経由で呼ぶこともできません。
+- Without authentication, permissions use unguessable URLs and tokens. Event IDs are 128-bit random values; tokens are 256-bit random values.
+- Store only SHA-256 token hashes, never plaintext, and compare them with `timingSafeEqual`.
+- `<meta name="referrer" content="no-referrer">` suppresses Referer headers on external links. Cloudflare also returns `Referrer-Policy: no-referrer`, HSTS, and other security headers.
+- Only the home page (`/`) is indexed by search engines. Since the SPA returns the same `index.html` for every path, indexing is controlled through `_headers` with `X-Robots-Tag: noindex, nofollow`, rather than an HTML robots meta tag. It applies to every path except the home page, so new routes default to exclusion. No `robots.txt` blocks crawling, because that would prevent crawlers from reading `noindex`.
+- Preserve line breaks in memos and messages, but never interpret them as HTML.
+- Support mobile widths and light/dark themes. The header offers system / light / dark; the default system choice follows OS settings.
+- The unauthenticated API limits abuse to 100 requests per IP per 60 seconds. CORS is not enabled for other origins, preventing browser calls from pages on other sites.
 
-## スコープ外
+## Out of scope
 
-通知（メール等）、カレンダー連携、多言語対応、画像アップロードは含みません。
-どの候補に決まったかを記録する機能もありません。
+Notifications (email, etc.), calendar integration, multilingual support, and image uploads are not included.
+There is also no feature for recording the final selected candidate.

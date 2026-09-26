@@ -1,248 +1,250 @@
-# アーキテクチャ
+# Architecture
 
-Tsudou の技術的な構成と、そうした理由をまとめます。
-画面と API の振る舞いそのものは [仕様](specification.md) を参照してください。
+The technical structure of Tsudou and the reasoning behind it.
+See the [Specification](specification.md) for UI and API behavior.
 
-## 全体像
+## Overview
 
-ログイン機構を持たないサーバレス SPA です。
-画面と API を 1 つの Cloudflare Worker（`tsudou`）で配信します。
-画面は Worker の静的アセット（`frontend/dist/`）で、Worker のスクリプトを通らずに返ります。
-`/api/*` だけが Worker のスクリプトに渡り、その中身は Express.js の普通の HTTP サーバです。
-`nodejs_compat` の `node:http` 互換と `cloudflare:node` の `httpServerHandler` により、Workers の `fetch` を Express へのリクエストに変換して渡します。データは D1（SQLite）に置きます。
-設定は `backend/wrangler.jsonc` にまとめています。
+Tsudou is a serverless SPA without sign-in.
+A single Cloudflare Worker (`tsudou`) serves the UI and API.
+The UI is delivered as Worker static assets (`frontend/dist/`), bypassing the Worker script.
+Only `/api/*` reaches the script, which runs a standard Express.js HTTP server.
+The `node:http` compatibility provided by `nodejs_compat`, together with `httpServerHandler` from `cloudflare:node`, converts Worker `fetch` calls into Express requests. Data is stored in D1 (SQLite).
+Configuration lives in `backend/wrangler.jsonc`.
 
 ```text
-  ブラウザ
-  +---------------------+
-  | React SPA           |
-  | メモリ (トークン)   |
-  | localStorage: テーマ|
-  +----------+----------+
-             | HTTPS (同一オリジン。API は認証なし、レート制限あり)
+  Browser
+  +-------------------------+
+  | React SPA               |
+  | Memory: tokens          |
+  | localStorage: theme     |
+  +----------+--------------+
+             | HTTPS (same origin; API has no authentication, with rate limiting)
              v
-  +---------------------------------------------------------------+
-  | Cloudflare Worker "tsudou"                                     |
-  |                                                                |
-  |  /api/* 以外 -> 静的アセット (frontend/dist/)                  |
-  |                 未知のパスは index.html を返して SPA に渡す    |
-  |                 _headers でヘッダ付与                          |
-  |                                                                |
-  |  /api/*      -> httpServerHandler -> Express (Worker 内 :8080) |
-  |                 レート制限 / 入力検証 / トークン照合 /         |
-  |                 業務ロジック。公開されるのはルート 7 つだけ    |
-  |                                                                |
-  |  scheduled (Cron Trigger, 1日1回) -> 期限切れの削除            |
-  +----------+-----------------------------------------------------+
-             | D1 バインディング (env.DB)
+  +--------------------------------------------------------------------------+
+  | Cloudflare Worker "tsudou"                                                |
+  |                                                                          |
+  |  Non-/api/* -> Static assets (frontend/dist/)                              |
+  |                Unknown paths return index.html for SPA routing            |
+  |                Response headers applied through _headers                  |
+  |                                                                          |
+  |  /api/*     -> httpServerHandler -> Express (Worker internal port :8080)   |
+  |                Rate limiting / input validation / token checks /          |
+  |                business logic; only seven operation routes exposed        |
+  |                                                                          |
+  |  scheduled (daily Cron Trigger) -> Expiry cleanup                          |
+  +----------+---------------------------------------------------------------+
+             | D1 binding (env.DB)
              v
   +--------------------------------------------------+
   | D1 "tsudou" (SQLite)                              |
   |   events  : INDEX expires_at                      |
-  |   answers : FK event_id ON DELETE CASCADE,        |
+  |   answers : FK event_id ON DELETE CASCADE,         |
   |             UNIQUE (event_id, name)               |
   +--------------------------------------------------+
 ```
 
-重要な点は、**ブラウザは `events` / `answers` テーブルに一切触れられない**ことです。
-D1 には Worker のバインディングを通した API サーバからしかアクセスできず、Express に定義したルートは 7 つだけです。
-認可判定（トークン照合）と入力検証は必ずサーバ側を通ります。
+**The browser has no direct access to the `events` / `answers` tables.**
+Only the API server can access D1 through Worker bindings, and Express defines only seven operation routes.
+Authorization (token checks) and input validation always run on the server.
 
-## 技術スタック
+## Technology stack
 
-| レイヤ | 採用技術 |
+| Layer | Technology |
 | --- | --- |
-| UI | React 19 / React Router 8（`createBrowserRouter`） |
-| フォーム | TanStack Form (`@tanstack/react-form`) |
-| サーバの状態 | TanStack Query (`@tanstack/react-query`) |
-| スタイル | Tailwind CSS v4（`@tailwindcss/vite`） |
-| ビルド | Vite 8 / TypeScript（プロジェクト参照による複合ビルド） |
-| API | REST 風のルート（画面と同じオリジンの `/api` 以下）、認証なし（Workers の Rate Limiting で濫用を抑える） |
-| API サーバ | Express 5 |
-| 実行環境 | Cloudflare Workers（`nodejs_compat`、`cloudflare:node` の `httpServerHandler`）。ローカルは `wrangler dev` |
-| 永続化 | Cloudflare D1（SQLite。マイグレーションは `wrangler d1 migrations`） |
-| 定期実行 | Workers の Cron Trigger（期限切れの削除） |
-| 設定 | `backend/wrangler.jsonc`（静的アセット・D1・Rate Limiting・Cron Trigger） |
-| ホスティング | 画面と API を 1 つの Cloudflare Worker で配信（GitHub Actions から wrangler でデプロイ） |
-| 品質 | Vitest / Testing Library / Biome / pre-commit |
+| UI | React 19 / React Router 8 (`createBrowserRouter`) |
+| Forms | TanStack Form (`@tanstack/react-form`) |
+| Server state | TanStack Query (`@tanstack/react-query`) |
+| Styling | Tailwind CSS v4 (`@tailwindcss/vite`) |
+| Build | Vite 8 / TypeScript (composite builds with project references) |
+| API | REST-style routes under `/api` on the UI origin; no authentication, with Workers Rate Limiting for abuse prevention |
+| API server | Express 5 |
+| Runtime | Cloudflare Workers (`nodejs_compat`, `httpServerHandler` from `cloudflare:node`); local development uses `wrangler dev` |
+| Persistence | Cloudflare D1 (SQLite; migrations through `wrangler d1 migrations`) |
+| Scheduling | Workers Cron Trigger (expiry cleanup) |
+| Configuration | `backend/wrangler.jsonc` (static assets, D1, Rate Limiting, Cron Trigger) |
+| Hosting | One Cloudflare Worker for UI and API, deployed with wrangler through GitHub Actions |
+| Quality | Vitest / Testing Library / Biome / pre-commit |
 
-## リポジトリ構成
+## Repository structure
 
-pnpm のワークスペースで、`frontend/`（`@tsudou/frontend`）、`backend/`（`@tsudou/backend`）、両者が共有するコードの `shared/`（`@tsudou/shared`）の 3 パッケージに分けています。
-依存関係とスクリプトはそれぞれの `package.json` にあり、ルートの `package.json` は Biome と、各パッケージのスクリプトを呼び出すショートカット（`pnpm run dev` / `pnpm run dev:api` / `pnpm test` など）だけを持ちます。
+The pnpm workspace has three packages: `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), and shared code in `shared/` (`@tsudou/shared`).
+Each package has its own dependencies and scripts in `package.json`. The root `package.json` contains Biome and shortcuts that invoke package scripts (`pnpm run dev` / `pnpm run dev:api` / `pnpm test`, etc.).
 
-フロントとバックエンドはどちらも `@tsudou/shared` にワークスペースの依存（`workspace:*`）として依存し、`@tsudou/shared/limits` のように import します。フロントはバックエンドのパッケージに依存しないので、サーバの内部モジュールを import することはできません（「サーバとフロントで共有するコード」参照）。
+Both frontend and backend depend on `@tsudou/shared` through `workspace:*`, importing modules such as `@tsudou/shared/limits`.
+The frontend does not depend on the backend package and cannot import server internals (see "Code shared by server and frontend").
 
 ```text
-backend/                        バックエンド (@tsudou/backend)
-├─ package.json                 依存関係とスクリプト
-├─ wrangler.jsonc               Worker の設定 (静的アセット / D1 / Rate Limiting / Cron Trigger)
-├─ migrations/                  D1 のマイグレーション (0001_init.sql ...)
-├─ vitest.config.ts             バックエンドのテスト設定 (node 環境)
-├─ scripts/openapi.ts           docs/openapi.yaml の生成 (pnpm run openapi)
+backend/                        Backend (@tsudou/backend)
+├─ package.json                 Dependencies and scripts
+├─ wrangler.jsonc               Worker settings (static assets / D1 / Rate Limiting / Cron Trigger)
+├─ migrations/                  D1 migrations (0001_init.sql ...)
+├─ vitest.config.ts             Backend test configuration (node environment)
+├─ scripts/openapi.ts           Generate docs/openapi.yaml (pnpm run openapi)
 └─ src/
-   ├─ worker.ts                 Worker のエントリ (Express を listen させ httpServerHandler に渡す / Cron)
-   ├─ app.ts                    Express アプリ (/api 以下のルート / エラーハンドラ / レート制限)
-   ├─ http.ts                   ボディの検査 (Zod) / エラー → ステータス対応
-   ├─ schemas.ts                API の入出力の形 (Zod のスキーマ)
-   ├─ openapi.ts                スキーマとルートから OpenAPI のドキュメントを生成
-   ├─ operations.ts             業務ロジック (Repository を注入)
-   ├─ repository.ts             データアクセスの境界 (インタフェース)
-   ├─ d1Repository.ts           本番実装 (D1) と期限切れの削除
-   ├─ memoryRepository.ts       テスト用インメモリ実装
-   ├─ tokens.ts                 ID / トークン生成、ハッシュ、定時間比較
-   ├─ validate.ts               入力検証と正規化
-   ├─ retention.ts              保持期限の算出と期限切れ判定
-   └─ errors.ts                 AppError (コード + 説明)
+   ├─ worker.ts                 Worker entry (Express listen / httpServerHandler / Cron)
+   ├─ app.ts                    Express app (/api routes / error handling / rate limiting)
+   ├─ http.ts                   Body validation (Zod) / error-to-status mapping
+   ├─ schemas.ts                API input/output shapes (Zod schemas)
+   ├─ openapi.ts                Generate OpenAPI documentation from schemas and routes
+   ├─ operations.ts             Business logic (injected Repository)
+   ├─ repository.ts             Data access boundary (interface)
+   ├─ d1Repository.ts           Production implementation (D1) and expiry cleanup
+   ├─ memoryRepository.ts       In-memory implementation for tests
+   ├─ tokens.ts                 ID/token generation, hashing, constant-time comparison
+   ├─ validate.ts               Input validation and normalization
+   ├─ retention.ts              Expiry calculation and checks
+   └─ errors.ts                 AppError (code + description)
 
-shared/                         共有コード (@tsudou/shared)
-├─ package.json                 exports で limits / messages / types を公開
-├─ tsconfig.json                DOM と Node の型を読み込まない
+shared/                         Shared code (@tsudou/shared)
+├─ package.json                 Exposes limits / messages / types through exports
+├─ tsconfig.json                No DOM or Node types
 └─ src/
-   ├─ limits.ts                 入力上限・保持期間
-   ├─ messages.ts               検証メッセージ
-   └─ types.ts                  ドメイン型
+   ├─ limits.ts                 Input limits and retention period
+   ├─ messages.ts               Validation messages
+   └─ types.ts                  Domain types
 
-frontend/                       フロントエンド (@tsudou/frontend)
-├─ package.json                 依存関係とスクリプト
-├─ index.html                   エントリ HTML
-├─ vite.config.ts               Vite とフロントのテスト設定 (開発時の /api の転送先、sw.js の生成)
-├─ public/manifest.webmanifest  PWA のマニフェスト
-├─ scripts/capture-guide.mjs    使い方ページの画面キャプチャの撮影
+frontend/                       Frontend (@tsudou/frontend)
+├─ package.json                 Dependencies and scripts
+├─ index.html                   Entry HTML
+├─ vite.config.ts               Vite and frontend tests (development /api proxy, sw.js generation)
+├─ public/manifest.webmanifest  PWA manifest
+├─ scripts/capture-guide.mjs    Capture guide screenshots
 └─ src/
-   ├─ main.tsx / router.tsx     エントリとルート定義
-   ├─ sw.js                     Service Worker の原本 (ビルドで dist/sw.js になる)
-   ├─ routes/                   画面 (Root / Home / Guide / EventCreated / EventPublic /
+   ├─ main.tsx / router.tsx     Entry and route definitions
+   ├─ sw.js                     Service Worker source (built as dist/sw.js)
+   ├─ routes/                   Screens (Root / Home / Guide / EventCreated / EventPublic /
    │                            EventManage / NotFound)
-   ├─ assets/guide/             使い方ページの画面キャプチャ
-   ├─ components/               画面部品と ui/ プリミティブ
+   ├─ assets/guide/             Guide screenshots
+   ├─ components/               UI components and ui/ primitives
    └─ lib/                      api, queryClient, errors, storage, urls, format,
-                                formValidators, tally, 各種フック
+                                formValidators, tally, and hooks
 ```
 
-## バックエンド
+## Backend
 
-### 認可モデル
+### Authorization model
 
-認証は持ちません。権限分離は次の 3 点で構造的に保証しています。
+There is no authentication. Permission separation is enforced structurally through three boundaries:
 
-- D1 にアクセスできるのは、バインディング（`env.DB`）を持つ API の Worker だけ。
-- Express に定義したルートは下表の 7 つだけで、イベントや回答を列挙するルートが存在しない。
-  Worker は `/api/*` を Express に渡し（`run_worker_first`）、未定義のパスには Express が 404 を返します。
-- 編集系のルートは必ず API サーバのトークン照合を通る。トークンは専用ヘッダで受け取ります。
+- Only the API Worker, with its `env.DB` binding, can access D1.
+- Express defines only the seven operation routes below, with no routes for enumerating events or responses.
+  The Worker forwards `/api/*` to Express (`run_worker_first`); Express returns 404 for undefined paths.
+- Editing routes always perform server-side token checks. Tokens arrive in dedicated headers.
 
-| ルート | 操作 | トークン |
+| Route | Operation | Token |
 | --- | --- | --- |
-| `POST /api/events` | イベント作成 | – |
-| `GET /api/events/{eventId}` | イベント取得（回答を含む） | – |
-| `PATCH /api/events/{eventId}` | イベント更新・締切 | `X-Manage-Token` |
-| `DELETE /api/events/{eventId}` | イベント削除 | `X-Manage-Token` |
-| `POST /api/events/{eventId}/answers` | 回答作成 | – |
-| `PUT /api/answers/{answerId}` | 回答更新 | `X-Edit-Token` |
-| `DELETE /api/answers/{answerId}` | 回答削除 | `X-Edit-Token` または `X-Manage-Token` |
+| `POST /api/events` | Create event | – |
+| `GET /api/events/{eventId}` | Get event, including responses | – |
+| `PATCH /api/events/{eventId}` | Update event / close responses | `X-Manage-Token` |
+| `DELETE /api/events/{eventId}` | Delete event | `X-Manage-Token` |
+| `POST /api/events/{eventId}/answers` | Create response | – |
+| `PUT /api/answers/{answerId}` | Update response | `X-Edit-Token` |
+| `DELETE /api/answers/{answerId}` | Delete response | `X-Edit-Token` or `X-Manage-Token` |
 
-トークンをパスやクエリではなくヘッダで送るのは、アクセスログやブラウザの履歴に残さないためです。
+Headers keep tokens out of access logs and browser history associated with paths and query strings.
 
-認証の無い公開 API なので、濫用対策として次を設定しています。
+The public, unauthenticated API uses the following abuse controls:
 
-- クライアントの IP（`CF-Connecting-IP`）ごとのレート制限（60 秒あたり 100 リクエスト、`wrangler.jsonc` の `ratelimits`）。
-  超えると `429 RATE_LIMITED` を返します。Workers の Rate Limiting は拠点ごとの結果整合なので、厳密な上限ではなく濫用の目安です。
-- API は画面と同じオリジンにあり、他のオリジンには CORS を許可しません（CORS のヘッダを一切返さない）。
-  他サイトのページからブラウザ経由で呼ばれることはありませんが、ブラウザ以外からの呼び出しは防がないため、濫用対策としてはレート制限が本体です。
+- Rate limiting per client IP (`CF-Connecting-IP`): 100 requests per 60 seconds, configured through `ratelimits` in `wrangler.jsonc`.
+  Exceeding the limit returns `429 RATE_LIMITED`. Workers Rate Limiting is eventually consistent per location, so this is an abuse threshold rather than an exact global cap.
+- The API shares the UI origin and enables no CORS for other origins (no CORS headers are returned).
+  Browser calls from pages on other sites are blocked, but non-browser calls are not; rate limiting is the primary abuse control.
 
-### 戻り値型を分離する理由
+### Why response types are separate
 
-保存用のレコード型（`EventRecord` / `AnswerRecord`）と公開用の型（`EventView` / `AnswerView`）を分けています。
-`manageTokenHash` / `editTokenHash` が **公開型のフィールドとして存在しない**ため、実装ミスでハッシュが外に出る経路がありません。
-`operations.ts` の `toEventView` / `toAnswerView` が唯一の詰め替え地点で、型が門番になります。
+Stored record types (`EventRecord` / `AnswerRecord`) are separate from public types (`EventView` / `AnswerView`).
+`manageTokenHash` / `editTokenHash` **do not exist as public type fields**, preventing accidental exposure through implementation mistakes.
+`toEventView` / `toAnswerView` in `operations.ts` are the only mapping points; types enforce the boundary.
 
-### API サーバの層構造
+### API server layers
 
 ```text
-worker.ts       エントリ。Express アプリを Worker 内のポート 8080 で listen させ、
-                httpServerHandler が fetch をそのポートへのリクエストに変換する
-                (実際のソケットは開かない)。D1 とレート制限のバインディングは
-                cloudflare:workers の env から取り、createApp に注入する。
+worker.ts       Entry: Express listens on internal Worker port 8080.
+                httpServerHandler converts fetch calls into requests to that port
+                without opening a real socket. D1 and rate limiting bindings come
+                from cloudflare:workers env and are injected into createApp.
    ↓
-app.ts          Express アプリ。/api 以下のルーターで、レート制限のあと、ルートごとに
-                パスパラメータ・ヘッダ・ボディを operations の引数に詰め替える。
-                エラーハンドラが AppError をステータス付きのレスポンスに変え、
-                想定外の例外だけログ (Workers Logs) に残して INTERNAL に潰す。
+app.ts          Express app: after rate limiting, routes under /api map path
+                parameters, headers, and bodies to operations arguments.
+                The error handler converts AppError to a response with a status.
+                Unexpected exceptions alone are logged (Workers Logs) and mapped
+                to INTERNAL.
    ↓
-http.ts         ボディを schemas.ts の Zod スキーマで検査する。
-                値の中身 (長さ・範囲) は validate.ts に任せ、ここでは形だけを見る。
+http.ts         Validates body shapes with Zod schemas from schemas.ts.
+                Value validation (lengths and ranges) is delegated to validate.ts.
    ↓
-operations.ts   業務ロジック。引数に Repository を受け取り、D1 へは直接触らない。
+operations.ts   Business logic: receives Repository and never accesses D1 directly.
    ↓
-repository.ts   データアクセスの境界 (インタフェース)。
-   ├─ d1Repository.ts      本番: D1
-   └─ memoryRepository.ts  テスト: インメモリ
+repository.ts   Data access boundary (interface).
+   ├─ d1Repository.ts      Production: D1
+   └─ memoryRepository.ts  Tests: in-memory
 ```
 
-### OpenAPI のドキュメント
+### OpenAPI documentation
 
-`docs/openapi.yaml` は、`schemas.ts` の Zod スキーマと `openapi.ts` のルートの一覧から `@asteasolutions/zod-to-openapi` で生成します（`pnpm run openapi`）。
-リクエストのスキーマは実際の検査にも使うので、ドキュメントと実装の入力の形がずれません。
-レスポンスのスキーマは `shared/src/types.ts` の型と一致しないと型エラーになるようにしてあります。
-生成物が最新かどうかは `openapi.test.ts` が確かめます。
+`docs/openapi.yaml` is generated from Zod schemas in `schemas.ts` and route definitions in `openapi.ts` using `@asteasolutions/zod-to-openapi` (`pnpm run openapi`).
+Request schemas also perform actual validation, keeping documented input shapes aligned with the implementation.
+Response schemas cause type errors if they differ from `shared/src/types.ts`.
+`openapi.test.ts` verifies that generated documentation is current.
 
-- 長さや範囲の上限は、前後の空白を除いてから数えるため Zod では検査せず、ドキュメント用のメタデータとしてだけ書きます。実際の検査は従来どおり `validate.ts` です。
-- メタデータは zod-to-openapi の `.openapi()` ではなく Zod 標準の `.meta()` で書きます。zod-to-openapi はドキュメントの生成時にしか読み込まないので、Worker のバンドルに入りません。
+- Length and range limits are documentation metadata rather than Zod validation, since lengths are counted after trimming. Actual value validation remains in `validate.ts`.
+- Metadata uses Zod's standard `.meta()`, rather than zod-to-openapi's `.openapi()`. zod-to-openapi is loaded only for documentation generation and does not enter the Worker bundle.
 
-`app.ts` は Workers に依存しない（バインディングは関数として注入する）ので、Node.js 上の supertest でそのままテストできます。
-`operations.ts` が `Repository` インタフェースにしか依存しないため、作成 → 回答 → 編集 → 削除という一連の流れをデータベースなしにテストできます（`operations.test.ts`、HTTP の入出力は `app.test.ts`）。
+`app.ts` does not depend on Workers (bindings are injected as functions), so supertest can test it directly on Node.js.
+`operations.ts` depends only on the `Repository` interface, allowing creation → response → editing → deletion tests without a database (`operations.test.ts`; HTTP input/output is covered by `app.test.ts`).
 
-### データモデル
+### Data model
 
-スキーマは `backend/migrations/` にあり、`wrangler d1 migrations apply` で流します。
-列名はスネークケースで、`d1Repository.ts` がレコード型（キャメルケース）と詰め替えます。
-`created_at` / `updated_at`（ISO 8601 文字列）は `d1Repository.ts` が書き込みます。
-D1 は Worker とは別のリソースなので、Worker を削除してもデータは残ります。
-誤って消した・壊したときは D1 の Time Travel で過去の時点に戻せます。
+Schemas live in `backend/migrations/` and are applied with `wrangler d1 migrations apply`.
+Columns use snake_case; `d1Repository.ts` maps them to camelCase record types.
+`d1Repository.ts` writes `created_at` / `updated_at` as ISO 8601 strings.
+D1 is a separate resource from the Worker, so deleting the Worker preserves data.
+D1 Time Travel can restore an earlier state after accidental deletion or corruption.
 
-`events` テーブル。
+The `events` table:
 
-| 列 | 型 | 説明 |
+| Column | Type | Description |
 | --- | --- | --- |
-| `id` | TEXT (PK) | 128bit 乱数の base64url（22 文字）。共有 URL に載る |
-| `title` | TEXT | イベント名 |
-| `fee` | INTEGER? | 参加費（円）。`NULL` は未設定、`0` は無料 |
-| `memo` | TEXT? | 自由記述 |
-| `candidates` | TEXT (JSON) | `Candidate[]`（`{ id, startAt }`）。開始日時の昇順 |
-| `closed` | INTEGER | 締切フラグ（0 / 1） |
-| `manage_token_hash` | TEXT | 管理トークンの SHA-256（hex） |
-| `expires_at` | INTEGER | 保持期限（エポック秒）。インデックスあり（期限切れの削除用） |
+| `id` | TEXT (PK) | 128-bit random value in base64url (22 characters), included in the shared URL |
+| `title` | TEXT | Event title |
+| `fee` | INTEGER? | Fee in yen; `NULL` means unset, `0` means free |
+| `memo` | TEXT? | Free text |
+| `candidates` | TEXT (JSON) | `Candidate[]` (`{ id, startAt }`), sorted by start time |
+| `closed` | INTEGER | Responses closed flag (0 / 1) |
+| `manage_token_hash` | TEXT | SHA-256 management token hash (hex) |
+| `expires_at` | INTEGER | Expiry in epoch seconds, indexed for cleanup |
 
-`answers` テーブル。
+The `answers` table:
 
-| 列 | 型 | 説明 |
+| Column | Type | Description |
 | --- | --- | --- |
 | `id` | TEXT (PK) | `crypto.randomUUID()` |
-| `event_id` | TEXT (FK) | 親イベント。`ON DELETE CASCADE` でイベントと一緒に消える |
-| `name` | TEXT | 回答者名。`UNIQUE (event_id, name)` で同一イベント内で一意 |
-| `message` | TEXT? | 任意のひとこと |
-| `choices` | TEXT (JSON) | `Choice[]`（`{ candidateId, status }`）。候補と 1:1 で対応 |
-| `edit_token_hash` | TEXT | 回答編集キーの SHA-256（hex） |
-| `expires_at` | INTEGER | 親イベントの値をそのまま引き継ぐ |
+| `event_id` | TEXT (FK) | Parent event; `ON DELETE CASCADE` deletes the response with it |
+| `name` | TEXT | Respondent name, unique within the event through `UNIQUE (event_id, name)` |
+| `message` | TEXT? | Optional message |
+| `choices` | TEXT (JSON) | `Choice[]` (`{ candidateId, status }`), one per candidate |
+| `edit_token_hash` | TEXT | SHA-256 response edit key hash (hex) |
+| `expires_at` | INTEGER | Inherited directly from the parent event |
 
-候補と選択は、イベントや回答と必ず一緒に読み書きするので、別テーブルにせず JSON の列に埋め込んでいます。
-回答は 1 イベントあたり多くても数十件を想定しているため、並べ替え・集計は API サーバとブラウザで行います。
-`UNIQUE (event_id, name)` の複合インデックスが、1 イベントの回答を引くインデックスも兼ねます。
+Candidates and choices are embedded in JSON columns because they are always read and written with their event or response.
+Events are expected to have at most a few dozen responses, so sorting and aggregation run in the API server and browser.
+The composite `UNIQUE (event_id, name)` index also supports fetching an event's responses.
 
-同名の回答は `operations.ts` が事前に確かめて `DUPLICATE_NAME` を返しますが、同時に送信されると両方とも確認をすり抜けます。その場合も `UNIQUE` 制約で後の書き込みが失敗し、`d1Repository.ts` がそれを `DUPLICATE_NAME` に変換します。
+`operations.ts` checks for duplicate names before writing and returns `DUPLICATE_NAME`. Concurrent submissions can both pass that check; the `UNIQUE` constraint rejects the later write, and `d1Repository.ts` converts the failure to `DUPLICATE_NAME`.
 
-### トークンと認可の実装
+### Tokens and authorization
 
-- イベント ID は 128bit、管理トークンと回答編集キーは 256bit の乱数（`node:crypto` の `randomBytes`）。
-- トークンは **平文で保存しません**。SHA-256 のハッシュだけを保存し、平文を返すのは発行時の 1 回だけです。
-- 照合は `crypto.timingSafeEqual` で行います。長さ差による早期 return を避けるため、常にハッシュ同士を固定長で比較します。
-- 管理トークンはクエリ文字列ではなく URL のハッシュフラグメント（`#k=...`）で渡します。フラグメントはサーバに送信されないため、アクセスログや Referer に残りません。
+- Event IDs are 128-bit random values; management tokens and response edit keys are 256-bit random values (`randomBytes` from `node:crypto`).
+- Tokens are **never stored in plaintext**. Only SHA-256 hashes are stored; plaintext is returned once at issuance.
+- Comparisons use `crypto.timingSafeEqual`. Fixed-length hashes are always compared to avoid early returns based on differing lengths.
+- Management tokens are passed in URL fragments (`#k=...`) rather than query strings. Fragments are not sent to the server and do not enter access logs or Referer headers.
 
-### エラーの伝え方
+### Error handling
 
-API サーバは `AppError`（コード + 人間向けの説明）を送出し、`app.ts` のエラーハンドラが HTTP ステータスと `{ "error": { "code", "message" } }` のボディに変換します。
+The API server throws `AppError` (code and human-readable description). The error handler in `app.ts` converts it to an HTTP status and `{ "error": { "code", "message" } }` body.
 
-| コード | ステータス |
+| Code | Status |
 | --- | --- |
 | `VALIDATION` | 400 |
 | `FORBIDDEN` | 403 |
@@ -251,206 +253,205 @@ API サーバは `AppError`（コード + 人間向けの説明）を送出し�
 | `RATE_LIMITED` | 429 |
 | `INTERNAL` | 500 |
 
-フロントの `parseApiError`（`frontend/src/lib/errors.ts`）がボディからコードと表示文言を取り出します。
-既知のコードでなければ（Cloudflare 自体のエラーなど）`INTERNAL` に丸めます。
+The frontend's `parseApiError` (`frontend/src/lib/errors.ts`) extracts the code and display message.
+Unknown codes, such as Cloudflare errors, become `INTERNAL`.
 
-## フロントエンド
+## Frontend
 
-### 状態管理
+### State management
 
-サーバ由来のデータは TanStack Query のキャッシュ（`frontend/src/lib/queryClient.ts`、アプリ全体で 1 つ）に置き、それ以外のグローバルな状態ストアは持ちません。状態は用途ごとに置き場所を分けています。
+Server data lives in a single app-wide TanStack Query cache (`frontend/src/lib/queryClient.ts`). There is no other global state store; state is placed according to its purpose.
 
-| 状態 | 置き場所 |
+| State | Location |
 | --- | --- |
-| サーバ由来のイベント（回答を含む） | TanStack Query のキャッシュ（`useEvent` フック。キーは `['event', eventId]`） |
-| フォームの下書き | TanStack Form（各フォームコンポーネントが保持） |
-| 通信中フラグとエラー | `useAsyncAction` フック（中身は TanStack Query の `useMutation`） |
-| 「保存しました」等の一時表示 | `useFlash` フック |
-| 管理トークン / 回答編集キー | メモリのみ（`frontend/src/lib/keyring.ts`）。URL のフラグメントから取り込む |
-| テーマの選択 | `localStorage` と `<html data-theme>`（`frontend/src/lib/theme.ts`） |
+| Server event, including responses | TanStack Query cache (`useEvent`, key `['event', eventId]`) |
+| Form drafts | TanStack Form, owned by each form component |
+| Pending operations and errors | `useAsyncAction` (internally TanStack Query's `useMutation`) |
+| Temporary feedback, such as saved confirmations | `useFlash` |
+| Management tokens / response edit keys | Memory only (`frontend/src/lib/keyring.ts`), loaded from URL fragments |
+| Theme preference | `localStorage` and `<html data-theme>` (`frontend/src/lib/theme.ts`) |
 
-初期値の差し替えに `useEffect` を使いません。
-対象が変わったとき（別イベントを開いた、自分の回答の有無が変わった）は呼び出し側が `key` を変えてフォームを作り直します。
+Initial values are not synchronized with `useEffect`.
+When the target changes (another event or a change in whether the current user has a response), the caller changes the form's `key` to recreate it.
 
-`useEvent` は `useQuery` でイベントを取得します。`eventId` が変わったときに古いレスポンスで上書きしないことや、**画面にフォーカスが戻ったときの取り直し**（`refetchOnWindowFocus`）は Query に任せています。
-管理画面を開いたままにしていても、タブに戻れば新しい回答が見えます。
-公開ページと管理ページは同じキーを使うので、行き来するとキャッシュをすぐに表示し、裏で取り直します。
+`useEvent` fetches events with `useQuery`. Query handles stale responses after `eventId` changes and **refetching when window focus returns** (`refetchOnWindowFocus`).
+Hosts can leave the management page open and see new responses when returning to the tab.
+Public and management pages share a query key, displaying cached data immediately and refetching in the background when navigating between them.
 
-- 保存直後はサーバの戻り値でそのまま置き換える `replace`（`setQueryData`）を使い、再取得の 1 往復を省きます。
-  戻り値に回答が含まれない操作（回答の作成・更新・削除）のあとは `reload`（`invalidateQueries`）で取り直します。
-- イベントを削除したら `forget`（`removeQueries`）でキャッシュからも消し、戻るで古い内容を出さないようにします。
-- 取得済みのデータがあるうちは、裏での取り直しに失敗してもエラー画面にせず、そのまま表示を続けます。
-- 取得の失敗は、通信の失敗とサーバの想定外エラー（`NETWORK` / `INTERNAL`）だけ 1 回やり直します。
-  レート制限などは何度送っても同じなので、すぐにエラーを見せます。
-- キャッシュに入るのは `EventView` だけで、管理トークンや回答編集キーは入りません（`keyring.ts` のメモリだけに持つ方針は変わりません）。
+- After a save, `replace` (`setQueryData`) stores the server response directly, avoiding another round trip.
+  Operations whose response does not include event responses (response creation/update/deletion) use `reload` (`invalidateQueries`) to refetch.
+- Event deletion uses `forget` (`removeQueries`) to remove cached data, preventing old content from appearing on back navigation.
+- If data has already been fetched, a background refetch failure keeps it visible instead of showing an error screen.
+- Fetches retry once only for network failures and unexpected server errors (`NETWORK` / `INTERNAL`).
+  Rate limiting and similar errors appear immediately because repeating the request will not resolve them.
+- The cache holds only `EventView`, never management tokens or response edit keys; those remain exclusively in `keyring.ts` memory.
 
-`useAsyncAction` は、1 つの画面の操作（保存・締切・削除など）で実行中フラグとエラーを共有するため、操作ごとに `useMutation` を分けず、渡された処理を走らせる 1 つの mutation にしています。
-イベント作成（`Home`）は操作が 1 つだけなので、`createEvent` をそのまま `useMutation` に渡しています。
+`useAsyncAction` uses one mutation that runs the supplied operation, rather than separate mutations per action, so saving, closing, and deleting on one page share a pending flag and errors.
+Event creation (`Home`) has only one operation and passes `createEvent` directly to `useMutation`.
 
-### API 呼び出し
+### API calls
 
-`frontend/src/lib/api.ts` の `request` が `fetch` を包み、「成功なら JSON、失敗なら `ApiError` を throw」に正規化します。
-通信自体の失敗は `NETWORK`、`GET /api/events/{eventId}` の 404 は `null` として返します。
-レスポンスからアプリ内の型へのキャストもこの 1 箇所に閉じ込め、各関数の戻り値注釈が型の門番になります。
+`request` in `frontend/src/lib/api.ts` wraps `fetch`, returning JSON on success and throwing `ApiError` on failure.
+Communication failures become `NETWORK`; 404 from `GET /api/events/{eventId}` returns `null`.
+Casts from responses to application types are confined to this function, while return type annotations enforce the boundary.
 
-API は画面と同じオリジンの `/api` 以下にあるので、`api.ts` は相対パス（`/api/events` など）で呼びます。
-ビルド時に API の URL を渡す必要はありません。ローカル開発では、Vite の開発サーバが `/api` を `wrangler dev`（`localhost:8080`）に転送します（`frontend/vite.config.ts` の `server.proxy`）。
+Since the API is under `/api` on the UI origin, `api.ts` uses relative paths such as `/api/events`.
+No API URL is needed at build time. During local development, Vite proxies `/api` to `wrangler dev` at `localhost:8080` (`server.proxy` in `frontend/vite.config.ts`).
 
-### トークンの扱い
+### Token handling
 
-共有 PC を想定して、管理トークンと回答編集キーはブラウザのストレージに保存しません。
-`keyring.ts` がモジュール内の `Map` に持ち、`useSyncExternalStore` で画面に配ります。
-アプリ内の画面遷移では保たれ、再読み込みやタブを閉じると消えます。
-持ち運びは管理用 URL（`#k=...`）と回答編集 URL（`#a=...&k=...`）で行います。
+To support shared computers, management tokens and response edit keys are not persisted in browser storage.
+`keyring.ts` holds them in a module-level `Map` and exposes them through `useSyncExternalStore`.
+They survive app navigation but disappear on reload or tab closure.
+Management URLs (`#k=...`) and response edit URLs (`#a=...&k=...`) carry them between sessions.
 
-以前のバージョンが `localStorage` に保存していたトークン（`tsudou:hosted` / `tsudou:answered`）は、起動時に `storage.ts` の `purgeLegacyTokens` が消します。
-プライベートモードなどで `localStorage` の操作が例外になりうるので、try/catch で握り潰します。
+At startup, `purgeLegacyTokens` in `storage.ts` removes tokens previously stored in `localStorage` (`tsudou:hosted` / `tsudou:answered`).
+Because `localStorage` can throw in situations such as private browsing, failures are caught and ignored.
 
-### テーマ
+### Theme
 
-Tailwind の `dark:` は OS 設定ではなく `<html data-theme="dark">` で効くよう、`index.css` の `@custom-variant` で差し替えています。
-`data-theme` は `theme.ts` の `useTheme` が選択（`tsudou:theme`）と `prefers-color-scheme` から決めます。
-React の描画前に一瞬ライトで表示されるのを防ぐため、`index.html` のインラインスクリプトでも同じ判定を先に行っています。キーや値を変えるときは両方を直してください。
-ブラウザの UI（アドレスバーやインストール後のタイトルバー）の色を決める `<meta name="theme-color">` も、同じ 2 か所でヘッダの背景色（`THEME_COLORS`）に合わせて書き換えます。
+The `@custom-variant` in `index.css` makes Tailwind's `dark:` depend on `<html data-theme="dark">`, rather than directly on OS settings.
+`useTheme` in `theme.ts` determines `data-theme` from the saved choice (`tsudou:theme`) and `prefers-color-scheme`.
+An inline script in `index.html` performs the same check before React renders, preventing a flash of the light theme. Update both locations when changing keys or values.
+Both locations also update `<meta name="theme-color">`, which controls browser UI colors (address bar or installed app title bar), to match the header background (`THEME_COLORS`).
 
 ### PWA
 
-`public/manifest.webmanifest` でインストールできるようにし、Service Worker でオフラインでも画面を起動できるようにしています。
-Service Worker の原本は `src/sw.js` で、ビルド時に `vite.config.ts` の `serviceWorker` プラグインが先頭に `VERSION`（HTML / JS / CSS の内容のハッシュ）と `PRECACHE`（`/`、`/assets/` の JS と CSS、`/favicon.svg`）を書き足して `dist/sw.js` として出力します。
-登録は `lib/serviceWorker.ts` が本番ビルドでだけ行います（開発サーバには `sw.js` が無く、HMR の邪魔にもなるため）。
+`public/manifest.webmanifest` enables installation; a Service Worker allows the UI to start offline.
+The Service Worker source is `src/sw.js`. At build time, the `serviceWorker` plugin in `vite.config.ts` prepends `VERSION` (a hash of HTML / JS / CSS contents) and `PRECACHE` (`/`, JS and CSS under `/assets/`, and `/favicon.svg`), producing `dist/sw.js`.
+`lib/serviceWorker.ts` registers it only in production builds, since the development server has no `sw.js` and a Service Worker would interfere with HMR.
 
-| リクエスト | 扱い |
+| Request | Strategy |
 | --- | --- |
-| 画面（ナビゲーション） | ネットワーク優先。オフラインのときだけキャッシュの `index.html`（`/`）を返す。URL ごとには保存しない |
-| `/assets/*` | キャッシュ優先。無ければ取得してキャッシュする（ファイル名にハッシュが付き中身が変わらないため） |
-| `/api/*` | 関与しない（データやトークンをキャッシュに残さない） |
-| その他（`public/` のファイル） | ネットワーク優先。オフラインのときだけキャッシュを返す |
+| Page navigation | Network first; only when offline, return cached `index.html` (`/`). Do not cache individual URLs |
+| `/assets/*` | Cache first; fetch and cache on a miss, since hashed filenames have immutable contents |
+| `/api/*` | Do not handle, keeping data and tokens out of caches |
+| Other files from `public/` | Network first; use the cache only when offline |
 
-新しい Service Worker は待たずに有効になり（`skipWaiting` / `clients.claim`）、`VERSION` の違う古いキャッシュを消します。
+New Service Workers activate immediately (`skipWaiting` / `clients.claim`) and delete old caches with a different `VERSION`.
 
-## サーバとフロントで共有するコード
+## Code shared by server and frontend
 
-`shared/`（`@tsudou/shared`）の 3 ファイルを、フロントとバックエンドの両方から `@tsudou/shared/limits` のようにパッケージ名で import しています。公開するのは `shared/package.json` の `exports` にあるものだけです。
+Both frontend and backend import three files from `shared/` (`@tsudou/shared`) by package name, such as `@tsudou/shared/limits`. Only modules in `exports` in `shared/package.json` are public.
 
-| ファイル | 共有するもの |
+| File | Shared contents |
 | --- | --- |
-| `limits.ts` | 入力上限（`LIMITS`）と保持期間（`RETENTION_MONTHS`） |
-| `messages.ts` | 検証メッセージの文言 |
-| `types.ts` | ドメイン型（`Candidate` / `Choice` / `EventView` / `AnswerView` ほか） |
+| `limits.ts` | Input limits (`LIMITS`) and retention (`RETENTION_MONTHS`) |
+| `messages.ts` | Validation message text |
+| `types.ts` | Domain types (`Candidate` / `Choice` / `EventView` / `AnswerView`, etc.) |
 
-この 3 つは **ブラウザと Workers の両方にバンドルされるため、片方にしかない API は使えません**。
-`shared/tsconfig.json` は DOM と Node の型を読み込まないので、`document` や `process` を使うと型エラーになります（`pnpm run typecheck` に含まれます）。フロントはバックエンドのパッケージに依存しないため、`node:crypto` を引く `validate.ts` / `operations.ts` を参照することもできません。共有したい型は `types.ts` に置きます。
+These files are **bundled into both browser and Worker code, so they cannot use platform-specific APIs**.
+`shared/tsconfig.json` includes neither DOM nor Node types, so `document` or `process` cause type errors (covered by `pnpm run typecheck`). The frontend does not depend on the backend package and cannot import `validate.ts` / `operations.ts`, which pull in `node:crypto`. Place shared types in `types.ts`.
 
-クライアント側の検証（`formValidators.ts`）は送信前に気づかせるための UI 上の親切さであり、最終的な門番は常にサーバ側（`validate.ts`）です。上限値と文言を共有しているため、片方だけがズレることはありません。
+Client validation (`formValidators.ts`) helps users catch errors before submitting; final validation always happens on the server (`validate.ts`). Shared limits and messages prevent divergence.
 
-## データの保持期間
+## Data retention
 
-イベントと回答は作成から `RETENTION_MONTHS`（既定 3 ヶ月）で自動削除されます。
+Events and responses are automatically deleted after `RETENTION_MONTHS` (default: three months) from creation.
 
-- API サーバがレコード作成時に `expires_at`（エポック秒）を書き込みます。
-- 1 日 1 回（UTC 18:00 = JST 3:00）の Cron Trigger が `worker.ts` の `scheduled` を呼び、`d1Repository.ts` の `deleteExpired` が期限を過ぎたイベントを削除します。回答は外部キーの `ON DELETE CASCADE` で一緒に消えます。
-- 起算点は **イベントの作成時点**です。編集や回答があっても延長しません。回答はイベントの `expires_at` をそのまま引き継ぎ、イベントと同時に消えます。
-- 削除は 1 日 1 回なので、期限から最大 1 日ほどはレコードが残ります。その間もレコードは読めてしまうため、アプリ側でも `retention.ts` の `isExpired` で「存在しない」として扱います。ユーザーから見れば期限ちょうどに消えます。Cron の実行が失敗しても次の日に消えるだけで、見え方は変わりません。
-- `retention.test.ts` が `RETENTION_MONTHS` の値を固定しているので、意図しない変更に気づけます。
+- The API server writes `expires_at` (epoch seconds) at record creation.
+- A daily Cron Trigger (18:00 UTC = 03:00 JST) invokes `scheduled` in `worker.ts`; `deleteExpired` in `d1Repository.ts` deletes expired events. Responses disappear through the foreign key's `ON DELETE CASCADE`.
+- Retention starts at **event creation** and is not extended by edits or responses. Responses inherit the event's `expires_at` and disappear with it.
+- Daily cleanup may leave records in storage for up to about one day after expiry. `isExpired` in `retention.ts` also treats them as nonexistent, so users see them disappear exactly at expiry. A failed Cron run merely delays physical cleanup until the next day without changing visible behavior.
+- `retention.test.ts` pins `RETENTION_MONTHS`, catching unintended changes.
 
-## デプロイ
+## Deployment
 
-`.github/workflows/deploy.yml` を Actions タブから手動実行（`workflow_dispatch`）すると、次の順に実行します。
-（現在は移行準備のため `main` への push での自動実行を止めています。）
+Manually run `.github/workflows/deploy.yml` from the Actions tab (`workflow_dispatch`). It performs these steps:
+(Automatic deployment on pushes to `main` is currently disabled while preparing the migration.)
 
-1. `pnpm run build` でフロントエンドをビルドする（Worker が配信する `frontend/dist/`）
-2. D1 のデータベース（`tsudou`）が無ければ `wrangler d1 create tsudou --location apac` で作る（初回だけ）
-3. `wrangler d1 migrations apply tsudou --remote` で D1 に未適用のマイグレーションを流す。
-   新しいコードが新しいスキーマを前提にできるよう、Worker のデプロイより先に行います
-4. `backend/` で `wrangler deploy` して、画面と API を配信する Worker（`tsudou`）を公開する
+1. Build the frontend with `pnpm run build` (`frontend/dist/`, served by the Worker).
+2. If the D1 database (`tsudou`) is absent, create it with `wrangler d1 create tsudou --location apac` (first deployment only).
+3. Apply pending migrations with `wrangler d1 migrations apply tsudou --remote`.
+   This runs before Worker deployment so new code can rely on the new schema.
+4. Run `wrangler deploy` from `backend/` to publish the Worker (`tsudou`) serving the UI and API.
 
-Cloudflare には Secrets の `CLOUDFLARE_API_TOKEN`（Workers と D1 の編集権限）と `CLOUDFLARE_ACCOUNT_ID` で認証します。アカウント ID は認証情報ではありませんが、ログに出さないよう Secret にしています。
+Cloudflare authentication uses secrets `CLOUDFLARE_API_TOKEN` (Workers and D1 edit permissions) and `CLOUDFLARE_ACCOUNT_ID`. The account ID is not a credential, but is stored as a secret to keep it out of logs.
 
-`backend/wrangler.jsonc` の D1 バインディングは `database_id` を持たず、`database_name`（`tsudou`）だけを書いています。
-wrangler がデプロイ時にアカウント内のその名前のデータベースを引くので、アカウント固有の ID をリポジトリに置かずに済みます。
-データベースは、初回のデプロイで `wrangler d1 info` が見つけられなかったときだけ作ります。
+The D1 binding in `backend/wrangler.jsonc` has no `database_id`, only `database_name` (`tsudou`).
+At deployment, wrangler resolves the database by name within the account, keeping account-specific IDs out of the repository.
+The workflow creates the database only when `wrangler d1 info` cannot find it on the first deployment.
 
-`wrangler deploy` にも、バインディング先のデータベースが無ければ作る機能（resource provisioning）がありますが、使っていません。
-リージョンを指定できないため GitHub Actions の実行環境に近い（日本から遠い）場所に作られうること、マイグレーションのステップより後に走るため初回はマイグレーションが失敗することが理由です。
-D1 のリージョンは作成後に変えられないので、`--location apac` を付けて明示的に作ります。
-`wrangler d1 info` が一時的な理由で失敗しても、`d1 create` は同名のデータベースがあればエラーで止まるので、重複して作られることはありません。
+`wrangler deploy` can also create a missing bound database (resource provisioning), but this feature is not used.
+It cannot specify a region, so the database might be created near the GitHub Actions runner and far from Japan. It also runs after the migration step, making first-deployment migrations fail.
+D1 regions cannot be changed after creation, so the workflow explicitly creates the database with `--location apac`.
+If `wrangler d1 info` fails temporarily, `d1 create` stops with an error when the name already exists, preventing duplicates.
 
-リソースを削除するときは `.github/workflows/destroy.yml` を手動実行します。
-入力の `confirm` に Worker 名を入れないと中止し、Worker を先に消して配信を止めてから、`delete_database` が指定されたときだけ D1 のデータベースを消します。
-データベースの削除は既定で行わないので、Worker だけ消してもデータは残り、デプロイし直せば元どおりに動きます。
-デプロイと同じ concurrency グループ（`deploy`）にして、デプロイの途中で消したり、消した直後に作り直したりしないようにしています。
+To remove resources, run `.github/workflows/destroy.yml` manually.
+It aborts unless `confirm` matches the Worker name, deletes the Worker first to stop delivery, and deletes D1 only if `delete_database` is selected.
+Database deletion is off by default, so removing only the Worker retains data and redeployment restores service.
+The same concurrency group (`deploy`) prevents deletion during deployment or immediate recreation while deletion is running.
 
-静的アセットの設定（`assets`）は `backend/wrangler.jsonc` にあり、`directory` は `../frontend/dist` を指します。
-Worker のコードと D1 のマイグレーションが `backend/` にあるため、設定もそこに置いています。
-`run_worker_first: ["/api/*"]` により API のパスだけが Worker のスクリプトに渡り、それ以外はアセットが直接返ります（画面の配信で Worker を起動しない）。
-ルート配信なので、Vite の `base` やルーターの `basename` は既定のままです。
+Static asset configuration (`assets`) lives in `backend/wrangler.jsonc`; `directory` points to `../frontend/dist`.
+The configuration is placed alongside Worker code and D1 migrations in `backend/`.
+`run_worker_first: ["/api/*"]` forwards only API paths to the Worker script; other paths return assets directly without invoking the Worker.
+Hosting is at the root, so Vite's `base` and the router's `basename` keep their defaults.
 
-`not_found_handling: "single-page-application"` により、未知のパスへのナビゲーションには `index.html` がステータス 200 で返り、SPA がルーティングします。
+`not_found_handling: "single-page-application"` returns `index.html` with status 200 for navigation to unknown paths, leaving routing to the SPA.
 
-レスポンスヘッダは `frontend/public/_headers`（ビルドで `dist/` にコピーされる）で付けます。
-全パスに HSTS / `X-Content-Type-Options` / `X-Frame-Options` / `Permissions-Policy` と `Referrer-Policy: no-referrer` を付け、`/assets/*` は長期キャッシュ、`/sw.js` は `no-cache` にします。
-管理トークンがフラグメントにあるとはいえ外部リンク経由での漏れを避けるため、Referer は `frontend/index.html` の `<meta name="referrer" content="no-referrer">` でも送らないようにしています。
+Response headers come from `frontend/public/_headers`, copied into `dist/` during the build.
+All paths receive HSTS / `X-Content-Type-Options` / `X-Frame-Options` / `Permissions-Policy` and `Referrer-Policy: no-referrer`. `/assets/*` uses long-term caching; `/sw.js` uses `no-cache`.
+Although tokens are in fragments, `<meta name="referrer" content="no-referrer">` in `frontend/index.html` also suppresses Referer headers to avoid leakage through external links.
 
-## ローカル実行
+## Local development
 
-API（`pnpm run dev:api`）と画面（`pnpm run dev`）の開発サーバを別々に起動します。
+Start API (`pnpm run dev:api`) and UI (`pnpm run dev`) development servers separately.
 
-`pnpm run dev:api` は、`wrangler d1 migrations apply tsudou --local` でローカルの D1 にマイグレーションを流してから、`wrangler dev --port 8080` で Worker を起動します。wrangler は本番と同じランタイム（workerd）で Worker を動かし、D1 と Rate Limiting もローカルの実装に差し替えます。Cloudflare のアカウントは要りません。
-ローカルの D1 のデータは `backend/.wrangler/state/` に保存され、停止しても残ります。
-`assets.directory`（`frontend/dist/`）が無いと wrangler が起動しないため、無ければ空のディレクトリを先に作ります。
+`pnpm run dev:api` applies local migrations with `wrangler d1 migrations apply tsudou --local`, then starts the Worker with `wrangler dev --port 8080`. wrangler uses the production runtime (workerd) and substitutes local D1 and Rate Limiting implementations. No Cloudflare account is required.
+Local D1 data persists in `backend/.wrangler/state/` after shutdown.
+Since wrangler requires `assets.directory` (`frontend/dist/`) to exist, an empty directory is created first if needed.
 
-`pnpm run dev` の Vite は `/api` を `localhost:8080` に転送するので、画面から見ると本番と同じく同一オリジンです。
-`pnpm run build` でフロントエンドをビルドしておけば、`localhost:8080` を開くと本番と同じ 1 つの Worker の構成で確かめられます。
+Vite (`pnpm run dev`) proxies `/api` to `localhost:8080`, preserving the same-origin behavior seen in production.
+After `pnpm run build`, opening `localhost:8080` lets you verify the production arrangement with one Worker serving everything.
 
-Cron Trigger はローカルでは自動で動かないため、`curl http://localhost:8080/cdn-cgi/local/scheduled` で手動で呼び出します。
+Cron Triggers do not run automatically locally; invoke them with `curl http://localhost:8080/cdn-cgi/local/scheduled`.
 
-TypeScript の型（`Env` や `D1Database`、`cloudflare:*` モジュール）は `wrangler types` が `backend/worker-configuration.d.ts` に生成します。
-`wrangler.jsonc` から作り直せるので、コミットせず `pnpm run typecheck` のたびに生成します。
+`wrangler types` generates TypeScript types (`Env`, `D1Database`, and `cloudflare:*` modules) in `backend/worker-configuration.d.ts`.
+This file is regenerated from `wrangler.jsonc` for each `pnpm run typecheck` and is not committed.
 
-## テスト
+## Tests
 
-`pnpm test` が各パッケージの Vitest を順に実行します。
-フロントエンド（`frontend/vite.config.ts`、`frontend/src/**/*.test.{ts,tsx}`）は jsdom、バックエンド（`backend/vitest.config.ts`、`backend/**/*.test.ts`）は node 環境で動きます。
+`pnpm test` runs each package's Vitest suite in sequence.
+Frontend tests (`frontend/vite.config.ts`, `frontend/src/**/*.test.{ts,tsx}`) use jsdom; backend tests (`backend/vitest.config.ts`, `backend/**/*.test.ts`) use node.
 
-| 対象 | テスト |
+| Area | Tests |
 | --- | --- |
-| HTTP の入出力 | `app.test.ts`（supertest。/api 以下のルーティング、ステータス、トークンヘッダ、不正な JSON、レート制限） |
-| 業務ロジック | `operations.test.ts`（`memoryRepository` を注入し、作成〜回答〜編集〜削除を通しで検証） |
-| D1 の実装 | `d1Repository.test.ts`（wrangler の `getPlatformProxy` でローカルの D1 を立て、マイグレーションを流して検証） |
-| 検証・正規化 | `validate.test.ts` |
-| トークン | `tokens.test.ts`（ハッシュと定時間比較） |
-| 保持期間 | `retention.test.ts` |
-| フロントの純粋関数 | `format.test.ts` / `errors.test.ts` / `formValidators.test.ts` / `answerDraft.test.ts` / `candidateDraft.test.ts` / `urls.test.ts` / `keyring.test.ts` |
-| データ取得のフック | `useEvent.test.tsx` / `useAsyncAction.test.tsx`（テストごとに `createQueryClient()` で作り直し、`api.ts` をモックする） |
-| コンポーネント | `AnswerForm.test.tsx` / `AnswerGrid.test.tsx` / `ShareLinkBox.test.tsx` / `EventUrlBoxes.test.tsx` / `Root.test.tsx`（Testing Library） |
+| HTTP input/output | `app.test.ts` (supertest: /api routing, statuses, token headers, invalid JSON, rate limiting) |
+| Business logic | `operations.test.ts` (injected `memoryRepository`, covering creation → response → editing → deletion) |
+| D1 implementation | `d1Repository.test.ts` (local D1 through wrangler's `getPlatformProxy`, with migrations applied) |
+| Validation and normalization | `validate.test.ts` |
+| Tokens | `tokens.test.ts` (hashing and constant-time comparison) |
+| Retention | `retention.test.ts` |
+| Frontend pure functions | `format.test.ts` / `errors.test.ts` / `formValidators.test.ts` / `answerDraft.test.ts` / `candidateDraft.test.ts` / `urls.test.ts` / `keyring.test.ts` |
+| Data-fetching hooks | `useEvent.test.tsx` / `useAsyncAction.test.tsx` (fresh `createQueryClient()` per test, mocked `api.ts`) |
+| Components | `AnswerForm.test.tsx` / `AnswerGrid.test.tsx` / `ShareLinkBox.test.tsx` / `EventUrlBoxes.test.tsx` / `Root.test.tsx` (Testing Library) |
 
-## 設計上の判断
+## Design decisions
 
-ログインを設けない代わりに、権限を「推測できない URL」と「トークン」で表現しています。
-メールアドレスもパスワードも預からずに済み、参加者は URL を開くだけで回答できます。
-管理トークンと回答編集キーは、共有 PC で次の利用者にイベントや回答を書き換えられないよう、ブラウザに保存しません。発行直後に管理用 URL / 回答編集 URL を表示し、本人に保管してもらいます。
-再読み込みで編集できなくなる不便さより、端末に何も残さないことを優先しています。
-この制約は作成完了画面と回答直後の表示で明示しています。
+Without sign-in, permissions use unguessable URLs and tokens.
+There is no need to collect email addresses or passwords, and participants can respond simply by opening a URL.
+Management tokens and response edit keys are not persisted in the browser, preventing the next user on a shared computer from changing events or responses. Management and response edit URLs are shown immediately after issuance, and users must keep them.
+Leaving no tokens on the device takes priority over the inconvenience of losing editing access on reload.
+Creation confirmation and post-submission screens explain this restriction.
 
-操作ごとに Worker を分けず、単一の Worker（Express アプリ）が全操作を解決します。
-共有するのは検証・トークン照合・リポジトリ実装であり、分割するとこれらを跨いで配線する手間のほうが大きくなるためです。
+A single Worker (Express app) handles all operations, rather than separate Workers per operation.
+Validation, token checks, and repository implementations are shared; splitting operations would add more wiring overhead than benefit.
 
-当初は Amplify Gen 2（AppSync + API Key）で構築していましたが、API Key が最長 365 日で失効するため年 1 回の再デプロイが必要なこと、Lambda の型チェックに `ampx` の生成物が必要なこと、公開したいのは少数の操作だけで GraphQL の利点が薄いことから、API Gateway（HTTP API）+ Lambda + DynamoDB を CDK で直接定義する構成に移行しました。
-HTTP API は REST API（v1）より安価で低レイテンシで、必要なスロットリングと CORS は備えています。
+The app originally used Amplify Gen 2 (AppSync + API Key). API keys expire after at most 365 days, requiring annual redeployment; Lambda type checking depended on generated `ampx` output; and only a few operations needed exposure, offering little benefit from GraphQL. It moved to API Gateway (HTTP API) + Lambda + DynamoDB, defined directly with CDK.
+HTTP API is cheaper and has lower latency than REST API (v1), while providing the required throttling and CORS support.
 
-さらに、Lambda のイベント形式に直接依存するハンドラをやめ、Express の普通の HTTP サーバにして Lambda Web Adapter で動かすようにしました。同じ Docker イメージが Lambda でもローカルの `docker compose` でも動くので、AWS なしで API を含めた開発・確認ができ、テストも supertest で書けます。
-イメージには Lambda ランタイムの AWS SDK が無いため、SDK も含めて esbuild で 1 ファイルにバンドルしていました。
+Later, handlers tied directly to Lambda event formats were replaced with a standard Express HTTP server running through Lambda Web Adapter. The same Docker image ran in Lambda and local `docker compose`, enabling API development and verification without AWS and tests through supertest.
+Since the image lacked the Lambda runtime's AWS SDK, esbuild bundled the SDK and application into a single file.
 
-その後、フロントエンドと同じ Cloudflare にバックエンドも移しました（Workers + D1）。
-理由は次のとおりです。
+The backend then moved to Cloudflare (Workers + D1), alongside the frontend, for these reasons:
 
-- 配信とデプロイの先が 1 つになり、AWS の認証（OIDC ロール、CDK のブートストラップ）と Docker イメージのビルドが不要になる
-- D1 の `UNIQUE` 制約と外部キーで、同名回答の競合と回答の取り残しをデータベース側で防げる（DynamoDB では、一覧を読んでから書く方式のため同時送信を防げなかった）
-- ローカル開発が `wrangler dev` だけで済み、DynamoDB Local の Docker が要らなくなる
+- One hosting and deployment destination removes AWS authentication setup (OIDC roles, CDK bootstrap) and Docker image builds.
+- D1 `UNIQUE` constraints and foreign keys prevent concurrent duplicate names and orphaned responses at the database level. The DynamoDB read-then-write approach could not prevent simultaneous submissions.
+- Local development needs only `wrangler dev`, without a DynamoDB Local Docker container.
 
-Express のコードはそのまま使い、`nodejs_compat` と `httpServerHandler` で Workers 上で動かしています。
-移行の直後は API を画面とは別の Worker（別オリジン）にしていましたが、1 つの Worker にまとめました。
-同一オリジンになることで CORS の設定、許可オリジンと API の URL の Variables、ビルド時の `VITE_API_URL` がすべて不要になり、設定ミスで画面から API を呼べなくなる失敗がなくなるためです。
-代わりに API のルートを `/api` 以下に移し、SPA のパスと分けています。
-`Repository` インタフェースで業務ロジックとデータアクセスを分けていたため、差し替えたのは `dynamoRepository.ts` → `d1Repository.ts` とエントリ（`server.ts` → `worker.ts`）だけです。
-D1 には TTL が無いため、期限切れの削除は Cron Trigger で行います。
+Existing Express code runs on Workers through `nodejs_compat` and `httpServerHandler`.
+Immediately after migration, the API used a separate Worker and origin; it was then combined with the UI in one Worker.
+Sharing an origin removes CORS configuration, Variables for allowed origins and API URLs, and build-time `VITE_API_URL`, eliminating those configuration failures that could prevent API calls from the UI.
+API routes moved under `/api` to separate them from SPA paths.
+Because the `Repository` interface already separated business logic from data access, only `dynamoRepository.ts` → `d1Repository.ts` and the entry point (`server.ts` → `worker.ts`) needed replacement.
+D1 has no TTL feature, so a Cron Trigger performs expiry cleanup.

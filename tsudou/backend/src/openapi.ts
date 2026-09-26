@@ -31,10 +31,14 @@ export function generateOpenApiDocument() {
   const eventParams = z.object({ eventId: z.string() });
   const answerParams = z.object({ answerId: z.string() });
   const manageTokenHeader = z.object({
-    [MANAGE_TOKEN]: z.string().meta({ description: 'イベント作成時に返した管理トークン' }),
+    [MANAGE_TOKEN]: z
+      .string()
+      .meta({ description: 'Management token returned when the event was created' }),
   });
   const editTokenHeader = z.object({
-    [EDIT_TOKEN]: z.string().meta({ description: '回答作成時に返した回答編集キー' }),
+    [EDIT_TOKEN]: z
+      .string()
+      .meta({ description: 'Response edit key returned when the response was created' }),
   });
 
   const json = <T extends z.ZodType>(description: string, schema: T): ResponseConfig => ({
@@ -64,21 +68,21 @@ export function generateOpenApiDocument() {
   registry.registerPath({
     method: 'get',
     path: `${API_PREFIX}/healthz`,
-    summary: 'ヘルスチェック',
+    summary: 'Health check',
     tags: ['system'],
     responses: {
-      200: json('稼働中', z.object({ ok: z.literal(true) })),
+      200: json('Operational', z.object({ ok: z.literal(true) })),
     },
   });
 
   registry.registerPath({
     method: 'post',
     path: `${API_PREFIX}/events`,
-    summary: 'イベント作成',
+    summary: 'Create event',
     tags: ['events'],
     request: { body: body(CreateEventBodySchema) },
     responses: {
-      201: json('作成した', CreateEventResultSchema),
+      201: json('Created', CreateEventResultSchema),
       ...errors('VALIDATION'),
     },
   });
@@ -86,11 +90,11 @@ export function generateOpenApiDocument() {
   registry.registerPath({
     method: 'get',
     path: `${API_PREFIX}/events/{eventId}`,
-    summary: 'イベント取得 (回答を含む)',
+    summary: 'Get event (including responses)',
     tags: ['events'],
     request: { params: eventParams },
     responses: {
-      200: json('イベント', EventViewSchema),
+      200: json('Event', EventViewSchema),
       ...errors('NOT_FOUND'),
     },
   });
@@ -98,11 +102,11 @@ export function generateOpenApiDocument() {
   registry.registerPath({
     method: 'patch',
     path: `${API_PREFIX}/events/{eventId}`,
-    summary: 'イベント更新・締切',
+    summary: 'Update event or close responses',
     tags: ['events'],
     request: { params: eventParams, headers: manageTokenHeader, body: body(UpdateEventBodySchema) },
     responses: {
-      200: json('更新後のイベント', EventViewSchema),
+      200: json('Updated event', EventViewSchema),
       ...errors('VALIDATION', 'FORBIDDEN', 'NOT_FOUND'),
     },
   });
@@ -110,11 +114,11 @@ export function generateOpenApiDocument() {
   registry.registerPath({
     method: 'delete',
     path: `${API_PREFIX}/events/{eventId}`,
-    summary: 'イベント削除 (回答も消える)',
+    summary: 'Delete event (also deletes responses)',
     tags: ['events'],
     request: { params: eventParams, headers: manageTokenHeader },
     responses: {
-      204: { description: '削除した' },
+      204: { description: 'Deleted' },
       ...errors('FORBIDDEN', 'NOT_FOUND'),
     },
   });
@@ -122,11 +126,11 @@ export function generateOpenApiDocument() {
   registry.registerPath({
     method: 'post',
     path: `${API_PREFIX}/events/{eventId}/answers`,
-    summary: '回答の作成',
+    summary: 'Create response',
     tags: ['answers'],
     request: { params: eventParams, body: body(AnswerBodySchema) },
     responses: {
-      201: json('作成した', SubmitAnswerResultSchema),
+      201: json('Created', SubmitAnswerResultSchema),
       ...errors('VALIDATION', 'NOT_FOUND', 'CLOSED', 'DUPLICATE_NAME'),
     },
   });
@@ -134,11 +138,11 @@ export function generateOpenApiDocument() {
   registry.registerPath({
     method: 'put',
     path: `${API_PREFIX}/answers/{answerId}`,
-    summary: '回答の更新',
+    summary: 'Update response',
     tags: ['answers'],
     request: { params: answerParams, headers: editTokenHeader, body: body(AnswerBodySchema) },
     responses: {
-      200: json('更新後の回答', AnswerViewSchema),
+      200: json('Updated response', AnswerViewSchema),
       ...errors('VALIDATION', 'FORBIDDEN', 'NOT_FOUND', 'CLOSED', 'DUPLICATE_NAME'),
     },
   });
@@ -146,15 +150,15 @@ export function generateOpenApiDocument() {
   registry.registerPath({
     method: 'delete',
     path: `${API_PREFIX}/answers/{answerId}`,
-    summary: '回答の削除',
-    description: '回答編集キー (本人) または管理トークン (主催者) のどちらかが必要',
+    summary: 'Delete response',
+    description: 'Requires either the response edit key (owner) or management token (host)',
     tags: ['answers'],
     request: {
       params: answerParams,
       headers: editTokenHeader.partial().extend(manageTokenHeader.partial().shape),
     },
     responses: {
-      204: { description: '削除した' },
+      204: { description: 'Deleted' },
       ...errors('FORBIDDEN', 'NOT_FOUND'),
     },
   });
@@ -165,8 +169,8 @@ export function generateOpenApiDocument() {
       title: 'Tsudou API',
       version: pkg.version,
       description:
-        'ログイン不要の日程調整サービスの API。画面と同じオリジンの /api 以下にあり、認証はない。' +
-        '文字数の上限は前後の空白を除いてから数える。',
+        'API for an event scheduling service without sign-in. It is under /api on the UI origin and has no authentication. ' +
+        'Character limits are applied after trimming whitespace.',
     },
   });
 }
@@ -175,5 +179,5 @@ export function generateOpenApiDocument() {
 export const OPENAPI_PATH = fileURLToPath(new URL('../../docs/openapi.yaml', import.meta.url));
 
 export function renderOpenApiYaml(): string {
-  return `# 生成物なので直接編集しない。backend/src/openapi.ts を直して pnpm run openapi で作り直す\n${stringify(generateOpenApiDocument())}`;
+  return `# Generated file; do not edit directly. Update backend/src/openapi.ts or backend/src/schemas.ts and run pnpm run openapi.\n${stringify(generateOpenApiDocument())}`;
 }

@@ -1,9 +1,11 @@
-# 生成物なので直接編集しない。backend/src/openapi.ts を直して pnpm run openapi で作り直す
+# Generated file; do not edit directly. Update backend/src/openapi.ts or backend/src/schemas.ts and run pnpm run openapi.
 openapi: 3.1.0
 info:
   title: Tsudou API
   version: 0.1.0
-  description: ログイン不要の日程調整サービスの API。画面と同じオリジンの /api 以下にあり、認証はない。文字数の上限は前後の空白を除いてから数える。
+  description: API for an event scheduling service without sign-in. It is under
+    /api on the UI origin and has no authentication. Character limits are
+    applied after trimming whitespace.
 components:
   schemas:
     CreateEventResult:
@@ -13,7 +15,7 @@ components:
           type: string
         manageToken:
           type: string
-          description: 管理トークン。平文で返すのはこの一度きり
+          description: Management token; returned in plaintext only once
       required:
         - eventId
         - manageToken
@@ -35,7 +37,7 @@ components:
                 - INTERNAL
             message:
               type: string
-              description: 画面にそのまま表示できる説明
+              description: Message suitable for direct display in the UI
           required:
             - code
             - message
@@ -47,14 +49,14 @@ components:
         title:
           type: string
           maxLength: 100
-          description: イベント名
+          description: Event title
         fee:
           type:
             - number
             - "null"
           minimum: 0
           maximum: 1000000
-          description: 参加費 (円)。整数
+          description: Fee in yen, as an integer
         memo:
           type:
             - string
@@ -76,11 +78,11 @@ components:
           type:
             - string
             - "null"
-          description: 既存の候補の識別子。無ければ新しく採番する
+          description: Existing candidate ID; a new ID is generated when omitted
         startAt:
           type: string
           format: date-time
-          description: 開始日時 (ISO 8601)
+          description: Start date/time (ISO 8601)
       required:
         - startAt
     EventView:
@@ -102,7 +104,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Candidate"
-          description: 開始日時の昇順
+          description: Sorted by start date/time in ascending order
         closed:
           type: boolean
         createdAt:
@@ -110,12 +112,12 @@ components:
           format: date-time
         expiresAt:
           type: integer
-          description: 自動削除される時刻 (エポック秒)
+          description: Automatic deletion time (epoch seconds)
         answers:
           type: array
           items:
             $ref: "#/components/schemas/AnswerView"
-          description: 作成日時の昇順
+          description: Sorted by creation time in ascending order
       required:
         - id
         - title
@@ -131,11 +133,11 @@ components:
       properties:
         id:
           type: string
-          description: 候補の識別子
+          description: Candidate ID
         startAt:
           type: string
           format: date-time
-          description: 開始日時 (ISO 8601)
+          description: Start date/time (ISO 8601)
       required:
         - id
         - startAt
@@ -183,7 +185,7 @@ components:
         - YES
         - NO
         - MAYBE
-      description: "YES: 参加 / NO: 不参加 / MAYBE: 未定"
+      description: "YES: attending / NO: not attending / MAYBE: undecided"
     UpdateEventBody:
       type: object
       properties:
@@ -192,14 +194,14 @@ components:
             - string
             - "null"
           maxLength: 100
-          description: イベント名
+          description: Event title
         fee:
           type:
             - number
             - "null"
           minimum: 0
           maximum: 1000000
-          description: 参加費 (円)。整数
+          description: Fee in yen, as an integer
         memo:
           type:
             - string
@@ -224,7 +226,7 @@ components:
           $ref: "#/components/schemas/AnswerView"
         editToken:
           type: string
-          description: 回答編集キー。平文で返すのはこの一度きり
+          description: Response edit key; returned in plaintext only once
       required:
         - answer
         - editToken
@@ -234,7 +236,7 @@ components:
         name:
           type: string
           maxLength: 40
-          description: 回答者名
+          description: Respondent name
         message:
           type:
             - string
@@ -244,7 +246,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Choice"
-          description: すべての候補に過不足なく 1 つずつ
+          description: Exactly one choice per candidate, with no missing or extra entries
       required:
         - name
         - choices
@@ -252,12 +254,12 @@ components:
 paths:
   /api/healthz:
     get:
-      summary: ヘルスチェック
+      summary: Health check
       tags:
         - system
       responses:
         "200":
-          description: 稼働中
+          description: Operational
           content:
             application/json:
               schema:
@@ -271,7 +273,7 @@ paths:
                   - ok
   /api/events:
     post:
-      summary: イベント作成
+      summary: Create event
       tags:
         - events
       requestBody:
@@ -282,7 +284,7 @@ paths:
               $ref: "#/components/schemas/CreateEventBody"
       responses:
         "201":
-          description: 作成した
+          description: Created
           content:
             application/json:
               schema:
@@ -307,7 +309,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/events/{eventId}:
     get:
-      summary: イベント取得 (回答を含む)
+      summary: Get event (including responses)
       tags:
         - events
       parameters:
@@ -318,7 +320,7 @@ paths:
           in: path
       responses:
         "200":
-          description: イベント
+          description: Event
           content:
             application/json:
               schema:
@@ -342,7 +344,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     patch:
-      summary: イベント更新・締切
+      summary: Update event or close responses
       tags:
         - events
       parameters:
@@ -353,9 +355,9 @@ paths:
           in: path
         - schema:
             type: string
-            description: イベント作成時に返した管理トークン
+            description: Management token returned when the event was created
           required: true
-          description: イベント作成時に返した管理トークン
+          description: Management token returned when the event was created
           name: x-manage-token
           in: header
       requestBody:
@@ -366,7 +368,7 @@ paths:
               $ref: "#/components/schemas/UpdateEventBody"
       responses:
         "200":
-          description: 更新後のイベント
+          description: Updated event
           content:
             application/json:
               schema:
@@ -402,7 +404,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     delete:
-      summary: イベント削除 (回答も消える)
+      summary: Delete event (also deletes responses)
       tags:
         - events
       parameters:
@@ -413,14 +415,14 @@ paths:
           in: path
         - schema:
             type: string
-            description: イベント作成時に返した管理トークン
+            description: Management token returned when the event was created
           required: true
-          description: イベント作成時に返した管理トークン
+          description: Management token returned when the event was created
           name: x-manage-token
           in: header
       responses:
         "204":
-          description: 削除した
+          description: Deleted
         "403":
           description: FORBIDDEN
           content:
@@ -447,7 +449,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/events/{eventId}/answers:
     post:
-      summary: 回答の作成
+      summary: Create response
       tags:
         - answers
       parameters:
@@ -464,7 +466,7 @@ paths:
               $ref: "#/components/schemas/AnswerBody"
       responses:
         "201":
-          description: 作成した
+          description: Created
           content:
             application/json:
               schema:
@@ -501,7 +503,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/answers/{answerId}:
     put:
-      summary: 回答の更新
+      summary: Update response
       tags:
         - answers
       parameters:
@@ -512,9 +514,9 @@ paths:
           in: path
         - schema:
             type: string
-            description: 回答作成時に返した回答編集キー
+            description: Response edit key returned when the response was created
           required: true
-          description: 回答作成時に返した回答編集キー
+          description: Response edit key returned when the response was created
           name: x-edit-token
           in: header
       requestBody:
@@ -525,7 +527,7 @@ paths:
               $ref: "#/components/schemas/AnswerBody"
       responses:
         "200":
-          description: 更新後の回答
+          description: Updated response
           content:
             application/json:
               schema:
@@ -567,8 +569,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     delete:
-      summary: 回答の削除
-      description: 回答編集キー (本人) または管理トークン (主催者) のどちらかが必要
+      summary: Delete response
+      description: Requires either the response edit key (owner) or management token (host)
       tags:
         - answers
       parameters:
@@ -579,21 +581,21 @@ paths:
           in: path
         - schema:
             type: string
-            description: 回答作成時に返した回答編集キー
+            description: Response edit key returned when the response was created
           required: false
-          description: 回答作成時に返した回答編集キー
+          description: Response edit key returned when the response was created
           name: x-edit-token
           in: header
         - schema:
             type: string
-            description: イベント作成時に返した管理トークン
+            description: Management token returned when the event was created
           required: false
-          description: イベント作成時に返した管理トークン
+          description: Management token returned when the event was created
           name: x-manage-token
           in: header
       responses:
         "204":
-          description: 削除した
+          description: Deleted
         "403":
           description: FORBIDDEN
           content:
