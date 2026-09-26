@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Root } from './Root';
 
 function renderRoot() {
@@ -37,3 +37,6 @@ describe('Root', () => {
     expect(home.querySelector('img[src="/favicon.svg"]')).toHaveAttribute('alt', '');
   });
 });
+
+// These assertions verify the Japanese interface explicitly.
+beforeEach(() => localStorage.setItem('tsudou:language', 'ja'));

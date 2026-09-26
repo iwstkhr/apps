@@ -4,20 +4,34 @@ import { formatDate, formatFee } from './format';
 import { applyLanguage, getLanguage, LANGUAGE_KEY, setLanguage, t, useLanguage } from './i18n';
 
 beforeEach(() => {
-  setLanguage('ja');
+  setLanguage('en');
   localStorage.clear();
 });
 afterEach(() => {
   vi.restoreAllMocks();
-  setLanguage('ja');
+  setLanguage('en');
   localStorage.clear();
 });
 
 describe('language preferences', () => {
-  it('defaults to Japanese and ignores unsupported stored values', () => {
-    expect(getLanguage()).toBe('ja');
+  it('defaults to English and ignores unsupported stored values', () => {
+    expect(getLanguage()).toBe('en');
     localStorage.setItem(LANGUAGE_KEY, 'fr');
+    expect(getLanguage()).toBe('en');
+  });
+
+  it('preserves a saved Japanese choice', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'ja');
     expect(getLanguage()).toBe('ja');
+    applyLanguage(getLanguage());
+    expect(document.documentElement.lang).toBe('ja');
+  });
+
+  it('defaults to English when storage is unavailable', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Blocked');
+    });
+    expect(getLanguage()).toBe('en');
   });
 
   it('restores English and updates document language and metadata', () => {
@@ -57,18 +71,18 @@ describe('language preferences', () => {
 
   it('synchronizes mounted screens with language changes in another tab', () => {
     const { result } = renderHook(useLanguage);
-    expect(result.current).toBe('ja');
-    act(() => {
-      localStorage.setItem(LANGUAGE_KEY, 'en');
-      window.dispatchEvent(new StorageEvent('storage', { key: LANGUAGE_KEY, newValue: 'en' }));
-    });
     expect(result.current).toBe('en');
-    expect(document.documentElement.lang).toBe('en');
+    act(() => {
+      localStorage.setItem(LANGUAGE_KEY, 'ja');
+      window.dispatchEvent(new StorageEvent('storage', { key: LANGUAGE_KEY, newValue: 'ja' }));
+    });
+    expect(result.current).toBe('ja');
+    expect(document.documentElement.lang).toBe('ja');
     act(() => {
       localStorage.clear();
       window.dispatchEvent(new StorageEvent('storage', { key: null }));
     });
-    expect(result.current).toBe('ja');
+    expect(result.current).toBe('en');
   });
 });
 

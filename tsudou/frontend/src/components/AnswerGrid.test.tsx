@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { bestCandidateIds, summarize } from '../lib/tally';
 import type { AnswerView, Candidate } from '../lib/types';
 import { AnswerGrid } from './AnswerGrid';
@@ -94,3 +94,6 @@ describe('AnswerGrid', () => {
     expect(screen.getAllByText('最多')).toHaveLength(1);
   });
 });
+
+// These assertions verify the Japanese interface explicitly.
+beforeEach(() => localStorage.setItem('tsudou:language', 'ja'));

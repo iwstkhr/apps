@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Guide } from './Guide';
 
 function renderGuide() {
@@ -39,3 +39,6 @@ describe('Guide', () => {
     }
   });
 });
+
+// These assertions verify the Japanese interface explicitly.
+beforeEach(() => localStorage.setItem('tsudou:language', 'ja'));

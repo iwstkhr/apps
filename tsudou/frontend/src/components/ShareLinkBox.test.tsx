@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ShareLinkBox } from './ShareLinkBox';
 
 const url = 'https://example.com/e/evt-1/manage#k=token';
@@ -21,3 +21,6 @@ describe('ShareLinkBox', () => {
     expect(screen.getByRole('button', { name: 'コピー' })).toBeInTheDocument();
   });
 });
+
+// These assertions verify the Japanese interface explicitly.
+beforeEach(() => localStorage.setItem('tsudou:language', 'ja'));

@@ -11,12 +11,12 @@ import { Home } from './Home';
 import { Root } from './Root';
 
 beforeEach(() => {
-  setLanguage('ja');
   localStorage.clear();
+  setLanguage('ja');
 });
 afterEach(() => {
-  setLanguage('ja');
   localStorage.clear();
+  setLanguage('ja');
 });
 
 function renderPage(page: 'home' | 'guide' = 'home') {
@@ -40,6 +40,13 @@ function renderPage(page: 'home' | 'guide' = 'home') {
 }
 
 describe('language switching', () => {
+  it('shows English on a first visit without a saved language', () => {
+    localStorage.clear();
+    renderPage();
+    expect(screen.getByRole('heading', { name: 'Create an event' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
+  });
+
   it('switches the whole screen without losing an event draft or existing validation errors', async () => {
     const user = userEvent.setup();
     renderPage();

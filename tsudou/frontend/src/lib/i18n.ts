@@ -4,14 +4,14 @@ import { english } from './translations';
 export type Language = 'ja' | 'en';
 export const LANGUAGE_KEY = 'tsudou:language';
 const listeners = new Set<() => void>();
-let memoryLanguage: Language = 'ja';
+let memoryLanguage: Language = 'en';
 let unsavedLanguage: Language | null = null;
 
 export function getLanguage(): Language {
   if (unsavedLanguage) return unsavedLanguage;
   try {
     const saved = localStorage.getItem(LANGUAGE_KEY);
-    return saved === 'en' ? 'en' : 'ja';
+    return saved === 'ja' ? 'ja' : 'en';
   } catch {
     return memoryLanguage;
   }
@@ -60,7 +60,7 @@ function subscribe(listener: () => void) {
 }
 
 export function useLanguage() {
-  return useSyncExternalStore(subscribe, getLanguage, () => 'ja' as const);
+  return useSyncExternalStore(subscribe, getLanguage, () => 'en' as const);
 }
 
 /** Translate application text only. Interpolated values are rendered as plain text. */

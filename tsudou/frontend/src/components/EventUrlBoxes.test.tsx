@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ManageUrlBox, ShareUrlBox } from './EventUrlBoxes';
 
 describe('ShareUrlBox / ManageUrlBox', () => {
@@ -24,3 +24,6 @@ describe('ShareUrlBox / ManageUrlBox', () => {
     expect(screen.getByRole('link', { name: '開く' })).toHaveAttribute('href', url);
   });
 });
+
+// These assertions verify the Japanese interface explicitly.
+beforeEach(() => localStorage.setItem('tsudou:language', 'ja'));

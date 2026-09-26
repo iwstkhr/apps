@@ -7,6 +7,7 @@ import { ThemeToggle } from './ThemeToggle';
 describe('ThemeToggle', () => {
   beforeEach(() => {
     localStorage.clear();
+    localStorage.setItem('tsudou:language', 'ja');
     delete document.documentElement.dataset.theme;
   });
 
@@ -47,6 +48,7 @@ describe('ThemeToggle', () => {
 describe('ThemeToggle theme-color', () => {
   beforeEach(() => {
     localStorage.clear();
+    localStorage.setItem('tsudou:language', 'ja');
     document.head.innerHTML = '<meta name="theme-color" content="#ffffff" />';
   });
 

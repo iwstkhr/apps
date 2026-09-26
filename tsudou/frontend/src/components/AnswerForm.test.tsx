@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyDraft } from '../lib/answerDraft';
 import type { Candidate } from '../lib/types';
 import { AnswerForm } from './AnswerForm';
@@ -109,3 +109,6 @@ describe('AnswerForm', () => {
     expect(onSubmit.mock.calls[0]![0].choices).toEqual({ c1: 'YES', c2: 'NO' });
   });
 });
+
+// These assertions verify the Japanese interface explicitly.
+beforeEach(() => localStorage.setItem('tsudou:language', 'ja'));

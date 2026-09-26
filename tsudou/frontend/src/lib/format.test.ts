@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   formatDate,
   formatDateTime,
@@ -90,3 +90,6 @@ describe('formatExpiry', () => {
     expect(formatExpiry(Number.NaN)).toBe('--');
   });
 });
+
+// These assertions verify the Japanese interface explicitly.
+beforeEach(() => localStorage.setItem('tsudou:language', 'ja'));

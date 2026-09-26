@@ -1,23 +1,23 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
-    <meta name="description" content="Tsudou はログイン不要でイベントの日程調整ができるアプリです。" />
+    <meta name="description" content="Schedule events with Tsudou without signing in." />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <!-- ヘッダの背景色。ダークテーマでは下のスクリプトと src/lib/theme.ts が書き換える -->
     <meta name="theme-color" content="#ffffff" />
-    <title>Tsudou｜イベント日程調整</title>
+    <title>Tsudou | Event scheduling</title>
     <script>
       // 初回描画前にテーマを決めてチラつきを防ぐ。ロジックは src/lib/theme.ts と揃えること
       (() => {
-        let language = 'ja';
+        let language = 'en';
         try {
-          if (localStorage.getItem('tsudou:language') === 'en') language = 'en';
+          if (localStorage.getItem('tsudou:language') === 'ja') language = 'ja';
         } catch {}
         document.documentElement.lang = language;
         document.title = language === 'en' ? 'Tsudou | Event scheduling' : 'Tsudou｜イベント日程調整';

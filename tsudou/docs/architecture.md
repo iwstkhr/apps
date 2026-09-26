@@ -318,7 +318,7 @@ Both locations also update `<meta name="theme-color">`, which controls browser U
 
 ### Display language
 
-`LanguageSelect` in the header switches between Japanese (`ja`, default) and English (`en`). `lib/i18n.ts` persists the choice, notifies mounted components through `useSyncExternalStore`, and handles cross-tab storage events. Storage exceptions use an in-memory preference.
+`LanguageSelect` in the header switches between Japanese (`ja`) and English (`en`, default). `lib/i18n.ts` persists the choice, notifies mounted components through `useSyncExternalStore`, and handles cross-tab storage events. Storage exceptions use an in-memory preference.
 
 `lib/translations.ts` maps Japanese application text to English. Translation happens at rendering, including existing field and server errors, so switching preserves TanStack Form drafts and server data. Interpolated values stay plain text; user-generated content is never translated. Weekday labels follow the language while date values, local time zones, and yen amounts retain their meaning. Backend validation rules and API messages remain unchanged.
 
