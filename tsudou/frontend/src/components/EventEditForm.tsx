@@ -1,0 +1,73 @@
+import { useForm } from '@tanstack/react-form';
+import { candidatesToDrafts, candidatesToInput } from '../lib/candidateDraft';
+import { parseFeeValue } from '../lib/formValidators';
+import type { EventView } from '../lib/types';
+import { EventFormFields, type EventFormValues } from './EventFormFields';
+import { Alert, Button } from './ui';
+
+export type EventEditValues = {
+  title: string;
+  fee: number | null;
+  memo: string | null;
+  candidates: { id?: string | null; startAt: string }[];
+};
+
+/**
+ * 編集フォームの状態は TanStack Form が持つ。呼び出し側は key={event.id} で
+ * 作り直すことで defaultValues を入れ替えるため、エフェクトでの同期が要らない。
+ */
+export function EventEditForm({
+  event,
+  saving,
+  saved,
+  error,
+  onSave,
+}: {
+  event: EventView;
+  saving: boolean;
+  saved: boolean;
+  error: string | null;
+  onSave: (values: EventEditValues) => void;
+}) {
+  const form = useForm({
+    defaultValues: {
+      title: event.title,
+      fee: event.fee == null ? '' : String(event.fee),
+      memo: event.memo ?? '',
+      candidates: candidatesToDrafts(event.candidates),
+    } satisfies EventFormValues,
+    onSubmit: ({ value }) => {
+      onSave({
+        title: value.title.trim(),
+        fee: parseFeeValue(value.fee),
+        memo: value.memo.trim() === '' ? null : value.memo.trim(),
+        candidates: candidatesToInput(value.candidates),
+      });
+    },
+  });
+
+  return (
+    <form
+      className="space-y-5"
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <EventFormFields form={form} disabled={saving} />
+
+      {saved && <Alert variant="success">保存しました。</Alert>}
+      {error && <Alert variant="error">{error}</Alert>}
+
+      {/* 検証エラーが残っている間は送信させない */}
+      <form.Subscribe selector={(state) => state.canSubmit}>
+        {(canSubmit) => (
+          <Button type="submit" loading={saving} disabled={!canSubmit}>
+            変更を保存
+          </Button>
+        )}
+      </form.Subscribe>
+    </form>
+  );
+}

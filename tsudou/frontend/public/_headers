@@ -1,0 +1,25 @@
+# Cloudflare Workers の静的アセットに付けるレスポンスヘッダ。
+# Referrer-Policy: 管理用 URL の #k=<token> がフラグメントとはいえ、
+# 外部リンク経由での情報漏れを避けるため Referer は一切送らない
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  X-Robots-Tag: noindex, nofollow
+
+# 検索エンジンに載せるのはトップページだけ。どのパスにも同じ index.html を返すため
+# HTML の <meta name="robots"> では出し分けられず、ヘッダで制御する。
+# 載せないのを既定にし、トップページだけ外す (新しいルートが増えても漏れない)
+/
+  ! X-Robots-Tag
+
+# バージョン別・エイリアス付きプレビュー URL のトップページも検索結果に載せない。
+# それ以外のパスは上の /* の noindex がそのまま適用される。
+https://:preview-tsudou.:account.workers.dev/
+  X-Robots-Tag: noindex, nofollow
+
+# ファイル名にハッシュが付くので長期キャッシュしてよい
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
