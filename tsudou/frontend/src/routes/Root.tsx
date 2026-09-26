@@ -12,11 +12,18 @@ export function Root() {
             <img src="/favicon.svg" alt="" width={24} height={24} className="size-6 shrink-0" />
             <span className="flex items-baseline gap-2">
               <span className="text-base font-bold tracking-tight">Tsudou</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">イベント日程調整</span>
+              <span className="hidden text-xs text-slate-500 sm:inline dark:text-slate-400">
+                イベント日程調整
+              </span>
             </span>
           </Link>
           <div className="flex items-center gap-3">
-            <TextLink to="/">新しく作る</TextLink>
+            <TextLink to="/guide" className="whitespace-nowrap">
+              使い方
+            </TextLink>
+            <TextLink to="/" className="whitespace-nowrap">
+              新しく作る
+            </TextLink>
             <ThemeToggle />
           </div>
         </div>

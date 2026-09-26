@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "guide:capture": "node scripts/capture-guide.mjs"
   },
   "dependencies": {
     "@tanstack/react-form": "^1.33.5",

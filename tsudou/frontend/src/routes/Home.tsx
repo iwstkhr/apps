@@ -1,7 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { RETENTION_MONTHS } from '@tsudou/shared/limits';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { EventFormFields, type EventFormValues } from '../components/EventFormFields';
 import { Alert, Button, Card } from '../components/ui';
 import { createEvent } from '../lib/api';
@@ -51,6 +51,13 @@ export function Home() {
         </p>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           作成したイベントと回答は、作成から{RETENTION_MONTHS}ヶ月後に自動削除されます。
+        </p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          はじめての方は
+          <Link to="/guide" className="text-indigo-600 hover:underline dark:text-indigo-400">
+            使い方
+          </Link>
+          をご覧ください。
         </p>
 
         <form

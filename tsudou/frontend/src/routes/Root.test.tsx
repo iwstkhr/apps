@@ -23,6 +23,12 @@ describe('Root', () => {
     );
   });
 
+  it('ヘッダーから使い方ページへ移動できる', () => {
+    renderRoot();
+
+    expect(screen.getByRole('link', { name: '使い方' })).toHaveAttribute('href', '/guide');
+  });
+
   it('ヘッダーのアプリ名の横にアイコンを表示し、リンク名はアプリ名のままにする', () => {
     renderRoot();
 
