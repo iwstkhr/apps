@@ -1,0 +1,22 @@
+{
+  // フロント (ブラウザ) とバックエンド (Node.js) の両方にバンドルされるコード。
+  // どちらか片方にしかない API を使ったら型エラーになるよう、DOM と Node の型を読み込まない。
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": true,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+
+    "types": []
+  },
+  "include": ["src"]
+}
