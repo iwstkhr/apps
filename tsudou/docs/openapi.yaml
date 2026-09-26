@@ -1,0 +1,623 @@
+# Generated file; do not edit directly. Update backend/src/openapi.ts or backend/src/schemas.ts and run pnpm run openapi.
+openapi: 3.1.0
+info:
+  title: Tsudou API
+  version: 0.1.0
+  description: API for an event scheduling service without sign-in. It is under
+    /api on the UI origin and has no authentication. Character limits are
+    applied after trimming whitespace.
+components:
+  schemas:
+    CreateEventResult:
+      type: object
+      properties:
+        eventId:
+          type: string
+        manageToken:
+          type: string
+          description: Management token; returned in plaintext only once
+      required:
+        - eventId
+        - manageToken
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION
+                - FORBIDDEN
+                - NOT_FOUND
+                - CLOSED
+                - DUPLICATE_NAME
+                - RATE_LIMITED
+                - INTERNAL
+            message:
+              type: string
+              description: Message suitable for direct display in the UI
+          required:
+            - code
+            - message
+      required:
+        - error
+    CreateEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          description: Event title
+        fee:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1000000
+          description: Fee in yen, as an integer
+        memo:
+          type:
+            - string
+            - "null"
+          maxLength: 2000
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateInput"
+          minItems: 1
+          maxItems: 30
+      required:
+        - title
+        - candidates
+    CandidateInput:
+      type: object
+      properties:
+        id:
+          type:
+            - string
+            - "null"
+          description: Existing candidate ID; a new ID is generated when omitted
+        startAt:
+          type: string
+          format: date-time
+          description: Start date/time (ISO 8601)
+      required:
+        - startAt
+    EventView:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        fee:
+          type:
+            - integer
+            - "null"
+        memo:
+          type:
+            - string
+            - "null"
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Candidate"
+          description: Sorted by start date/time in ascending order
+        closed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: integer
+          description: Automatic deletion time (epoch seconds)
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerView"
+          description: Sorted by creation time in ascending order
+      required:
+        - id
+        - title
+        - fee
+        - memo
+        - candidates
+        - closed
+        - createdAt
+        - expiresAt
+        - answers
+    Candidate:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Candidate ID
+        startAt:
+          type: string
+          format: date-time
+          description: Start date/time (ISO 8601)
+      required:
+        - id
+        - startAt
+    AnswerView:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        message:
+          type:
+            - string
+            - "null"
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Choice"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - message
+        - choices
+        - createdAt
+        - updatedAt
+    Choice:
+      type: object
+      properties:
+        candidateId:
+          type: string
+        status:
+          $ref: "#/components/schemas/AnswerStatus"
+      required:
+        - candidateId
+        - status
+    AnswerStatus:
+      type: string
+      enum:
+        - YES
+        - NO
+        - MAYBE
+      description: "YES: attending / NO: not attending / MAYBE: undecided"
+    UpdateEventBody:
+      type: object
+      properties:
+        title:
+          type:
+            - string
+            - "null"
+          maxLength: 100
+          description: Event title
+        fee:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1000000
+          description: Fee in yen, as an integer
+        memo:
+          type:
+            - string
+            - "null"
+          maxLength: 2000
+        candidates:
+          type:
+            - array
+            - "null"
+          items:
+            $ref: "#/components/schemas/CandidateInput"
+          minItems: 1
+          maxItems: 30
+        closed:
+          type:
+            - boolean
+            - "null"
+    SubmitAnswerResult:
+      type: object
+      properties:
+        answer:
+          $ref: "#/components/schemas/AnswerView"
+        editToken:
+          type: string
+          description: Response edit key; returned in plaintext only once
+      required:
+        - answer
+        - editToken
+    AnswerBody:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 40
+          description: Respondent name
+        message:
+          type:
+            - string
+            - "null"
+          maxLength: 500
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Choice"
+          description: Exactly one choice per candidate, with no missing or extra entries
+      required:
+        - name
+        - choices
+  parameters: {}
+paths:
+  /api/healthz:
+    get:
+      summary: Health check
+      tags:
+        - system
+      responses:
+        "200":
+          description: Operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    enum:
+                      - true
+                required:
+                  - ok
+  /api/events:
+    post:
+      summary: Create event
+      tags:
+        - events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEventBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateEventResult"
+        "400":
+          description: VALIDATION
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{eventId}:
+    get:
+      summary: Get event (including responses)
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: eventId
+          in: path
+      responses:
+        "200":
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventView"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: Update event or close responses
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: eventId
+          in: path
+        - schema:
+            type: string
+            description: Management token returned when the event was created
+          required: true
+          description: Management token returned when the event was created
+          name: x-manage-token
+          in: header
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEventBody"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventView"
+        "400":
+          description: VALIDATION
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Delete event (also deletes responses)
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: eventId
+          in: path
+        - schema:
+            type: string
+            description: Management token returned when the event was created
+          required: true
+          description: Management token returned when the event was created
+          name: x-manage-token
+          in: header
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{eventId}/answers:
+    post:
+      summary: Create response
+      tags:
+        - answers
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: eventId
+          in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitAnswerResult"
+        "400":
+          description: VALIDATION
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: CLOSED / DUPLICATE_NAME
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/answers/{answerId}:
+    put:
+      summary: Update response
+      tags:
+        - answers
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: answerId
+          in: path
+        - schema:
+            type: string
+            description: Response edit key returned when the response was created
+          required: true
+          description: Response edit key returned when the response was created
+          name: x-edit-token
+          in: header
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerBody"
+      responses:
+        "200":
+          description: Updated response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerView"
+        "400":
+          description: VALIDATION
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: CLOSED / DUPLICATE_NAME
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Delete response
+      description: Requires either the response edit key (owner) or management token (host)
+      tags:
+        - answers
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: answerId
+          in: path
+        - schema:
+            type: string
+            description: Response edit key returned when the response was created
+          required: false
+          description: Response edit key returned when the response was created
+          name: x-edit-token
+          in: header
+        - schema:
+            type: string
+            description: Management token returned when the event was created
+          required: false
+          description: Management token returned when the event was created
+          name: x-manage-token
+          in: header
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+webhooks: {}

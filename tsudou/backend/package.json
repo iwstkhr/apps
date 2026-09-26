@@ -1,0 +1,32 @@
+{
+  "name": "@tsudou/backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node -e \"require('node:fs').mkdirSync('../frontend/dist', { recursive: true })\" && wrangler d1 migrations apply tsudou --local && wrangler dev --port 8080",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "types": "wrangler types --strict-vars=false",
+    "openapi": "tsx scripts/openapi.ts",
+    "typecheck": "wrangler types --strict-vars=false && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@tsudou/shared": "workspace:*",
+    "express": "^5.2.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.0.0",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.2.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1",
+    "wrangler": "^4.135.0",
+    "yaml": "^2.9.1"
+  }
+}
