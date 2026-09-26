@@ -1,0 +1,18 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+*.tsbuildinfo
+
+# wrangler (.wrangler/ にはローカルの D1 のデータも入る)
+.wrangler/
+# `wrangler types` の生成物 (typecheck のたびに作り直す)
+worker-configuration.d.ts
+
+# env / local
+.env
+.env.*
+!.env.example
+.DS_Store
