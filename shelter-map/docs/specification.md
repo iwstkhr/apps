@@ -179,7 +179,7 @@ GeoJSON 上の指定フラグは文字列 `"1"` を指定あり、それ以外�
 | 項目 | 内容 |
 | --- | --- |
 | ランタイム | モダンブラウザー（`DecompressionStream` 利用） |
-| 配信 | GitHub Pages（ベースパス `/shelter-map/`） |
+| 配信 | Cloudflare Workers の静的アセット（ルートパスで配信） |
 | データ更新 | 毎月 1 日に Actions が PR を作成 |
 | 品質ゲート | pre-commit、Biome、TypeScript、Vitest |
 

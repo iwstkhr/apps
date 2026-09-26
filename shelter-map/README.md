@@ -31,6 +31,7 @@
 - [mise](https://mise.jdx.dev/)（Node.js と pre-commit のバージョン管理）
 - Node.js（[`mise.toml`](../mise.toml)（リポジトリ直下） / `package.json` の `engines.node` で指定）
 - npm
+- デプロイする場合は Cloudflare アカウント（`npx wrangler login` でログイン）
 
 ## セットアップ
 
@@ -53,6 +54,8 @@ npm run dev
 | `npm run dev` | 開発サーバーを起動 |
 | `npm run build` | 本番ビルドを作成 |
 | `npm run start` | 本番ビルドをローカルで配信 |
+| `npm run preview` | 本番ビルドを作成し、`wrangler dev` で Workers と同じ構成でローカル配信 |
+| `npm run deploy` | `build/client` を Cloudflare Workers へデプロイ（事前に `npm run build`） |
 | `npm run lint` | Biome でリントを実行 |
 | `npm run format` | Biome でコードをフォーマット |
 | `npm run format:check` | フォーマットの差分を確認 |
@@ -82,12 +85,12 @@ npm run dev
 
 ## CI / デプロイ
 
-PR と `main` への push で `shelter-map/` 以下が変更されると [Shelter map check](../.github/workflows/shelter-map-check.yml) が走り、`main` で Check が成功すると [Shelter map deploy](../.github/workflows/shelter-map-deploy.yml) が [GitHub Pages](https://pages.github.com/) へ公開します。詳細は [アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
+PR と `main` への push で `shelter-map/` 以下が変更されると [Shelter map check](../.github/workflows/shelter-map-check.yml) が走り、`main` で Check が成功すると [Shelter map deploy](../.github/workflows/shelter-map-deploy.yml) が [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/) へ公開します。配信設定は [`wrangler.jsonc`](wrangler.jsonc) で、デプロイには GitHub の secrets `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID` を使います。詳細は [アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
 
-GitHub Pages と同じベースパス（`/<リポジトリ名>/`）でローカルビルドする場合:
+Workers ではドメインのルートで配信するため、`BASE_PATH` は指定しません。サブパス配下で配信する場合だけ、ビルド時に指定します:
 
 ```bash
-BASE_PATH=/apps/ npm run build
+BASE_PATH=/sub-path/ npm run build
 ```
 
 `public/` 以下の静的アセットは `publicUrl()`（`app/lib/public-url.ts`）経由で参照し、ルート絶対パス（例: `/favicon.svg`）は使わないでください。

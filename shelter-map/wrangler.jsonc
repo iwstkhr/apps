@@ -1,0 +1,13 @@
+// shelter-map を Cloudflare Workers の静的アセットとして配信する (Worker のスクリプトは持たない)。
+// デプロイ前に `npm run build` で build/client/ を作っておく。
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "shelter-map",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./build/client",
+    // 未知のパスへのナビゲーションには index.html を 200 で返し、SPA のルーティングに任せる
+    "not_found_handling": "single-page-application"
+  },
+  "observability": { "enabled": true }
+}

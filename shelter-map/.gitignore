@@ -55,3 +55,6 @@ Thumbs.db
 # Deploy platform local config
 .vercel
 .netlify
+
+# Wrangler local state
+.wrangler/

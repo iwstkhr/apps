@@ -8,7 +8,7 @@
 
 ```text
 ┌──────────────────────────────────────────────────────────┐
-│  GitHub Pages（静的配信）                                 │
+│  Cloudflare Workers（静的アセット配信）                  │
 │  build/client + public/assets/*.geojson.gz               │
 └────────────────────────────┬─────────────────────────────┘
                              │ fetch (.geojson.gz)
@@ -39,7 +39,7 @@
 | スタイル | Tailwind CSS 4 |
 | 品質 | Biome、Vitest、Testing Library、pre-commit |
 | ランタイム管理 | mise（Node.js / pre-commit） |
-| 配信 | GitHub Pages |
+| 配信 | Cloudflare Workers（静的アセットのみ。設定は `wrangler.jsonc`） |
 
 ## ディレクトリ構成
 
@@ -63,7 +63,7 @@ public/assets/  # 圧縮 GeoJSON などの静的アセット
 scripts/        # dataset-meta 生成
 ../.github/workflows/          # リポジトリ直下
   shelter-map-check.yml           # PR / main の品質チェック
-  shelter-map-deploy.yml          # Check 成功後に Pages へデプロイ
+  shelter-map-deploy.yml          # Check 成功後に Workers へデプロイ
   shelter-map-update-geojson.yml  # 毎月の GeoJSON 更新 PR
 ```
 
@@ -161,7 +161,7 @@ MapTable
 ## ルーティングとビルド
 
 - `react-router.config.ts`: `ssr: false`
-- 本番の `basename` / Vite `base` は `BASE_PATH` 環境変数（Pages では `/shelter-map/`）
+- 本番の `basename` / Vite `base` は `BASE_PATH` 環境変数（未指定なら `/`。Workers ではルートで配信するので指定しない）
 - 静的アセット参照は必ず `publicUrl()`（`import.meta.env.BASE_URL` 経由）を使う
 - ルート絶対パス（例: `/favicon.svg`）は使わない
 
@@ -195,16 +195,16 @@ PR / push to main
 
 main で Shelter map check 成功
   └─ Shelter map deploy（workflow_run）
-       ├─ BASE_PATH=/<repo>/ npm run build
-       └─ GitHub Pages へ build/client を公開
+       ├─ npm run build
+       └─ npm run deploy（wrangler deploy で build/client を Workers へ公開）
 ```
 
-Deploy は Check の完了を `workflow_run` で待ち、成功時のみビルドする。
+Deploy は Check の完了を `workflow_run` で待ち、成功時のみ Check が検査したコミットをビルドする。未知のパスへのナビゲーションには `index.html` を返す（`not_found_handling: single-page-application`）。
 
 ## 設計上のポイント
 
 1. **単一ソースの状態** — フィルター済み一覧を Context で共有し、地図とテーブルの表示ずれを防ぐ
 1. **描画コストの抑制** — 地図は表示範囲のみ、低ズームでは circle、レイヤーは差分更新
 1. **大きな一覧の扱い** — テーブルは仮想スクロールで全件を扱う
-1. **配信の単純さ** — API なしの静的 SPA + gzip アセットで GitHub Pages に載せる
+1. **配信の単純さ** — API なしの静的 SPA + gzip アセットを Worker のスクリプトなしで Cloudflare Workers に載せる
 1. **データの安全性** — GeoJSON を実行時に検証し、不正 Feature は捨ててコレクション不正時のみ失敗する

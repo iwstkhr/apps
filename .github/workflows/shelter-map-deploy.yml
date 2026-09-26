@@ -1,5 +1,6 @@
 name: Shelter map deploy
 
+# 静的アセット（build/client/）を Cloudflare Workers で公開する。設定は shelter-map/wrangler.jsonc。
 on:
   workflow_run:
     workflows:
@@ -11,21 +12,32 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: shelter-map-deploy
   cancel-in-progress: false
 
+defaults:
+  run:
+    working-directory: shelter-map
+
 jobs:
-  build:
-    name: Build
+  deploy:
+    name: Deploy
+    # Check が失敗したコミットは公開しない
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          # Check が検査したコミットをそのまま公開する
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
       - name: Setup mise
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c  # v4
@@ -33,29 +45,11 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        working-directory: shelter-map
         run: npm ci
 
+      # Workers ではドメインのルートで配信するので BASE_PATH は付けない
       - name: Build
-        working-directory: shelter-map
-        env:
-          BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5
-        with:
-          path: shelter-map/build/client
-
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5
+      - name: Deploy
+        run: npm run deploy
