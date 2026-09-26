@@ -83,9 +83,9 @@ pnpm test            # Unit tests
 pnpm run build       # Production build
 ```
 
-GitHub Actions runs the following on pull requests and pushes to `main`:
+GitHub Actions runs the following on pull requests and pushes to `main` (workflows live at the monorepo root; `tsudou-test.yml` runs only when files under `tsudou/` change):
 
 | Workflow | Checks |
 | --- | --- |
-| `.github/workflows/test.yml` | Type checking (`pnpm run typecheck`) and unit tests (`pnpm test`) |
+| `.github/workflows/tsudou-test.yml` | Type checking (`pnpm run typecheck`) and unit tests (`pnpm test`) |
 | `.github/workflows/pre-commit.yml` | pre-commit hooks (Biome, markdownlint, actionlint, gitleaks, etc.) |

@@ -29,17 +29,18 @@
 ## 必要条件
 
 - [mise](https://mise.jdx.dev/)（Node.js と pre-commit のバージョン管理）
-- Node.js（[`mise.toml`](mise.toml) / `package.json` の `engines.node` で指定）
+- Node.js（[`mise.toml`](../mise.toml)（リポジトリ直下） / `package.json` の `engines.node` で指定）
 - npm
 
 ## セットアップ
 
 ```bash
-git clone https://github.com/iwstkhr/shelter-map.git
-cd shelter-map
+git clone https://github.com/iwstkhr/apps.git
+cd apps
 mise install
-npm ci
 pre-commit install
+cd shelter-map
+npm ci
 npm run dev
 ```
 
@@ -60,7 +61,7 @@ npm run dev
 | `npm run typecheck` | TypeScript の型チェックを実行 |
 | `npm run test` | Vitest でテストを実行 |
 | `npm run test:watch` | Vitest をウォッチモードで実行 |
-| `pre-commit run --all-files` | pre-commit の hooks を全ファイルに対して実行 |
+| `pre-commit run --all-files` | pre-commit の hooks を全ファイルに対して実行（リポジトリ直下で実行） |
 
 ## ドキュメント
 
@@ -81,12 +82,12 @@ npm run dev
 
 ## CI / デプロイ
 
-PR と `main` への push では [Check](.github/workflows/check.yml) が走り、`main` で Check が成功すると [Deploy](.github/workflows/deploy.yml) が [GitHub Pages](https://pages.github.com/) へ公開します。詳細は [アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
+PR と `main` への push で `shelter-map/` 以下が変更されると [Shelter map check](../.github/workflows/shelter-map-check.yml) が走り、`main` で Check が成功すると [Shelter map deploy](../.github/workflows/shelter-map-deploy.yml) が [GitHub Pages](https://pages.github.com/) へ公開します。詳細は [アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
 
-GitHub Pages と同じベースパスでローカルビルドする場合:
+GitHub Pages と同じベースパス（`/<リポジトリ名>/`）でローカルビルドする場合:
 
 ```bash
-BASE_PATH=/shelter-map/ npm run build
+BASE_PATH=/apps/ npm run build
 ```
 
 `public/` 以下の静的アセットは `publicUrl()`（`app/lib/public-url.ts`）経由で参照し、ルート絶対パス（例: `/favicon.svg`）は使わないでください。
@@ -95,15 +96,15 @@ BASE_PATH=/shelter-map/ npm run build
 
 ### Git hooks
 
-`mise install` 後に `pre-commit install` を実行すると、[`.pre-commit-config.yaml`](.pre-commit-config.yaml) の hooks がコミット時に有効になります。
+`mise install` 後に `pre-commit install` を実行すると、[`.pre-commit-config.yaml`](../.pre-commit-config.yaml)（リポジトリ直下）の hooks がコミット時に有効になります。
 
-全ファイルに対して手動実行する場合:
+全ファイルに対して手動実行する場合（リポジトリ直下で実行）:
 
 ```bash
 pre-commit run --all-files
 ```
 
-CI と同条件で確認する場合:
+CI と同条件で確認する場合（`pre-commit` はリポジトリ直下、`npm` は `shelter-map/` で実行）:
 
 ```bash
 pre-commit run --all-files

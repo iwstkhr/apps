@@ -1,4 +1,4 @@
-name: Destroy
+name: Tsudou destroy
 
 # Cloudflare 上のリソース（Worker と D1 のデータベース）を削除する。元に戻せないので手動実行のみ。
 # Worker を先に消して配信と API を止めてから、指定されていればデータベースを消す。
@@ -20,7 +20,7 @@ permissions:
 
 # デプロイと同時に走って、消した直後に作り直されないようにする
 concurrency:
-  group: deploy
+  group: tsudou-deploy
   cancel-in-progress: false
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      # backend/wrangler.jsonc の name と d1_databases[].database_name
+      # tsudou/backend/wrangler.jsonc の name と d1_databases[].database_name
       WORKER_NAME: tsudou
       DATABASE_NAME: tsudou
     steps:
@@ -48,23 +48,27 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        with:
+          package_json_file: tsudou/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           cache: pnpm
+          cache-dependency-path: tsudou/pnpm-lock.yaml
 
       - name: Install dependencies
+        working-directory: tsudou
         run: pnpm install --frozen-lockfile
 
       # Cron Trigger と静的アセットも Worker と一緒に消える。
       # 他の Worker から参照されている場合は wrangler が失敗するので、--force は付けない
       - name: Delete Worker
-        working-directory: backend
+        working-directory: tsudou/backend
         run: pnpm exec wrangler delete "$WORKER_NAME"
 
       - name: Delete D1 database
         if: inputs.delete_database
-        working-directory: backend
+        working-directory: tsudou/backend
         run: pnpm exec wrangler d1 delete "$DATABASE_NAME" --skip-confirmation

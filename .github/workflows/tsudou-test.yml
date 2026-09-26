@@ -1,11 +1,17 @@
-name: Test
+name: Tsudou test
 
-# 型チェックとユニットテスト (Vitest) を全パッケージで回す。Lint とフォーマットは pre-commit.yml が見る。
-# docs/openapi.yaml の作り直し忘れも backend のテスト (openapi.test.ts) で検出される。
+# 型チェックとユニットテスト (Vitest) を全パッケージで回す。Lint とフォーマットはリポジトリ直下の pre-commit.yml が見る。
+# tsudou/docs/openapi.yaml の作り直し忘れも backend のテスト (openapi.test.ts) で検出される。
 on:
   pull_request:
+    paths:
+      - 'tsudou/**'
+      - '.github/workflows/tsudou-test.yml'
   push:
     branches: [main]
+    paths:
+      - 'tsudou/**'
+      - '.github/workflows/tsudou-test.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,6 +19,10 @@ concurrency:
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: tsudou
 
 jobs:
   test:
@@ -23,12 +33,15 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        with:
+          package_json_file: tsudou/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           cache: pnpm
+          cache-dependency-path: tsudou/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

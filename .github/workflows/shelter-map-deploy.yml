@@ -1,9 +1,9 @@
-name: Deploy to GitHub Pages
+name: Shelter map deploy
 
 on:
   workflow_run:
     workflows:
-      - Check
+      - Shelter map check
     types:
       - completed
     branches:
@@ -33,9 +33,11 @@ jobs:
           cache: true
 
       - name: Install dependencies
+        working-directory: shelter-map
         run: npm ci
 
       - name: Build
+        working-directory: shelter-map
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
@@ -43,7 +45,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5
         with:
-          path: build/client
+          path: shelter-map/build/client
 
   deploy:
     name: Deploy

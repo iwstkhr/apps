@@ -1,4 +1,4 @@
-name: Deploy
+name: Tsudou deploy
 
 # 画面（静的アセット）と API（Express + D1）を 1 つの Cloudflare Worker として公開する。
 on:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy
+  group: tsudou-deploy
   cancel-in-progress: false
 
 jobs:
@@ -27,34 +27,39 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        with:
+          package_json_file: tsudou/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           cache: pnpm
+          cache-dependency-path: tsudou/pnpm-lock.yaml
 
       - name: Install dependencies
+        working-directory: tsudou
         run: pnpm install --frozen-lockfile
 
-      # Worker が静的アセットとして配信する frontend/dist/ を作る
+      # Worker が静的アセットとして配信する tsudou/frontend/dist/ を作る
       - name: Build frontend
+        working-directory: tsudou
         run: pnpm run build
 
       # 初回だけデータベースを作る。wrangler deploy の自動作成はリージョンを指定できず、
-      # マイグレーションより後に走るので使わない。backend/wrangler.jsonc は名前で引くので ID の書き戻しは要らない
+      # マイグレーションより後に走るので使わない。tsudou/backend/wrangler.jsonc は名前で引くので ID の書き戻しは要らない
       - name: Create D1 database if missing
-        working-directory: backend
+        working-directory: tsudou/backend
         run: |
           pnpm exec wrangler d1 info tsudou > /dev/null ||
             pnpm exec wrangler d1 create tsudou --location apac --no-update-config
 
       # 新しいコードが新しいスキーマを前提にできるよう、Worker より先に流す（適用済みのものは飛ばされる）
       - name: Apply D1 migrations
-        working-directory: backend
+        working-directory: tsudou/backend
         run: pnpm exec wrangler d1 migrations apply tsudou --remote
 
-      # 設定は backend/wrangler.jsonc。SPA のフォールバックとレスポンスヘッダ（frontend/public/_headers）もここで効く
+      # 設定は tsudou/backend/wrangler.jsonc。SPA のフォールバックとレスポンスヘッダ（tsudou/frontend/public/_headers）もここで効く
       - name: Deploy
-        working-directory: backend
+        working-directory: tsudou/backend
         run: pnpm exec wrangler deploy

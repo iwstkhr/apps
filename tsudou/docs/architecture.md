@@ -366,7 +366,7 @@ Events and responses are automatically deleted after `RETENTION_MONTHS` (default
 
 ## Deployment
 
-Manually run `.github/workflows/deploy.yml` from the Actions tab (`workflow_dispatch`). It performs these steps:
+Manually run `.github/workflows/tsudou-deploy.yml` (at the monorepo root) from the Actions tab (`workflow_dispatch`). It performs these steps:
 (Automatic deployment on pushes to `main` is currently disabled while preparing the migration.)
 
 1. Build the frontend with `pnpm run build` (`frontend/dist/`, served by the Worker).
@@ -386,7 +386,7 @@ It cannot specify a region, so the database might be created near the GitHub Act
 D1 regions cannot be changed after creation, so the workflow explicitly creates the database with `--location apac`.
 If `wrangler d1 info` fails temporarily, `d1 create` stops with an error when the name already exists, preventing duplicates.
 
-To remove resources, run `.github/workflows/destroy.yml` manually.
+To remove resources, run `.github/workflows/tsudou-destroy.yml` (at the monorepo root) manually.
 It aborts unless `confirm` matches the Worker name, deletes the Worker first to stop delivery, and deletes D1 only if `delete_database` is selected.
 Database deletion is off by default, so removing only the Worker retains data and redeployment restores service.
 The same concurrency group (`deploy`) prevents deletion during deployment or immediate recreation while deletion is running.

@@ -1,4 +1,4 @@
-name: Update shelter GeoJSON
+name: Shelter map update GeoJSON
 
 on:
   schedule:
@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
   pull-requests: write
+
+defaults:
+  run:
+    working-directory: shelter-map
 
 jobs:
   update-geojson:
@@ -62,8 +66,8 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8
         with:
-          commit-message: 'chore(data): update shelter GeoJSON data'
-          title: 'chore(data): update shelter GeoJSON data (${{ env.run_date }})'
+          commit-message: 'chore(shelter-map): update shelter GeoJSON data'
+          title: 'chore(shelter-map): update shelter GeoJSON data (${{ env.run_date }})'
           body: |
             Automated monthly update from 国土地理院 指定緊急避難場所データ.
 
@@ -74,5 +78,5 @@ jobs:
           branch: automated/update-geojson
           delete-branch: true
           add-paths: |
-            public/assets/mergeFromCity_2.geojson.gz
-            app/generated/dataset-meta.ts
+            shelter-map/public/assets/mergeFromCity_2.geojson.gz
+            shelter-map/app/generated/dataset-meta.ts

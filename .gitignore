@@ -1,0 +1,7 @@
+# Each app keeps its own .gitignore in its directory.
+
+# dependencies
+node_modules/
+
+# macOS-specific files
+.DS_Store

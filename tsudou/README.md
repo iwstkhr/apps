@@ -71,7 +71,7 @@ pnpm install
 ```
 
 The pnpm workspace contains three packages: `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), and shared code in `shared/` (`@tsudou/shared`).
-Run `pnpm install` once at the repository root to install all packages. Run all commands below from the repository root as well.
+Run `pnpm install` once in the `tsudou/` directory (the workspace root) to install all packages. Run all commands below from `tsudou/` as well.
 
 ### Local development
 
@@ -114,7 +114,7 @@ When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou
 
 ## Deployment (Cloudflare Workers)
 
-Manually run `.github/workflows/deploy.yml` from the Actions tab (`workflow_dispatch`). It performs these steps:
+Manually run `.github/workflows/tsudou-deploy.yml` (at the monorepo root) from the Actions tab (`workflow_dispatch`). It performs these steps:
 (Automatic deployment on pushes to `main` is currently disabled.)
 
 1. Build the frontend with `pnpm run build` (`frontend/dist/`).
@@ -138,7 +138,7 @@ Manually run `.github/workflows/deploy.yml` from the Actions tab (`workflow_disp
 
 ### Removing resources
 
-Manually run `.github/workflows/destroy.yml` from the Actions tab to delete Cloudflare resources.
+Manually run `.github/workflows/tsudou-destroy.yml` (at the monorepo root) from the Actions tab to delete Cloudflare resources.
 Because this cannot be undone, it runs only when the `confirm` input matches the Worker name (`tsudou`).
 
 1. Delete the Worker (`tsudou`), stopping UI/API delivery and the Cron Trigger.
