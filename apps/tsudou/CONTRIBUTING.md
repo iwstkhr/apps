@@ -83,7 +83,7 @@ pnpm test            # Unit tests
 pnpm run build       # Production build
 ```
 
-GitHub Actions runs the following on pull requests and pushes to `main` (workflows live at the monorepo root; `tsudou-test.yml` runs only when files under `tsudou/` change):
+GitHub Actions runs the following on pull requests and pushes to `main` (workflows live at the monorepo root; `tsudou-test.yml` runs only when files under `apps/tsudou/` change):
 
 | Workflow | Checks |
 | --- | --- |

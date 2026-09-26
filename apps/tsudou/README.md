@@ -71,7 +71,7 @@ pnpm install
 ```
 
 The pnpm workspace contains three packages: `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), and shared code in `shared/` (`@tsudou/shared`).
-Run `pnpm install` once in the `tsudou/` directory (the workspace root) to install all packages. Run all commands below from `tsudou/` as well.
+Run `pnpm install` once in the `apps/tsudou/` directory (the workspace root) to install all packages. Run all commands below from `apps/tsudou/` as well.
 
 ### Local development
 

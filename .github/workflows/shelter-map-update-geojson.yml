@@ -12,7 +12,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: shelter-map
+    working-directory: apps/shelter-map
 
 jobs:
   update-geojson:
@@ -78,5 +78,5 @@ jobs:
           branch: automated/update-geojson
           delete-branch: true
           add-paths: |
-            shelter-map/public/assets/mergeFromCity_2.geojson.gz
-            shelter-map/app/generated/dataset-meta.ts
+            apps/shelter-map/public/assets/mergeFromCity_2.geojson.gz
+            apps/shelter-map/app/generated/dataset-meta.ts

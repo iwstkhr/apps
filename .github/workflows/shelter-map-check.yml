@@ -3,14 +3,14 @@ name: Shelter map check
 on:
   pull_request:
     paths:
-      - 'shelter-map/**'
+      - 'apps/shelter-map/**'
       - 'mise.toml'
       - '.github/workflows/shelter-map-check.yml'
   push:
     branches:
       - main
     paths:
-      - 'shelter-map/**'
+      - 'apps/shelter-map/**'
       - 'mise.toml'
       - '.github/workflows/shelter-map-check.yml'
 
@@ -23,7 +23,7 @@ concurrency:
 
 defaults:
   run:
-    working-directory: shelter-map
+    working-directory: apps/shelter-map
 
 jobs:
   check:

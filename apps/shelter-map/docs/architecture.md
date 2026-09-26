@@ -61,7 +61,7 @@ app/
   types/        # ドメイン型・検証・フィルター
 public/assets/  # 圧縮 GeoJSON などの静的アセット
 scripts/        # dataset-meta 生成
-../.github/workflows/          # リポジトリ直下
+../../.github/workflows/       # リポジトリ直下
   shelter-map-check.yml           # PR / main の品質チェック
   shelter-map-deploy.yml          # Check 成功後に Workers へデプロイ
   shelter-map-update-geojson.yml  # 毎月の GeoJSON 更新 PR
@@ -179,7 +179,7 @@ MapTable
 
 関連ファイル:
 
-- [`.github/workflows/shelter-map-update-geojson.yml`](../../.github/workflows/shelter-map-update-geojson.yml)
+- [`.github/workflows/shelter-map-update-geojson.yml`](../../../.github/workflows/shelter-map-update-geojson.yml)
 - [`scripts/write-dataset-meta.mjs`](../scripts/write-dataset-meta.mjs)
 
 ## CI / CD
@@ -188,7 +188,7 @@ MapTable
 PR / push to main
   ├─ Pre-commit（リポジトリ全体）
   │    └─ pre-commit run --all-files
-  └─ Shelter map check（shelter-map/ 以下の変更時のみ）
+  └─ Shelter map check（apps/shelter-map/ 以下の変更時のみ）
        ├─ npm run check
        ├─ npm run typecheck
        └─ npm run test

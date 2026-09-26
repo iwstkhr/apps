@@ -1,6 +1,6 @@
 name: Shelter map deploy
 
-# 静的アセット（build/client/）を Cloudflare Workers で公開する。設定は shelter-map/wrangler.jsonc。
+# 静的アセット（build/client/）を Cloudflare Workers で公開する。設定は apps/shelter-map/wrangler.jsonc。
 on:
   workflow_run:
     workflows:
@@ -19,7 +19,7 @@ concurrency:
 
 defaults:
   run:
-    working-directory: shelter-map
+    working-directory: apps/shelter-map
 
 jobs:
   deploy:

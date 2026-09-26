@@ -29,7 +29,7 @@
 ## 必要条件
 
 - [mise](https://mise.jdx.dev/)（Node.js と pre-commit のバージョン管理）
-- Node.js（[`mise.toml`](../mise.toml)（リポジトリ直下） / `package.json` の `engines.node` で指定）
+- Node.js（[`mise.toml`](../../mise.toml)（リポジトリ直下） / `package.json` の `engines.node` で指定）
 - npm
 - デプロイする場合は Cloudflare アカウント（`npx wrangler login` でログイン）
 
@@ -40,7 +40,7 @@ git clone https://github.com/iwstkhr/apps.git
 cd apps
 mise install
 pre-commit install
-cd shelter-map
+cd apps/shelter-map
 npm ci
 npm run dev
 ```
@@ -85,7 +85,7 @@ npm run dev
 
 ## CI / デプロイ
 
-PR と `main` への push で `shelter-map/` 以下が変更されると [Shelter map check](../.github/workflows/shelter-map-check.yml) が走り、`main` で Check が成功すると [Shelter map deploy](../.github/workflows/shelter-map-deploy.yml) が [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/) へ公開します。配信設定は [`wrangler.jsonc`](wrangler.jsonc) で、デプロイには GitHub の secrets `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID` を使います。詳細は [アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
+PR と `main` への push で `apps/shelter-map/` 以下が変更されると [Shelter map check](../../.github/workflows/shelter-map-check.yml) が走り、`main` で Check が成功すると [Shelter map deploy](../../.github/workflows/shelter-map-deploy.yml) が [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/) へ公開します。配信設定は [`wrangler.jsonc`](wrangler.jsonc) で、デプロイには GitHub の secrets `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID` を使います。詳細は [アーキテクチャ](docs/architecture.md#ci--cd) を参照してください。
 
 Workers ではドメインのルートで配信するため、`BASE_PATH` は指定しません。サブパス配下で配信する場合だけ、ビルド時に指定します:
 
@@ -99,7 +99,7 @@ BASE_PATH=/sub-path/ npm run build
 
 ### Git hooks
 
-`mise install` 後に `pre-commit install` を実行すると、[`.pre-commit-config.yaml`](../.pre-commit-config.yaml)（リポジトリ直下）の hooks がコミット時に有効になります。
+`mise install` 後に `pre-commit install` を実行すると、[`.pre-commit-config.yaml`](../../.pre-commit-config.yaml)（リポジトリ直下）の hooks がコミット時に有効になります。
 
 全ファイルに対して手動実行する場合（リポジトリ直下で実行）:
 
@@ -107,7 +107,7 @@ BASE_PATH=/sub-path/ npm run build
 pre-commit run --all-files
 ```
 
-CI と同条件で確認する場合（`pre-commit` はリポジトリ直下、`npm` は `shelter-map/` で実行）:
+CI と同条件で確認する場合（`pre-commit` はリポジトリ直下、`npm` は `apps/shelter-map/` で実行）:
 
 ```bash
 pre-commit run --all-files
