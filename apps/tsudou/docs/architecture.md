@@ -68,8 +68,8 @@ Authorization (token checks) and input validation always run on the server.
 
 ## Repository structure
 
-The pnpm workspace has three packages: `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), and shared code in `shared/` (`@tsudou/shared`).
-Each package has its own dependencies and scripts in `package.json`. The root `package.json` contains Biome and shortcuts that invoke package scripts (`pnpm run dev` / `pnpm run dev:api` / `pnpm test`, etc.).
+Tsudou has three packages in the monorepo pnpm workspace (`pnpm-workspace.yaml` at the repository root): `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), and shared code in `shared/` (`@tsudou/shared`).
+Each package has its own dependencies and scripts in `package.json`. `apps/tsudou/package.json` contains Biome and shortcuts that invoke package scripts (`pnpm run dev` / `pnpm run dev:api` / `pnpm test`, etc.).
 
 Both frontend and backend depend on `@tsudou/shared` through `workspace:*`, importing modules such as `@tsudou/shared/limits`.
 The frontend does not depend on the backend package and cannot import server internals (see "Code shared by server and frontend").

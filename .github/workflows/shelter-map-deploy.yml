@@ -45,11 +45,11 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       # Workers ではドメインのルートで配信するので BASE_PATH は付けない
       - name: Build
-        run: npm run build
+        run: pnpm run build
 
       - name: Deploy
-        run: npm run deploy
+        run: pnpm run deploy

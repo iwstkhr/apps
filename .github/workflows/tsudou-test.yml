@@ -6,11 +6,17 @@ on:
   pull_request:
     paths:
       - 'apps/tsudou/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - '.github/workflows/tsudou-test.yml'
   push:
     branches: [main]
     paths:
       - 'apps/tsudou/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - '.github/workflows/tsudou-test.yml'
 
 concurrency:
@@ -33,15 +39,12 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
-        with:
-          package_json_file: apps/tsudou/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           cache: pnpm
-          cache-dependency-path: apps/tsudou/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

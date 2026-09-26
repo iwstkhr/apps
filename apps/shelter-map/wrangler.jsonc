@@ -1,5 +1,5 @@
 // shelter-map を Cloudflare Workers の静的アセットとして配信する (Worker のスクリプトは持たない)。
-// デプロイ前に `npm run build` で build/client/ を作っておく。
+// デプロイ前に `pnpm run build` で build/client/ を作っておく。
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "shelter-map",

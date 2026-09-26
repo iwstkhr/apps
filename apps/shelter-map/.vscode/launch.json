@@ -6,7 +6,7 @@
       "request": "launch",
       "name": "Debug: Dev Server + Chrome",
       "runtimeExecutable": "mise",
-      "runtimeArgs": ["exec", "--", "npm", "run", "dev"],
+      "runtimeArgs": ["exec", "--", "pnpm", "run", "dev"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {

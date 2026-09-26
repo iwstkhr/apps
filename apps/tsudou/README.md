@@ -70,8 +70,8 @@ The name comes from the Japanese word "集う" (to gather). The romanized `Tsudo
 pnpm install
 ```
 
-The pnpm workspace contains three packages: `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), and shared code in `shared/` (`@tsudou/shared`).
-Run `pnpm install` once in the `apps/tsudou/` directory (the workspace root) to install all packages. Run all commands below from `apps/tsudou/` as well.
+Tsudou consists of three packages in the monorepo pnpm workspace: `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), and shared code in `shared/` (`@tsudou/shared`).
+Run `pnpm install` once anywhere in the repository to install all packages. Run all commands below from `apps/tsudou/`.
 
 ### Local development
 
@@ -98,7 +98,7 @@ pnpm run build             # Frontend type check and production build (frontend/
 pnpm run build:api         # Bundle the Worker without deploying (backend/dist/; run pnpm run build first)
 pnpm run typecheck         # Type-check all packages; backend generates Worker types with wrangler types first
 pnpm test                  # Unit tests for both packages (Vitest)
-pnpm run lint              # Lint and formatting checks (Biome, entire repository)
+pnpm run lint              # Lint and formatting checks (Biome, all of apps/tsudou/)
 pnpm run lint:fix          # Apply Biome fixes
 pnpm run openapi           # Regenerate API documentation (docs/openapi.yaml)
 pnpm run guide:capture     # Recapture user guide screenshots (development servers must be running)

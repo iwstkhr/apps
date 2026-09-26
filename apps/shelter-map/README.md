@@ -28,10 +28,10 @@
 
 ## 必要条件
 
-- [mise](https://mise.jdx.dev/)（Node.js と pre-commit のバージョン管理）
+- [mise](https://mise.jdx.dev/)（Node.js、pnpm、pre-commit のバージョン管理）
 - Node.js（[`mise.toml`](../../mise.toml)（リポジトリ直下） / `package.json` の `engines.node` で指定）
-- npm
-- デプロイする場合は Cloudflare アカウント（`npx wrangler login` でログイン）
+- pnpm（リポジトリ全体の pnpm workspace で依存関係を管理）
+- デプロイする場合は Cloudflare アカウント（`pnpm exec wrangler login` でログイン）
 
 ## セットアップ
 
@@ -40,9 +40,9 @@ git clone https://github.com/iwstkhr/apps.git
 cd apps
 mise install
 pre-commit install
+pnpm install
 cd apps/shelter-map
-npm ci
-npm run dev
+pnpm run dev
 ```
 
 開発サーバーは <http://localhost:5173> で起動します。
@@ -51,19 +51,19 @@ npm run dev
 
 | コマンド | 説明 |
 | --- | --- |
-| `npm run dev` | 開発サーバーを起動 |
-| `npm run build` | 本番ビルドを作成 |
-| `npm run start` | 本番ビルドをローカルで配信 |
-| `npm run preview` | 本番ビルドを作成し、`wrangler dev` で Workers と同じ構成でローカル配信 |
-| `npm run deploy` | `build/client` を Cloudflare Workers へデプロイ（事前に `npm run build`） |
-| `npm run lint` | Biome でリントを実行 |
-| `npm run format` | Biome でコードをフォーマット |
-| `npm run format:check` | フォーマットの差分を確認 |
-| `npm run check` | Biome でリントとフォーマットを確認 |
-| `npm run check:fix` | Biome でリント修正・フォーマット・import 整理を実行 |
-| `npm run typecheck` | TypeScript の型チェックを実行 |
-| `npm run test` | Vitest でテストを実行 |
-| `npm run test:watch` | Vitest をウォッチモードで実行 |
+| `pnpm run dev` | 開発サーバーを起動 |
+| `pnpm run build` | 本番ビルドを作成 |
+| `pnpm run start` | 本番ビルドをローカルで配信 |
+| `pnpm run preview` | 本番ビルドを作成し、`wrangler dev` で Workers と同じ構成でローカル配信 |
+| `pnpm run deploy` | `build/client` を Cloudflare Workers へデプロイ（事前に `pnpm run build`） |
+| `pnpm run lint` | Biome でリントを実行 |
+| `pnpm run format` | Biome でコードをフォーマット |
+| `pnpm run format:check` | フォーマットの差分を確認 |
+| `pnpm run check` | Biome でリントとフォーマットを確認 |
+| `pnpm run check:fix` | Biome でリント修正・フォーマット・import 整理を実行 |
+| `pnpm run typecheck` | TypeScript の型チェックを実行 |
+| `pnpm run test` | Vitest でテストを実行 |
+| `pnpm run test:watch` | Vitest をウォッチモードで実行 |
 | `pre-commit run --all-files` | pre-commit の hooks を全ファイルに対して実行（リポジトリ直下で実行） |
 
 ## ドキュメント
@@ -90,7 +90,7 @@ PR と `main` への push で `apps/shelter-map/` 以下が変更されると [S
 Workers ではドメインのルートで配信するため、`BASE_PATH` は指定しません。サブパス配下で配信する場合だけ、ビルド時に指定します:
 
 ```bash
-BASE_PATH=/sub-path/ npm run build
+BASE_PATH=/sub-path/ pnpm run build
 ```
 
 `public/` 以下の静的アセットは `publicUrl()`（`app/lib/public-url.ts`）経由で参照し、ルート絶対パス（例: `/favicon.svg`）は使わないでください。
@@ -107,13 +107,13 @@ BASE_PATH=/sub-path/ npm run build
 pre-commit run --all-files
 ```
 
-CI と同条件で確認する場合（`pre-commit` はリポジトリ直下、`npm` は `apps/shelter-map/` で実行）:
+CI と同条件で確認する場合（`pre-commit` はリポジトリ直下、`pnpm` は `apps/shelter-map/` で実行）:
 
 ```bash
 pre-commit run --all-files
-npm run check
-npm run typecheck
-npm run test
+pnpm run check
+pnpm run typecheck
+pnpm run test
 ```
 
 ### コミットメッセージ

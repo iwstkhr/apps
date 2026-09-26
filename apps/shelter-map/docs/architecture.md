@@ -38,7 +38,7 @@
 | 一覧 | TanStack Virtual |
 | スタイル | Tailwind CSS 4 |
 | 品質 | Biome、Vitest、Testing Library、pre-commit |
-| ランタイム管理 | mise（Node.js / pre-commit） |
+| ランタイム管理 | mise（Node.js / pnpm / pre-commit） |
 | 配信 | Cloudflare Workers（静的アセットのみ。設定は `wrangler.jsonc`） |
 
 ## ディレクトリ構成
@@ -189,14 +189,14 @@ PR / push to main
   ├─ Pre-commit（リポジトリ全体）
   │    └─ pre-commit run --all-files
   └─ Shelter map check（apps/shelter-map/ 以下の変更時のみ）
-       ├─ npm run check
-       ├─ npm run typecheck
-       └─ npm run test
+       ├─ pnpm run check
+       ├─ pnpm run typecheck
+       └─ pnpm run test
 
 main で Shelter map check 成功
   └─ Shelter map deploy（workflow_run）
-       ├─ npm run build
-       └─ npm run deploy（wrangler deploy で build/client を Workers へ公開）
+       ├─ pnpm run build
+       └─ pnpm run deploy（wrangler deploy で build/client を Workers へ公開）
 ```
 
 Deploy は Check の完了を `workflow_run` で待ち、成功時のみ Check が検査したコミットをビルドする。未知のパスへのナビゲーションには `index.html` を返す（`not_found_handling: single-page-application`）。
