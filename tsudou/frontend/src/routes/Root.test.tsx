@@ -22,4 +22,12 @@ describe('Root', () => {
       '© 2031 wasabee.dev. All Rights Reserved.',
     );
   });
+
+  it('ヘッダーのアプリ名の横にアイコンを表示し、リンク名はアプリ名のままにする', () => {
+    renderRoot();
+
+    const home = screen.getByRole('link', { name: /^Tsudou/ });
+    expect(home).toHaveAttribute('href', '/');
+    expect(home.querySelector('img[src="/favicon.svg"]')).toHaveAttribute('alt', '');
+  });
 });
