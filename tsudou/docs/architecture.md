@@ -17,7 +17,7 @@ Configuration lives in `backend/wrangler.jsonc`.
   +-------------------------+
   | React SPA               |
   | Memory: tokens          |
-  | localStorage: theme     |
+  | Saved preferences       |
   +----------+--------------+
              | HTTPS (same origin; API has no authentication, with rate limiting)
              v
@@ -269,6 +269,7 @@ Server data lives in a single app-wide TanStack Query cache (`frontend/src/lib/q
 | Pending operations and errors | `useAsyncAction` (internally TanStack Query's `useMutation`) |
 | Temporary feedback, such as saved confirmations | `useFlash` |
 | Management tokens / response edit keys | Memory only (`frontend/src/lib/keyring.ts`), loaded from URL fragments |
+| Display language | External store (`lib/i18n.ts`), `localStorage` (`tsudou:language`), and `useSyncExternalStore`; translation catalog in `lib/translations.ts` |
 | Theme preference | `localStorage` and `<html data-theme>` (`frontend/src/lib/theme.ts`) |
 
 Initial values are not synchronized with `useEffect`.
@@ -314,6 +315,14 @@ The `@custom-variant` in `index.css` makes Tailwind's `dark:` depend on `<html d
 `useTheme` in `theme.ts` determines `data-theme` from the saved choice (`tsudou:theme`) and `prefers-color-scheme`.
 An inline script in `index.html` performs the same check before React renders, preventing a flash of the light theme. Update both locations when changing keys or values.
 Both locations also update `<meta name="theme-color">`, which controls browser UI colors (address bar or installed app title bar), to match the header background (`THEME_COLORS`).
+
+### Display language
+
+`LanguageSelect` in the header switches between Japanese (`ja`, default) and English (`en`). `lib/i18n.ts` persists the choice, notifies mounted components through `useSyncExternalStore`, and handles cross-tab storage events. Storage exceptions use an in-memory preference.
+
+`lib/translations.ts` maps Japanese application text to English. Translation happens at rendering, including existing field and server errors, so switching preserves TanStack Form drafts and server data. Interpolated values stay plain text; user-generated content is never translated. Weekday labels follow the language while date values, local time zones, and yen amounts retain their meaning. Backend validation rules and API messages remain unchanged.
+
+The initial script in `index.html` sets the saved document language and title before rendering. `main.tsx` and subsequent language changes also update description metadata. When editing UI wording, update both language entries and check the guide in both languages.
 
 ### PWA
 

@@ -1,4 +1,5 @@
 import { cx } from '../lib/cx';
+import { t, useLanguage } from '../lib/i18n';
 import { useFlash } from '../lib/useFlash';
 import { Button, buttonClassName } from './ui';
 
@@ -19,6 +20,7 @@ export function ShareLinkBox({
    */
   openable?: boolean;
 }) {
+  useLanguage();
   const [copied, flashCopied] = useFlash(2000);
 
   const copy = async () => {
@@ -28,7 +30,7 @@ export function ShareLinkBox({
     } catch {
       // クリップボード API が使えない環境 (http, 権限拒否など)。
       // URL は画面に出ているので手動でコピーしてもらう。
-      window.prompt('この URL をコピーしてください', url);
+      window.prompt(t('この URL をコピーしてください'), url);
     }
   };
 
@@ -52,7 +54,7 @@ export function ShareLinkBox({
         </code>
         <div className="flex shrink-0 gap-2">
           <Button type="button" size="sm" variant="secondary" onClick={copy}>
-            {copied ? 'コピーしました' : 'コピー'}
+            {copied ? t('コピーしました') : t('コピー')}
           </Button>
           {openable && (
             // opener を渡さない (noopener)。Referer は no-referrer で元から送らない
@@ -62,7 +64,7 @@ export function ShareLinkBox({
               rel="noopener noreferrer"
               className={buttonClassName({ variant: 'secondary', size: 'sm' })}
             >
-              開く
+              {t('開く')}
             </a>
           )}
           {typeof navigator !== 'undefined' && 'share' in navigator && (
@@ -72,7 +74,7 @@ export function ShareLinkBox({
               variant="ghost"
               onClick={() => void navigator.share({ url }).catch(() => undefined)}
             >
-              共有
+              {t('共有')}
             </Button>
           )}
         </div>

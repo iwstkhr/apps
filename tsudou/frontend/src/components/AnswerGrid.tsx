@@ -1,5 +1,6 @@
 import { cx } from '../lib/cx';
 import { formatDate, formatTime } from '../lib/format';
+import { t, useLanguage } from '../lib/i18n';
 import { bestCandidateIds, summarize } from '../lib/tally';
 import { type AnswerStatus, type AnswerView, type Candidate, STATUS_MARK } from '../lib/types';
 
@@ -18,6 +19,7 @@ export function AnswerGrid({
   answers: readonly AnswerView[];
   highlightAnswerId?: string | null;
 }) {
+  useLanguage();
   const tallies = summarize(candidates, answers);
   const best = bestCandidateIds(tallies, answers.length);
   const byId = new Map(tallies.map((t) => [t.candidateId, t]));
@@ -31,7 +33,7 @@ export function AnswerGrid({
               scope="col"
               className="sticky left-0 z-10 border-b border-slate-200 bg-white px-3 py-2 text-left font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
             >
-              回答者
+              {t('回答者')}
             </th>
             {candidates.map((candidate) => {
               const tally = byId.get(candidate.id);
@@ -62,7 +64,7 @@ export function AnswerGrid({
                   </div>
                   {isBest && (
                     <div className="mt-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                      最多
+                      {t('最多')}
                     </div>
                   )}
                 </th>
@@ -78,7 +80,7 @@ export function AnswerGrid({
                 colSpan={candidates.length + 1}
                 className="px-3 py-8 text-center text-slate-500 dark:text-slate-400"
               >
-                まだ回答がありません。
+                {t('まだ回答がありません。')}
               </td>
             </tr>
           )}
@@ -97,7 +99,7 @@ export function AnswerGrid({
                   {answer.name}
                   {isMine && (
                     <span className="ml-1.5 rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] text-white">
-                      自分
+                      {t('自分')}
                     </span>
                   )}
                 </th>

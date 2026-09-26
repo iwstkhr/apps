@@ -1,6 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 import { candidatesToDrafts, candidatesToInput } from '../lib/candidateDraft';
 import { parseFeeValue } from '../lib/formValidators';
+import { t, useLanguage } from '../lib/i18n';
 import type { EventView } from '../lib/types';
 import { EventFormFields, type EventFormValues } from './EventFormFields';
 import { Alert, Button } from './ui';
@@ -29,6 +30,7 @@ export function EventEditForm({
   error: string | null;
   onSave: (values: EventEditValues) => void;
 }) {
+  useLanguage();
   const form = useForm({
     defaultValues: {
       title: event.title,
@@ -57,14 +59,14 @@ export function EventEditForm({
     >
       <EventFormFields form={form} disabled={saving} />
 
-      {saved && <Alert variant="success">保存しました。</Alert>}
+      {saved && <Alert variant="success">{t('保存しました。')}</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
 
       {/* 検証エラーが残っている間は送信させない */}
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
           <Button type="submit" loading={saving} disabled={!canSubmit}>
-            変更を保存
+            {t('変更を保存')}
           </Button>
         )}
       </form.Subscribe>

@@ -7,6 +7,7 @@ import {
   validateMemoValue,
   validateTitleValue,
 } from '../lib/formValidators';
+import { t, useLanguage } from '../lib/i18n';
 import { CandidateEditor } from './CandidateEditor';
 import { fieldError } from './FieldError';
 import { Field, Input, Textarea } from './ui';
@@ -56,12 +57,13 @@ export function EventFormFields({
   /** 作成時だけ過去の日時を拒否する。編集では開催済みの候補を残したまま保存できるようにする。 */
   rejectPastCandidates?: boolean;
 }) {
+  useLanguage();
   return (
     <>
       <form.Field name="title" validators={{ onChange: ({ value }) => validateTitleValue(value) }}>
         {(field) => (
           <Field
-            label="イベント名"
+            label={t('イベント名')}
             required
             htmlFor={field.name}
             error={fieldError(field.state.meta)}
@@ -71,7 +73,7 @@ export function EventFormFields({
               name={field.name}
               value={field.state.value}
               maxLength={LIMITS.titleMax}
-              placeholder="新年会"
+              placeholder={t('新年会')}
               disabled={disabled}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
@@ -89,10 +91,10 @@ export function EventFormFields({
       >
         {(field) => (
           <Field
-            label="日時の候補"
+            label={t('日時の候補')}
             required
             error={fieldError(field.state.meta)}
-            hint="参加予定者はこの候補ごとに ○ / △ / × で回答します。"
+            hint={t('参加予定者はこの候補ごとに ○ / △ / × で回答します。')}
           >
             <CandidateEditor
               value={field.state.value}
@@ -110,10 +112,10 @@ export function EventFormFields({
       <form.Field name="fee" validators={{ onChange: ({ value }) => validateFeeValue(value) }}>
         {(field) => (
           <Field
-            label="参加費 (任意)"
+            label={t('参加費 (任意)')}
             htmlFor={field.name}
             error={fieldError(field.state.meta)}
-            hint="円。空欄なら「未設定」、0 なら「無料」と表示されます。"
+            hint={t('円。空欄なら「未設定」、0 なら「無料」と表示されます。')}
           >
             <Input
               id={field.name}
@@ -132,10 +134,10 @@ export function EventFormFields({
       <form.Field name="memo" validators={{ onChange: ({ value }) => validateMemoValue(value) }}>
         {(field) => (
           <Field
-            label="メモ (任意)"
+            label={t('メモ (任意)')}
             htmlFor={field.name}
             error={fieldError(field.state.meta)}
-            hint="集合場所、持ち物、支払い方法など。"
+            hint={t('集合場所、持ち物、支払い方法など。')}
           >
             <Textarea
               id={field.name}
@@ -143,7 +145,7 @@ export function EventFormFields({
               rows={4}
               maxLength={LIMITS.memoMax}
               value={field.state.value}
-              placeholder="集合: 渋谷駅ハチ公前&#10;会費は当日現金でお願いします"
+              placeholder={t('集合: 渋谷駅ハチ公前\n会費は当日現金でお願いします')}
               disabled={disabled}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}

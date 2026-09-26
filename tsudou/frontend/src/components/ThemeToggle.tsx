@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cx } from '../lib/cx';
+import { t, useLanguage } from '../lib/i18n';
 import { type ThemePreference, useTheme } from '../lib/theme';
 
 const ICON_PROPS = {
@@ -45,20 +46,21 @@ const OPTIONS: { value: ThemePreference; label: string; icon: ReactNode }[] = [
 ];
 
 export function ThemeToggle() {
+  useLanguage();
   const { preference, setPreference } = useTheme();
 
   return (
     <fieldset className="flex items-center gap-0.5 rounded-lg p-0.5 ring-1 ring-slate-200 ring-inset dark:ring-slate-700">
-      <legend className="sr-only">テーマ</legend>
+      <legend className="sr-only">{t('テーマ')}</legend>
       {OPTIONS.map(({ value, label, icon }) => {
         const selected = preference === value;
         return (
           <button
             key={value}
             type="button"
-            aria-label={label}
+            aria-label={t(label)}
             aria-pressed={selected}
-            title={label}
+            title={t(label)}
             onClick={() => setPreference(value)}
             className={cx(
               'rounded-md p-1.5 transition-colors',

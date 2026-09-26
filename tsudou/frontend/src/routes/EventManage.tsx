@@ -7,6 +7,7 @@ import { TextLink } from '../components/TextLink';
 import { Alert, Button, Card, LoadingBlock, MessageCard } from '../components/ui';
 import { deleteAnswer, deleteEvent, updateEvent } from '../lib/api';
 import { formatExpiry } from '../lib/format';
+import { t, useLanguage } from '../lib/i18n';
 import { forgetEventKeys, setManageToken, useManageToken } from '../lib/keyring';
 import { readTokenFromHash, stripHash } from '../lib/urls';
 import { useAsyncAction } from '../lib/useAsyncAction';
@@ -14,6 +15,7 @@ import { useEvent } from '../lib/useEvent';
 import { useFlash } from '../lib/useFlash';
 
 export function EventManage() {
+  useLanguage();
   const { eventId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,12 +43,12 @@ export function EventManage() {
 
   if (notFound) {
     return (
-      <MessageCard title="イベントが見つかりません">
+      <MessageCard title={t('イベントが見つかりません')}>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          URL が正しいか確認してください。すでに削除された可能性もあります。
+          {t('URL が正しいか確認してください。すでに削除された可能性もあります。')}
         </p>
         <TextLink to="/" className="mt-4 inline-block">
-          トップへ戻る
+          {t('トップへ戻る')}
         </TextLink>
       </MessageCard>
     );
@@ -54,22 +56,24 @@ export function EventManage() {
 
   if (error || !event || !eventId) {
     return (
-      <Alert variant="error" title="読み込みに失敗しました">
-        {error ?? '不明なエラーが発生しました'}
+      <Alert variant="error" title={t('読み込みに失敗しました')}>
+        {error ?? t('不明なエラーが発生しました')}
       </Alert>
     );
   }
 
   if (!manageToken) {
     return (
-      <MessageCard title="管理用 URL が必要です" align="start" className="space-y-3">
+      <MessageCard title={t('管理用 URL が必要です')} align="start" className="space-y-3">
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          このイベントを編集するには、作成時に発行された管理用 URL （<code>#k=...</code>{' '}
-          が付いたもの）を開いてください。管理トークンはブラウザに保存しないため、
-          ページを再読み込みした場合も管理用 URL を開き直す必要があります。
+          {t('このイベントを編集するには、作成時に発行された管理用 URL （')}
+          <code>#k=...</code>{' '}
+          {t(
+            'が付いたもの）を開いてください。管理トークンはブラウザに保存しないため、 ページを再読み込みした場合も管理用 URL を開き直す必要があります。',
+          )}
         </p>
         <TextLink to={`/e/${eventId}`} className="inline-block">
-          イベントページを見る
+          {t('イベントページを見る')}
         </TextLink>
       </MessageCard>
     );
@@ -87,7 +91,7 @@ export function EventManage() {
     });
 
   const removeAnswer = (answerId: string, name: string) => {
-    if (!window.confirm(`「${name}」の回答を削除します。よろしいですか?`)) return;
+    if (!window.confirm(t('「{0}」の回答を削除します。よろしいですか?', [name]))) return;
     void run(async () => {
       await deleteAnswer({ answerId, manageToken });
       await reload();
@@ -95,7 +99,7 @@ export function EventManage() {
   };
 
   const removeEvent = () => {
-    if (!window.confirm('イベントと、すべての回答を削除します。元に戻せません。よろしいですか?'))
+    if (!window.confirm(t('イベントと、すべての回答を削除します。元に戻せません。よろしいですか?')))
       return;
     void run(async () => {
       await deleteEvent(eventId, manageToken);
@@ -110,10 +114,10 @@ export function EventManage() {
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h1 className="text-lg font-bold">イベントの管理</h1>
+            <h1 className="text-lg font-bold">{t('イベントの管理')}</h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{event.title}</p>
           </div>
-          <TextLink to={`/e/${eventId}`}>参加者から見た画面</TextLink>
+          <TextLink to={`/e/${eventId}`}>{t('参加者から見た画面')}</TextLink>
         </div>
 
         <ShareUrlBox eventId={eventId} />
@@ -121,7 +125,7 @@ export function EventManage() {
       </Card>
 
       <Card>
-        <h2 className="text-base font-bold">内容を編集</h2>
+        <h2 className="text-base font-bold">{t('内容を編集')}</h2>
         <div className="mt-4">
           {/* key を変えることで、別イベントを開いたときにフォームを作り直す */}
           <EventEditForm
@@ -136,7 +140,7 @@ export function EventManage() {
       </Card>
 
       <Card>
-        <h2 className="text-base font-bold">回答状況</h2>
+        <h2 className="text-base font-bold">{t('回答状況')}</h2>
         <div className="mt-3">
           <AnswerGrid candidates={event.candidates} answers={event.answers} />
         </div>
@@ -159,7 +163,7 @@ export function EventManage() {
                   disabled={saving}
                   onClick={() => removeAnswer(answer.id, answer.name)}
                 >
-                  削除
+                  {t('削除')}
                 </Button>
               </li>
             ))}
@@ -168,13 +172,13 @@ export function EventManage() {
       </Card>
 
       <Card className="space-y-4">
-        <h2 className="text-base font-bold">締切と削除</h2>
+        <h2 className="text-base font-bold">{t('締切と削除')}</h2>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-slate-600 dark:text-slate-400">
             {event.closed
-              ? '締切中です。参加者は回答できません。'
-              : '受付中です。締め切ると新しい回答・編集ができなくなります。'}
+              ? t('締切中です。参加者は回答できません。')
+              : t('受付中です。締め切ると新しい回答・編集ができなくなります。')}
           </p>
           <Button
             variant="secondary"
@@ -182,19 +186,19 @@ export function EventManage() {
             disabled={saving}
             onClick={() => void toggleClosed()}
           >
-            {event.closed ? '受付を再開する' : '回答を締め切る'}
+            {event.closed ? t('受付を再開する') : t('回答を締め切る')}
           </Button>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            イベントとすべての回答を削除します。元に戻せません。
+            {t('イベントとすべての回答を削除します。元に戻せません。')}
             <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
-              何もしなくても {formatExpiry(event.expiresAt)} 以降に自動削除されます。
+              {t('何もしなくても {0} 以降に自動削除されます。', [formatExpiry(event.expiresAt)])}
             </span>
           </p>
           <Button variant="danger" size="sm" disabled={saving} onClick={removeEvent}>
-            イベントを削除
+            {t('イベントを削除')}
           </Button>
         </div>
       </Card>

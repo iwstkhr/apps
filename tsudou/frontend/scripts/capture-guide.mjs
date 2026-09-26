@@ -40,6 +40,8 @@ const newPage = async () => {
     timezoneId: 'Asia/Tokyo',
     colorScheme: 'light',
   });
+  // The guide screenshots document the Japanese interface in both language versions.
+  await context.addInitScript(() => localStorage.setItem('tsudou:language', 'ja'));
   return context.newPage();
 };
 
@@ -58,7 +60,24 @@ const shot = async (locator, name) => {
   await page.mouse.move(0, 0);
   // 再描画で戻らないよう、撮る直前に差し替える
   await maskOrigin(page);
+  // A flash message or query update may rerender URL fields during screenshot capture.
+  // Keep sample origins masked until capture completes.
+  const maskObserver = await page.evaluateHandle((shown) => {
+    const mask = () => {
+      for (const el of document.querySelectorAll('code')) {
+        if (el.textContent.includes(location.origin)) {
+          el.textContent = el.textContent.replace(location.origin, shown);
+        }
+      }
+    };
+    const observer = new MutationObserver(mask);
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    mask();
+    return observer;
+  }, SHOWN_ORIGIN);
   await locator.screenshot({ path: `${OUT}${name}.png`, animations: 'disabled' });
+  await maskObserver.evaluate((observer) => observer.disconnect());
+  await maskObserver.dispose();
   console.log(`saved ${name}.png`);
 };
 

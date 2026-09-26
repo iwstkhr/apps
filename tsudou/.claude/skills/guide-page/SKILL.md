@@ -42,7 +42,7 @@ The capture script also locates elements by labels and roles, so wording changes
 
 Update `capture-guide.mjs` when capturing a new screen or state, or when wording changes invalidate locators.
 
-- Locate elements with `getByLabel` / `getByRole` / `card(page, 'heading text')` (the `section` containing that text). CSS class selectors can break with visual changes alone. Use the actual Japanese UI text for locators.
+- Locate elements with `getByLabel` / `getByRole` / `card(page, 'heading text')` (the `section` containing that text). CSS class selectors can break with visual changes alone. Capture in Japanese and use the actual Japanese UI text for locators. Keep English guide instructions aligned with the English UI translations in `frontend/src/lib/translations.ts`.
 - Capture with `shot(locator, name)`. It waits for network activity to settle, moves the mouse away, and replaces `localhost` in URL fields with `https://tsudou.example.com` immediately before capture. React rerenders would otherwise restore the original URL.
 - Candidate dates are calculated from the execution date, because creation does not allow past dates. Do not hardcode them.
 - Other participants' responses are submitted through the API (`POST /api/events/{id}/answers`), which is faster and less fragile than entering them through the UI.
@@ -81,6 +81,7 @@ Update the values in `Guide.tsx` for images whose height changed; the width norm
 
 - **Copy UI wording from the implementation.** Search components and server messages (`backend/src/errors.ts`, etc.) instead of writing button labels or messages from memory. Even a difference between "保存" and "変更を保存" can prevent readers from finding a button.
 - **Do not include specific dates in alternative text.** Candidate dates change on every capture; use descriptions such as "the third candidate". Describe what the image shows in one sentence for readers who cannot see it.
+- Update Japanese and English guide text and alternative text together through `frontend/src/lib/translations.ts`. Screenshots use Japanese; explain that in the English guide.
 - Match the existing Japanese guide style: polite language, UI labels enclosed in Japanese quotation marks (「」), and cautions in `Alert` with `variant="warning"`.
 - When adding an image, add its import and always pass `alt` / `width` / `height` to `Screenshot`; `Guide.test.tsx` checks these.
 - Reference constants such as `RETENTION_MONTHS` for values derived from settings instead of hardcoding numbers.
@@ -96,6 +97,7 @@ pnpm --filter @tsudou/frontend test
 Open `/guide` in the Browser pane and check:
 
 - No horizontal scrolling at desktop or mobile width (`resize_window` with `mobile`).
+- Japanese and English text, including labels, alternative text, and language-switching instructions, and preservation of form drafts when switching.
 - Readability in both light and dark themes; screenshots use the light theme.
 - Opening `/guide#host`, `#guest`, and `#faq` directly scrolls to the corresponding heading.
 

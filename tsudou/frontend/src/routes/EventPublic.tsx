@@ -8,6 +8,7 @@ import { TextLink } from '../components/TextLink';
 import { Alert, Button, Card, LoadingBlock, MessageCard } from '../components/ui';
 import { type AnswerDraft, draftFromAnswer, draftToChoices, emptyDraft } from '../lib/answerDraft';
 import { deleteAnswer, submitAnswer, updateAnswer } from '../lib/api';
+import { t, useLanguage } from '../lib/i18n';
 import { setAnswerKey, useAnswerKey, useManageToken } from '../lib/keyring';
 import { answerEditUrl, managePath, readAnswerKeyFromHash, shareUrl, stripHash } from '../lib/urls';
 import { useAsyncAction } from '../lib/useAsyncAction';
@@ -15,6 +16,7 @@ import { useEvent } from '../lib/useEvent';
 import { useFlash } from '../lib/useFlash';
 
 export function EventPublic() {
+  useLanguage();
   const { eventId } = useParams();
   const location = useLocation();
   const { event, loading, error, notFound, reload } = useEvent(eventId);
@@ -42,12 +44,12 @@ export function EventPublic() {
 
   if (notFound) {
     return (
-      <MessageCard title="イベントが見つかりません">
+      <MessageCard title={t('イベントが見つかりません')}>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          URL が正しいか確認してください。イベントが削除された可能性もあります。
+          {t('URL が正しいか確認してください。イベントが削除された可能性もあります。')}
         </p>
         <TextLink to="/" className="mt-4 inline-block">
-          トップへ戻る
+          {t('トップへ戻る')}
         </TextLink>
       </MessageCard>
     );
@@ -55,8 +57,8 @@ export function EventPublic() {
 
   if (error || !event || !eventId) {
     return (
-      <Alert variant="error" title="読み込みに失敗しました">
-        {error ?? '不明なエラーが発生しました'}
+      <Alert variant="error" title={t('読み込みに失敗しました')}>
+        {error ?? t('不明なエラーが発生しました')}
       </Alert>
     );
   }
@@ -99,7 +101,7 @@ export function EventPublic() {
 
   const removeMyAnswer = () => {
     if (!myAnswer || !mine) return;
-    if (!window.confirm('自分の回答を削除します。よろしいですか?')) return;
+    if (!window.confirm(t('自分の回答を削除します。よろしいですか?'))) return;
 
     void run(async () => {
       await deleteAnswer({ answerId: myAnswer.id, editToken: mine.editToken });
@@ -115,23 +117,23 @@ export function EventPublic() {
           <h1 className="text-xl font-bold">{event.title}</h1>
           {event.closed && (
             <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200">
-              締切済み
+              {t('締切済み')}
             </span>
           )}
         </div>
         <EventSummary event={event} />
         {manageToken && (
           <TextLink to={managePath(event.id, manageToken)} className="inline-block">
-            このイベントを編集する（管理ページ）
+            {t('このイベントを編集する（管理ページ）')}
           </TextLink>
         )}
       </Card>
 
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-base font-bold">回答状況</h2>
+          <h2 className="text-base font-bold">{t('回答状況')}</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {event.answers.length} 名が回答済み
+            {event.answers.length} {t('名が回答済み')}
           </p>
         </div>
         <div className="mt-3">
@@ -160,17 +162,21 @@ export function EventPublic() {
       </Card>
 
       <Card>
-        <h2 className="text-base font-bold">{myAnswer ? '自分の回答を編集' : '出欠を回答する'}</h2>
+        <h2 className="text-base font-bold">
+          {myAnswer ? t('自分の回答を編集') : t('出欠を回答する')}
+        </h2>
 
         {event.closed ? (
           <div className="mt-3">
-            <Alert variant="warning">このイベントは締め切られているため、回答できません。</Alert>
+            <Alert variant="warning">
+              {t('このイベントは締め切られているため、回答できません。')}
+            </Alert>
           </div>
         ) : (
           <>
             {justSaved && (
               <div className="mt-3">
-                <Alert variant="success">回答を保存しました。</Alert>
+                <Alert variant="success">{t('回答を保存しました。')}</Alert>
               </div>
             )}
             {formError && (
@@ -181,15 +187,19 @@ export function EventPublic() {
             {keyIsStale && (
               <div className="mt-3">
                 <Alert variant="warning">
-                  回答編集 URL に対応する回答が見つかりません。すでに削除された可能性があります。
+                  {t(
+                    '回答編集 URL に対応する回答が見つかりません。すでに削除された可能性があります。',
+                  )}
                 </Alert>
               </div>
             )}
             {myAnswer && mine && (
               <div className="mt-3">
                 <ShareLinkBox
-                  label="回答編集 URL"
-                  description="あとで回答を変更・削除するにはこの URL が必要です。ページを閉じる前にブックマークするか自分宛てに送ってください。他の人には共有しないでください。"
+                  label={t('回答編集 URL')}
+                  description={t(
+                    'あとで回答を変更・削除するにはこの URL が必要です。ページを閉じる前にブックマークするか自分宛てに送ってください。他の人には共有しないでください。',
+                  )}
                   url={answerEditUrl(eventId, mine)}
                   tone="warning"
                 />
@@ -211,7 +221,7 @@ export function EventPublic() {
             {myAnswer && (
               <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
                 <Button variant="danger" size="sm" disabled={submitting} onClick={removeMyAnswer}>
-                  自分の回答を削除
+                  {t('自分の回答を削除')}
                 </Button>
               </div>
             )}
@@ -219,7 +229,7 @@ export function EventPublic() {
         )}
       </Card>
 
-      <ShareLinkBox label="このイベントの共有 URL" url={shareUrl(event.id)} />
+      <ShareLinkBox label={t('このイベントの共有 URL')} url={shareUrl(event.id)} />
     </div>
   );
 }

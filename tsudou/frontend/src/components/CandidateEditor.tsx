@@ -3,6 +3,7 @@ import { type CandidateDraft, defaultCandidate, nextCandidateAfter } from '../li
 import { cx } from '../lib/cx';
 import { toDateTimeLocal } from '../lib/format';
 import { validateCandidateRow } from '../lib/formValidators';
+import { t, useLanguage } from '../lib/i18n';
 import { Button, Input } from './ui';
 
 /**
@@ -31,6 +32,7 @@ export function CandidateEditor({
   rejectPast?: boolean;
   disabled?: boolean;
 }) {
+  useLanguage();
   const baseId = useId();
   const min = rejectPast ? toDateTimeLocal(new Date().toISOString()) : undefined;
 
@@ -57,17 +59,18 @@ export function CandidateEditor({
 
           return (
             <li key={draft.id ?? `new-${index}`}>
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[1.5rem_minmax(0,1fr)_auto]">
                 <span className="w-6 shrink-0 text-right text-sm text-slate-400 tabular-nums">
                   {index + 1}.
                 </span>
                 <Input
                   id={rowId}
+                  className="min-w-0"
                   type="datetime-local"
                   value={draft.value}
                   min={min}
                   disabled={disabled}
-                  aria-label={`候補 ${index + 1} の日時`}
+                  aria-label={t('候補 {0} の日時', [index + 1])}
                   aria-invalid={rowError ? true : undefined}
                   aria-describedby={rowError ? `${rowId}-error` : undefined}
                   onChange={(e) => update(index, { value: e.target.value })}
@@ -78,11 +81,14 @@ export function CandidateEditor({
                   variant="ghost"
                   size="sm"
                   disabled={disabled || value.length <= 1}
-                  aria-label={`候補 ${index + 1} を削除`}
+                  aria-label={t('候補 {0} を削除', [index + 1])}
                   onClick={() => remove(index)}
-                  className={cx('shrink-0', value.length <= 1 && 'invisible')}
+                  className={cx(
+                    'col-start-2 justify-self-end sm:col-start-3 sm:row-start-1',
+                    value.length <= 1 && 'invisible',
+                  )}
                 >
-                  削除
+                  {t('削除')}
                 </Button>
               </div>
               {rowError && (
@@ -90,7 +96,7 @@ export function CandidateEditor({
                   id={`${rowId}-error`}
                   className="mt-1 ml-8 text-xs text-red-600 dark:text-red-400"
                 >
-                  {rowError}
+                  {t(rowError)}
                 </p>
               )}
             </li>
@@ -105,9 +111,15 @@ export function CandidateEditor({
         disabled={disabled || value.length >= max}
         onClick={add}
       >
-        ＋ 候補を追加
+        {t('＋ 候補を追加')}
       </Button>
-      {value.length >= max && <p className="text-xs text-slate-500">候補は{max}件までです。</p>}
+      {value.length >= max && (
+        <p className="text-xs text-slate-500">
+          {t('候補は')}
+          {max}
+          {t('件までです。')}
+        </p>
+      )}
     </div>
   );
 }

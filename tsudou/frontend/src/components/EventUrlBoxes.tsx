@@ -1,3 +1,4 @@
+import { t, useLanguage } from '../lib/i18n';
 import { manageUrl, shareUrl } from '../lib/urls';
 import { ShareLinkBox } from './ShareLinkBox';
 
@@ -8,10 +9,11 @@ import { ShareLinkBox } from './ShareLinkBox';
  */
 
 export function ShareUrlBox({ eventId, openable }: { eventId: string; openable?: boolean }) {
+  useLanguage();
   return (
     <ShareLinkBox
-      label="共有用 URL"
-      description="参加予定者に送る URL です。"
+      label={t('共有用 URL')}
+      description={t('参加予定者に送る URL です。')}
       url={shareUrl(eventId)}
       openable={openable}
     />
@@ -27,10 +29,11 @@ export function ManageUrlBox({
   manageToken: string;
   openable?: boolean;
 }) {
+  useLanguage();
   return (
     <ShareLinkBox
-      label="管理用 URL"
-      description="イベントの編集・締切・削除ができます。他の人には共有しないでください。"
+      label={t('管理用 URL')}
+      description={t('イベントの編集・締切・削除ができます。他の人には共有しないでください。')}
       url={manageUrl(eventId, manageToken)}
       tone="warning"
       openable={openable}

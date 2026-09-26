@@ -8,9 +8,11 @@ import { createEvent } from '../lib/api';
 import { candidatesToInput, defaultCandidate } from '../lib/candidateDraft';
 import { errorMessage } from '../lib/errors';
 import { parseFeeValue } from '../lib/formValidators';
+import { t, useLanguage } from '../lib/i18n';
 import { setManageToken } from '../lib/keyring';
 
 export function Home() {
+  useLanguage();
   const navigate = useNavigate();
   const create = useMutation({
     mutationFn: createEvent,
@@ -45,19 +47,21 @@ export function Home() {
   return (
     <div className="space-y-6">
       <Card>
-        <h1 className="text-lg font-bold">イベントを作成</h1>
+        <h1 className="text-lg font-bold">{t('イベントを作成')}</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          作成すると共有用の URL が発行されます。参加予定者はログインなしで回答できます。
+          {t('作成すると共有用の URL が発行されます。参加予定者はログインなしで回答できます。')}
         </p>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          作成したイベントと回答は、作成から{RETENTION_MONTHS}ヶ月後に自動削除されます。
+          {t('作成したイベントと回答は、作成から')}
+          {RETENTION_MONTHS}
+          {t('ヶ月後に自動削除されます。')}
         </p>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          はじめての方は
+          {t('はじめての方は')}
           <Link to="/guide" className="text-indigo-600 hover:underline dark:text-indigo-400">
-            使い方
+            {t('使い方')}
           </Link>
-          をご覧ください。
+          {t('をご覧ください。')}
         </p>
 
         <form
@@ -79,7 +83,7 @@ export function Home() {
 
                 {/* 検証エラーが残っている間は送信させない (未操作のうちは押せ、押すと検証が走る) */}
                 <Button type="submit" loading={isSubmitting} disabled={!canSubmit}>
-                  イベントを作成して URL を発行
+                  {t('イベントを作成して URL を発行')}
                 </Button>
               </>
             )}

@@ -4,6 +4,7 @@ import type { AnswerDraft } from '../lib/answerDraft';
 import { cx } from '../lib/cx';
 import { formatDateTime } from '../lib/format';
 import { validateMessageValue, validateNameValue } from '../lib/formValidators';
+import { t, useLanguage } from '../lib/i18n';
 import { type AnswerStatus, type Candidate, STATUS_LABEL, STATUS_MARK } from '../lib/types';
 import { fieldError } from './FieldError';
 import { Button, Field, Input, Textarea } from './ui';
@@ -34,6 +35,7 @@ export function AnswerForm({
   submitting: boolean;
   mode: 'create' | 'edit';
 }) {
+  useLanguage();
   const form = useForm({
     defaultValues: initialDraft,
     onSubmit: ({ value }) => onSubmit(value),
@@ -51,11 +53,11 @@ export function AnswerForm({
       <form.Field name="name" validators={{ onChange: ({ value }) => validateNameValue(value) }}>
         {(field) => (
           <Field
-            label="お名前"
+            label={t('お名前')}
             required
             htmlFor={field.name}
             error={fieldError(field.state.meta)}
-            hint="一覧に表示されます。"
+            hint={t('一覧に表示されます。')}
           >
             <Input
               id={field.name}
@@ -63,7 +65,7 @@ export function AnswerForm({
               value={field.state.value}
               maxLength={LIMITS.nameMax}
               autoComplete="name"
-              placeholder="山田 太郎"
+              placeholder={t('山田 太郎')}
               disabled={submitting}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
@@ -86,10 +88,11 @@ export function AnswerForm({
             <div className="space-y-2">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  参加できる日時<span className="ml-1 text-red-600 dark:text-red-400">*</span>
+                  {t('参加できる日時')}
+                  <span className="ml-1 text-red-600 dark:text-red-400">*</span>
                 </p>
                 <div className="flex items-center gap-1 text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">一括:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t('一括:')}</span>
                   {STATUSES.map((status) => (
                     <button
                       key={status}
@@ -99,7 +102,7 @@ export function AnswerForm({
                       className="rounded px-1.5 py-0.5 text-slate-600 underline-offset-2 hover:underline disabled:opacity-50 dark:text-slate-300"
                     >
                       {STATUS_MARK[status]}
-                      {STATUS_LABEL[status]}
+                      {t(STATUS_LABEL[status])}
                     </button>
                   ))}
                 </div>
@@ -118,7 +121,7 @@ export function AnswerForm({
                       </span>
                       <div
                         role="radiogroup"
-                        aria-label={`${formatDateTime(candidate.startAt)} の出欠`}
+                        aria-label={t('{0} の出欠', [formatDateTime(candidate.startAt)])}
                         className="flex gap-1"
                       >
                         {STATUSES.map((status) => {
@@ -141,7 +144,7 @@ export function AnswerForm({
                                   : 'bg-white text-slate-600 ring-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-800',
                               )}
                             >
-                              {STATUS_MARK[status]} {STATUS_LABEL[status]}
+                              {STATUS_MARK[status]} {t(STATUS_LABEL[status])}
                             </button>
                           );
                         })}
@@ -161,10 +164,10 @@ export function AnswerForm({
       >
         {(field) => (
           <Field
-            label="メッセージ (任意)"
+            label={t('メッセージ (任意)')}
             htmlFor={field.name}
             error={fieldError(field.state.meta)}
-            hint="遅れて参加する、などの補足があれば。"
+            hint={t('遅れて参加する、などの補足があれば。')}
           >
             <Textarea
               id={field.name}
@@ -173,7 +176,7 @@ export function AnswerForm({
               maxLength={LIMITS.messageMax}
               value={field.state.value}
               disabled={submitting}
-              placeholder="20時から合流します"
+              placeholder={t('20時から合流します')}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
@@ -185,7 +188,7 @@ export function AnswerForm({
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
           <Button type="submit" loading={submitting} disabled={!canSubmit}>
-            {mode === 'create' ? '回答する' : '回答を更新する'}
+            {mode === 'create' ? t('回答する') : t('回答を更新する')}
           </Button>
         )}
       </form.Subscribe>

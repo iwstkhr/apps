@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 import './index.css';
+import { applyLanguage, getLanguage } from './lib/i18n';
 import { queryClient } from './lib/queryClient';
 import { registerServiceWorker } from './lib/serviceWorker';
 import { purgeLegacyTokens } from './lib/storage';
@@ -13,6 +14,7 @@ if (!container) {
   throw new Error('#root が見つかりません');
 }
 
+applyLanguage(getLanguage());
 purgeLegacyTokens();
 registerServiceWorker();
 

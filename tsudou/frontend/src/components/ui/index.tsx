@@ -5,6 +5,7 @@ import type {
   TextareaHTMLAttributes,
 } from 'react';
 import { cx } from '../../lib/cx';
+import { t, useLanguage } from '../../lib/i18n';
 
 // ------------------------------------------------------------------ Button
 
@@ -102,6 +103,7 @@ export function Field({
   htmlFor?: string;
   children: ReactNode;
 }) {
+  useLanguage();
   return (
     <div className="space-y-1.5">
       <label
@@ -115,7 +117,7 @@ export function Field({
       {hint && !error && <p className="text-xs text-slate-500 dark:text-slate-400">{hint}</p>}
       {error && (
         <p role="alert" className="text-xs text-red-600 dark:text-red-400">
-          {error}
+          {t(error)}
         </p>
       )}
     </div>
@@ -151,13 +153,18 @@ export function Alert({
   title?: string;
   children?: ReactNode;
 }) {
+  useLanguage();
   return (
     <div
       role={variant === 'error' ? 'alert' : 'status'}
       className={cx('rounded-lg px-4 py-3 text-sm ring-1 ring-inset', ALERT_VARIANTS[variant])}
     >
       {title && <p className="font-semibold">{title}</p>}
-      {children && <div className={cx(title && 'mt-1')}>{children}</div>}
+      {children && (
+        <div className={cx(title && 'mt-1')}>
+          {typeof children === 'string' ? t(children) : children}
+        </div>
+      )}
     </div>
   );
 }
@@ -181,7 +188,8 @@ export function Card({ className, children }: { className?: string; children: Re
 // ------------------------------------------------------- 画面全体の状態表示
 
 /** データ取得中のプレースホルダ。 */
-export function LoadingBlock({ children = '読み込み中...' }: { children?: ReactNode }) {
+export function LoadingBlock({ children = t('読み込み中...') }: { children?: ReactNode }) {
+  useLanguage();
   return (
     <div className="flex items-center justify-center gap-2 py-16 text-slate-500">
       <Spinner /> {children}
