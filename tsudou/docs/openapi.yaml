@@ -1,0 +1,621 @@
+# 生成物なので直接編集しない。backend/src/openapi.ts を直して pnpm run openapi で作り直す
+openapi: 3.1.0
+info:
+  title: Tsudou API
+  version: 0.1.0
+  description: ログイン不要の日程調整サービスの API。画面と同じオリジンの /api 以下にあり、認証はない。文字数の上限は前後の空白を除いてから数える。
+components:
+  schemas:
+    CreateEventResult:
+      type: object
+      properties:
+        eventId:
+          type: string
+        manageToken:
+          type: string
+          description: 管理トークン。平文で返すのはこの一度きり
+      required:
+        - eventId
+        - manageToken
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION
+                - FORBIDDEN
+                - NOT_FOUND
+                - CLOSED
+                - DUPLICATE_NAME
+                - RATE_LIMITED
+                - INTERNAL
+            message:
+              type: string
+              description: 画面にそのまま表示できる説明
+          required:
+            - code
+            - message
+      required:
+        - error
+    CreateEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          description: イベント名
+        fee:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1000000
+          description: 参加費 (円)。整数
+        memo:
+          type:
+            - string
+            - "null"
+          maxLength: 2000
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateInput"
+          minItems: 1
+          maxItems: 30
+      required:
+        - title
+        - candidates
+    CandidateInput:
+      type: object
+      properties:
+        id:
+          type:
+            - string
+            - "null"
+          description: 既存の候補の識別子。無ければ新しく採番する
+        startAt:
+          type: string
+          format: date-time
+          description: 開始日時 (ISO 8601)
+      required:
+        - startAt
+    EventView:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        fee:
+          type:
+            - integer
+            - "null"
+        memo:
+          type:
+            - string
+            - "null"
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Candidate"
+          description: 開始日時の昇順
+        closed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: integer
+          description: 自動削除される時刻 (エポック秒)
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerView"
+          description: 作成日時の昇順
+      required:
+        - id
+        - title
+        - fee
+        - memo
+        - candidates
+        - closed
+        - createdAt
+        - expiresAt
+        - answers
+    Candidate:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 候補の識別子
+        startAt:
+          type: string
+          format: date-time
+          description: 開始日時 (ISO 8601)
+      required:
+        - id
+        - startAt
+    AnswerView:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        message:
+          type:
+            - string
+            - "null"
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Choice"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - message
+        - choices
+        - createdAt
+        - updatedAt
+    Choice:
+      type: object
+      properties:
+        candidateId:
+          type: string
+        status:
+          $ref: "#/components/schemas/AnswerStatus"
+      required:
+        - candidateId
+        - status
+    AnswerStatus:
+      type: string
+      enum:
+        - YES
+        - NO
+        - MAYBE
+      description: "YES: 参加 / NO: 不参加 / MAYBE: 未定"
+    UpdateEventBody:
+      type: object
+      properties:
+        title:
+          type:
+            - string
+            - "null"
+          maxLength: 100
+          description: イベント名
+        fee:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1000000
+          description: 参加費 (円)。整数
+        memo:
+          type:
+            - string
+            - "null"
+          maxLength: 2000
+        candidates:
+          type:
+            - array
+            - "null"
+          items:
+            $ref: "#/components/schemas/CandidateInput"
+          minItems: 1
+          maxItems: 30
+        closed:
+          type:
+            - boolean
+            - "null"
+    SubmitAnswerResult:
+      type: object
+      properties:
+        answer:
+          $ref: "#/components/schemas/AnswerView"
+        editToken:
+          type: string
+          description: 回答編集キー。平文で返すのはこの一度きり
+      required:
+        - answer
+        - editToken
+    AnswerBody:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 40
+          description: 回答者名
+        message:
+          type:
+            - string
+            - "null"
+          maxLength: 500
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Choice"
+          description: すべての候補に過不足なく 1 つずつ
+      required:
+        - name
+        - choices
+  parameters: {}
+paths:
+  /api/healthz:
+    get:
+      summary: ヘルスチェック
+      tags:
+        - system
+      responses:
+        "200":
+          description: 稼働中
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    enum:
+                      - true
+                required:
+                  - ok
+  /api/events:
+    post:
+      summary: イベント作成
+      tags:
+        - events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEventBody"
+      responses:
+        "201":
+          description: 作成した
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateEventResult"
+        "400":
+          description: VALIDATION
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{eventId}:
+    get:
+      summary: イベント取得 (回答を含む)
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: eventId
+          in: path
+      responses:
+        "200":
+          description: イベント
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventView"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: イベント更新・締切
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: eventId
+          in: path
+        - schema:
+            type: string
+            description: イベント作成時に返した管理トークン
+          required: true
+          description: イベント作成時に返した管理トークン
+          name: x-manage-token
+          in: header
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEventBody"
+      responses:
+        "200":
+          description: 更新後のイベント
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventView"
+        "400":
+          description: VALIDATION
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: イベント削除 (回答も消える)
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: eventId
+          in: path
+        - schema:
+            type: string
+            description: イベント作成時に返した管理トークン
+          required: true
+          description: イベント作成時に返した管理トークン
+          name: x-manage-token
+          in: header
+      responses:
+        "204":
+          description: 削除した
+        "403":
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{eventId}/answers:
+    post:
+      summary: 回答の作成
+      tags:
+        - answers
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: eventId
+          in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerBody"
+      responses:
+        "201":
+          description: 作成した
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitAnswerResult"
+        "400":
+          description: VALIDATION
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: CLOSED / DUPLICATE_NAME
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/answers/{answerId}:
+    put:
+      summary: 回答の更新
+      tags:
+        - answers
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: answerId
+          in: path
+        - schema:
+            type: string
+            description: 回答作成時に返した回答編集キー
+          required: true
+          description: 回答作成時に返した回答編集キー
+          name: x-edit-token
+          in: header
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerBody"
+      responses:
+        "200":
+          description: 更新後の回答
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerView"
+        "400":
+          description: VALIDATION
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: CLOSED / DUPLICATE_NAME
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: 回答の削除
+      description: 回答編集キー (本人) または管理トークン (主催者) のどちらかが必要
+      tags:
+        - answers
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: answerId
+          in: path
+        - schema:
+            type: string
+            description: 回答作成時に返した回答編集キー
+          required: false
+          description: 回答作成時に返した回答編集キー
+          name: x-edit-token
+          in: header
+        - schema:
+            type: string
+            description: イベント作成時に返した管理トークン
+          required: false
+          description: イベント作成時に返した管理トークン
+          name: x-manage-token
+          in: header
+      responses:
+        "204":
+          description: 削除した
+        "403":
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: RATE_LIMITED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+webhooks: {}
