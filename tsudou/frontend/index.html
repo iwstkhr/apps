@@ -6,6 +6,19 @@
     <meta name="referrer" content="no-referrer" />
     <meta name="description" content="Tsudou はログイン不要でイベントの日程調整ができるアプリです。" />
     <title>Tsudou｜イベント日程調整</title>
+    <script>
+      // 初回描画前にテーマを決めてチラつきを防ぐ。ロジックは src/lib/theme.ts と揃えること
+      (() => {
+        let pref = null;
+        try {
+          pref = localStorage.getItem('tsudou:theme');
+        } catch {}
+        const dark =
+          pref === 'dark' ||
+          (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

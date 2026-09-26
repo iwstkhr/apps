@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router';
 import { TextLink } from '../components/TextLink';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export function Root() {
   return (
@@ -12,6 +13,7 @@ export function Root() {
           </Link>
           <div className="flex items-center gap-3">
             <TextLink to="/">新しく作る</TextLink>
+            <ThemeToggle />
           </div>
         </div>
       </header>
