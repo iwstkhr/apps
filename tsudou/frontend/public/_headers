@@ -20,6 +20,10 @@
 https://:preview-tsudou.:account.workers.dev/
   X-Robots-Tag: noindex, nofollow
 
+# Service Worker は名前が変わらないので、デプロイ後の更新がすぐ届くよう毎回確かめさせる
+/sw.js
+  Cache-Control: no-cache
+
 # ファイル名にハッシュが付くので長期キャッシュしてよい
 /assets/*
   Cache-Control: public, max-age=31536000, immutable

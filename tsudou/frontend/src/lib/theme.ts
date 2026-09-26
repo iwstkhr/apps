@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
  * 「システム」のときは OS の設定 (prefers-color-scheme) に追従する。
  *
  * 初回描画のチラつきを避けるため、index.html のインラインスクリプトでも
- * 同じキーを読んで <html data-theme> を先に決めている。キーや値を変えるときは
+ * 同じキーを読んで <html data-theme> と theme-color を先に決めている。キーや値を変えるときは
  * そちらも合わせて直すこと。
  */
 
@@ -14,6 +14,9 @@ export type ResolvedTheme = 'light' | 'dark';
 
 export const THEME_KEY = 'tsudou:theme';
 const DARK_QUERY = '(prefers-color-scheme: dark)';
+
+/** ブラウザ UI (アドレスバーやインストール後のタイトルバー) の色。ヘッダの背景 (white / slate-900) に揃える */
+export const THEME_COLORS: Record<ResolvedTheme, string> = { light: '#ffffff', dark: '#0f172b' };
 
 export function readThemePreference(): ThemePreference {
   try {
@@ -44,6 +47,7 @@ export function resolveTheme(preference: ThemePreference, prefersDark: boolean):
 
 function applyTheme(theme: ResolvedTheme): void {
   document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[theme]);
 }
 
 export function useTheme() {

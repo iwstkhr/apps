@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { THEME_KEY } from '../lib/theme';
+import { THEME_COLORS, THEME_KEY } from '../lib/theme';
 import { ThemeToggle } from './ThemeToggle';
 
 describe('ThemeToggle', () => {
@@ -41,5 +41,22 @@ describe('ThemeToggle', () => {
     localStorage.setItem(THEME_KEY, 'dark');
     render(<ThemeToggle />);
     expect(document.documentElement.dataset.theme).toBe('dark');
+  });
+});
+
+describe('ThemeToggle theme-color', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.head.innerHTML = '<meta name="theme-color" content="#ffffff" />';
+  });
+
+  it('keeps the browser UI color in sync with the theme', async () => {
+    const user = userEvent.setup();
+    const meta = document.querySelector('meta[name="theme-color"]')!;
+    render(<ThemeToggle />);
+    expect(meta).toHaveAttribute('content', THEME_COLORS.light);
+
+    await user.click(screen.getByRole('button', { name: 'ダークテーマ' }));
+    expect(meta).toHaveAttribute('content', THEME_COLORS.dark);
   });
 });

@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 import './index.css';
 import { queryClient } from './lib/queryClient';
+import { registerServiceWorker } from './lib/serviceWorker';
 import { purgeLegacyTokens } from './lib/storage';
 import { router } from './router';
 
@@ -13,6 +14,7 @@ if (!container) {
 }
 
 purgeLegacyTokens();
+registerServiceWorker();
 
 createRoot(container).render(
   <StrictMode>
