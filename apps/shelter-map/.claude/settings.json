@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "agent-plugin": {
+      "source": {
+        "source": "github",
+        "repo": "iwstkhr/agent-plugin"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "code-sync@agent-plugin": true
+  }
+}
