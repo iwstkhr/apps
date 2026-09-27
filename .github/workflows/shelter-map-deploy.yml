@@ -24,12 +24,13 @@ defaults:
 jobs:
   deploy:
     name: Deploy
-    # Check が失敗したコミットは公開しない
-    if: github.event.workflow_run.conclusion == 'success'
+    # Check が失敗したコミットは公開しない。
+    # branches の絞り込みはフォークのブランチ名 (main) にも当たるので、このリポジトリへの push に限る
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
       - name: Checkout
@@ -51,5 +52,9 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # 依存パッケージのスクリプトから読まれないよう、シークレットはこのステップにだけ渡す
       - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm run deploy

@@ -199,7 +199,7 @@ PR / push to main
        └─ pnpm run deploy (wrangler deploy publishes build/client to Workers)
 ```
 
-Deploy waits for Check to complete through `workflow_run` and builds the commit verified by Check only when it succeeds. Navigation to unknown paths returns `index.html` (`not_found_handling: single-page-application`).
+Deploy waits for Check to complete through `workflow_run` and builds the commit verified by Check only when it succeeds. It runs only for Check runs triggered by a push to this repository, so pull requests from forks (even from a branch named `main`) never reach the deploy job. The Cloudflare secrets are passed only to the deploy step, not to dependency installation or the build. Navigation to unknown paths returns `index.html` (`not_found_handling: single-page-application`).
 
 ## Design considerations
 
