@@ -1,0 +1,22 @@
+{
+  "name": "tsudou",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @tsudou/frontend run dev",
+    "dev:api": "pnpm --filter @tsudou/backend run dev",
+    "build": "pnpm --filter @tsudou/frontend run build",
+    "build:api": "pnpm --filter @tsudou/backend run build",
+    "openapi": "pnpm --filter @tsudou/backend run openapi",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "format": "biome format --write",
+    "typecheck": "pnpm --filter './*' run typecheck",
+    "test": "pnpm --filter './*' run test",
+    "guide:capture": "pnpm --filter @tsudou/frontend run guide:capture"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14"
+  }
+}
