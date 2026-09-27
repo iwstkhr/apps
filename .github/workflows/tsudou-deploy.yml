@@ -23,9 +23,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    # シークレットは依存パッケージのスクリプトから読まれないよう、Cloudflare を操作するステップにだけ渡す
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -52,6 +50,9 @@ jobs:
       # マイグレーションより後に走るので使わない。apps/tsudou/backend/wrangler.jsonc は名前で引くので ID の書き戻しは要らない
       - name: Create D1 database if missing
         working-directory: apps/tsudou/backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           pnpm exec wrangler d1 info tsudou > /dev/null ||
             pnpm exec wrangler d1 create tsudou --location apac --no-update-config
@@ -59,9 +60,15 @@ jobs:
       # 新しいコードが新しいスキーマを前提にできるよう、Worker より先に流す（適用済みのものは飛ばされる）
       - name: Apply D1 migrations
         working-directory: apps/tsudou/backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler d1 migrations apply tsudou --remote
 
       # 設定は apps/tsudou/backend/wrangler.jsonc。SPA のフォールバックとレスポンスヘッダ（apps/tsudou/frontend/public/_headers）もここで効く
       - name: Deploy
         working-directory: apps/tsudou/backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler deploy
