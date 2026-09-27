@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Tsudou</title>
+  <rect width="32" height="32" rx="7" fill="#4f46e5"/>
+  <rect x="10" y="5.5" width="2.5" height="5" rx="1.25" fill="#fff"/>
+  <rect x="19.5" y="5.5" width="2.5" height="5" rx="1.25" fill="#fff"/>
+  <rect x="6.5" y="8" width="19" height="18" rx="3" fill="#fff"/>
+  <rect x="6.5" y="12" width="19" height="1.5" fill="#4f46e5" opacity=".25"/>
+  <path d="M11.5 19.5l3 3 6-6.5" fill="none" stroke="#4f46e5" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
