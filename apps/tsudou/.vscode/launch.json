@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "frontend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5173"],
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "pattern": "Local:.+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome",
+        "webRoot": "${workspaceFolder}/frontend"
+      }
+    },
+    {
+      // ローカルの D1 にマイグレーションを流してから、API の Worker を wrangler dev で起動する。
+      // Worker は workerd の中で動くので node のデバッガはアタッチしない (wrangler dev の [d] で DevTools を開く)
+      "name": "api",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev:api"],
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "frontend + api",
+      "configurations": ["api", "frontend"],
+      "stopAll": true
+    }
+  ]
+}
