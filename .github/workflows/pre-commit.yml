@@ -15,3 +15,6 @@ permissions:
 jobs:
   pre-commit:
     uses: iwstkhr/shared-config/.github/workflows/pre-commit.yml@main
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
