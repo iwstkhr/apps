@@ -63,6 +63,7 @@ public/assets/  # Static assets such as compressed GeoJSON
 scripts/        # Generate dataset-meta
 ../../.github/workflows/       # At the repository root
   shelter-map-test.yml            # Quality checks for PRs / main
+  shelter-map-preview.yml         # Per-PR Workers Preview and its URL comment
   shelter-map-deploy.yml          # Deploy to Workers on pushes to main
   shelter-map-update-geojson.yml  # Monthly GeoJSON update PR
 ```
@@ -192,6 +193,13 @@ PR / push to main
        ├─ pnpm run typecheck
        └─ pnpm run test
 
+PR opened / updated / closed (only for changes under apps/shelter-map/, not from forks)
+  └─ [shelter-map] Preview
+       ├─ pnpm run build
+       ├─ wrangler preview --name pr-<number> (creates or updates the Preview)
+       ├─ Comment the Preview URL on the PR (one comment, updated on each push)
+       └─ wrangler preview delete (when the PR is closed)
+
 push to main (only for changes under apps/shelter-map/) / manual run
   └─ [shelter-map] Deploy
        ├─ pnpm run build
@@ -199,6 +207,8 @@ push to main (only for changes under apps/shelter-map/) / manual run
 ```
 
 Test and Deploy run independently, as in tsudou. Deploy runs only on pushes to `main` and manual runs, so pull requests (including those from forks) never reach it. The Cloudflare secrets are passed only to the deploy step, not to dependency installation or the build. Navigation to unknown paths returns `index.html` (`not_found_handling: single-page-application`).
+
+Preview serves each PR at `https://pr-<number>-shelter-map.<subdomain>.workers.dev/` using [Workers Previews](https://developers.cloudflare.com/workers/previews/). The production `workers.dev` URL stays disabled (`workers_dev: false`), while Preview URLs are enabled separately (`preview_urls: true`) and served with an `X-Robots-Tag: noindex` header. `preview_urls` takes effect on the next `wrangler deploy`, so Previews work only after that setting reaches production. Pull requests from forks cannot read the Cloudflare secrets, so Preview skips them.
 
 ## Design considerations
 
