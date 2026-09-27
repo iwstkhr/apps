@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - apps/tsudou/*
+
+# 依存パッケージのインストール時スクリプトは既定でブロックされるため、
+# 必要なものだけを明示的に許可する。
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: false
+  esbuild: true
+  workerd: true

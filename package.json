@@ -1,0 +1,10 @@
+{
+  "name": "apps",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.5.1",
+  "scripts": {
+    "typecheck": "pnpm -r --filter '!tsudou' run typecheck",
+    "test": "pnpm -r --filter '!tsudou' run test"
+  }
+}

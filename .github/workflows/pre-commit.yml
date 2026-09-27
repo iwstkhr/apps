@@ -1,0 +1,17 @@
+name: "[repo] Pre-commit"
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    uses: iwstkhr/shared-config/.github/workflows/pre-commit.yml@main
