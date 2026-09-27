@@ -1,0 +1,72 @@
+// @vitest-environment happy-dom
+
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MapTable } from '~/components/table/map-table';
+import { createShelter } from '~/test/fixtures';
+import { renderWithShelterMap } from '~/test/render-with-shelter-map';
+import { emptyShelterColumnFilters } from '~/types/shelter-filters';
+
+describe('MapTable', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('shows the displayed shelter count and dataset source', () => {
+    const shelters = [
+      createShelter({ id: 'yokohama', name: '横浜避難所' }),
+      createShelter({ id: 'kawasaki', name: '川崎避難所', address: '神奈川県川崎市' }),
+    ];
+
+    renderWithShelterMap(
+      <div className="flex h-[32rem] flex-col">
+        <MapTable />
+      </div>,
+      { displayedShelters: shelters },
+    );
+
+    expect(screen.getByText('2 件')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '国土地理院 指定緊急避難場所データ' })).toHaveAttribute(
+      'href',
+      'https://www.gsi.go.jp/bousaichiri/hinanbasho.html',
+    );
+  });
+
+  it('debounces column filter changes before updating the map', () => {
+    const { container, contextValue } = renderWithShelterMap(
+      <div className="flex h-[32rem] flex-col">
+        <MapTable />
+      </div>,
+    );
+    const table = within(container).getByRole('table');
+
+    fireEvent.click(within(table).getByRole('button', { name: '名前のフィルター' }));
+
+    const filterInput = within(table).getByPlaceholderText('名前で絞り込み');
+    fireEvent.change(filterInput, { target: { value: '横浜' } });
+
+    expect(contextValue.updateColumnFilters).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(200);
+
+    expect(contextValue.updateColumnFilters).toHaveBeenCalledOnce();
+    expect(contextValue.updateColumnFilters).toHaveBeenCalledWith({
+      ...emptyShelterColumnFilters,
+      name: '横浜',
+    });
+  });
+});
