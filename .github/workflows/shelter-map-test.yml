@@ -1,5 +1,6 @@
-name: "[shelter-map] Check"
+name: "[shelter-map] Test"
 
+# Biome、型チェック、ユニットテスト (Vitest) を回す。リポジトリ全体の Lint は pre-commit.yml が見る。
 on:
   pull_request:
     paths:
@@ -8,34 +9,31 @@ on:
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'mise.toml'
-      - '.github/workflows/shelter-map-check.yml'
+      - '.github/workflows/shelter-map-test.yml'
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'apps/shelter-map/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'mise.toml'
-      - '.github/workflows/shelter-map-check.yml'
+      - '.github/workflows/shelter-map-test.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 defaults:
   run:
     working-directory: apps/shelter-map
 
 jobs:
-  check:
-    name: Check
+  test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
@@ -48,13 +46,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Lint of the whole repository (pre-commit hooks) runs in pre-commit.yml
-
-      - name: Run check
+      - name: Check
         run: pnpm run check
 
-      - name: Run typecheck
+      - name: Typecheck
         run: pnpm run typecheck
 
-      - name: Run tests
+      - name: Test
         run: pnpm run test

@@ -62,8 +62,8 @@ app/
 public/assets/  # Static assets such as compressed GeoJSON
 scripts/        # Generate dataset-meta
 ../../.github/workflows/       # At the repository root
-  shelter-map-check.yml           # Quality checks for PRs / main
-  shelter-map-deploy.yml          # Deploy to Workers after Check succeeds
+  shelter-map-test.yml            # Quality checks for PRs / main
+  shelter-map-deploy.yml          # Deploy to Workers on pushes to main
   shelter-map-update-geojson.yml  # Monthly GeoJSON update PR
 ```
 
@@ -188,18 +188,18 @@ Related files:
 PR / push to main
   ├─ [repo] Pre-commit (entire repository)
   │    └─ pre-commit run --all-files
-  └─ [shelter-map] Check (only for changes under apps/shelter-map/)
+  └─ [shelter-map] Test (only for changes under apps/shelter-map/)
        ├─ pnpm run check
        ├─ pnpm run typecheck
        └─ pnpm run test
 
-[shelter-map] Check succeeds on main
-  └─ [shelter-map] Deploy (workflow_run)
+push to main (only for changes under apps/shelter-map/) / manual run
+  └─ [shelter-map] Deploy
        ├─ pnpm run build
        └─ pnpm run deploy (wrangler deploy publishes build/client to Workers)
 ```
 
-Deploy waits for Check to complete through `workflow_run` and builds the commit verified by Check only when it succeeds. It runs only for Check runs triggered by a push to this repository, so pull requests from forks (even from a branch named `main`) never reach the deploy job. The Cloudflare secrets are passed only to the deploy step, not to dependency installation or the build. Navigation to unknown paths returns `index.html` (`not_found_handling: single-page-application`).
+Test and Deploy run independently, as in tsudou. Deploy runs only on pushes to `main` and manual runs, so pull requests (including those from forks) never reach it. The Cloudflare secrets are passed only to the deploy step, not to dependency installation or the build. Navigation to unknown paths returns `index.html` (`not_found_handling: single-page-application`).
 
 ## Design considerations
 

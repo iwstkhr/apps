@@ -2,13 +2,17 @@ name: "[shelter-map] Deploy"
 
 # 静的アセット（build/client/）を Cloudflare Workers で公開する。設定は apps/shelter-map/wrangler.jsonc。
 on:
-  workflow_run:
-    workflows:
-      - "[shelter-map] Check"
-    types:
-      - completed
-    branches:
-      - main
+  push:
+    branches: [main]
+    paths:
+      - 'apps/shelter-map/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'mise.toml'
+      - '.github/workflows/shelter-map-deploy.yml'
+  # 手動でデプロイし直すときに使う
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -23,21 +27,12 @@ defaults:
 
 jobs:
   deploy:
-    name: Deploy
-    # Check が失敗したコミットは公開しない。
-    # branches の絞り込みはフォークのブランチ名 (main) にも当たるので、このリポジトリへの push に限る
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
-
+    # シークレットは依存パッケージのスクリプトから読まれないよう、Cloudflare を操作するステップにだけ渡す
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
-          # Check が検査したコミットをそのまま公開する
-          ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
 
       - name: Setup mise
@@ -52,7 +47,6 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      # 依存パッケージのスクリプトから読まれないよう、シークレットはこのステップにだけ渡す
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
