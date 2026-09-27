@@ -21,10 +21,6 @@ concurrency:
   group: shelter-map-deploy
   cancel-in-progress: false
 
-defaults:
-  run:
-    working-directory: apps/shelter-map
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -41,13 +37,16 @@ jobs:
           cache: true
 
       - name: Install dependencies
+        working-directory: apps/shelter-map
         run: pnpm install --frozen-lockfile
 
       # Workers ではドメインのルートで配信するので BASE_PATH は付けない
       - name: Build
+        working-directory: apps/shelter-map
         run: pnpm run build
 
       - name: Deploy
+        working-directory: apps/shelter-map
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
