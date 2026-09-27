@@ -187,9 +187,8 @@ Related files:
 ```text
 PR / push to main
   ├─ [repo] Pre-commit (entire repository)
-  │    └─ pre-commit run --all-files
+  │    └─ pre-commit run --all-files (including Biome lint and formatting)
   └─ [shelter-map] Test (only for changes under apps/shelter-map/)
-       ├─ pnpm run check
        ├─ pnpm run typecheck
        └─ pnpm run test
 

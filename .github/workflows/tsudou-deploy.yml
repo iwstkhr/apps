@@ -20,6 +20,10 @@ concurrency:
   group: tsudou-deploy
   cancel-in-progress: false
 
+defaults:
+  run:
+    working-directory: apps/tsudou
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -34,12 +38,10 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        working-directory: apps/tsudou
         run: pnpm install --frozen-lockfile
 
       # Worker が静的アセットとして配信する apps/tsudou/frontend/dist/ を作る
       - name: Build frontend
-        working-directory: apps/tsudou
         run: pnpm run build
 
       # 初回だけデータベースを作る。wrangler deploy の自動作成はリージョンを指定できず、

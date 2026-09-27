@@ -1,6 +1,6 @@
 name: "[shelter-map] Test"
 
-# Biome、型チェック、ユニットテスト (Vitest) を回す。リポジトリ全体の Lint は pre-commit.yml が見る。
+# 型チェックとユニットテスト (Vitest) を回す。Lint とフォーマット (Biome) はリポジトリ直下の pre-commit.yml が見る。
 on:
   pull_request:
     paths:
@@ -45,9 +45,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Check
-        run: pnpm run check
 
       - name: Typecheck
         run: pnpm run typecheck
