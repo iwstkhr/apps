@@ -366,8 +366,7 @@ Events and responses are automatically deleted after `RETENTION_MONTHS` (default
 
 ## Deployment
 
-Manually run `.github/workflows/tsudou-deploy.yml` (at the monorepo root) from the Actions tab (`workflow_dispatch`). It performs these steps:
-(Automatic deployment on pushes to `main` is currently disabled while preparing the migration.)
+`.github/workflows/tsudou-deploy.yml` (at the monorepo root) runs automatically on pushes to `main` that change `apps/tsudou/**` or the workspace dependencies. It can also be run manually from the Actions tab (`workflow_dispatch`). It performs these steps:
 
 1. Build the frontend with `pnpm run build` (`frontend/dist/`, served by the Worker).
 2. If the D1 database (`tsudou`) is absent, create it with `wrangler d1 create tsudou --location apac` (first deployment only).
@@ -385,11 +384,6 @@ The workflow creates the database only when `wrangler d1 info` cannot find it on
 It cannot specify a region, so the database might be created near the GitHub Actions runner and far from Japan. It also runs after the migration step, making first-deployment migrations fail.
 D1 regions cannot be changed after creation, so the workflow explicitly creates the database with `--location apac`.
 If `wrangler d1 info` fails temporarily, `d1 create` stops with an error when the name already exists, preventing duplicates.
-
-To remove resources, run `.github/workflows/tsudou-destroy.yml` (at the monorepo root) manually.
-It aborts unless `confirm` matches the Worker name, deletes the Worker first to stop delivery, and deletes D1 only if `delete_database` is selected.
-Database deletion is off by default, so removing only the Worker retains data and redeployment restores service.
-The same concurrency group (`deploy`) prevents deletion during deployment or immediate recreation while deletion is running.
 
 Static asset configuration (`assets`) lives in `backend/wrangler.jsonc`; `directory` points to `../frontend/dist`.
 The configuration is placed alongside Worker code and D1 migrations in `backend/`.

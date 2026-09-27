@@ -2,9 +2,14 @@ name: "[tsudou] Deploy"
 
 # 画面（静的アセット）と API（Express + D1）を 1 つの Cloudflare Worker として公開する。
 on:
-  # TODO: 移行の準備が整うまで自動実行を止めている。再開するときは push トリガーを戻す
-  # push:
-  #   branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - 'apps/tsudou/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/tsudou-deploy.yml'
   # 手動でデプロイし直すときに使う
   workflow_dispatch:
 

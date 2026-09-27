@@ -116,8 +116,7 @@ When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou
 
 ## Deployment (Cloudflare Workers)
 
-Manually run `.github/workflows/tsudou-deploy.yml` (at the monorepo root) from the Actions tab (`workflow_dispatch`). It performs these steps:
-(Automatic deployment on pushes to `main` is currently disabled.)
+`.github/workflows/tsudou-deploy.yml` (at the monorepo root) runs automatically on pushes to `main` that change `apps/tsudou/**` or the workspace dependencies. It can also be run manually from the Actions tab (`workflow_dispatch`). It performs these steps:
 
 1. Build the frontend with `pnpm run build` (`frontend/dist/`).
 2. If the D1 database (`tsudou`) does not exist, create it with `wrangler d1 create tsudou --location apac` (first deployment only).
@@ -137,18 +136,6 @@ Manually run `.github/workflows/tsudou-deploy.yml` (at the monorepo root) from t
    | Secret | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
 
    The Worker is served on the custom domain `tsudou.wasabee.dev` (`routes` in `backend/wrangler.jsonc`). `wrangler deploy` creates the DNS record and certificate, so the `wasabee.dev` zone must be in the same account. The `workers.dev` and preview URLs are disabled. No other configuration is needed because the UI and API share an origin.
-
-### Removing resources
-
-Manually run `.github/workflows/tsudou-destroy.yml` (at the monorepo root) from the Actions tab to delete Cloudflare resources.
-Because this cannot be undone, it runs only when the `confirm` input matches the Worker name (`tsudou`).
-
-1. Delete the Worker (`tsudou`), stopping UI/API delivery and the Cron Trigger.
-2. Delete the D1 database (`tsudou`) only when `delete_database` is checked.
-   **All event and response data is lost**. By default, the checkbox is off and the database is retained.
-
-Keeping the database allows redeployment with the original data.
-The workflow uses the same concurrency group as deployment, preventing overlapping runs.
 
 ### Delivery behavior
 
