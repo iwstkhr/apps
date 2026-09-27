@@ -80,3 +80,15 @@ jobs:
           add-paths: |
             apps/shelter-map/public/assets/mergeFromCity_2.geojson.gz
             apps/shelter-map/app/generated/dataset-meta.ts
+
+  # 月次の定期実行なので、PR ができたかどうかを成否どちらも Slack に流す
+  notify:
+    name: Notify
+    needs: update-geojson
+    if: ${{ always() }}
+    uses: iwstkhr/shared-config/.github/workflows/slack-notify.yml@main
+    with:
+      status: ${{ needs.update-geojson.result }}
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}

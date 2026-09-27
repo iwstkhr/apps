@@ -52,3 +52,15 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm run deploy
+
+  # 成否どちらも Slack に流す。push と手動実行だけなのでシークレットは常に読める
+  notify:
+    name: Notify
+    needs: deploy
+    if: ${{ always() }}
+    uses: iwstkhr/shared-config/.github/workflows/slack-notify.yml@main
+    with:
+      status: ${{ needs.deploy.result }}
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}

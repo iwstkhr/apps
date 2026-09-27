@@ -35,6 +35,9 @@ defaults:
 jobs:
   test:
     runs-on: ubuntu-latest
+    outputs:
+      # ジョブの if ではシークレットを読めないので、Slack の設定があるかだけを渡す
+      slack-enabled: ${{ secrets.SLACK_BOT_TOKEN != '' && secrets.SLACK_CHANNEL_ID != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -54,3 +57,15 @@ jobs:
       # D1 のテストは wrangler の getPlatformProxy がローカルの D1 を立てるので、Cloudflare のアカウントは要らない
       - name: Test
         run: pnpm test
+
+  # 失敗したときだけ Slack に流す。フォークからの PR ではシークレットが読めないので飛ばす
+  notify:
+    name: Notify
+    needs: test
+    if: ${{ failure() && needs.test.outputs.slack-enabled == 'true' }}
+    uses: iwstkhr/shared-config/.github/workflows/slack-notify.yml@main
+    with:
+      status: ${{ needs.test.result }}
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
