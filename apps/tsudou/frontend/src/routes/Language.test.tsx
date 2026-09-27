@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Alert } from '../components/ui';
 import { LANGUAGE_KEY, setLanguage } from '../lib/i18n';
 import { createQueryClient } from '../lib/queryClient';
@@ -11,10 +11,12 @@ import { Home } from './Home';
 import { Root } from './Root';
 
 beforeEach(() => {
+  vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US']);
   localStorage.clear();
   setLanguage('ja');
 });
 afterEach(() => {
+  vi.restoreAllMocks();
   localStorage.clear();
   setLanguage('ja');
 });
@@ -40,6 +42,15 @@ function renderPage(page: 'home' | 'guide' = 'home') {
 }
 
 describe('language switching', () => {
+  it('shows Japanese on a first visit with a Japanese browser preference', () => {
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['ja-JP', 'en-US']);
+    localStorage.clear();
+    renderPage();
+    expect(screen.getByLabelText(/^イベント名/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '言語' })).toHaveValue('ja');
+    expect(localStorage.getItem(LANGUAGE_KEY)).toBeNull();
+  });
+
   it('shows English on a first visit without a saved language', () => {
     localStorage.clear();
     renderPage();

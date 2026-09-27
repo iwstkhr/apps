@@ -4,17 +4,27 @@ import { english } from './translations';
 export type Language = 'ja' | 'en';
 export const LANGUAGE_KEY = 'tsudou:language';
 const listeners = new Set<() => void>();
-let memoryLanguage: Language = 'en';
 let unsavedLanguage: Language | null = null;
+
+function getBrowserLanguage(): Language {
+  if (typeof navigator === 'undefined') return 'en';
+  const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const locale of languages) {
+    const language = locale?.split('-')[0]?.toLowerCase();
+    if (language === 'ja' || language === 'en') return language;
+  }
+  return 'en';
+}
 
 export function getLanguage(): Language {
   if (unsavedLanguage) return unsavedLanguage;
   try {
     const saved = localStorage.getItem(LANGUAGE_KEY);
-    return saved === 'ja' ? 'ja' : 'en';
+    if (saved === 'ja' || saved === 'en') return saved;
   } catch {
-    return memoryLanguage;
+    // Use the browser preference when storage is unavailable.
   }
+  return getBrowserLanguage();
 }
 
 export function applyLanguage(language: Language) {
@@ -31,7 +41,6 @@ export function applyLanguage(language: Language) {
 }
 
 export function setLanguage(language: Language) {
-  memoryLanguage = language;
   try {
     localStorage.setItem(LANGUAGE_KEY, language);
     unsavedLanguage = null;

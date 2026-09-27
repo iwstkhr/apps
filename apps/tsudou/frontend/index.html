@@ -16,8 +16,17 @@
       // 初回描画前にテーマを決めてチラつきを防ぐ。ロジックは src/lib/theme.ts と揃えること
       (() => {
         let language = 'en';
+        const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+        for (const locale of languages) {
+          const candidate = locale?.split('-')[0]?.toLowerCase();
+          if (candidate === 'ja' || candidate === 'en') {
+            language = candidate;
+            break;
+          }
+        }
         try {
-          if (localStorage.getItem('tsudou:language') === 'ja') language = 'ja';
+          const saved = localStorage.getItem('tsudou:language');
+          if (saved === 'ja' || saved === 'en') language = saved;
         } catch {}
         document.documentElement.lang = language;
         document.title = language === 'en' ? 'Tsudou | Event scheduling' : 'Tsudou｜イベント日程調整';

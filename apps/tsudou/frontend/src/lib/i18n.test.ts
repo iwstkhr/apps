@@ -4,6 +4,7 @@ import { formatDate, formatFee } from './format';
 import { applyLanguage, getLanguage, LANGUAGE_KEY, setLanguage, t, useLanguage } from './i18n';
 
 beforeEach(() => {
+  vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US']);
   setLanguage('en');
   localStorage.clear();
 });
@@ -14,6 +15,39 @@ afterEach(() => {
 });
 
 describe('language preferences', () => {
+  it.each([
+    [['ja-JP', 'en-US'], 'ja'],
+    [['en-GB', 'ja-JP'], 'en'],
+    [['fr-FR', 'ja'], 'ja'],
+    [['de-DE', 'fr-FR'], 'en'],
+    [['JA-jp'], 'ja'],
+  ] as const)('selects the first supported browser language from %j', (languages, expected) => {
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue([...languages]);
+    expect(getLanguage()).toBe(expected);
+  });
+
+  it('uses navigator.language when the preferred language list is empty', () => {
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue([]);
+    vi.spyOn(navigator, 'language', 'get').mockReturnValue('ja-JP');
+    expect(getLanguage()).toBe('ja');
+  });
+
+  it('prioritizes saved choices over browser preferences and ignores invalid choices', () => {
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['ja-JP']);
+    localStorage.setItem(LANGUAGE_KEY, 'en');
+    expect(getLanguage()).toBe('en');
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    expect(getLanguage()).toBe('ja');
+  });
+
+  it('uses the browser language when storage is unavailable', () => {
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['ja-JP']);
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Blocked');
+    });
+    expect(getLanguage()).toBe('ja');
+  });
+
   it('defaults to English and ignores unsupported stored values', () => {
     expect(getLanguage()).toBe('en');
     localStorage.setItem(LANGUAGE_KEY, 'fr');

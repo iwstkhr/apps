@@ -311,9 +311,9 @@ Storage uses ISO 8601 (UTC); input uses `<input type="datetime-local">`.
 
 ## Display language
 
-The header offers **日本語** and **English** on every page. English is the default. Changes apply immediately to navigation, forms, status labels, notices, confirmation dialogs, validation errors, date weekdays, and guide text and alternative text. Document language, title, and description follow the selection.
+The header offers **日本語** and **English** on every page. Without a saved choice, the first supported language in `navigator.languages` is used (`ja-JP` maps to Japanese and `en-US` to English). An empty list falls back to `navigator.language`; if no language matches, English is used. Changes apply immediately to navigation, forms, status labels, notices, confirmation dialogs, validation errors, date weekdays, and guide text and alternative text. Document language, title, and description follow the selection.
 
-The selection is saved as `tsudou:language` (`ja` / `en`) and restored on subsequent visits. Unsupported saved values fall back to English. Storage failures keep switching functional for the current session. Changes in another tab synchronize through the browser storage event.
+The selection is saved as `tsudou:language` (`ja` / `en`) and restored on subsequent visits. Saved choices take priority over browser preferences. Unsupported saved values fall back to browser language detection. Storage failures keep switching functional for the current session. Changes in another tab synchronize through the browser storage event.
 
 Switching does not clear form drafts or alter user-entered event titles, memos, respondent names, or messages. Dates remain in the viewer's local time zone and fees remain in yen. Guide screenshots show Japanese; the English guide explains this.
 
@@ -323,7 +323,7 @@ Only theme and language preferences are persisted in `localStorage`. Read/write 
 
 | Key | Contents |
 | --- | --- |
-| `tsudou:language` | Display language (`ja` / `en`); defaults to English |
+| `tsudou:language` | Display language (`ja` / `en`); defaults to the first supported browser language, otherwise English |
 | `tsudou:theme` | Theme choice (`light` / `dark`); choosing system removes the key |
 
 Management tokens and response edit keys are **never persisted**, preventing the next user of a shared computer from changing events or responses.

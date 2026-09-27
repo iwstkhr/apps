@@ -318,11 +318,11 @@ Both locations also update `<meta name="theme-color">`, which controls browser U
 
 ### Display language
 
-`LanguageSelect` in the header switches between Japanese (`ja`) and English (`en`, default). `lib/i18n.ts` persists the choice, notifies mounted components through `useSyncExternalStore`, and handles cross-tab storage events. Storage exceptions use an in-memory preference.
+`LanguageSelect` in the header switches between Japanese (`ja`) and English (`en`). `lib/i18n.ts` persists the choice, notifies mounted components through `useSyncExternalStore`, and handles cross-tab storage events. Without a valid saved choice, it selects the first Japanese or English entry in `navigator.languages`, falling back to `navigator.language` when the list is empty and English when no entry matches. Storage read failures also use browser detection; failed writes keep the manual choice in memory.
 
 `lib/translations.ts` maps Japanese application text to English. Translation happens at rendering, including existing field and server errors, so switching preserves TanStack Form drafts and server data. Interpolated values stay plain text; user-generated content is never translated. Weekday labels follow the language while date values, local time zones, and yen amounts retain their meaning. Backend validation rules and API messages remain unchanged.
 
-The initial script in `index.html` sets the saved document language and title before rendering. `main.tsx` and subsequent language changes also update description metadata. When editing UI wording, update both language entries and check the guide in both languages.
+The initial script in `index.html` uses the same saved-choice and browser-language priority to set document language and title before rendering. `main.tsx` and subsequent language changes also update description metadata. When editing UI wording, update both language entries and check the guide in both languages.
 
 ### PWA
 

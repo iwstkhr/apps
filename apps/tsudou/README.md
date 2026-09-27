@@ -16,7 +16,7 @@ Hosts create an event and receive a shareable URL. Anyone with the URL can respo
 | Host | Create events (title, multiple candidate dates/times, fee, memo), edit details, close/reopen responses, delete responses, and delete events |
 | Participant | Respond with ○△× for each candidate, attach an optional message, and edit/delete their own response |
 
-The header lets users switch between Japanese and English. English is the default. The choice is saved in the browser; event titles, memos, names, and messages stay as entered.
+The header lets users switch between Japanese and English. Without a saved choice, the first supported language in the browser’s preferred languages is used; if none match Japanese or English, English is used. The choice is saved in the browser; event titles, memos, names, and messages stay as entered.
 
 The app supports PWA installation on smartphone home screens and desktop computers.
 
