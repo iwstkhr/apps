@@ -63,7 +63,8 @@ jobs:
         run: |
           output="$(pnpm exec wrangler preview --name "$PREVIEW_NAME" --ignore-base-config --json)"
           printf '%s\n' "$output"
-          preview_url="$(printf '%s' "$output" | jq -er '.preview.urls[0]')"
+          # wrangler は --json でもアセットのアップロード状況を JSON より前に標準出力へ書く
+          preview_url="$(printf '%s\n' "$output" | sed -n '/^{/,$p' | jq -ser '.[0].preview.urls[0]')"
           echo "url=$preview_url" >> "$GITHUB_OUTPUT"
 
       # コメントは 1 つだけにして、push のたびに同じコメントを書き換える
