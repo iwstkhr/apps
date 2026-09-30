@@ -2,6 +2,8 @@ packages:
   - apps/*
   - apps/tsudou/*
 
+saveExact: true
+
 # 依存パッケージのインストール時スクリプトは既定でブロックされるため、
 # 必要なものだけを明示的に許可する。
 allowBuilds:
