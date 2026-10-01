@@ -289,6 +289,10 @@ Public and management pages share a query key, displaying cached data immediatel
   Rate limiting and similar errors appear immediately because repeating the request will not resolve them.
 - The cache holds only `EventView`, never management tokens or response edit keys; those remain exclusively in `keyring.ts` memory.
 
+`usePublicEvent` and `useManagedEvent` compose fetching, mutations, keys, and cache updates for the public and management screens.
+`useEventKeys` imports keys from URL fragments into memory and immediately removes the fragments.
+Routes render the resulting state and delegate operations to these hooks.
+
 `useAsyncAction` uses one mutation that runs the supplied operation, rather than separate mutations per action, so saving, closing, and deleting on one page share a pending flag and errors.
 Event creation (`Home`) has only one operation and passes `createEvent` directly to `useMutation`.
 
@@ -428,7 +432,7 @@ Frontend tests (`frontend/vite.config.ts`, `frontend/src/**/*.test.{ts,tsx}`) us
 | Tokens | `tokens.test.ts` (hashing and constant-time comparison) |
 | Retention | `retention.test.ts` |
 | Frontend pure functions | `format.test.ts` / `errors.test.ts` / `formValidators.test.ts` / `answerDraft.test.ts` / `candidateDraft.test.ts` / `urls.test.ts` / `keyring.test.ts` |
-| Data-fetching hooks | `useEvent.test.tsx` / `useAsyncAction.test.tsx` (fresh `createQueryClient()` per test, mocked `api.ts`) |
+| Data-fetching hooks | `useEvent.test.tsx` / `useAsyncAction.test.tsx` / `eventActions.test.tsx` (fresh `createQueryClient()` per test, mocked `api.ts`) |
 | Components | `AnswerForm.test.tsx` / `AnswerGrid.test.tsx` / `ShareLinkBox.test.tsx` / `EventUrlBoxes.test.tsx` / `Root.test.tsx` (Testing Library) |
 
 ## Design decisions

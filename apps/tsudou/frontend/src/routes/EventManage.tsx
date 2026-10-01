@@ -1,41 +1,31 @@
-import { useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router';
+import { useLocation, useParams } from 'react-router';
 import { AnswerGrid } from '../components/AnswerGrid';
-import { EventEditForm, type EventEditValues } from '../components/EventEditForm';
+import { EventEditForm } from '../components/EventEditForm';
 import { ManageUrlBox, ShareUrlBox } from '../components/EventUrlBoxes';
 import { TextLink } from '../components/TextLink';
 import { Alert, Button, Card, LoadingBlock, MessageCard } from '../components/ui';
-import { deleteAnswer, deleteEvent, updateEvent } from '../lib/api';
 import { formatExpiry } from '../lib/format';
 import { t, useLanguage } from '../lib/i18n';
-import { forgetEventKeys, setManageToken, useManageToken } from '../lib/keyring';
-import { readTokenFromHash, stripHash } from '../lib/urls';
-import { useAsyncAction } from '../lib/useAsyncAction';
-import { useEvent } from '../lib/useEvent';
-import { useFlash } from '../lib/useFlash';
+import { useManagedEvent } from '../lib/useManagedEvent';
 
 export function EventManage() {
   useLanguage();
   const { eventId } = useParams();
   const location = useLocation();
-  const navigate = useNavigate();
-  const { event, loading, error, notFound, replace, reload, forget } = useEvent(eventId);
-
-  // 管理トークンは共有 PC で他人に使われないよう、ブラウザには保存せずメモリにだけ持つ。
-  // イベントを作成した直後か、管理用 URL (#k=...) から開いたときにだけ入る。
-  const manageToken = useManageToken(eventId);
-
-  const { pending: saving, error: formError, run } = useAsyncAction();
-  const [saved, flashSaved] = useFlash();
-
-  // メモリに取り込んだらすぐにフラグメントを消し、
-  // アドレスバーからの共有や、戻る/進むでの再表示で漏れないようにする。
-  useEffect(() => {
-    const token = readTokenFromHash(location.hash);
-    if (!eventId || !token) return;
-    setManageToken(eventId, token);
-    stripHash();
-  }, [eventId, location.hash]);
+  const {
+    event,
+    loading,
+    error,
+    notFound,
+    manageToken,
+    saving,
+    formError,
+    saved,
+    save,
+    toggleClosed,
+    removeAnswer,
+    removeEvent,
+  } = useManagedEvent(eventId, location.hash);
 
   if (loading && !event) {
     return <LoadingBlock />;
@@ -78,36 +68,6 @@ export function EventManage() {
       </MessageCard>
     );
   }
-
-  const save = (values: EventEditValues) =>
-    run(async () => {
-      replace(await updateEvent({ eventId, manageToken, ...values }));
-      flashSaved();
-    });
-
-  const toggleClosed = () =>
-    run(async () => {
-      replace(await updateEvent({ eventId, manageToken, closed: !event.closed }));
-    });
-
-  const removeAnswer = (answerId: string, name: string) => {
-    if (!window.confirm(t('「{0}」の回答を削除します。よろしいですか?', [name]))) return;
-    void run(async () => {
-      await deleteAnswer({ answerId, manageToken });
-      await reload();
-    });
-  };
-
-  const removeEvent = () => {
-    if (!window.confirm(t('イベントと、すべての回答を削除します。元に戻せません。よろしいですか?')))
-      return;
-    void run(async () => {
-      await deleteEvent(eventId, manageToken);
-      forgetEventKeys(eventId);
-      forget();
-      void navigate('/');
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -161,7 +121,7 @@ export function EventManage() {
                   variant="ghost"
                   size="sm"
                   disabled={saving}
-                  onClick={() => removeAnswer(answer.id, answer.name)}
+                  onClick={() => void removeAnswer(answer.id, answer.name)}
                 >
                   {t('削除')}
                 </Button>
@@ -197,7 +157,7 @@ export function EventManage() {
               {t('何もしなくても {0} 以降に自動削除されます。', [formatExpiry(event.expiresAt)])}
             </span>
           </p>
-          <Button variant="danger" size="sm" disabled={saving} onClick={removeEvent}>
+          <Button variant="danger" size="sm" disabled={saving} onClick={() => void removeEvent()}>
             {t('イベントを削除')}
           </Button>
         </div>

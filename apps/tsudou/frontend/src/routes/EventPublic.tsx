@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { AnswerForm } from '../components/AnswerForm';
 import { AnswerGrid } from '../components/AnswerGrid';
@@ -6,37 +5,30 @@ import { EventSummary } from '../components/EventSummary';
 import { ShareLinkBox } from '../components/ShareLinkBox';
 import { TextLink } from '../components/TextLink';
 import { Alert, Button, Card, LoadingBlock, MessageCard } from '../components/ui';
-import { type AnswerDraft, draftFromAnswer, draftToChoices, emptyDraft } from '../lib/answerDraft';
-import { deleteAnswer, submitAnswer, updateAnswer } from '../lib/api';
 import { t, useLanguage } from '../lib/i18n';
-import { setAnswerKey, useAnswerKey, useManageToken } from '../lib/keyring';
-import { answerEditUrl, managePath, readAnswerKeyFromHash, shareUrl, stripHash } from '../lib/urls';
-import { useAsyncAction } from '../lib/useAsyncAction';
-import { useEvent } from '../lib/useEvent';
-import { useFlash } from '../lib/useFlash';
+import { answerEditUrl, managePath, shareUrl } from '../lib/urls';
+import { usePublicEvent } from '../lib/usePublicEvent';
 
 export function EventPublic() {
   useLanguage();
   const { eventId } = useParams();
   const location = useLocation();
-  const { event, loading, error, notFound, reload } = useEvent(eventId);
-
-  // 回答編集キーは共有 PC で他人に使われないよう、ブラウザには保存せずメモリにだけ持つ。
-  // 回答した直後か、回答編集 URL (#a=...&k=...) から開いたときにだけ入る。
-  const mine = useAnswerKey(eventId);
-  const manageToken = useManageToken(eventId);
-
-  // 編集キーをメモリに取り込んだらすぐにフラグメントを消し、
-  // アドレスバーからの共有や、戻る/進むでの再表示で漏れないようにする。
-  useEffect(() => {
-    const key = readAnswerKeyFromHash(location.hash);
-    if (!eventId || !key) return;
-    setAnswerKey(eventId, key);
-    stripHash();
-  }, [eventId, location.hash]);
-
-  const { pending: submitting, error: formError, run } = useAsyncAction();
-  const [justSaved, flashSaved] = useFlash();
+  const {
+    event,
+    loading,
+    error,
+    notFound,
+    mine,
+    manageToken,
+    myAnswer,
+    keyIsStale,
+    initialDraft,
+    submitting,
+    formError,
+    justSaved,
+    save,
+    removeMyAnswer,
+  } = usePublicEvent(eventId, location.hash);
 
   if (loading && !event) {
     return <LoadingBlock />;
@@ -62,53 +54,6 @@ export function EventPublic() {
       </Alert>
     );
   }
-
-  // 編集キーを持っていて、かつサーバ側にもその回答が残っている場合だけ「自分の回答」
-  const myAnswer = mine ? event.answers.find((a) => a.id === mine.answerId) : undefined;
-  const keyIsStale = mine !== null && myAnswer === undefined;
-
-  const initialDraft = myAnswer
-    ? draftFromAnswer(event.candidates, myAnswer)
-    : emptyDraft(event.candidates);
-
-  const save = (draft: AnswerDraft) =>
-    run(async () => {
-      const choices = draftToChoices(event.candidates, draft);
-      const message = draft.message.trim() === '' ? null : draft.message.trim();
-
-      if (myAnswer && mine) {
-        await updateAnswer({
-          answerId: myAnswer.id,
-          editToken: mine.editToken,
-          name: draft.name.trim(),
-          message,
-          choices,
-        });
-      } else {
-        const { answer, editToken } = await submitAnswer({
-          eventId,
-          name: draft.name.trim(),
-          message,
-          choices,
-        });
-        // 編集キーはここでしか受け取れない。画面に回答編集 URL を出して持ち帰ってもらう
-        setAnswerKey(eventId, { answerId: answer.id, editToken });
-      }
-
-      flashSaved();
-      await reload();
-    });
-
-  const removeMyAnswer = () => {
-    if (!myAnswer || !mine) return;
-    if (!window.confirm(t('自分の回答を削除します。よろしいですか?'))) return;
-
-    void run(async () => {
-      await deleteAnswer({ answerId: myAnswer.id, editToken: mine.editToken });
-      setAnswerKey(eventId, null);
-      await reload();
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -220,7 +165,12 @@ export function EventPublic() {
 
             {myAnswer && (
               <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-                <Button variant="danger" size="sm" disabled={submitting} onClick={removeMyAnswer}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  disabled={submitting}
+                  onClick={() => void removeMyAnswer()}
+                >
                   {t('自分の回答を削除')}
                 </Button>
               </div>
