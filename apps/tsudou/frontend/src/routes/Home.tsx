@@ -2,12 +2,12 @@ import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { RETENTION_MONTHS } from '@tsudou/shared/limits';
 import { Link, useNavigate } from 'react-router';
-import { EventFormFields, type EventFormValues } from '../components/EventFormFields';
+import { EventFormFields } from '../components/EventFormFields';
 import { Alert, Button, Card } from '../components/ui';
 import { createEvent } from '../lib/api';
-import { candidatesToInput, defaultCandidate } from '../lib/candidateDraft';
+import { defaultCandidate } from '../lib/candidateDraft';
 import { errorMessage } from '../lib/errors';
-import { parseFeeValue } from '../lib/formValidators';
+import { type EventFormValues, eventFormToInput } from '../lib/eventForm';
 import { t, useLanguage } from '../lib/i18n';
 import { setManageToken } from '../lib/keyring';
 
@@ -33,15 +33,7 @@ export function Home() {
     } satisfies EventFormValues,
     // 送信中の表示はフォームの isSubmitting で出すので、ここでは完了まで待つ。
     // 失敗は create.error に入るので、例外はここで止める
-    onSubmit: ({ value }) =>
-      create
-        .mutateAsync({
-          title: value.title.trim(),
-          fee: parseFeeValue(value.fee),
-          memo: value.memo.trim() === '' ? null : value.memo.trim(),
-          candidates: candidatesToInput(value.candidates),
-        })
-        .catch(() => {}),
+    onSubmit: ({ value }) => create.mutateAsync(eventFormToInput(value)).catch(() => {}),
   });
 
   return (

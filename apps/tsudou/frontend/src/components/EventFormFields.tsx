@@ -1,6 +1,7 @@
 import type { ReactFormExtendedApi } from '@tanstack/react-form';
 import { LIMITS } from '@tsudou/shared/limits';
-import type { CandidateDraft } from '../lib/candidateDraft';
+import type { EventFormValues } from '../lib/eventForm';
+
 import {
   validateCandidatesValue,
   validateFeeValue,
@@ -11,15 +12,6 @@ import { t, useLanguage } from '../lib/i18n';
 import { CandidateEditor } from './CandidateEditor';
 import { fieldError } from './FieldError';
 import { Field, Input, Textarea } from './ui';
-
-/** 作成フォームと編集フォームで共通のフォーム値。 */
-export type EventFormValues = {
-  title: string;
-  /** 入力途中も保持したいので文字列で持ち、送信時に数値へ変換する。 */
-  fee: string;
-  memo: string;
-  candidates: CandidateDraft[];
-};
 
 /**
  * `useForm<EventFormValues>` が返すフォームの型。

@@ -1,17 +1,12 @@
 import { useForm } from '@tanstack/react-form';
-import { candidatesToDrafts, candidatesToInput } from '../lib/candidateDraft';
-import { parseFeeValue } from '../lib/formValidators';
+import { candidatesToDrafts } from '../lib/candidateDraft';
+import { type EventFormInput, type EventFormValues, eventFormToInput } from '../lib/eventForm';
 import { t, useLanguage } from '../lib/i18n';
 import type { EventView } from '../lib/types';
-import { EventFormFields, type EventFormValues } from './EventFormFields';
+import { EventFormFields } from './EventFormFields';
 import { Alert, Button } from './ui';
 
-export type EventEditValues = {
-  title: string;
-  fee: number | null;
-  memo: string | null;
-  candidates: { id?: string | null; startAt: string }[];
-};
+export type EventEditValues = EventFormInput;
 
 /**
  * 編集フォームの状態は TanStack Form が持つ。呼び出し側は key={event.id} で
@@ -39,12 +34,7 @@ export function EventEditForm({
       candidates: candidatesToDrafts(event.candidates),
     } satisfies EventFormValues,
     onSubmit: ({ value }) => {
-      onSave({
-        title: value.title.trim(),
-        fee: parseFeeValue(value.fee),
-        memo: value.memo.trim() === '' ? null : value.memo.trim(),
-        candidates: candidatesToInput(value.candidates),
-      });
+      onSave(eventFormToInput(value));
     },
   });
 

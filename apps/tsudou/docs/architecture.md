@@ -273,6 +273,8 @@ Server data lives in a single app-wide TanStack Query cache (`frontend/src/lib/q
 | Theme preference | `localStorage` and `<html data-theme>` (`frontend/src/lib/theme.ts`) |
 
 Initial values are not synchronized with `useEffect`.
+`eventFormToInput` in `lib/eventForm.ts` converts validated form values into the common creation/edit payload, including whitespace normalization, optional fields, fees, and candidate IDs.
+
 When the target changes (another event or a change in whether the current user has a response), the caller changes the form's `key` to recreate it.
 
 `useEvent` fetches events with `useQuery`. Query handles stale responses after `eventId` changes and **refetching when window focus returns** (`refetchOnWindowFocus`).
