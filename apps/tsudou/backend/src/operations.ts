@@ -1,10 +1,4 @@
-import type {
-  AnswerView,
-  Candidate,
-  CandidateInput,
-  Choice,
-  EventView,
-} from '@tsudou/shared/types';
+import type { AnswerView, CandidateInput, Choice, EventView } from '@tsudou/shared/types';
 import { AppError, duplicateNameError, forbiddenError, notFoundError } from './errors';
 import type { AnswerRecord, EventRecord, Repository } from './repository';
 import { expiresAtFrom, isExpired } from './retention';
@@ -12,7 +6,6 @@ import { generateEventId, generateToken, hashToken, verifyToken } from './tokens
 import {
   LIMITS,
   normalizeOptionalText,
-  reconcileChoices,
   validateCandidates,
   validateChoices,
   validateFee,
@@ -171,25 +164,8 @@ export async function updateEvent(repo: Repository, args: UpdateEventArgs): Prom
 
   const updated = await repo.updateEvent(event.id, patch);
 
-  let answers = await repo.listAnswersByEvent(event.id);
-
-  // 候補を増減させると既存回答とズレるので、消えた候補は落とし、
-  // 増えた候補は「未定」で埋め直す
-  if (candidates && !sameCandidateIds(event.candidates, candidates)) {
-    answers = await Promise.all(
-      answers.map((answer) =>
-        repo.updateAnswer(answer.id, { choices: reconcileChoices(answer.choices, candidates) }),
-      ),
-    );
-  }
-
+  const answers = await repo.listAnswersByEvent(event.id);
   return toEventView(updated, answers);
-}
-
-function sameCandidateIds(a: readonly Candidate[], b: readonly Candidate[]): boolean {
-  if (a.length !== b.length) return false;
-  const ids = new Set(a.map((c) => c.id));
-  return b.every((c) => ids.has(c.id));
 }
 
 export async function deleteEvent(

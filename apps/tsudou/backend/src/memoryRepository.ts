@@ -8,6 +8,8 @@ import type {
   Repository,
 } from './repository';
 
+import { reconcileChoices } from './validate';
+
 /**
  * テスト用のインメモリ実装。D1 と同じく「更新は部分適用」「取得は参照ではなく複製」
  * になるよう、出し入れのたびに構造化複製する。
@@ -42,8 +44,21 @@ export function createMemoryRepository(
       const current = events.get(eventId);
       if (!current) throw new Error(`event not found: ${eventId}`);
       const next: EventRecord = { ...current, ...clone(patch), updatedAt: now() };
+      // 全レコードの構築が成功してから反映し、途中の失敗では何も変更しない。
+      const reconciled = patch.candidates
+        ? [...answers.values()]
+            .filter((answer) => answer.eventId === eventId)
+            .map((answer) => {
+              const choices = reconcileChoices(answer.choices, next.candidates);
+              return JSON.stringify(choices) === JSON.stringify(answer.choices)
+                ? answer
+                : { ...answer, choices, updatedAt: next.updatedAt };
+            })
+        : [];
+      const result = clone(next);
       events.set(eventId, next);
-      return clone(next);
+      for (const answer of reconciled) answers.set(answer.id, answer);
+      return result;
     },
 
     async deleteEvent(eventId: string) {

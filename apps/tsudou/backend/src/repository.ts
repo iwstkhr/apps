@@ -42,6 +42,7 @@ export type AnswerPatch = Partial<Pick<AnswerRecord, 'name' | 'message' | 'choic
 export interface Repository {
   createEvent(input: NewEvent): Promise<EventRecord>;
   getEvent(eventId: string): Promise<EventRecord | null>;
+  /** 候補を更新する場合、既存回答の選択も同じ処理で補正し、全体を原子的に保存する。 */
   updateEvent(eventId: string, patch: EventPatch): Promise<EventRecord>;
   deleteEvent(eventId: string): Promise<void>;
 

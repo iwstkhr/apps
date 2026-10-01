@@ -458,3 +458,10 @@ Sharing an origin removes CORS configuration, Variables for allowed origins and 
 API routes moved under `/api` to separate them from SPA paths.
 Because the `Repository` interface already separated business logic from data access, only `dynamoRepository.ts` → `d1Repository.ts` and the entry point (`server.ts` → `worker.ts`) needed replacement.
 D1 has no TTL feature, so a Cron Trigger performs expiry cleanup.
+
+## Atomic candidate updates
+
+`Repository.updateEvent` also reconciles existing response choices whenever candidates change.
+D1 batches the event update and response reconciliation in one transaction: a failure rolls back both.
+Reconciliation uses the response choices stored at execution time, preserving retained selections and filling new candidates with `MAYBE`.
+The memory repository follows the same contract.

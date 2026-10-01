@@ -101,6 +101,28 @@ async function run<T>(context: string, fn: () => Promise<T>): Promise<T> {
  * patch に含まれるキーだけを SET し、更新後の行を返す。
  * 存在しない行の更新は想定外 (呼び出し側で存在を確かめている) なので INTERNAL にする。
  */
+function prepareUpdate(
+  db: D1Database,
+  table: 'events' | 'answers',
+  columns: Record<string, (value: never) => unknown>,
+  id: string,
+  patch: Record<string, unknown>,
+  timestamp = new Date().toISOString(),
+): D1PreparedStatement {
+  const entries = Object.entries(patch).filter(([, value]) => value !== undefined);
+  const assignments = entries.map(([key]) => `${key} = ?`);
+  const values = entries.map(([key, value]) => {
+    const encode = columns[key];
+    if (!encode) throw new Error(`更新できない項目です: ${key}`);
+    return encode(value as never);
+  });
+  return db
+    .prepare(
+      `UPDATE ${table} SET ${[...assignments, 'updated_at = ?'].join(', ')} WHERE id = ? RETURNING *`,
+    )
+    .bind(...values, timestamp, id);
+}
+
 async function update<Row>(
   db: D1Database,
   table: 'events' | 'answers',
@@ -109,24 +131,32 @@ async function update<Row>(
   patch: Record<string, unknown>,
   context: string,
 ): Promise<Row> {
-  const entries = Object.entries(patch).filter(([, value]) => value !== undefined);
-  const assignments = entries.map(([key]) => `${key} = ?`);
-  const values = entries.map(([key, value]) => {
-    const encode = columns[key];
-    if (!encode) throw new Error(`更新できない項目です: ${key}`);
-    return encode(value as never);
-  });
-
   return run(context, async () => {
-    const row = await db
-      .prepare(
-        `UPDATE ${table} SET ${[...assignments, 'updated_at = ?'].join(', ')} WHERE id = ? RETURNING *`,
-      )
-      .bind(...values, new Date().toISOString(), id)
-      .first<Row>();
+    const row = await prepareUpdate(db, table, columns, id, patch).first<Row>();
     if (!row) throw new Error(`${table} not found: ${id}`);
     return row;
   });
+}
+
+/**
+ * 保存時点の回答から選択を補正する。事前に読み出した回答で上書きしないため、
+ * 回答の編集と競合しても、その時点の選択を維持できる。
+ */
+function prepareReconcileAnswers(db: D1Database, eventId: string, timestamp: string) {
+  const choices = `(SELECT json_group_array(json_object(
+    'candidateId', json_extract(candidate.value, '$.id'),
+    'status', COALESCE((
+      SELECT json_extract(choice.value, '$.status')
+      FROM json_each(answers.choices) AS choice
+      WHERE json_extract(choice.value, '$.candidateId') = json_extract(candidate.value, '$.id')
+    ), 'MAYBE')
+  )) FROM json_each((SELECT candidates FROM events WHERE id = answers.event_id)) AS candidate)`;
+  return db
+    .prepare(
+      `UPDATE answers SET choices = ${choices}, updated_at = ?
+     WHERE event_id = ? AND choices != ${choices}`,
+    )
+    .bind(timestamp, eventId);
 }
 
 /** 本番の Repository 実装。テストは memoryRepository.ts を使う。 */
@@ -167,15 +197,22 @@ export function createD1Repository(db: D1Database): Repository {
     },
 
     async updateEvent(eventId: string, patch: EventPatch) {
-      const row = await update<EventRow>(
-        db,
-        'events',
-        EVENT_COLUMNS,
-        eventId,
-        patch,
-        'updateEvent',
-      );
-      return toEvent(row);
+      if (patch.candidates === undefined) {
+        return toEvent(
+          await update<EventRow>(db, 'events', EVENT_COLUMNS, eventId, patch, 'updateEvent'),
+        );
+      }
+      return run('updateEvent', async () => {
+        const timestamp = new Date().toISOString();
+        // batch 全体がトランザクション。補正が失敗すればイベント更新も戻る。
+        const [result] = await db.batch<EventRow>([
+          prepareUpdate(db, 'events', EVENT_COLUMNS, eventId, patch, timestamp),
+          prepareReconcileAnswers(db, eventId, timestamp),
+        ]);
+        const row = result.results[0];
+        if (!row) throw new Error(`events not found: ${eventId}`);
+        return toEvent(row);
+      });
     },
 
     async deleteEvent(eventId: string) {

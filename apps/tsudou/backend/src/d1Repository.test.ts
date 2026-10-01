@@ -85,6 +85,59 @@ describe('d1Repository', () => {
     expect(await repo.getEvent('event-1')).toEqual(updated);
   });
 
+  it('候補更新は残った選択を維持し、新規候補を未定にして、別イベントに影響しない', async () => {
+    await repo.createEvent(newEvent());
+    await repo.createEvent(newEvent({ id: 'event-2' }));
+    await repo.createAnswer(newAnswer());
+    const other = await repo.createAnswer(newAnswer({ id: 'other', eventId: 'event-2' }));
+    const candidates = [
+      { id: 'c2', startAt: '2030-01-02T10:00:00.000Z' },
+      { id: 'c1', startAt: '2030-01-01T10:00:00.000Z' },
+    ];
+    await repo.updateEvent('event-1', { candidates });
+    expect((await repo.getAnswer('answer-1'))?.choices).toEqual([
+      { candidateId: 'c2', status: 'MAYBE' },
+      { candidateId: 'c1', status: 'YES' },
+    ]);
+    await repo.updateEvent('event-1', { candidates: [candidates[0]] });
+    expect((await repo.getAnswer('answer-1'))?.choices).toEqual([
+      { candidateId: 'c2', status: 'MAYBE' },
+    ]);
+    expect(await repo.getAnswer('other')).toEqual(other);
+  });
+
+  it('同じ候補の再保存では回答を更新しない', async () => {
+    const event = await repo.createEvent(newEvent());
+    const answer = await repo.createAnswer(newAnswer());
+    await repo.updateEvent(event.id, { candidates: event.candidates });
+    expect(await repo.getAnswer(answer.id)).toEqual(answer);
+  });
+
+  it('回答補正が途中で失敗したらイベントと全回答をロールバックする', async () => {
+    const event = await repo.createEvent(newEvent());
+    const first = await repo.createAnswer(newAnswer());
+    const second = await repo.createAnswer(newAnswer({ id: 'answer-2', name: 'guest-2' }));
+    await db
+      .prepare(`CREATE TRIGGER fail_reconcile BEFORE UPDATE ON answers
+      WHEN NEW.id = 'answer-2' BEGIN SELECT RAISE(ABORT, 'test failure'); END`)
+      .run();
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await expect(
+        repo.updateEvent(event.id, {
+          title: 'changed',
+          candidates: [{ id: 'c2', startAt: '2030-01-02T10:00:00.000Z' }],
+        }),
+      ).rejects.toMatchObject({ code: 'INTERNAL' });
+      expect(await repo.getEvent(event.id)).toEqual(event);
+      expect(await repo.getAnswer(first.id)).toEqual(first);
+      expect(await repo.getAnswer(second.id)).toEqual(second);
+    } finally {
+      spy.mockRestore();
+      await db.prepare('DROP TRIGGER fail_reconcile').run();
+    }
+  });
+
   it('存在しない行の更新は INTERNAL', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     await expect(repo.updateEvent('missing', { title: 'x' })).rejects.toMatchObject({
