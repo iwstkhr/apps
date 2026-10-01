@@ -63,6 +63,9 @@ export function createMemoryRepository(
 
     async deleteEvent(eventId: string) {
       events.delete(eventId);
+      for (const [id, answer] of answers) {
+        if (answer.eventId === eventId) answers.delete(id);
+      }
     },
 
     async createAnswer(input: NewAnswer) {

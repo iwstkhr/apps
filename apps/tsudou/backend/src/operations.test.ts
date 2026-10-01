@@ -236,11 +236,15 @@ describe('deleteEvent', () => {
   it('紐づく回答ごと削除する', async () => {
     const { eventId, manageToken } = await seedEvent();
     const { answer } = await answerAll(eventId, '山田', ['YES', 'YES']);
+    const other = await seedEvent();
+    const { answer: otherAnswer } = await answerAll(other.eventId, 'guest', ['NO', 'NO']);
 
     await ops.deleteEvent(repo, { eventId, manageToken });
 
     expect(await repo.getEvent(eventId)).toBeNull();
     expect(await repo.getAnswer(answer.id)).toBeNull();
+    expect(await repo.getEvent(other.eventId)).not.toBeNull();
+    expect(await repo.getAnswer(otherAnswer.id)).not.toBeNull();
   });
 });
 

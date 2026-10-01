@@ -44,6 +44,7 @@ export interface Repository {
   getEvent(eventId: string): Promise<EventRecord | null>;
   /** 候補を更新する場合、既存回答の選択も同じ処理で補正し、全体を原子的に保存する。 */
   updateEvent(eventId: string, patch: EventPatch): Promise<EventRecord>;
+  /** イベントと関連回答を一緒に削除する。他のイベントには影響しない。 */
   deleteEvent(eventId: string): Promise<void>;
 
   createAnswer(input: NewAnswer): Promise<AnswerRecord>;

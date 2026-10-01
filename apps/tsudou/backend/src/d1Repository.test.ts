@@ -185,13 +185,19 @@ describe('d1Repository', () => {
     });
   });
 
-  it('イベントを消すと回答も消える', async () => {
+  it('イベントを消すと関連回答だけが消える', async () => {
     await repo.createEvent(newEvent());
     await repo.createAnswer(newAnswer());
+    const other = await repo.createEvent(newEvent({ id: 'other-event' }));
+    const otherAnswer = await repo.createAnswer(
+      newAnswer({ id: 'other-answer', eventId: other.id }),
+    );
 
     await repo.deleteEvent('event-1');
     expect(await repo.getEvent('event-1')).toBeNull();
     expect(await repo.getAnswer('answer-1')).toBeNull();
+    expect(await repo.getEvent(other.id)).toEqual(other);
+    expect(await repo.getAnswer(otherAnswer.id)).toEqual(otherAnswer);
   });
 
   it('deleteExpired は期限を過ぎたイベントとその回答だけを消す', async () => {

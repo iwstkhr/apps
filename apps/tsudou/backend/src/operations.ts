@@ -174,9 +174,6 @@ export async function deleteEvent(
 ) {
   const event = await loadEventAsHost(repo, args.eventId, args.manageToken);
 
-  // 孤児レコードが残らないよう、先に回答を消してからイベントを消す
-  const answers = await repo.listAnswersByEvent(event.id);
-  await Promise.all(answers.map((answer) => repo.deleteAnswer(answer.id)));
   await repo.deleteEvent(event.id);
 
   return true;

@@ -465,3 +465,7 @@ D1 has no TTL feature, so a Cron Trigger performs expiry cleanup.
 D1 batches the event update and response reconciliation in one transaction: a failure rolls back both.
 Reconciliation uses the response choices stored at execution time, preserving retained selections and filling new candidates with `MAYBE`.
 The memory repository follows the same contract.
+
+`Repository.deleteEvent` deletes the event and its associated responses together.
+D1 uses `ON DELETE CASCADE`; the memory repository also removes associated responses.
+Business logic performs authorization and delegates deletion without listing or individually deleting responses.
