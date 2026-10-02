@@ -1,4 +1,4 @@
-name: "[shelter-map] Deploy"
+name: "shelter-map - Deploy"
 
 # 静的アセット（build/client/）を Cloudflare Workers で公開する。設定は apps/shelter-map/wrangler.jsonc。
 on:

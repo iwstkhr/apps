@@ -187,21 +187,21 @@ Related files:
 
 ```text
 PR / push to main
-  ├─ [repo] Pre-commit (entire repository)
+  ├─ repo - Pre-commit (entire repository)
   │    └─ pre-commit run --all-files (including Biome lint and formatting)
-  └─ [shelter-map] Test (only for changes under apps/shelter-map/)
+  └─ shelter-map - Test (only for changes under apps/shelter-map/)
        ├─ pnpm run typecheck
        └─ pnpm run test
 
 PR opened / updated / closed (only for changes under apps/shelter-map/, not from forks)
-  └─ [shelter-map] Preview
+  └─ shelter-map - Preview
        ├─ pnpm run build
        ├─ wrangler preview --name pr-<number> (creates or updates the Preview)
        ├─ Comment the Preview URL on the PR (one comment, updated on each push)
        └─ wrangler preview delete (when the PR is closed)
 
 push to main (only for changes under apps/shelter-map/) / manual run
-  └─ [shelter-map] Deploy
+  └─ shelter-map - Deploy
        ├─ pnpm run build
        └─ pnpm run deploy (wrangler deploy publishes build/client to Workers)
 ```

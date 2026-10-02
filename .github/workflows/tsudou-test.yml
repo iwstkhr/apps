@@ -1,4 +1,4 @@
-name: "[tsudou] Test"
+name: "tsudou - Test"
 
 # 型チェックとユニットテスト (Vitest) を全パッケージで回す。Lint とフォーマットはリポジトリ直下の pre-commit.yml が見る。
 # apps/tsudou/docs/openapi.yaml の作り直し忘れも backend のテスト (openapi.test.ts) で検出される。

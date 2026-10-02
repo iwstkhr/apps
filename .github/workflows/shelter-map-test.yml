@@ -1,4 +1,4 @@
-name: "[shelter-map] Test"
+name: "shelter-map - Test"
 
 # 型チェックとユニットテスト (Vitest) を回す。Lint とフォーマット (Biome) はリポジトリ直下の pre-commit.yml が見る。
 on:

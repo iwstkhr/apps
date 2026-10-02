@@ -1,4 +1,4 @@
-name: "[repo] Pre-commit"
+name: "repo - Pre-commit"
 
 on:
   pull_request:

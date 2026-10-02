@@ -1,4 +1,4 @@
-name: "[tsudou] Deploy"
+name: "tsudou - Deploy"
 
 # 画面（静的アセット）と API（Express + D1）を 1 つの Cloudflare Worker として公開する。
 on:

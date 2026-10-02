@@ -1,4 +1,4 @@
-name: "[shelter-map] Preview"
+name: "shelter-map - Preview"
 
 # PR ごとに Cloudflare Workers の Preview (wrangler preview) を作り、URL を PR にコメントする。
 # Preview は PR を閉じたときに消す。設定は apps/shelter-map/wrangler.jsonc の preview_urls と previews。

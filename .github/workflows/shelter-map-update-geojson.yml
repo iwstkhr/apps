@@ -1,4 +1,4 @@
-name: "[shelter-map] Update GeoJSON"
+name: "shelter-map - Update GeoJSON"
 
 on:
   schedule:
