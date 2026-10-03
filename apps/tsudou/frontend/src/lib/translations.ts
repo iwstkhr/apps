@@ -182,6 +182,11 @@ export const english: Record<string, string> = {
   '「この名前はすでに回答済みです」と表示されます': 'I see “This name has already responded”',
   '同じイベントで同じ名前は 1 回しか回答できません。自分の回答を直したい場合は、回答時に控えた回答編集 URL を開いてください。別の人の場合は、名前を少し変えて（名字を足すなど）回答してください。':
     'Each name can respond only once per event. To edit your response, open the edit URL you saved after submitting. If you are a different person, use a distinguishable name, such as adding your surname.',
+  イベントページは安全ですか: 'Is the event page safe?',
+  '共有用 URL を知っている人は、ログインせずにイベントの内容と回答状況（お名前・○△×・メッセージ）を見られます。 URL には推測できないランダムな文字列を使い、検索エンジンにも載らないようにしていますが、URL が転送されればその人も見られます。 送る相手に気をつけ、電話番号や住所など知られて困る情報は書かないでください。':
+    'Anyone with the share URL can view the event details and responses (names, ○△×, and messages) without signing in. The URL contains an unguessable random string and is kept out of search engines, but anyone it is forwarded to can view it too. Be careful who you send it to, and do not write anything you would not want others to know, such as phone numbers or addresses.',
+  'ページを見られても、イベントや回答を変更されることはありません。 変更には管理用 URL・回答編集 URL に含まれる鍵が必要で、サーバには鍵そのものではなく、元に戻せない形に変換した値だけを保存しています。':
+    'Viewing the page does not let anyone change the event or responses. Changes require the key in the management URL or response edit URL, and the server stores only an irreversibly transformed value, never the key itself.',
   データはいつまで残りますか: 'How long is data kept?',
   'イベントと回答は、作成から': 'Events and responses are deleted automatically after ',
   'ヶ月後に自動で削除されます。編集や回答をしても期限は延びません。削除される日付はイベントページと管理ページに表示されます。':
