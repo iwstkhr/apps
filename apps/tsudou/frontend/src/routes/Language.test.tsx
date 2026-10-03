@@ -94,7 +94,7 @@ describe('language switching', () => {
       if (image.getAttribute('alt'))
         expect(image.getAttribute('alt')).not.toMatch(/[ぁ-んァ-ン一-龯]/);
     }
-    expect(screen.getByText(/Screenshots show the Japanese interface/)).toBeInTheDocument();
+    expect(screen.getByText(/Screenshots use sample data/)).toBeInTheDocument();
   });
 
   it('updates an already displayed server error when changing language', () => {

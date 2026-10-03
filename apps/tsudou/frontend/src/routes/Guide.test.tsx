@@ -38,6 +38,15 @@ describe('Guide', () => {
       expect(img).toHaveAttribute('height');
     }
   });
+
+  it.each(['ja', 'en'] as const)('表示言語 %s の画面キャプチャを表示する', (language) => {
+    localStorage.setItem('tsudou:language', language);
+    renderGuide();
+
+    for (const img of screen.getAllByRole('img')) {
+      expect(img.getAttribute('src')).toContain(`/assets/guide/${language}/`);
+    }
+  });
 });
 
 // These assertions verify the Japanese interface explicitly.

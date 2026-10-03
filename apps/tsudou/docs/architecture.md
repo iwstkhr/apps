@@ -115,7 +115,7 @@ frontend/                       Frontend (@tsudou/frontend)
    ├─ sw.js                     Service Worker source (built as dist/sw.js)
    ├─ routes/                   Screens (Root / Home / Guide / EventCreated / EventPublic /
    │                            EventManage / NotFound)
-   ├─ assets/guide/             Guide screenshots
+   ├─ assets/guide/             Guide screenshots (ja/ and en/) and their sizes (sizes.json)
    ├─ components/               UI components and ui/ primitives
    └─ lib/                      api, queryClient, errors, storage, urls, format,
                                 formValidators, tally, and hooks

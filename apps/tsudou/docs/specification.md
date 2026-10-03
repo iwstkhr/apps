@@ -68,7 +68,7 @@ Explains host and participant workflows with screenshots captured using sample d
 
 - The table of contents (host / participant / FAQ) uses page anchors (`#host` / `#guest` / `#faq`). Opening a URL with an anchor scrolls to that heading after rendering.
 - Tapping or clicking a screenshot opens the full-size image in a new tab.
-- Screenshots are stored in `frontend/src/assets/guide/` and recaptured with `pnpm run guide:capture`. During capture, URL field origins are replaced with `https://tsudou.example.com`.
+- Screenshots are captured per display language with sample data in that language and shown to match the selected language. They are stored in `frontend/src/assets/guide/ja/` and `frontend/src/assets/guide/en/` and recaptured with `pnpm run guide:capture`, which also writes their dimensions to `frontend/src/assets/guide/sizes.json`. During capture, URL field origins are replaced with `https://tsudou.example.com`.
 
 ### Creation confirmation (`/e/<eventId>/created`)
 
@@ -315,7 +315,7 @@ The header offers **日本語** and **English** on every page. Without a saved c
 
 The selection is saved as `tsudou:language` (`ja` / `en`) and restored on subsequent visits. Saved choices take priority over browser preferences. Unsupported saved values fall back to browser language detection. Storage failures keep switching functional for the current session. Changes in another tab synchronize through the browser storage event.
 
-Switching does not clear form drafts or alter user-entered event titles, memos, respondent names, or messages. Dates remain in the viewer's local time zone and fees remain in yen. Guide screenshots show Japanese; the English guide explains this.
+Switching does not clear form drafts or alter user-entered event titles, memos, respondent names, or messages. Dates remain in the viewer's local time zone and fees remain in yen. Guide screenshots switch with the selected language.
 
 ## Browser storage
 

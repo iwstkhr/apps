@@ -68,7 +68,7 @@ export const english: Record<string, string> = {
   イベント参加者の使い方: 'Guide for participants',
   よくある質問: 'Frequently asked questions',
   '画面はサンプルデータ（「チーム歓迎会」の日程調整）で表示した例です。日付や URL は実際の画面と異なります。':
-    'Screenshots use sample data for a team welcome party. Dates and URLs differ from your event. Screenshots show the Japanese interface; select 日本語 to match the labels.',
+    'Screenshots use sample data for a team welcome party. Dates and URLs differ from your event.',
   'イベントを作成し、参加者の回答を見て日程を決めるまでの流れです。':
     'Create an event, review responses, and choose a date.',
   イベントを作成する: 'Create an event',
@@ -286,7 +286,6 @@ export const english: Record<string, string> = {
   予期しないエラーが発生しました: 'An unexpected error occurred.',
   'ヘッダーで「日本語」または「English」を選ぶと、表示言語を切り替えられます。選択はこのブラウザに保存されます。入力したイベント名やメッセージは翻訳されません。':
     'Choose 日本語 or English in the header to change the display language. Your choice is saved in this browser. Event titles and messages you enter are not translated.',
-  '画面キャプチャは日本語表示の例です。': 'Screenshots show the Japanese interface.',
   '集合: 渋谷駅ハチ公前\n会費は当日現金でお願いします':
     'Meet at the station entrance\nPlease pay in cash on the day',
 };

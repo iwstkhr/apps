@@ -108,9 +108,9 @@ pnpm run guide:capture     # Recapture user guide screenshots (development serve
 
 When changing API routes or input/output, update `backend/src/schemas.ts` (Zod schemas) and `backend/src/openapi.ts` (route definitions), then regenerate `docs/openapi.yaml` with `pnpm run openapi`. `pnpm test` detects outdated generated documentation.
 
-After changing the UI appearance, run `pnpm run guide:capture` with both `pnpm run dev:api` and `pnpm run dev` running to recapture guide screenshots (`frontend/src/assets/guide/`).
-The script creates sample data (a "チーム歓迎会" team welcome party and four responses) in local D1 and captures it using the installed Google Chrome.
-If image dimensions change, update `width` / `height` in `frontend/src/routes/Guide.tsx` accordingly.
+After changing the UI appearance, run `pnpm run guide:capture` with both `pnpm run dev:api` and `pnpm run dev` running to recapture guide screenshots for each display language (`frontend/src/assets/guide/ja/` and `frontend/src/assets/guide/en/`).
+The script creates sample data per language (a "チーム歓迎会" / "Team welcome party" event and four responses) in local D1 and captures it using the installed Google Chrome.
+It also writes image dimensions to `frontend/src/assets/guide/sizes.json`, which `frontend/src/routes/Guide.tsx` uses for `width` / `height`, so no manual updates are needed.
 
 When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou <name>` from `backend/` to add a file under `backend/migrations/`. Do not rewrite migrations that have already been applied.
 
@@ -195,7 +195,7 @@ frontend/                        @tsudou/frontend
    ├─ sw.js                      Service Worker source (built as dist/sw.js)
    ├─ router.tsx                 Route definitions
    ├─ routes/                    Home / Guide / EventCreated / EventPublic / EventManage / NotFound
-   ├─ assets/guide/              Guide screenshots
+   ├─ assets/guide/              Guide screenshots (ja/ and en/) and their sizes (sizes.json)
    ├─ components/                AnswerForm, AnswerGrid, CandidateEditor,
    │                             EventEditForm, EventFormFields, EventUrlBoxes,
    │                             ShareLinkBox, ui/

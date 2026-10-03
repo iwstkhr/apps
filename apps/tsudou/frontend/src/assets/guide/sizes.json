@@ -1,0 +1,94 @@
+{
+  "ja": {
+    "host-create": {
+      "width": 736,
+      "height": 834
+    },
+    "host-created": {
+      "width": 736,
+      "height": 380
+    },
+    "guest-event": {
+      "width": 736,
+      "height": 188
+    },
+    "guest-status": {
+      "width": 736,
+      "height": 342
+    },
+    "guest-answer": {
+      "width": 736,
+      "height": 587
+    },
+    "guest-answered": {
+      "width": 736,
+      "height": 848
+    },
+    "host-manage-urls": {
+      "width": 736,
+      "height": 348
+    },
+    "host-manage-edit": {
+      "width": 736,
+      "height": 762
+    },
+    "host-manage-answers": {
+      "width": 736,
+      "height": 550
+    },
+    "host-manage-close": {
+      "width": 736,
+      "height": 184
+    },
+    "guest-closed": {
+      "width": 736,
+      "height": 121
+    }
+  },
+  "en": {
+    "host-create": {
+      "width": 736,
+      "height": 834
+    },
+    "host-created": {
+      "width": 736,
+      "height": 380
+    },
+    "guest-event": {
+      "width": 736,
+      "height": 188
+    },
+    "guest-status": {
+      "width": 736,
+      "height": 342
+    },
+    "guest-answer": {
+      "width": 736,
+      "height": 587
+    },
+    "guest-answered": {
+      "width": 736,
+      "height": 848
+    },
+    "host-manage-urls": {
+      "width": 736,
+      "height": 348
+    },
+    "host-manage-edit": {
+      "width": 736,
+      "height": 762
+    },
+    "host-manage-answers": {
+      "width": 736,
+      "height": 550
+    },
+    "host-manage-close": {
+      "width": 736,
+      "height": 184
+    },
+    "guest-closed": {
+      "width": 736,
+      "height": 121
+    }
+  }
+}

@@ -1,41 +1,40 @@
 import { RETENTION_MONTHS } from '@tsudou/shared/limits';
 import { type ReactNode, useEffect } from 'react';
 import { useLocation } from 'react-router';
-import guestAnswer from '../assets/guide/guest-answer.png';
-import guestAnswered from '../assets/guide/guest-answered.png';
-import guestClosed from '../assets/guide/guest-closed.png';
-import guestEvent from '../assets/guide/guest-event.png';
-import guestStatus from '../assets/guide/guest-status.png';
-import hostCreate from '../assets/guide/host-create.png';
-import hostCreated from '../assets/guide/host-created.png';
-import hostManageAnswers from '../assets/guide/host-manage-answers.png';
-import hostManageClose from '../assets/guide/host-manage-close.png';
-import hostManageEdit from '../assets/guide/host-manage-edit.png';
-import hostManageUrls from '../assets/guide/host-manage-urls.png';
+import sizes from '../assets/guide/sizes.json';
 import { TextLink } from '../components/TextLink';
 import { Alert, Card } from '../components/ui';
 import { t, useLanguage } from '../lib/i18n';
 
 /**
- * 使い方のページ。画面キャプチャはサンプルデータで撮ったもので、
+ * 使い方のページ。画面キャプチャはサンプルデータで表示言語ごとに撮ったもので、
  * `pnpm run guide:capture` (frontend/scripts/capture-guide.mjs) で撮り直せる。
  * 画面の見た目を変えたら撮り直すこと。
  */
 
-/** 画面キャプチャ。幅・高さは 2 倍解像度で撮った画像の CSS ピクセル (レイアウトのずれ防止)。 */
+const images = import.meta.glob<string>('../assets/guide/*/*.png', {
+  eager: true,
+  import: 'default',
+});
+
+type ScreenshotName = keyof (typeof sizes)['ja'];
+
+/**
+ * 表示言語の画面キャプチャ。幅・高さは撮影時に sizes.json へ書き出した
+ * CSS ピクセル (2 倍解像度の画像の半分。レイアウトのずれ防止)。
+ */
 function Screenshot({
-  src,
+  name,
   alt,
-  width,
-  height,
   caption,
 }: {
-  src: string;
+  name: ScreenshotName;
   alt: string;
-  width: number;
-  height: number;
   caption?: string;
 }) {
+  const language = useLanguage();
+  const src = images[`../assets/guide/${language}/${name}.png`];
+  const { width, height } = sizes[language][name];
   return (
     <figure className="space-y-2">
       {/* スマートフォンでは縮小されて読みにくいので、タップで原寸を開けるようにする */}
@@ -175,12 +174,10 @@ export function Guide() {
               </li>
             </Bullets>
             <Screenshot
-              src={hostCreate}
+              name="host-create"
               alt={t(
                 'イベント作成フォーム。イベント名に「チーム歓迎会」、日時の候補に 3 週ぶんの金曜 19:00、参加費に 4000、メモに会場と会費の案内を入力した状態',
               )}
-              width={736}
-              height={834}
             />
           </Step>
 
@@ -199,12 +196,10 @@ export function Guide() {
               </li>
             </Bullets>
             <Screenshot
-              src={hostCreated}
+              name="host-created"
               alt={t(
                 '作成完了画面。共有用 URL と管理用 URL が、それぞれコピー・開く・共有ボタン付きで表示されている',
               )}
-              width={736}
-              height={380}
             />
             <Alert variant="warning" title={t('管理用 URL は再表示できません')}>
               {t(
@@ -228,12 +223,10 @@ export function Guide() {
               )}
             </p>
             <Screenshot
-              src={hostManageUrls}
+              name="host-manage-urls"
               alt={t(
                 '管理ページの上部。イベント名「チーム歓迎会」と、共有用 URL・管理用 URL のコピー欄',
               )}
-              width={736}
-              height={348}
             />
             <p>
               {t(
@@ -241,12 +234,10 @@ export function Guide() {
               )}
             </p>
             <Screenshot
-              src={hostManageAnswers}
+              name="host-manage-answers"
               alt={t(
                 '管理ページの回答状況。4 名の回答が並び、○ が 4 人の 3 つ目の候補が「最多」として強調されている。各回答の右に削除ボタン',
               )}
-              width={736}
-              height={550}
               caption={t('この例では 3 つ目の候補に全員が参加でき、「最多」になっています')}
             />
           </Step>
@@ -262,12 +253,10 @@ export function Guide() {
               <li>{t('候補を追加すると、すでに回答した人のその候補は「△ 未定」になります。')}</li>
             </Bullets>
             <Screenshot
-              src={hostManageEdit}
+              name="host-manage-edit"
               alt={t(
                 '管理ページの内容の編集フォーム。作成時と同じイベント名・候補・参加費・メモの入力欄',
               )}
-              width={736}
-              height={762}
             />
           </Step>
 
@@ -285,12 +274,10 @@ export function Guide() {
               {t('ヶ月後に自動で削除されます。')}
             </p>
             <Screenshot
-              src={hostManageClose}
+              name="host-manage-close"
               alt={t(
                 '管理ページの締切と削除。「回答を締め切る」ボタンと「イベントを削除」ボタン、自動削除日の案内',
               )}
-              width={736}
-              height={184}
             />
           </Step>
         </ol>
@@ -317,12 +304,10 @@ export function Guide() {
               )}
             </p>
             <Screenshot
-              src={guestEvent}
+              name="guest-event"
               alt={t(
                 'イベントページの上部。イベント名「チーム歓迎会」、参加費 ¥4,000、メモ、自動削除日',
               )}
-              width={736}
-              height={188}
             />
           </Step>
 
@@ -333,12 +318,10 @@ export function Guide() {
               )}
             </p>
             <Screenshot
-              src={guestStatus}
+              name="guest-status"
               alt={t(
                 'イベントページの回答状況。3 名の ○△× が表で表示され、表の下に佐藤 花子さんのメッセージ',
               )}
-              width={736}
-              height={342}
             />
           </Step>
 
@@ -361,12 +344,10 @@ export function Guide() {
               </li>
             </Bullets>
             <Screenshot
-              src={guestAnswer}
+              name="guest-answer"
               alt={t(
                 '回答フォーム。お名前に「田中 健太」、1 つ目と 3 つ目の候補に「○ 参加」、2 つ目に「× 不参加」を選び、メッセージを入力した状態',
               )}
-              width={736}
-              height={587}
             />
           </Step>
 
@@ -377,12 +358,10 @@ export function Guide() {
               {t('が発行されます。あとで回答を変更・削除するにはこの URL が必要です。')}
             </p>
             <Screenshot
-              src={guestAnswered}
+              name="guest-answered"
               alt={t(
                 '回答後の画面。「回答を保存しました。」の表示と、回答編集 URL のコピー欄、回答内容の編集フォームと「自分の回答を削除」ボタン',
               )}
-              width={736}
-              height={848}
             />
             <Alert variant="warning" title={t('回答編集 URL は再表示できません')}>
               {t(
@@ -406,12 +385,10 @@ export function Guide() {
               )}
             </p>
             <Screenshot
-              src={guestClosed}
+              name="guest-closed"
               alt={t(
                 '締切後のイベントページ。「このイベントは締め切られているため、回答できません。」という案内',
               )}
-              width={736}
-              height={121}
             />
           </Step>
         </ol>
