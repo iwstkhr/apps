@@ -43,5 +43,26 @@
   ],
   // 保持期間を過ぎたイベントと回答を消す (1 日 1 回、UTC 18:00 = JST 3:00)
   "triggers": { "crons": ["0 18 * * *"] },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  "env": {
+    // e2e テスト (../e2e) のローカルサーバ用 (`wrangler dev --env e2e`)。デプロイには使わない。
+    // テストは同じ IP から短時間に多くのリクエストを送るので、レート制限だけを緩める。
+    // d1_databases と ratelimits は環境ごとに引き継がれないので、両方とも書き直す
+    "e2e": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "tsudou",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "1001",
+          "simple": { "limit": 10000, "period": 60 }
+        }
+      ]
+    }
+  }
 }

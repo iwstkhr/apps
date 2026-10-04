@@ -1,0 +1,22 @@
+{
+  // Playwright のテストは Node.js で動き、ページの操作は Playwright の API 越しに行う
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": true,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+
+    "types": ["node"]
+  },
+  "include": ["playwright.config.ts", "fixtures.ts", "tests", "scripts"]
+}

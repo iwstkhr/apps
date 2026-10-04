@@ -14,6 +14,7 @@
     "format": "biome format --write",
     "typecheck": "pnpm --filter './*' run typecheck",
     "test": "pnpm --filter './*' run test",
+    "test:e2e": "pnpm --filter @tsudou/e2e run e2e",
     "guide:capture": "pnpm --filter @tsudou/frontend run guide:capture"
   },
   "devDependencies": {

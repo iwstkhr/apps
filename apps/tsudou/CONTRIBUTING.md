@@ -80,6 +80,7 @@ pnpm run typecheck   # Type checking
 pnpm run lint        # Lint and formatting checks (Biome)
 pnpm run lint:fix    # Apply Biome fixes
 pnpm test            # Unit tests
+pnpm run test:e2e    # E2E tests (Playwright)
 pnpm run build       # Production build
 ```
 
@@ -87,5 +88,5 @@ GitHub Actions runs the following on pull requests and pushes to `main` (workflo
 
 | Workflow | Checks |
 | --- | --- |
-| `.github/workflows/tsudou-test.yml` | Type checking (`pnpm run typecheck`) and unit tests (`pnpm test`) |
+| `.github/workflows/tsudou-test.yml` | Type checking (`pnpm run typecheck`), unit tests (`pnpm test`), and E2E tests (`pnpm run test:e2e`) |
 | `.github/workflows/pre-commit.yml` | pre-commit hooks (Biome, markdownlint, actionlint, gitleaks, etc.) |

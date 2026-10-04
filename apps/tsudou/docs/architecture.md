@@ -64,11 +64,11 @@ Authorization (token checks) and input validation always run on the server.
 | Scheduling | Workers Cron Trigger (expiry cleanup) |
 | Configuration | `backend/wrangler.jsonc` (static assets, D1, Rate Limiting, Cron Trigger) |
 | Hosting | One Cloudflare Worker for UI and API on the custom domain `tsudou.wasabee.dev`, deployed with wrangler through GitHub Actions |
-| Quality | Vitest / Testing Library / Biome / pre-commit |
+| Quality | Vitest / Testing Library / Playwright / Biome / pre-commit |
 
 ## Repository structure
 
-Tsudou has three packages in the monorepo pnpm workspace (`pnpm-workspace.yaml` at the repository root): `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), and shared code in `shared/` (`@tsudou/shared`).
+Tsudou has four packages in the monorepo pnpm workspace (`pnpm-workspace.yaml` at the repository root): `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), shared code in `shared/` (`@tsudou/shared`), and E2E tests in `e2e/` (`@tsudou/e2e`).
 Each package has its own dependencies and scripts in `package.json`. `apps/tsudou/package.json` contains Biome and shortcuts that invoke package scripts (`pnpm run dev` / `pnpm run dev:api` / `pnpm test`, etc.).
 
 Both frontend and backend depend on `@tsudou/shared` through `workspace:*`, importing modules such as `@tsudou/shared/limits`.
@@ -119,6 +119,12 @@ frontend/                       Frontend (@tsudou/frontend)
    ├─ components/               UI components and ui/ primitives
    └─ lib/                      api, queryClient, errors, storage, urls, format,
                                 formValidators, tally, and hooks
+
+e2e/                            E2E tests (@tsudou/e2e)
+├─ playwright.config.ts         ja / en projects and server startup
+├─ fixtures.ts                  Language-aware text lookup and helpers
+├─ scripts/serve.mjs            Build, fresh local D1, wrangler dev --env e2e
+└─ tests/                       Host, participant, and closing scenarios
 ```
 
 ## Backend
@@ -434,6 +440,16 @@ Frontend tests (`frontend/vite.config.ts`, `frontend/src/**/*.test.{ts,tsx}`) us
 | Frontend pure functions | `format.test.ts` / `errors.test.ts` / `formValidators.test.ts` / `answerDraft.test.ts` / `candidateDraft.test.ts` / `urls.test.ts` / `keyring.test.ts` |
 | Data-fetching hooks | `useEvent.test.tsx` / `useAsyncAction.test.tsx` / `eventActions.test.tsx` (fresh `createQueryClient()` per test, mocked `api.ts`) |
 | Components | `AnswerForm.test.tsx` / `AnswerGrid.test.tsx` / `ShareLinkBox.test.tsx` / `EventUrlBoxes.test.tsx` / `Root.test.tsx` (Testing Library) |
+
+### E2E tests
+
+`pnpm run test:e2e` runs Playwright scenarios in `e2e/tests/` against the production arrangement: the built frontend and the API served by one `wrangler dev` Worker.
+They cover flows that span screens, the API, and D1, which unit tests cannot: creating and editing an event with the management URL, losing the management token on reload, answering and editing through the response edit URL in another browser, duplicate names, closing and reopening, and deleting an event.
+
+- Each scenario runs in Japanese and English (projects `ja` / `en`). `fixtures.ts` looks up labels through `frontend/src/lib/translations.ts`, so tests are written once with the Japanese source text.
+- Hosts and participants use separate browser contexts (`newUser`), so tokens held in one browser's memory do not leak into another.
+- `scripts/serve.mjs` recreates local D1 in `e2e/.wrangler/` for every run and starts `wrangler dev --env e2e`. Locally, every request shares one rate-limit key regardless of headers, so the `e2e` environment in `wrangler.jsonc` raises the limit. It is not used for deployment.
+- Service Workers are blocked so cached pages do not affect results. Tests use the installed Google Chrome (`channel: 'chrome'`), which GitHub Actions runners also provide.
 
 ## Design decisions
 

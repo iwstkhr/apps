@@ -100,6 +100,7 @@ pnpm run build             # Frontend type check and production build (frontend/
 pnpm run build:api         # Bundle the Worker without deploying (backend/dist/; run pnpm run build first)
 pnpm run typecheck         # Type-check all packages; backend generates Worker types with wrangler types first
 pnpm test                  # Unit tests for both packages (Vitest)
+pnpm run test:e2e          # E2E tests (Playwright; builds the frontend and starts its own server)
 pnpm run lint              # Lint and formatting checks (Biome, all of apps/tsudou/)
 pnpm run lint:fix          # Apply Biome fixes
 pnpm run openapi           # Regenerate API documentation (docs/openapi.yaml)
@@ -111,6 +112,10 @@ When changing API routes or input/output, update `backend/src/schemas.ts` (Zod s
 After changing the UI appearance, run `pnpm run guide:capture` with both `pnpm run dev:api` and `pnpm run dev` running to recapture guide screenshots for each display language (`frontend/src/assets/guide/ja/` and `frontend/src/assets/guide/en/`).
 The script creates sample data per language (a "チーム歓迎会" / "Team welcome party" event and four responses) in local D1 and captures it using the installed Google Chrome.
 It also writes image dimensions to `frontend/src/assets/guide/sizes.json`, which `frontend/src/routes/Guide.tsx` uses for `width` / `height`, so no manual updates are needed.
+
+`pnpm run test:e2e` builds the frontend, applies migrations to a fresh local D1 in `e2e/.wrangler/`, and serves the UI and API from `wrangler dev --env e2e` at `http://localhost:8788`, as in production. The `e2e` environment in `backend/wrangler.jsonc` relaxes rate limiting for the tests and is never deployed.
+Every scenario runs in both Japanese and English (Playwright projects `ja` / `en`) with the installed Google Chrome; no browser download is needed.
+To run one language, use `pnpm --filter @tsudou/e2e exec playwright test --project=ja`. Set `E2E_SKIP_BUILD=1` to reuse an existing `frontend/dist/`.
 
 When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou <name>` from `backend/` to add a file under `backend/migrations/`. Do not rewrite migrations that have already been applied.
 
@@ -202,6 +207,12 @@ frontend/                        @tsudou/frontend
    └─ lib/                       api, queryClient, errors, format, formValidators,
                                  keyring, storage, serviceWorker, theme, urls, useEvent,
                                  useAsyncAction, types
+
+e2e/                             @tsudou/e2e (Playwright)
+├─ playwright.config.ts          Japanese and English projects, server startup
+├─ fixtures.ts                   Language-aware text lookup and helpers (create event, answer)
+├─ scripts/serve.mjs             Build, migrate a fresh local D1, and run wrangler dev --env e2e
+└─ tests/                        Host, participant, and closing scenarios
 ```
 
 ### Design notes
