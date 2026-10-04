@@ -24,6 +24,7 @@ A web application for browsing designated emergency evacuation site data from th
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [Biome](https://biomejs.dev/) — linting and formatting
 - [Vitest](https://vitest.dev/) and [Testing Library](https://testing-library.com/docs/react-testing-library/intro/) — testing
+- [Playwright](https://playwright.dev/) — E2E testing
 - [pre-commit](https://pre-commit.com/) — Git hooks and lint tools (Biome, actionlint, shellcheck, markdownlint, gitleaks, etc.)
 
 ## Prerequisites
@@ -64,6 +65,7 @@ The development server starts at <http://localhost:5173>.
 | `pnpm run typecheck` | Run TypeScript type checking |
 | `pnpm run test` | Run tests with Vitest |
 | `pnpm run test:watch` | Run Vitest in watch mode |
+| `pnpm run test:e2e` | Run E2E tests with Playwright (builds the app and serves it with `wrangler dev`) |
 | `pre-commit run --all-files` | Run pre-commit hooks on all files (from the repository root) |
 
 ## Documentation
@@ -114,7 +116,10 @@ pre-commit run --all-files
 pnpm run check
 pnpm run typecheck
 pnpm run test
+pnpm run test:e2e
 ```
+
+`pnpm run test:e2e` builds the app and serves `build/client/` with `wrangler dev` at `http://localhost:8789`, as in production, then drives it with the installed Google Chrome (no browser download is needed). Map tiles are stubbed, and most scenarios replace the GeoJSON with a small fixture in `e2e/fixtures.ts`; one scenario loads the real dataset. Set `E2E_SKIP_BUILD=1` to reuse an existing `build/client/`.
 
 ### Commit messages
 

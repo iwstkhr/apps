@@ -37,7 +37,7 @@ There is no backend API or database. Evacuation site data is delivered as static
 | Map | Leaflet |
 | Table | TanStack Virtual |
 | Styling | Tailwind CSS 4 |
-| Quality | Biome, Vitest, Testing Library, pre-commit |
+| Quality | Biome, Vitest, Testing Library, Playwright, pre-commit |
 | Runtime management | mise (Node.js / pnpm / pre-commit) |
 | Delivery | Cloudflare Workers (static assets only; custom domain `shelter-map.wasabee.dev`; configured in `wrangler.jsonc`) |
 
@@ -59,6 +59,10 @@ app/
   routes/       # Pages (home only)
   test/         # Test helpers and fixtures
   types/        # Domain types, validation, and filters
+e2e/            # E2E tests (Playwright)
+  fixtures.ts   # Tile stubs, fixture GeoJSON, and helpers
+  scripts/      # Build and serve with wrangler dev
+  tests/        # Data loading, filters, and map scenarios
 public/assets/  # Static assets such as compressed GeoJSON
 scripts/        # Generate dataset-meta
 ../../.github/workflows/       # At the repository root
@@ -191,7 +195,8 @@ PR / push to main
   │    └─ pre-commit run --all-files (including Biome lint and formatting)
   └─ shelter-map - Test (only for changes under apps/shelter-map/)
        ├─ pnpm run typecheck
-       └─ pnpm run test
+       ├─ pnpm run test
+       └─ pnpm run test:e2e (separate job; uploads the Playwright report on failure)
 
 PR opened / updated / closed (only for changes under apps/shelter-map/, not from forks)
   └─ shelter-map - Preview
@@ -205,6 +210,8 @@ push to main (only for changes under apps/shelter-map/) / manual run
        ├─ pnpm run build
        └─ pnpm run deploy (wrangler deploy publishes build/client to Workers)
 ```
+
+The E2E job builds the app and serves `build/client/` with `wrangler dev`, then runs Playwright with the runner's preinstalled Google Chrome. Map tiles are stubbed so tests never reach OpenStreetMap or GSI, and most scenarios replace the GeoJSON with a small fixture so assertions do not depend on the monthly data update. They cover what unit tests cannot: gzip delivery and decoding through Workers, SPA fallback for unknown paths, filters reflected in both the table and the map, popups (including HTML escaping), tile switching, modifier-key zoom, and the mobile layout.
 
 Test and Deploy run independently, as in tsudou. Deploy runs only on pushes to `main` and manual runs, so pull requests (including those from forks) never reach it. The Cloudflare secrets are passed only to the deploy step, not to dependency installation or the build. Navigation to unknown paths returns `index.html` (`not_found_handling: single-page-application`).
 

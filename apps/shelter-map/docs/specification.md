@@ -183,7 +183,7 @@ Tile URLs:
 | Runtime | Modern browsers (uses `DecompressionStream`) |
 | Delivery | Cloudflare Workers static assets (served at the root of `https://shelter-map.wasabee.dev/`) |
 | Data updates | Actions creates a PR on the first day of each month |
-| Quality gates | pre-commit, Biome, TypeScript, Vitest |
+| Quality gates | pre-commit, Biome, TypeScript, Vitest, Playwright |
 
 ## Out of scope
 
