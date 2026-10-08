@@ -5,3 +5,4 @@ node_modules/
 
 # macOS-specific files
 .DS_Store
+.pre-commit-trivy-cache/
