@@ -189,10 +189,16 @@ describe('app', () => {
     };
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const res = await request(createApp(repo)).get('/api/events/x');
+    // パスに書式指定子を含めても、ログの書式として解釈されないこと
+    const res = await request(createApp(repo)).get('/api/events/%25o');
     expect(res.status).toBe(500);
     expect(res.body.error.code).toBe('INTERNAL');
     expect(res.body.error.message).not.toContain('boom');
+    expect(spy).toHaveBeenCalledWith(
+      'unexpected error:',
+      'GET /api/events/%25o',
+      expect.objectContaining({ message: 'boom' }),
+    );
     spy.mockRestore();
   });
 

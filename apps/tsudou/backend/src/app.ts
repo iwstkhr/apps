@@ -129,7 +129,8 @@ const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   } else if (isBodyParserError(error)) {
     appError = validationError(BAD_REQUEST);
   } else {
-    console.error(`[${req.method} ${req.path}] unexpected error`, error);
+    // 第 1 引数は書式文字列として解釈されるため固定にし、リクエスト由来の値は後ろに渡す
+    console.error('unexpected error:', `${req.method} ${req.path}`, error);
     appError = new AppError('INTERNAL', '処理に失敗しました。時間をおいて再度お試しください');
   }
 

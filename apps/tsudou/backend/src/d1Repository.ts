@@ -92,7 +92,7 @@ async function run<T>(context: string, fn: () => Promise<T>): Promise<T> {
     if (String(error).includes('UNIQUE constraint failed: answers.event_id, answers.name')) {
       throw duplicateNameError();
     }
-    console.error(`[${context}]`, error);
+    console.error('D1 operation failed:', context, error);
     throw new AppError('INTERNAL', 'データの処理に失敗しました');
   }
 }
