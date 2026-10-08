@@ -11,3 +11,14 @@ allowBuilds:
   core-js: false
   esbuild: true
   workerd: true
+
+# サプライチェーン攻撃対策
+# 公開から 7 日 (10080 分) 経っていないバージョンはインストールしない
+minimumReleaseAge: 10080
+# 以前のバージョンより信頼性 (provenance など) が下がったバージョンを拒否する
+trustPolicy: no-downgrade
+# メンテナーが CI を使わず手動公開した正規のリリースのため除外する
+trustPolicyExclude:
+  - semver@6.3.1
+# 推移的依存が Git リポジトリや tarball URL から取得されるのをブロックする
+blockExoticSubdeps: true
