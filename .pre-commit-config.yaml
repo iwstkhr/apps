@@ -59,7 +59,7 @@ repos:
   ##########################################################
   # Lint JavaScript and TypeScript files with Biome
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.5.14 # Use the sha / tag you want to point at
+    rev: v2.5.15 # Use the sha / tag you want to point at
     hooks:
       - id: biome-check
 
