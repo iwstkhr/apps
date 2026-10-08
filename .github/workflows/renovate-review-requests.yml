@@ -14,5 +14,3 @@ jobs:
       github.event.pull_request.state == 'open' &&
       contains(github.event.pull_request.labels.*.name, 'ai-review')
     uses: iwstkhr/shared-config/.github/workflows/renovate-review-requests.yml@main
-    secrets:
-      CODEX_REVIEW_TOKEN: ${{ secrets.CODEX_REVIEW_TOKEN }}
