@@ -53,7 +53,7 @@ repos:
 
   # Scan dependencies for vulnerabilities and IaC for misconfigurations (requires Docker)
   - repo: https://github.com/mxab/pre-commit-trivy
-    rev: v0.73.0
+    rev: 0.74.0
     hooks:
       - id: trivyfs-docker
         # Secret scanning is left to gitleaks; the last arg is the path to scan
@@ -84,7 +84,7 @@ repos:
 
   # Lint and format Python files with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.9
+    rev: v0.16.10
     hooks:
       - id: ruff-check
         # --extend-select S adds the flake8-bandit security rules on top of the repository's Ruff config
