@@ -169,7 +169,6 @@ backend/                         @tsudou/backend
 └─ src/
    ├─ worker.ts                  Worker entry (Express listen / httpServerHandler / Cron)
    ├─ app.ts                     Express app (routes under /api, error handling, rate limiting)
-   ├─ http.ts                    Body validation (Zod), error-to-status mapping
    ├─ schemas.ts                 API input/output shapes (Zod schemas)
    ├─ openapi.ts                 Generate OpenAPI documentation from schemas and routes
    ├─ operations.ts              Business logic (injected Repository; tested directly)
@@ -179,7 +178,7 @@ backend/                         @tsudou/backend
    ├─ tokens.ts                  ID/token generation, hashing, constant-time comparison
    ├─ validate.ts                Input validation and normalization
    ├─ retention.ts               Expiry calculation and checks
-   └─ errors.ts                  AppError (code + description)
+   └─ errors.ts                  AppError (code + description) and error-to-status mapping
 
 shared/                          @tsudou/shared (bundled into both frontend and backend)
 ├─ package.json                  Exposes limits / messages / types through exports

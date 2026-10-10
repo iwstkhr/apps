@@ -67,7 +67,7 @@ export function Button({
   );
 }
 
-export function Spinner({ className }: { className?: string }) {
+function Spinner({ className }: { className?: string }) {
   return (
     <svg
       className={cx('size-4 animate-spin', className)}

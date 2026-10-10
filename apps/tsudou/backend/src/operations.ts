@@ -1,7 +1,9 @@
-import type { AnswerView, CandidateInput, Choice, EventView } from '@tsudou/shared/types';
+import type { AnswerView, EventView } from '@tsudou/shared/types';
+import type * as z from 'zod';
 import { AppError, duplicateNameError, forbiddenError, notFoundError } from './errors';
-import type { AnswerRecord, EventRecord, Repository } from './repository';
+import type { AnswerRecord, EventPatch, EventRecord, Repository } from './repository';
 import { expiresAtFrom, isExpired } from './retention';
+import type { AnswerBodySchema, CreateEventBodySchema, UpdateEventBodySchema } from './schemas';
 import { generateEventId, generateToken, hashToken, verifyToken } from './tokens';
 import {
   LIMITS,
@@ -65,6 +67,14 @@ async function loadEvent(repo: Repository, eventId: string): Promise<EventRecord
   return event;
 }
 
+async function loadAnswer(repo: Repository, answerId: string): Promise<AnswerRecord> {
+  const answer = await repo.getAnswer(answerId);
+  if (!answer) {
+    throw notFoundError('回答が見つかりません');
+  }
+  return answer;
+}
+
 /** 締切済みなら弾く。回答の新規作成と更新で共通。 */
 function assertOpen(event: EventRecord): void {
   if (event.closed) {
@@ -102,12 +112,7 @@ async function loadEventAsHost(
 
 // ---------------------------------------------------------------- events
 
-export type CreateEventArgs = {
-  title: string;
-  fee?: number | null;
-  memo?: string | null;
-  candidates: CandidateInput[];
-};
+export type CreateEventArgs = z.infer<typeof CreateEventBodySchema>;
 
 export async function createEvent(repo: Repository, args: CreateEventArgs) {
   const manageToken = generateToken();
@@ -118,7 +123,7 @@ export async function createEvent(repo: Repository, args: CreateEventArgs) {
     expiresAt: expiresAtFrom(),
     title: validateTitle(args.title),
     fee: validateFee(args.fee),
-    memo: normalizeOptionalText(args.memo, LIMITS.memoMax, 'メモ'),
+    memo: normalizeOptionalText(args.memo, 'メモ', LIMITS.memoMax),
     candidates: validateCandidates(args.candidates, { rejectPast: true }),
     closed: false,
     manageTokenHash: hashToken(manageToken),
@@ -139,28 +144,21 @@ export async function getEvent(
   return toEventView(event, answers);
 }
 
-export type UpdateEventArgs = {
+export type UpdateEventArgs = z.infer<typeof UpdateEventBodySchema> & {
   eventId: string;
   manageToken: string;
-  title?: string | null;
-  fee?: number | null;
-  memo?: string | null;
-  candidates?: CandidateInput[] | null;
-  closed?: boolean | null;
 };
 
 export async function updateEvent(repo: Repository, args: UpdateEventArgs): Promise<EventView> {
   const event = await loadEventAsHost(repo, args.eventId, args.manageToken);
 
-  const patch: Parameters<Repository['updateEvent']>[1] = {};
+  const patch: EventPatch = {};
   if (args.title != null) patch.title = validateTitle(args.title);
   if (args.fee !== undefined) patch.fee = validateFee(args.fee);
   if (args.memo !== undefined)
-    patch.memo = normalizeOptionalText(args.memo, LIMITS.memoMax, 'メモ');
+    patch.memo = normalizeOptionalText(args.memo, 'メモ', LIMITS.memoMax);
   if (args.closed != null) patch.closed = args.closed;
-
-  const candidates = args.candidates ? validateCandidates(args.candidates) : null;
-  if (candidates) patch.candidates = candidates;
+  if (args.candidates) patch.candidates = validateCandidates(args.candidates);
 
   const updated = await repo.updateEvent(event.id, patch);
 
@@ -171,22 +169,14 @@ export async function updateEvent(repo: Repository, args: UpdateEventArgs): Prom
 export async function deleteEvent(
   repo: Repository,
   args: { eventId: string; manageToken: string },
-) {
+): Promise<void> {
   const event = await loadEventAsHost(repo, args.eventId, args.manageToken);
-
   await repo.deleteEvent(event.id);
-
-  return true;
 }
 
 // --------------------------------------------------------------- answers
 
-export type SubmitAnswerArgs = {
-  eventId: string;
-  name: string;
-  message?: string | null;
-  choices: Choice[];
-};
+export type SubmitAnswerArgs = z.infer<typeof AnswerBodySchema> & { eventId: string };
 
 export async function submitAnswer(repo: Repository, args: SubmitAnswerArgs) {
   const event = await loadEvent(repo, args.eventId);
@@ -202,7 +192,7 @@ export async function submitAnswer(repo: Repository, args: SubmitAnswerArgs) {
     // イベントと同時に消えるよう、イベントの期限をそのまま引き継ぐ
     expiresAt: event.expiresAt,
     name,
-    message: normalizeOptionalText(args.message, LIMITS.messageMax, 'メッセージ'),
+    message: normalizeOptionalText(args.message, 'メッセージ', LIMITS.messageMax),
     choices: validateChoices(args.choices, event.candidates),
     editTokenHash: hashToken(editToken),
   });
@@ -211,19 +201,13 @@ export async function submitAnswer(repo: Repository, args: SubmitAnswerArgs) {
   return { answer: toAnswerView(answer), editToken };
 }
 
-export type UpdateAnswerArgs = {
+export type UpdateAnswerArgs = z.infer<typeof AnswerBodySchema> & {
   answerId: string;
   editToken: string;
-  name: string;
-  message?: string | null;
-  choices: Choice[];
 };
 
 export async function updateAnswer(repo: Repository, args: UpdateAnswerArgs): Promise<AnswerView> {
-  const answer = await repo.getAnswer(args.answerId);
-  if (!answer) {
-    throw notFoundError('回答が見つかりません');
-  }
+  const answer = await loadAnswer(repo, args.answerId);
   if (!verifyToken(args.editToken, answer.editTokenHash)) {
     throw forbiddenError('この回答を編集する権限がありません');
   }
@@ -236,7 +220,7 @@ export async function updateAnswer(repo: Repository, args: UpdateAnswerArgs): Pr
 
   const updated = await repo.updateAnswer(answer.id, {
     name,
-    message: normalizeOptionalText(args.message, LIMITS.messageMax, 'メッセージ'),
+    message: normalizeOptionalText(args.message, 'メッセージ', LIMITS.messageMax),
     choices: validateChoices(args.choices, event.candidates),
   });
 
@@ -249,11 +233,8 @@ export type DeleteAnswerArgs = {
   manageToken?: string | null;
 };
 
-export async function deleteAnswer(repo: Repository, args: DeleteAnswerArgs) {
-  const answer = await repo.getAnswer(args.answerId);
-  if (!answer) {
-    throw notFoundError('回答が見つかりません');
-  }
+export async function deleteAnswer(repo: Repository, args: DeleteAnswerArgs): Promise<void> {
+  const answer = await loadAnswer(repo, args.answerId);
 
   // 本人 (編集キー) かホスト (管理トークン) のどちらかであればよい
   const isOwner = verifyToken(args.editToken, answer.editTokenHash);
@@ -268,5 +249,4 @@ export async function deleteAnswer(repo: Repository, args: DeleteAnswerArgs) {
   }
 
   await repo.deleteAnswer(answer.id);
-  return true;
 }

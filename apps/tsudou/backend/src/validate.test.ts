@@ -1,7 +1,7 @@
+import type { Candidate } from '@tsudou/shared/types';
 import { describe, expect, it } from 'vitest';
 import { AppError } from './errors';
 import {
-  type Candidate,
   LIMITS,
   normalizeOptionalText,
   reconcileChoices,
@@ -34,13 +34,13 @@ describe('validateTitle / validateName', () => {
 
 describe('normalizeOptionalText', () => {
   it('空白のみなら null にする', () => {
-    expect(normalizeOptionalText('   ', 100, 'メモ')).toBeNull();
-    expect(normalizeOptionalText(null, 100, 'メモ')).toBeNull();
-    expect(normalizeOptionalText(undefined, 100, 'メモ')).toBeNull();
+    expect(normalizeOptionalText('   ', 'メモ', 100)).toBeNull();
+    expect(normalizeOptionalText(null, 'メモ', 100)).toBeNull();
+    expect(normalizeOptionalText(undefined, 'メモ', 100)).toBeNull();
   });
 
   it('上限超過を拒否する', () => {
-    expect(() => normalizeOptionalText('a'.repeat(11), 10, 'メモ')).toThrow(/10文字/);
+    expect(() => normalizeOptionalText('a'.repeat(11), 'メモ', 10)).toThrow(/10文字/);
   });
 });
 

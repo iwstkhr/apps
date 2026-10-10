@@ -63,20 +63,27 @@ const toAnswer = (row: AnswerRow): AnswerRecord => ({
   updatedAt: row.updated_at,
 });
 
-/** 部分更新で SET してよい列と、D1 に入れる値への変換。キーは Record 側の名前で、列名と同じ。 */
-const EVENT_COLUMNS: Record<keyof EventPatch, (value: never) => unknown> = {
-  title: (value: string) => value,
-  fee: (value: number | null) => value,
-  memo: (value: string | null) => value,
-  candidates: (value: unknown[]) => JSON.stringify(value),
-  closed: (value: boolean) => (value ? 1 : 0),
+/** 部分更新で SET してよい列。キーは Record 側の名前で、列名と同じ。 */
+const EVENT_COLUMNS: Record<keyof EventPatch, true> = {
+  title: true,
+  fee: true,
+  memo: true,
+  candidates: true,
+  closed: true,
 };
 
-const ANSWER_COLUMNS: Record<keyof AnswerPatch, (value: never) => unknown> = {
-  name: (value: string) => value,
-  message: (value: string | null) => value,
-  choices: (value: unknown[]) => JSON.stringify(value),
+const ANSWER_COLUMNS: Record<keyof AnswerPatch, true> = {
+  name: true,
+  message: true,
+  choices: true,
 };
+
+/** D1 に入れる値への変換。配列は JSON 文字列、真偽値は 0 / 1 にする。 */
+function encode(value: unknown): unknown {
+  if (Array.isArray(value)) return JSON.stringify(value);
+  if (typeof value === 'boolean') return value ? 1 : 0;
+  return value;
+}
 
 /**
  * D1 の例外を AppError に変える。
@@ -104,7 +111,7 @@ async function run<T>(context: string, fn: () => Promise<T>): Promise<T> {
 function prepareUpdate(
   db: D1Database,
   table: 'events' | 'answers',
-  columns: Record<string, (value: never) => unknown>,
+  columns: Record<string, true>,
   id: string,
   patch: Record<string, unknown>,
   timestamp = new Date().toISOString(),
@@ -112,30 +119,14 @@ function prepareUpdate(
   const entries = Object.entries(patch).filter(([, value]) => value !== undefined);
   const assignments = entries.map(([key]) => `${key} = ?`);
   const values = entries.map(([key, value]) => {
-    const encode = columns[key];
-    if (!encode) throw new Error(`更新できない項目です: ${key}`);
-    return encode(value as never);
+    if (!Object.hasOwn(columns, key)) throw new Error(`更新できない項目です: ${key}`);
+    return encode(value);
   });
   return db
     .prepare(
       `UPDATE ${table} SET ${[...assignments, 'updated_at = ?'].join(', ')} WHERE id = ? RETURNING *`,
     )
     .bind(...values, timestamp, id);
-}
-
-async function update<Row>(
-  db: D1Database,
-  table: 'events' | 'answers',
-  columns: Record<string, (value: never) => unknown>,
-  id: string,
-  patch: Record<string, unknown>,
-  context: string,
-): Promise<Row> {
-  return run(context, async () => {
-    const row = await prepareUpdate(db, table, columns, id, patch).first<Row>();
-    if (!row) throw new Error(`${table} not found: ${id}`);
-    return row;
-  });
 }
 
 /**
@@ -197,17 +188,14 @@ export function createD1Repository(db: D1Database): Repository {
     },
 
     async updateEvent(eventId: string, patch: EventPatch) {
-      if (patch.candidates === undefined) {
-        return toEvent(
-          await update<EventRow>(db, 'events', EVENT_COLUMNS, eventId, patch, 'updateEvent'),
-        );
-      }
       return run('updateEvent', async () => {
         const timestamp = new Date().toISOString();
-        // batch 全体がトランザクション。補正が失敗すればイベント更新も戻る。
+        // batch 全体がトランザクション。候補を変えたときは補正も含め、失敗すればイベント更新も戻る。
         const [result] = await db.batch<EventRow>([
           prepareUpdate(db, 'events', EVENT_COLUMNS, eventId, patch, timestamp),
-          prepareReconcileAnswers(db, eventId, timestamp),
+          ...(patch.candidates === undefined
+            ? []
+            : [prepareReconcileAnswers(db, eventId, timestamp)]),
         ]);
         const row = result.results[0];
         if (!row) throw new Error(`events not found: ${eventId}`);
@@ -264,15 +252,17 @@ export function createD1Repository(db: D1Database): Repository {
     },
 
     async updateAnswer(answerId: string, patch: AnswerPatch) {
-      const row = await update<AnswerRow>(
-        db,
-        'answers',
-        ANSWER_COLUMNS,
-        answerId,
-        patch,
-        'updateAnswer',
-      );
-      return toAnswer(row);
+      return run('updateAnswer', async () => {
+        const row = await prepareUpdate(
+          db,
+          'answers',
+          ANSWER_COLUMNS,
+          answerId,
+          patch,
+        ).first<AnswerRow>();
+        if (!row) throw new Error(`answers not found: ${answerId}`);
+        return toAnswer(row);
+      });
     },
 
     async deleteAnswer(answerId: string) {

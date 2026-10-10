@@ -16,18 +16,12 @@ import { reconcileChoices } from './validate';
  */
 export function createMemoryRepository(
   now: () => string = () => new Date().toISOString(),
-): Repository & {
-  events: Map<string, EventRecord>;
-  answers: Map<string, AnswerRecord>;
-} {
+): Repository {
   const events = new Map<string, EventRecord>();
   const answers = new Map<string, AnswerRecord>();
   const clone = <T>(value: T): T => structuredClone(value);
 
   return {
-    events,
-    answers,
-
     async createEvent(input: NewEvent) {
       const timestamp = now();
       const record: EventRecord = { ...clone(input), createdAt: timestamp, updatedAt: timestamp };

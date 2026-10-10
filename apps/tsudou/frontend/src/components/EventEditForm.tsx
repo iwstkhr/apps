@@ -6,8 +6,6 @@ import type { EventView } from '../lib/types';
 import { EventFormFields } from './EventFormFields';
 import { Alert, Button } from './ui';
 
-export type EventEditValues = EventFormInput;
-
 /**
  * 編集フォームの状態は TanStack Form が持つ。呼び出し側は key={event.id} で
  * 作り直すことで defaultValues を入れ替えるため、エフェクトでの同期が要らない。
@@ -23,7 +21,7 @@ export function EventEditForm({
   saving: boolean;
   saved: boolean;
   error: string | null;
-  onSave: (values: EventEditValues) => void;
+  onSave: (values: EventFormInput) => void;
 }) {
   useLanguage();
   const form = useForm({

@@ -1,5 +1,18 @@
+/** エラーコードごとの HTTP ステータス。AppErrorCode はこのキーから導く。 */
+export const STATUS_BY_CODE = {
+  VALIDATION: 400,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CLOSED: 409,
+  DUPLICATE_NAME: 409,
+  RATE_LIMITED: 429,
+  INTERNAL: 500,
+} as const;
+
+export type AppErrorCode = keyof typeof STATUS_BY_CODE;
+
 /**
- * クライアントが分岐できるエラー。HTTP 層 (http.ts) が code から
+ * クライアントが分岐できるエラー。HTTP 層 (app.ts) が code から
  * ステータスを決め、`{ error: { code, message: detail } }` としてそのまま返す。
  * message は `CODE: 人間向けの説明` の形にしておき、ログで読みやすくする。
  */
@@ -14,15 +27,6 @@ export class AppError extends Error {
     this.detail = detail;
   }
 }
-
-export type AppErrorCode =
-  | 'VALIDATION'
-  | 'NOT_FOUND'
-  | 'FORBIDDEN'
-  | 'CLOSED'
-  | 'DUPLICATE_NAME'
-  | 'RATE_LIMITED'
-  | 'INTERNAL';
 
 export const validationError = (detail: string) => new AppError('VALIDATION', detail);
 export const notFoundError = (detail: string) => new AppError('NOT_FOUND', detail);

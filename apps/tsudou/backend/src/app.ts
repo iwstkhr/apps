@@ -4,8 +4,8 @@ import express, {
   type Request,
   type RequestHandler,
 } from 'express';
-import { AppError, notFoundError, validationError } from './errors';
-import { BAD_REQUEST, parseBody, STATUS_BY_CODE } from './http';
+import type * as z from 'zod';
+import { AppError, notFoundError, STATUS_BY_CODE, validationError } from './errors';
 import * as ops from './operations';
 import type { Repository } from './repository';
 import { AnswerBodySchema, CreateEventBodySchema, UpdateEventBodySchema } from './schemas';
@@ -20,6 +20,20 @@ export type AppOptions = {
    */
   rateLimit?: (key: string) => Promise<boolean>;
 };
+
+const BAD_REQUEST = 'リクエストの形式が正しくありません';
+
+/**
+ * ボディを Zod のスキーマ (schemas.ts) で検査する。形が合わなければ一律 BAD_REQUEST にする
+ * (値の中身は validate.ts が項目ごとの日本語のメッセージで弾く)。
+ * PATCH では「省略 = 変更しない」「null = 消す」の意味になるので、スキーマの側で
+ * 省略 (undefined) と null を区別できるようにしておく。
+ */
+function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.output<T> {
+  const result = schema.safeParse(body);
+  if (!result.success) throw validationError(BAD_REQUEST);
+  return result.data;
+}
 
 /** ヘッダのトークン。空文字は「無い」と同じに扱う。 */
 const token = (req: Request, name: string) => req.get(name) || undefined;

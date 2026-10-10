@@ -9,6 +9,5 @@ import type { AnyFieldMeta } from '@tanstack/react-form';
 export function fieldError(meta: AnyFieldMeta): string | null {
   if (!meta.isTouched) return null;
   const first = meta.errors.find((error) => error != null);
-  if (first == null) return null;
-  return typeof first === 'string' ? first : String(first);
+  return first == null ? null : String(first);
 }

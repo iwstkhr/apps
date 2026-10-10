@@ -55,12 +55,17 @@ export function AnswerGrid({
                   </div>
                   <div className="mt-1 text-xs font-normal tabular-nums">
                     <span className="text-emerald-600 dark:text-emerald-400">
-                      ○{tally?.yes ?? 0}
+                      {STATUS_MARK.YES}
+                      {tally?.yes ?? 0}
                     </span>
                     <span className="mx-1 text-amber-600 dark:text-amber-400">
-                      △{tally?.maybe ?? 0}
+                      {STATUS_MARK.MAYBE}
+                      {tally?.maybe ?? 0}
                     </span>
-                    <span className="text-slate-400">×{tally?.no ?? 0}</span>
+                    <span className="text-slate-400">
+                      {STATUS_MARK.NO}
+                      {tally?.no ?? 0}
+                    </span>
                   </div>
                   {isBest && (
                     <div className="mt-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">

@@ -1,8 +1,7 @@
 import { LIMITS } from '@tsudou/shared/limits';
 import type { AnswerStatus, AnswerView, Candidate, Choice, EventView } from '@tsudou/shared/types';
 import * as z from 'zod';
-import type { AppErrorCode } from './errors';
-import { STATUS_BY_CODE } from './http';
+import { type AppErrorCode, STATUS_BY_CODE } from './errors';
 
 /**
  * HTTP の入出力の形を Zod で定義する。リクエストのスキーマは app.ts が実際の検査に使い、
@@ -24,10 +23,12 @@ export const AnswerStatusSchema = z.enum(['YES', 'NO', 'MAYBE']).meta({
   description: 'YES: attending / NO: not attending / MAYBE: undecided',
 });
 
+const startAt = z.string().meta({ format: 'date-time', description: 'Start date/time (ISO 8601)' });
+
 export const CandidateSchema = z
   .object({
     id: z.string().meta({ description: 'Candidate ID' }),
-    startAt: z.string().meta({ format: 'date-time', description: 'Start date/time (ISO 8601)' }),
+    startAt,
   })
   .meta({ id: 'Candidate' });
 
@@ -37,7 +38,7 @@ export const CandidateInputSchema = z
       .string()
       .nullish()
       .meta({ description: 'Existing candidate ID; a new ID is generated when omitted' }),
-    startAt: z.string().meta({ format: 'date-time', description: 'Start date/time (ISO 8601)' }),
+    startAt,
   })
   .meta({ id: 'CandidateInput' });
 

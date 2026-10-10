@@ -107,30 +107,20 @@ export function Guide() {
         </p>
         <nav aria-label={t('目次')}>
           <ul className="flex flex-wrap gap-x-4 gap-y-1">
-            <li>
-              <a
-                href="#host"
-                className="text-sm text-indigo-600 hover:underline dark:text-indigo-400"
-              >
-                {t('イベント管理者（主催者）の使い方')}
-              </a>
-            </li>
-            <li>
-              <a
-                href="#guest"
-                className="text-sm text-indigo-600 hover:underline dark:text-indigo-400"
-              >
-                {t('イベント参加者の使い方')}
-              </a>
-            </li>
-            <li>
-              <a
-                href="#faq"
-                className="text-sm text-indigo-600 hover:underline dark:text-indigo-400"
-              >
-                {t('よくある質問')}
-              </a>
-            </li>
+            {[
+              ['host', t('イベント管理者（主催者）の使い方')],
+              ['guest', t('イベント参加者の使い方')],
+              ['faq', t('よくある質問')],
+            ].map(([id, label]) => (
+              <li key={id}>
+                <a
+                  href={`#${id}`}
+                  className="text-sm text-indigo-600 hover:underline dark:text-indigo-400"
+                >
+                  {label}
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
         <p className="text-xs text-slate-500 dark:text-slate-400">

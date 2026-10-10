@@ -39,8 +39,6 @@ export const english: Record<string, string> = {
   回答を締め切る: 'Close responses',
   'イベントとすべての回答を削除します。元に戻せません。':
     'Delete this event and all responses. This cannot be undone.',
-  何もしなくても: 'Automatically deleted on or after ',
-  '以降に自動削除されます。': '.',
   イベントを削除: 'Delete event',
   'URL が正しいか確認してください。イベントが削除された可能性もあります。':
     'Check the URL. The event may have been deleted.',

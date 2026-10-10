@@ -84,7 +84,6 @@ backend/                        Backend (@tsudou/backend)
 └─ src/
    ├─ worker.ts                 Worker entry (Express listen / httpServerHandler / Cron)
    ├─ app.ts                    Express app (/api routes / error handling / rate limiting)
-   ├─ http.ts                   Body validation (Zod) / error-to-status mapping
    ├─ schemas.ts                API input/output shapes (Zod schemas)
    ├─ openapi.ts                Generate OpenAPI documentation from schemas and routes
    ├─ operations.ts             Business logic (injected Repository)
@@ -94,7 +93,7 @@ backend/                        Backend (@tsudou/backend)
    ├─ tokens.ts                 ID/token generation, hashing, constant-time comparison
    ├─ validate.ts               Input validation and normalization
    ├─ retention.ts              Expiry calculation and checks
-   └─ errors.ts                 AppError (code + description)
+   └─ errors.ts                 AppError (code + description) and error-to-status mapping
 
 shared/                         Shared code (@tsudou/shared)
 ├─ package.json                 Exposes limits / messages / types through exports
@@ -175,10 +174,9 @@ app.ts          Express app: after rate limiting, routes under /api map path
                 parameters, headers, and bodies to operations arguments.
                 The error handler converts AppError to a response with a status.
                 Unexpected exceptions alone are logged (Workers Logs) and mapped
-                to INTERNAL.
-   ↓
-http.ts         Validates body shapes with Zod schemas from schemas.ts.
-                Value validation (lengths and ranges) is delegated to validate.ts.
+                to INTERNAL. Body shapes are validated with Zod schemas from
+                schemas.ts; value validation (lengths and ranges) is delegated
+                to validate.ts.
    ↓
 operations.ts   Business logic: receives Repository and never accesses D1 directly.
    ↓
