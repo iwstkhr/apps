@@ -1,0 +1,66 @@
+name: "todo - Deploy"
+
+# 静的アセット（build/client/）を Cloudflare Workers で公開する。設定は apps/todo/wrangler.jsonc。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/todo/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'mise.toml'
+      - '.github/workflows/todo-deploy.yml'
+  # 手動でデプロイし直すときに使う
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: todo-deploy
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: apps/todo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # シークレットは依存パッケージのスクリプトから読まれないよう、Cloudflare を操作するステップにだけ渡す
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup mise
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5  # v5
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Workers ではドメインのルートで配信するので BASE_PATH は付けない
+      - name: Build
+        run: pnpm run build
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm run deploy
+
+  # 成否どちらも Slack に流す。push と手動実行だけなのでシークレットは常に読める
+  notify:
+    name: Notify
+    needs: deploy
+    if: ${{ always() }}
+    uses: iwstkhr/shared-config/.github/workflows/slack-notify.yml@main
+    with:
+      status: ${{ needs.deploy.result }}
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}

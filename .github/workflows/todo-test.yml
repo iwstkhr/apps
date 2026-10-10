@@ -1,0 +1,98 @@
+name: "todo - Test"
+
+# 型チェックとユニットテスト (Vitest) を回し、e2e テスト (Playwright) も回す。
+# Lint とフォーマット (Biome) はリポジトリ直下の pre-commit.yml が見る。
+on:
+  pull_request:
+    paths:
+      - 'apps/todo/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'mise.toml'
+      - '.github/workflows/todo-test.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/todo/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'mise.toml'
+      - '.github/workflows/todo-test.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/todo
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      # ジョブの if ではシークレットを読めないので、Slack の設定があるかだけを渡す
+      slack-enabled: ${{ secrets.SLACK_BOT_TOKEN != '' && secrets.SLACK_CHANNEL_ID != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Setup mise
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5  # v5
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test
+
+  # 本番ビルドを wrangler dev で配信して画面を操作する。
+  # ブラウザはランナーにインストール済みの Google Chrome を使う
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Setup mise
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5  # v5
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: E2E test
+        run: pnpm run test:e2e
+
+      # 失敗の原因を追えるよう、レポート (トレース付き) を残す
+      - name: Upload report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: playwright-report
+          path: apps/todo/e2e/playwright-report/
+          retention-days: 7
+
+  # 失敗したときだけ Slack に流す。フォークからの PR ではシークレットが読めないので飛ばす
+  notify:
+    name: Notify
+    needs: [test, e2e]
+    if: ${{ failure() && needs.test.outputs.slack-enabled == 'true' }}
+    uses: iwstkhr/shared-config/.github/workflows/slack-notify.yml@main
+    with:
+      status: failure
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
