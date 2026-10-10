@@ -169,21 +169,22 @@ test('creates and edits folder colors and preserves them after reload and import
   await expect(icon).toHaveCSS('color', 'rgb(22, 163, 74)');
   await folderNav(page).getByRole('button', { name: /^仕事/ }).click();
   await page.setViewportSize({ width: 375, height: 800 });
-  await expect(
-    page.getByRole('button', { name: 'フォルダ: 仕事' }).locator('svg').first(),
-  ).toHaveCSS('color', 'rgb(22, 163, 74)');
+  await expect(page.getByRole('heading', { level: 2 }).locator('svg')).toHaveCSS(
+    'color',
+    'rgb(22, 163, 74)',
+  );
 });
 
 test('opens the folder list from a button on narrow screens', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await expect(folderNav(page)).toBeHidden();
 
-  const toggle = page.getByRole('button', { name: 'フォルダ: すべて' });
+  const toggle = page.locator('header').getByRole('button', { name: 'メニューを開く' });
   await toggle.click();
   await createFolder(page, '買い物');
   // フォルダを選ぶと一覧は畳まれ、ボタンに選んだフォルダが出る
   await expect(folderNav(page)).toBeHidden();
-  await expect(page.getByRole('button', { name: 'フォルダ: 買い物' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText('買い物');
 });
 
 test('resizes the folder pane by dragging and keeps the width after reloading', async ({
@@ -228,4 +229,52 @@ test('keeps the folder pane as tall as the window while the list scrolls', async
   await page.mouse.wheel(0, 10_000);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   expect(await pane.boundingBox()).toEqual(atTop);
+});
+
+test('uses a modal slide-out menu without shifting tasks on narrow screens', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  const toggle = page.locator('header').getByRole('button', { name: 'メニューを開く' });
+  const main = page.locator('#todo-main-column');
+  const before = await main.boundingBox();
+  const menu = page.getByRole('dialog', { name: 'メニュー', exact: true });
+  const close = page.getByRole('button', { name: 'メニューを閉じる', exact: true });
+
+  await toggle.click();
+  await expect(menu).toBeVisible();
+  await expect(menu).toHaveAttribute('aria-modal', 'true');
+  await expect(close).toBeFocused();
+  await expect(main).toHaveAttribute('inert', '');
+  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+  expect(await main.boundingBox()).toEqual(before);
+  await expect.poll(async () => (await menu.boundingBox())?.x).toBe(0);
+  const box = await menu.boundingBox();
+  expect(box?.x).toBe(0);
+  expect(box?.width).toBeLessThanOrEqual(375 * 0.85);
+
+  await page.keyboard.press('Shift+Tab');
+  await expect(menu.getByRole('button', { name: '新しいフォルダ' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+  await expect(toggle).toBeFocused();
+  await expect(main).not.toHaveAttribute('inert');
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');
+
+  await toggle.click();
+  await close.click();
+  await expect(menu).toBeHidden();
+  await toggle.click();
+  await page.getByRole('button', { name: 'メニューの背景を閉じる' }).click({
+    position: { x: 365, y: 400 },
+  });
+  await expect(menu).toBeHidden();
+  await expect(toggle).toBeFocused();
+
+  await toggle.click();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(menu).toBeHidden();
+  await expect(folderNav(page)).toBeVisible();
+  await expect(main).not.toHaveAttribute('inert');
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');
 });

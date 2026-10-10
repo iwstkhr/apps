@@ -56,7 +56,7 @@ app/
   lib/styles.ts                 Shared Tailwind class strings
   types/todo.ts                 Todo type, factories, validation, and date helpers
   types/folder.ts               Folder type, factories, and validation
-  components/layout/            Header with export and import buttons, the shared modal, and the folder list resizer
+  components/layout/            Header with export and import buttons, the shared modal, responsive sidebar panel, and folder list resizer
   components/folder/            Folder list, create/edit dialog, and folder selector
   components/todo/status-sidebar.tsx Status filter buttons and counts for the selected folder
   components/todo/              Add/edit form, toolbar, list, and item
@@ -88,6 +88,7 @@ e2e/                            Playwright tests against wrangler dev
 | `lib/todo-drag.ts` | `setDraggedTodo` (also sets the drag image), `isDraggingTodo` (checks only the type, because data cannot be read during `dragover`), `getDraggedTodo` |
 | `hooks/use-todos.ts` | CRUD API for todos and folders (including `moveTodo`), optimistic updates, error handling, and tab sync |
 | `hooks/use-view-state.ts` | Restores and saves the sort mode, selected and collapsed folders, and the folder list width (clamped to 180–480 px); ignores broken values and storage errors |
+| `components/layout/sidebar-panel.tsx` | A persistent sidebar at widths of 1024px and above; a modal drawer opened from the header menu button below that breakpoint. Media query changes release the mobile focus trap and scroll lock. The drawer makes the header, main column, and menu button inert, restores focus on close, and closes on Escape, backdrop click, or navigation selection |
 | `components/layout/sidebar-resizer.tsx` | A `separator` handle that resizes the folder list by pointer drag or keyboard and resets on double click. The width is applied through the `--sidebar-width` CSS variable on the layout grid. The folder list is `sticky` with a height of the window minus the fixed-height (`h-14`) header, and the footer is in the right column so the folder list stays in place down to the end of the page |
 
 ## Testing
@@ -96,7 +97,7 @@ e2e/                            Playwright tests against wrangler dev
 | --- | --- | --- |
 | Unit | Vitest | Types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb) |
 | Component | Vitest, Testing Library, happy-dom | `useTodos` and the whole `Home` screen |
-| E2E | Playwright | Production build served by `wrangler dev`: persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, and the folder toggle on narrow screens |
+| E2E | Playwright | Production build served by `wrangler dev`: persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, and the mobile drawer, including focus trapping, close controls, background scroll locking, and switching back to the desktop sidebar |
 
 ## CI / CD
 

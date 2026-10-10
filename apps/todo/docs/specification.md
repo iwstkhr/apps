@@ -27,20 +27,20 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 ### Folders
 
-- The left pane includes a ステータス section with すべて, 未着手, 進行中, 保留, and 完了. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. The main toolbar contains sorting, tag, and keyword controls; status selection is available only in the left pane. On narrow screens, open the pane with the folder toggle; selecting a status closes it.
+- The left pane includes a ステータス section with すべて, 未着手, 進行中, 保留, and 完了. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. The main toolbar contains sorting, tag, and keyword controls; status selection is available only in the left pane. On narrow screens, open the pane with the menu button; selecting a status closes it.
 
 - Folders can be nested to any depth. Each todo belongs to at most one folder; todos without a folder are 未分類 (unfiled).
 - The folder list shows すべて (all), 未分類, and the folder tree, with the number of open (not 完了) todos next to each. A folder's count includes its subfolders.
 - Selecting a folder shows the todos in that folder and all of its subfolders. Todos that are not directly in the selected folder show their folder path (for example `仕事 / 案件 A`). The status, tag, and keyword filters apply within the selected folder.
 - The folder icon next to フォルダ creates a top-level folder. Each folder row has buttons to create a folder inside it, rename or move it (choose a new parent; a folder cannot be moved into itself or its subfolders), and delete it.
-- The create/edit dialog offers eight named color presets (yellow, orange, red, pink, purple, blue, green, and gray). The selected preset is highlighted and can be chosen by keyboard. The chosen color appears on the folder icon in the tree, the heading, and the narrow-screen toggle. Each folder has its own color; colors are saved and exported with the folders. Old records and invalid colors use the default amber (`#f59e0b`).
+- The create/edit dialog offers eight named color presets (yellow, orange, red, pink, purple, blue, green, and gray). The selected preset is highlighted and can be chosen by keyboard. The chosen color appears on the folder icons in the tree and the heading. Each folder has its own color; colors are saved and exported with the folders. Old records and invalid colors use the default amber (`#f59e0b`).
 - On wide screens a todo can be dragged from its header (title and grip) and dropped on a folder or 未分類 in the folder list to move it there. The header shows a grab cursor; the memo, status, tags, checkbox, and action buttons do not start a todo drag. While dragging, only a small label with the todo title follows below and to the right of the pointer, instead of the browser's default image of the whole card, so it does not cover the folder names. The row under the pointer is filled with a solid blue that stands out from the selected folder in both light and dark mode, and hovering over a collapsed folder for a moment opens it so its subfolders can be targeted. すべて is not a drop target. A message confirms the move. On narrow screens, use the folder field in the edit form instead.
 - Deleting a folder also deletes its subfolders after a confirmation, and moves the todos in them to 未分類.
 - Folders with children can be collapsed. Siblings are sorted by name.
 - On wide screens the folder list fills the window height below the header and stays in place while the todo list scrolls; a long folder list scrolls inside it. The footer sits under the todo list.
 - On wide screens the folder list can be resized by dragging its right edge (180–480 px, 240 px by default). The edge can also be focused and moved with ← / → (Shift for larger steps) and Home / End, and double-clicking it restores the default width.
 - The selected folder, the collapsed folders, and the folder list width are restored after a reload. If the restored folder no longer exists, すべて is shown.
-- On narrow screens the folder list is hidden behind a `フォルダ: <current folder>` button and closes after a folder is selected.
+- On narrow screens, a menu button on the left side of the header opens a menu that slides in from the left over the task list. The menu contains status and folder navigation and closes when a status or folder is selected, the close button or backdrop is tapped, or Escape is pressed. While open, it keeps keyboard focus inside and prevents background interaction and scrolling.
 
 ### Sort order
 
@@ -79,7 +79,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 └──────────────────────────────────────────────────────────────┘
 ```
 
-On narrow screens the folder list moves above the list behind a toggle button, and the header buttons show icons only. Folder rows show their buttons only on hover or focus on wide screens.
+On narrow screens, the menu button appears on the left side of the header and opens the sidebar as a drawer without moving the tasks. The header buttons show icons only. Folder rows show their buttons only on hover or focus on wide screens.
 
 ## Data model
 

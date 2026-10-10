@@ -1,9 +1,10 @@
 import { type CSSProperties, useCallback, useMemo, useState } from 'react';
-import { FaChevronDown, FaChevronUp, FaFolder } from 'react-icons/fa';
+import { FaFolder } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
 import { AppHeader } from '~/components/layout/app-header';
+import { SidebarPanel } from '~/components/layout/sidebar-panel';
 import { SidebarResizer } from '~/components/layout/sidebar-resizer';
 import { StatusSidebar } from '~/components/todo/status-sidebar';
 import { TodoForm } from '~/components/todo/todo-form';
@@ -11,7 +12,6 @@ import { TodoList } from '~/components/todo/todo-list';
 import { TodoToolbar } from '~/components/todo/todo-toolbar';
 import { type ImportMode, useTodos } from '~/hooks/use-todos';
 import { SIDEBAR_WIDTH, useViewState } from '~/hooks/use-view-state';
-import { cn } from '~/lib/cn';
 import { downloadExport, ImportError, type ParsedImport, parseImport } from '~/lib/export-import';
 import {
   countOpenByFolder,
@@ -80,6 +80,7 @@ export default function Home() {
     setSort,
   } = useViewState();
   const [showFolders, setShowFolders] = useState(false);
+  const closeMenu = useCallback(() => setShowFolders(false), []);
   const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
   const [notice, setNotice] = useState<{ kind: 'info' | 'error'; text: string } | null>(null);
@@ -214,6 +215,8 @@ export default function Home() {
   return (
     <div className="flex min-h-svh flex-col">
       <AppHeader
+        menuOpen={showFolders}
+        onOpenMenu={() => setShowFolders(true)}
         onExport={() => downloadExport({ todos, folders })}
         onImportFile={(file) => void handleImportFile(file)}
         exportDisabled={todos.length === 0 && folders.length === 0}
@@ -227,37 +230,9 @@ export default function Home() {
             (ヘッダー 3.5rem + 境界線 1px + 上下の余白 1rem ずつ) */}
         <aside
           id="folder-sidebar"
-          className="relative mb-4 lg:sticky lg:top-[calc(3.5rem+1px+1rem)] lg:mb-0 lg:flex lg:h-[calc(100svh-3.5rem-1px-2rem)] lg:flex-col"
+          className="relative lg:sticky lg:top-[calc(3.5rem+1px+1rem)] lg:mb-0 lg:flex lg:h-[calc(100svh-3.5rem-1px-2rem)] lg:flex-col"
         >
-          {/* 狭い画面ではフォルダ一覧を畳んでおく */}
-          <button
-            type="button"
-            className="flex w-full items-center justify-between gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 lg:hidden dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-            aria-expanded={showFolders}
-            aria-controls="folder-panel"
-            onClick={() => setShowFolders((value) => !value)}
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <FaFolder
-                className="shrink-0"
-                style={{ color: selectedFolderColor }}
-                aria-hidden="true"
-              />
-              <span className="truncate">フォルダ: {selectionLabel}</span>
-            </span>
-            {showFolders ? (
-              <FaChevronUp aria-hidden="true" />
-            ) : (
-              <FaChevronDown aria-hidden="true" />
-            )}
-          </button>
-          <div
-            id="folder-panel"
-            className={cn(
-              'mt-2 rounded-lg border border-slate-200 bg-white p-2 lg:mt-0 lg:block lg:min-h-0 lg:flex-1 lg:overflow-y-auto dark:border-slate-800 dark:bg-slate-900',
-              !showFolders && 'hidden',
-            )}
-          >
+          <SidebarPanel open={showFolders} onClose={closeMenu}>
             <StatusSidebar
               value={filters.status}
               counts={counts}
@@ -273,12 +248,18 @@ export default function Home() {
               onSelect={selectFolder}
               collapsed={collapsedFolders}
               onToggleCollapsed={toggleCollapsed}
-              onAdd={(parentId) => setFolderDialog({ mode: 'create', parentId })}
-              onEdit={(folder) => setFolderDialog({ mode: 'edit', folder })}
+              onAdd={(parentId) => {
+                closeMenu();
+                setFolderDialog({ mode: 'create', parentId });
+              }}
+              onEdit={(folder) => {
+                closeMenu();
+                setFolderDialog({ mode: 'edit', folder });
+              }}
               onRemove={handleRemoveFolder}
               onDropTodo={(todoId, folderId) => void handleDropTodo(todoId, folderId)}
             />
-          </div>
+          </SidebarPanel>
           <SidebarResizer
             width={sidebarWidth}
             min={SIDEBAR_WIDTH.min}
@@ -290,7 +271,7 @@ export default function Home() {
         </aside>
 
         {/* フッターも右の列に入れ、フォルダ欄がページの下端まで画面に固定されるようにする */}
-        <div className="flex min-w-0 flex-1 flex-col gap-8 lg:self-stretch">
+        <div id="todo-main-column" className="flex min-w-0 flex-1 flex-col gap-8 lg:self-stretch">
           <main className="flex min-w-0 flex-1 flex-col gap-4">
             {(error || notice) && (
               <div
