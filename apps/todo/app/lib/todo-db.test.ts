@@ -7,6 +7,7 @@ import {
   replaceAllTodos,
 } from '~/lib/todo-db';
 import { createTodoFixture } from '~/test/fixtures';
+import type { Todo } from '~/types/todo';
 
 afterEach(async () => {
   await closeDbForTesting();
@@ -33,5 +34,12 @@ describe('todo-db', () => {
     const c = createTodoFixture();
     await replaceAllTodos([c]);
     expect(await getAllTodos()).toEqual([c]);
+  });
+
+  it('normalizes stored records and drops broken ones', async () => {
+    const valid = createTodoFixture({ tags: [' a ', 'a'] });
+    // 古い形式や壊れたデータが保存されていても読み込みで落ちないこと
+    await putTodos([valid, { id: 'broken' } as unknown as Todo]);
+    expect(await getAllTodos()).toEqual([{ ...valid, tags: ['a'] }]);
   });
 });
