@@ -17,7 +17,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Choose カスタム to reorder todos by dragging their headers or using up/down buttons; the order is saved and included in exports
 - Delete all completed todos at once
 - Export all todos and folders to a JSON file, and import a file by merging it with or replacing the current data
-- Find language, theme, export, and import in the ⋯ menu at the right of the header
+- Find language, theme, export, and import in the メニュー (⋯) at the right of the header
 - Sync changes across tabs of the same browser
 - Use the app on mobile screens and in dark mode
 - Use the app in English or Japanese; it follows the browser language until you choose one

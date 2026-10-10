@@ -20,10 +20,11 @@ export const english: Record<string, string> = {
   画像: 'Image',
 
   // ヘッダー・メニュー
-  メニューを開く: 'Open menu',
-  メニューを閉じる: 'Close menu',
-  メニューの背景を閉じる: 'Close menu backdrop',
   メニュー: 'Menu',
+  フォルダとステータス: 'Folders and statuses',
+  フォルダとステータスを開く: 'Open folders and statuses',
+  フォルダとステータスを閉じる: 'Close folders and statuses',
+  フォルダとステータスの背景を閉じる: 'Close the folders and statuses backdrop',
   エクスポート: 'Export',
   インポート: 'Import',
   'すべての TODO を JSON ファイルに保存します': 'Save all todos to a JSON file',
@@ -31,7 +32,6 @@ export const english: Record<string, string> = {
   インポートするファイル: 'File to import',
 
   // ヘッダーのメニュー
-  その他の操作: 'More actions',
   'テーマ…': 'Theme…',
 
   // テーマ

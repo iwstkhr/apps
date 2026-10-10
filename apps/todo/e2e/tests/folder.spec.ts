@@ -184,7 +184,7 @@ test('opens the folder list from a button on narrow screens', async ({ page }) =
   await page.setViewportSize({ width: 375, height: 800 });
   await expect(folderNav(page)).toBeHidden();
 
-  const toggle = page.locator('header').getByRole('button', { name: 'メニューを開く' });
+  const toggle = page.locator('header').getByRole('button', { name: 'フォルダとステータスを開く' });
   await toggle.click();
   await createFolder(page, '買い物');
   // フォルダを選ぶと一覧は畳まれ、ボタンに選んだフォルダが出る
@@ -238,11 +238,11 @@ test('keeps the folder pane as tall as the window while the list scrolls', async
 
 test('uses a modal slide-out menu without shifting tasks on narrow screens', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
-  const toggle = page.locator('header').getByRole('button', { name: 'メニューを開く' });
+  const toggle = page.locator('header').getByRole('button', { name: 'フォルダとステータスを開く' });
   const main = page.locator('#todo-main-column');
   const before = await main.boundingBox();
-  const menu = page.getByRole('dialog', { name: 'メニュー', exact: true });
-  const close = page.getByRole('button', { name: 'メニューを閉じる', exact: true });
+  const menu = page.getByRole('dialog', { name: 'フォルダとステータス', exact: true });
+  const close = page.getByRole('button', { name: 'フォルダとステータスを閉じる', exact: true });
 
   await toggle.click();
   await expect(menu).toBeVisible();
@@ -270,7 +270,7 @@ test('uses a modal slide-out menu without shifting tasks on narrow screens', asy
   await close.click();
   await expect(menu).toBeHidden();
   await toggle.click();
-  await page.getByRole('button', { name: 'メニューの背景を閉じる' }).click({
+  await page.getByRole('button', { name: 'フォルダとステータスの背景を閉じる' }).click({
     position: { x: 365, y: 400 },
   });
   await expect(menu).toBeHidden();

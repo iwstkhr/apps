@@ -13,7 +13,7 @@ test.describe('in a Japanese browser', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
     await expect(page.getByRole('button', { name: '追加', exact: true })).toBeVisible();
 
-    await page.locator('header').getByRole('button', { name: 'その他の操作' }).click();
+    await page.locator('header').getByRole('button', { name: 'メニュー', exact: true }).click();
     await languageItem(page, 'English').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
@@ -32,7 +32,7 @@ test.describe('in a Japanese browser', () => {
     await page.reload();
     await expect(page.getByRole('heading', { name: 'TODO' })).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Folders' })).toBeVisible();
-    await page.locator('header').getByRole('button', { name: 'More actions' }).click();
+    await page.locator('header').getByRole('button', { name: 'Menu', exact: true }).click();
     await expect(languageItem(page, 'English')).toHaveAttribute('aria-checked', 'true');
   });
 });
@@ -45,7 +45,7 @@ test.describe('in an English browser', () => {
     await expect(page.getByRole('heading', { name: 'TODO' })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
-    await page.locator('header').getByRole('button', { name: 'More actions' }).click();
+    await page.locator('header').getByRole('button', { name: 'Menu', exact: true }).click();
     await expect(languageItem(page, 'English')).toHaveAttribute('aria-checked', 'true');
   });
 
@@ -57,7 +57,7 @@ test.describe('in an English browser', () => {
     await expect(page.getByRole('heading', { name: 'TODO' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 
-    await page.locator('header').getByRole('button', { name: 'More actions' }).click();
+    await page.locator('header').getByRole('button', { name: 'Menu', exact: true }).click();
     // メニューも画面の幅に収まる
     const menu = await page.getByRole('menu').boundingBox();
     expect(menu?.x).toBeGreaterThanOrEqual(0);
@@ -65,7 +65,7 @@ test.describe('in an English browser', () => {
     await languageItem(page, '日本語').click();
     await expect(page.getByRole('button', { name: '追加', exact: true })).toBeVisible();
     // 英語に戻すメニュー操作はキーボードでもできる
-    await page.locator('header').getByRole('button', { name: 'その他の操作' }).focus();
+    await page.locator('header').getByRole('button', { name: 'メニュー', exact: true }).focus();
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');

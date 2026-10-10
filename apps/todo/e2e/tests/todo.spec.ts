@@ -103,7 +103,7 @@ test('filters from the status pane and its narrow-screen toggle', async ({ page 
   await expect(todoItems(page)).toHaveText([/洗濯/]);
   await page.setViewportSize({ width: 375, height: 800 });
   await expect(sidebar).toBeHidden();
-  await page.getByRole('button', { name: 'メニューを開く' }).click();
+  await page.getByRole('button', { name: 'フォルダとステータスを開く' }).click();
   await sidebar.getByRole('button', { name: '完了 1', exact: true }).click();
   await expect(sidebar).toBeHidden();
   await expect(todoItems(page)).toHaveText([/掃除/]);

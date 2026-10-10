@@ -39,7 +39,7 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   await page.emulateMedia({ colorScheme: 'light' });
   await openApp(page);
   await addTodo(page, '配色を確認');
-  const button = page.locator('header').getByRole('button', { name: 'その他の操作' });
+  const button = page.locator('header').getByRole('button', { name: 'メニュー', exact: true });
   const dialog = page.getByRole('dialog', { name: 'テーマ', exact: true });
   const openTheme = () => chooseFromHeaderMenu(page, 'テーマ…');
   const bodyColor = () =>

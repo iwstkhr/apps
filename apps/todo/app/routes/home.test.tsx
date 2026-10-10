@@ -78,7 +78,7 @@ describe('Home', () => {
       await putTodos([createTodoFixture({ title: '牛乳を買う', status: 'in_progress' })]);
       const user = await renderHome();
 
-      await user.click(screen.getByRole('button', { name: 'その他の操作' }));
+      await user.click(screen.getByRole('button', { name: 'メニュー' }));
       await user.click(screen.getByRole('menuitemradio', { name: 'English' }));
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
       expect(screen.getByRole('navigation', { name: 'Folders' })).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe('Home', () => {
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
 
       const again = userEvent.setup();
-      await again.click(screen.getByRole('button', { name: 'More actions' }));
+      await again.click(screen.getByRole('button', { name: 'Menu' }));
       await again.click(screen.getByRole('menuitemradio', { name: '日本語' }));
       expect(screen.getByRole('button', { name: '追加' })).toBeInTheDocument();
       expect(document.documentElement.lang).toBe('ja');
@@ -108,7 +108,7 @@ describe('Home', () => {
       vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US', 'ja-JP']);
       const user = await renderHome();
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'More actions' }));
+      await user.click(screen.getByRole('button', { name: 'Menu' }));
       expect(screen.getByRole('menuitemradio', { name: 'English' })).toBeChecked();
     });
   });
@@ -116,7 +116,7 @@ describe('Home', () => {
   it('shows the empty state', async () => {
     const user = await renderHome();
     expect(screen.getByText(/TODO はまだありません/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'その他の操作' }));
+    await user.click(screen.getByRole('button', { name: 'メニュー' }));
     expect(screen.getByRole('menuitem', { name: 'エクスポート' })).toHaveAttribute(
       'aria-disabled',
       'true',

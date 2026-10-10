@@ -27,7 +27,7 @@ function renderMenu({ exportDisabled = false } = {}) {
       <button type="button">ページの次の要素</button>
     </>,
   );
-  const button = screen.getByRole('button', { name: 'その他の操作' });
+  const button = screen.getByRole('button', { name: 'メニュー' });
   return { user, button, onExport, onImport };
 }
 
@@ -40,7 +40,7 @@ describe('HeaderMenu', () => {
 
     await user.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'true');
-    const menu = screen.getByRole('menu', { name: 'その他の操作' });
+    const menu = screen.getByRole('menu', { name: 'メニュー' });
     expect(button).toHaveAttribute('aria-controls', menu.id);
     expect(screen.getByRole('group', { name: '言語' })).toBeInTheDocument();
     expect(screen.getAllByRole('menuitemradio').map((item) => item.textContent)).toEqual([
@@ -98,7 +98,7 @@ describe('HeaderMenu', () => {
     await user.click(screen.getByRole('menuitemradio', { name: 'English' }));
     expect(getLanguage()).toBe('en');
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'More actions' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Menu' })).toHaveFocus();
     setLanguage('ja');
   });
 

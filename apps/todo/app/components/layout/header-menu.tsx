@@ -21,7 +21,7 @@ const itemClass =
   'flex w-full items-center gap-2.5 rounded px-2.5 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800';
 
 /**
- * ヘッダー右端の「その他の操作」メニュー。言語・テーマ・エクスポート・インポートをまとめる。
+ * ヘッダー右端の「メニュー」。言語・テーマ・エクスポート・インポートをまとめる。
  * WAI-ARIA の menu の作法に合わせ、開くと最初の項目にフォーカスし、↑↓ / Home / End で移動、
  * Escape で閉じてボタンにフォーカスを戻す。Tab や外側のクリックでも閉じる。
  */
@@ -91,8 +91,6 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
         ref={buttonRef}
         type="button"
         className="header-menu-button inline-flex items-center rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-        aria-label={t('その他の操作')}
-        title={t('その他の操作')}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -106,6 +104,8 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
         }}
       >
         <FaEllipsisH aria-hidden="true" />
+        {/* 名前はどの幅でも「メニュー」。狭い画面では左の ☰ と並ぶので文字は出さず、読み上げだけにする */}
+        <span className="sr-only lg:not-sr-only lg:ml-1.5">{t('メニュー')}</span>
       </button>
 
       {open && (
@@ -113,7 +113,7 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
           ref={menuRef}
           id={menuId}
           role="menu"
-          aria-label={t('その他の操作')}
+          aria-label={t('メニュー')}
           tabIndex={-1}
           onKeyDown={onMenuKeyDown}
           // ヘッダーの配色 (濃いテーマでは白い文字) を引き継がないよう、色はここで決める

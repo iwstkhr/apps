@@ -42,7 +42,7 @@ The selection is stored separately in localStorage (`todo:theme`) and restored a
 
 ### Header menu
 
-The ⋯ button (その他の操作) at the right of the header opens a menu with, from top to bottom: 言語 (日本語 and English, with a check mark on the current language), テーマ…, エクスポート, and インポート. These are occasional actions, so they share one button and keep the header uncluttered on narrow screens; the ☰ button on the left stays reserved for the folder and status navigation. Choosing an item closes the menu and runs it: a language applies immediately, テーマ… opens the theme dialog, エクスポート downloads the file, and インポート opens the file picker. エクスポート is shown but unavailable while there are no todos and no folders.
+The メニュー button at the right of the header (⋯ followed by the text メニュー at widths of 1024px and above; only ⋯ on narrower screens, where its accessible name is still メニュー) opens a menu with, from top to bottom: 言語 (日本語 and English, with a check mark on the current language), テーマ…, エクスポート, and インポート. These are occasional actions, so they share one button and keep the header uncluttered on narrow screens; the ☰ button on the left stays reserved for the folder and status navigation and is named for it (フォルダとステータスを開く), so the two buttons are never both called メニュー. Choosing an item closes the menu and runs it: a language applies immediately, テーマ… opens the theme dialog, エクスポート downloads the file, and インポート opens the file picker. エクスポート is shown but unavailable while there are no todos and no folders.
 
 The menu follows the WAI-ARIA menu pattern: the button announces the popup and its state, opening it (by click, Enter, Space, ↓, or ↑) focuses the first item, ↑ / ↓ move between items and wrap around, Home and End jump to the first and last item, and Escape closes the menu and returns focus to the button. Tab or a click outside closes it as well. The menu fits within narrow screens.
 
@@ -75,7 +75,7 @@ Editing shows the original Markdown source. Storage, keyword search, and JSON ex
 - On wide screens the folder list fills the window height below the header and stays in place while the todo list scrolls; a long folder list scrolls inside it. The footer sits under the todo list.
 - On wide screens the folder list can be resized by dragging its right edge (180–480 px, 240 px by default). The edge can also be focused and moved with ← / → (Shift for larger steps) and Home / End, and double-clicking it restores the default width.
 - The selected folder, the collapsed folders, and the folder list width are restored after a reload. If the restored folder no longer exists, すべて is shown.
-- On narrow screens, a menu button on the left side of the header opens a menu that slides in from the left over the task list. The menu contains status and folder navigation and closes when a status or folder is selected, the close button or backdrop is tapped, or Escape is pressed. While open, it keeps keyboard focus inside and prevents background interaction and scrolling.
+- On narrow screens, the ☰ button (フォルダとステータスを開く) on the left side of the header opens a panel titled フォルダとステータス that slides in from the left over the task list. The panel contains status and folder navigation and closes when a status or folder is selected, the close button or backdrop is tapped, or Escape is pressed. While open, it keeps keyboard focus inside and prevents background interaction and scrolling.
 
 ### Sort order
 
@@ -97,7 +97,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ Header: TODO                                              [⋯] │
+│ Header: TODO                                     [⋯ メニュー] │
 ├────────────────┬─────────────────────────────────────────────┤
 │ すべて       5 │ 仕事 / 案件 A                               │
 │ 未分類       2 │ Add form: [やること      ] [詳細] [追加]    │
@@ -114,7 +114,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 └──────────────────────────────────────────────────────────────┘
 ```
 
-On narrow screens, the menu button appears on the left side of the header and opens the sidebar as a drawer without moving the tasks. Folder rows show their buttons only on hover or focus on wide screens.
+On narrow screens, the ☰ button appears on the left side of the header and opens the sidebar as a drawer without moving the tasks, and the メニュー button shows only ⋯. Folder rows show their buttons only on hover or focus on wide screens.
 
 ## Data model
 
