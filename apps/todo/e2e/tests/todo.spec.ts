@@ -24,6 +24,32 @@ test('keeps todos after reloading', async ({ page }) => {
   await expect(item.getByRole('button', { name: '#買い物' })).toBeVisible();
 });
 
+test('filters from the status pane and its narrow-screen toggle', async ({ page }) => {
+  await addTodo(page, '洗濯');
+  await addTodo(page, '掃除');
+  await page.getByRole('combobox', { name: '「掃除」のステータス' }).selectOption('done');
+  const sidebar = page.getByRole('navigation', { name: 'ステータス', exact: true });
+  const toolbar = page.getByRole('combobox', { name: 'ステータスで絞り込み' });
+  await sidebar.getByRole('button', { name: '完了 1', exact: true }).click();
+  await expect(toolbar).toHaveValue('done');
+  await expect(todoItems(page)).toHaveText([/掃除/]);
+  await expect(sidebar.getByRole('button', { name: /未完了/ })).toHaveCount(0);
+  await expect(toolbar.getByRole('option', { name: /未完了/ })).toHaveCount(0);
+  await toolbar.selectOption('todo');
+  await expect(sidebar.getByRole('button', { name: '未着手 1' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(todoItems(page)).toHaveText([/洗濯/]);
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expect(sidebar).toBeHidden();
+  await page.getByRole('button', { name: 'フォルダ: すべて' }).click();
+  await sidebar.getByRole('button', { name: '完了 1', exact: true }).click();
+  await expect(sidebar).toBeHidden();
+  await expect(toolbar).toHaveValue('done');
+  await expect(todoItems(page)).toHaveText([/掃除/]);
+});
+
 test('completes, edits and deletes todos', async ({ page }) => {
   await addTodo(page, '洗濯');
   await addTodo(page, '掃除');
@@ -33,8 +59,6 @@ test('completes, edits and deletes todos', async ({ page }) => {
   const statusFilter = page.getByRole('combobox', { name: 'ステータスで絞り込み' });
   await statusFilter.selectOption('in_progress');
   await expect(todoItems(page)).toHaveText([/掃除/]);
-  await statusFilter.selectOption('active');
-  await expect(todoItems(page)).toHaveCount(1);
   await statusFilter.selectOption('all');
 
   // ステータスもリロード後に残る

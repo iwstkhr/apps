@@ -5,6 +5,7 @@ import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
 import { AppHeader } from '~/components/layout/app-header';
 import { SidebarResizer } from '~/components/layout/sidebar-resizer';
+import { StatusSidebar } from '~/components/todo/status-sidebar';
 import { TodoForm } from '~/components/todo/todo-form';
 import { TodoList } from '~/components/todo/todo-list';
 import { TodoToolbar } from '~/components/todo/todo-toolbar';
@@ -251,6 +252,14 @@ export default function Home() {
               !showFolders && 'hidden',
             )}
           >
+            <StatusSidebar
+              value={filters.status}
+              counts={counts}
+              onChange={(status) => {
+                setFilters((current) => ({ ...current, status }));
+                setShowFolders(false);
+              }}
+            />
             <FolderSidebar
               folders={folders}
               openCounts={openCounts}

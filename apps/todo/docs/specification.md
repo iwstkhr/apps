@@ -19,13 +19,15 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Status | Each todo has one of 未着手 (not started), 進行中 (in progress), 保留 (on hold), or 完了 (done). Change it with the status selector on the item. The checkbox is a shortcut: checking it sets 完了 and unchecking it returns to 未着手. New todos start as 未着手 |
 | Delete | The trash button deletes one todo after a confirmation. 完了済みを削除 deletes all completed todos in the current view |
 | Folders | See [Folders](#folders) |
-| Filter | Status (すべて / 未完了 (everything but 完了) / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive) |
+| Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive) |
 | Sort | 期限順 (default), 優先度順, ステータス順, 新しい順. Completed todos are always listed after the others |
 | Export | Saves every todo and folder to `todo-export-YYYYMMDD.json` |
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
 
 ### Folders
+
+- The left pane includes a ステータス section with すべて, 未着手, 進行中, 保留, and 完了. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. This selection is synchronized with the toolbar's status selector. On narrow screens, open the pane with the folder toggle; selecting a status closes it.
 
 - Folders can be nested to any depth. Each todo belongs to at most one folder; todos without a folder are 未分類 (unfiled).
 - The folder list shows すべて (all), 未分類, and the folder tree, with the number of open (not 完了) todos next to each. A folder's count includes its subfolders.

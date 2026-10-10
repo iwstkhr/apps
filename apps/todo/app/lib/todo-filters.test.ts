@@ -55,7 +55,6 @@ describe('applyFilters', () => {
   });
 
   it('filters by status, tag and keyword (title, memo, tags)', () => {
-    expect(applyFilters(all, { ...DEFAULT_FILTERS, status: 'active' })).toHaveLength(3);
     expect(titles(applyFilters(all, { ...DEFAULT_FILTERS, status: 'done' }))).toEqual([
       '完了したもの',
     ]);
@@ -78,14 +77,14 @@ describe('statuses', () => {
   const finished = createTodoFixture({ title: '完了', status: 'done' });
   const todos = [finished, hold, open, progress];
 
-  it('filters by each status and by "active" (everything but done)', () => {
+  it('filters by each status', () => {
     const by = (status: Parameters<typeof applyFilters>[1]['status']) =>
       titles(applyFilters(todos, { ...DEFAULT_FILTERS, status }));
     expect(by('in_progress')).toEqual(['進行中']);
     expect(by('on_hold')).toEqual(['保留']);
     expect(by('todo')).toEqual(['未着手']);
     expect(by('done')).toEqual(['完了']);
-    expect(by('active')).toEqual(['保留', '未着手', '進行中']);
+    expect(by('all')).toEqual(['保留', '未着手', '進行中', '完了']);
   });
 
   it('sorts in progress, not started, on hold, then done', () => {
@@ -100,7 +99,6 @@ describe('statuses', () => {
   it('counts todos per filter', () => {
     expect(countByStatus(todos)).toEqual({
       all: 4,
-      active: 3,
       todo: 1,
       in_progress: 1,
       on_hold: 1,

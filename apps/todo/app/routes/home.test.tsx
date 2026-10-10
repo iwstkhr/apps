@@ -109,8 +109,7 @@ describe('Home', () => {
 
     const statusFilter = screen.getByRole('combobox', { name: 'ステータスで絞り込み' });
     expect(within(statusFilter).getByRole('option', { name: '保留 (1)' })).toBeInTheDocument();
-    await user.selectOptions(statusFilter, 'active');
-    expect(items()).toHaveLength(2);
+    expect(within(statusFilter).queryByRole('option', { name: /未完了/ })).not.toBeInTheDocument();
     await user.selectOptions(statusFilter, 'on_hold');
     expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('返事待ち')]);
     await user.selectOptions(statusFilter, 'all');
@@ -121,6 +120,53 @@ describe('Home', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'タグで絞り込み' }), '');
     await user.type(screen.getByRole('searchbox', { name: 'キーワードで検索' }), 'なし');
+    expect(screen.getByText('条件に合う TODO はありません。')).toBeInTheDocument();
+  });
+
+  it('filters from the status sidebar within a folder and syncs with the toolbar', async () => {
+    const folder = createFolderFixture({ name: '仕事' });
+    const child = createFolderFixture({ name: '案件', parentId: folder.id });
+    await putAll({
+      folders: [folder, child],
+      todos: [
+        createTodoFixture({ title: '会議', folderId: folder.id, tags: ['仕事'] }),
+        createTodoFixture({
+          title: '返事待ち',
+          folderId: child.id,
+          status: 'on_hold',
+          tags: ['仕事'],
+        }),
+        createTodoFixture({ title: '完了した会議', folderId: folder.id, status: 'done' }),
+        createTodoFixture({ title: '掃除', status: 'done' }),
+      ],
+    });
+    const user = await renderHome();
+    const sidebar = within(screen.getByRole('navigation', { name: 'ステータス' }));
+    const toolbar = screen.getByRole('combobox', { name: 'ステータスで絞り込み' });
+    expect(sidebar.getByRole('button', { name: '完了 2' })).toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole('navigation', { name: 'フォルダ' })).getByRole('button', {
+        name: /^仕事/,
+      }),
+    );
+    expect(sidebar.getByRole('button', { name: '完了 1' })).toBeInTheDocument();
+    await user.click(sidebar.getByRole('button', { name: '保留 1' }));
+    expect(toolbar).toHaveValue('on_hold');
+    expect(items()).toHaveLength(1);
+    expect(items()[0]).toHaveTextContent('返事待ち');
+    expect(sidebar.queryByRole('button', { name: /未完了/ })).not.toBeInTheDocument();
+    await user.selectOptions(toolbar, 'all');
+    expect(sidebar.getByRole('button', { name: 'すべて 3' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(items()).toHaveLength(3);
+    await user.selectOptions(screen.getByRole('combobox', { name: 'タグで絞り込み' }), '仕事');
+    await user.type(screen.getByRole('searchbox', { name: 'キーワードで検索' }), '会議');
+    await user.click(sidebar.getByRole('button', { name: '未着手 1' }));
+    expect(items()).toHaveLength(1);
+    expect(items()[0]).toHaveTextContent('会議');
+    await user.click(sidebar.getByRole('button', { name: '進行中 0' }));
     expect(screen.getByText('条件に合う TODO はありません。')).toBeInTheDocument();
   });
 

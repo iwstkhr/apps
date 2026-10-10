@@ -1,12 +1,10 @@
 import { fieldClass, inputClass } from '~/lib/styles';
-import type { SortKey, StatusFilter, TodoFilters } from '~/lib/todo-filters';
-import { STATUS_LABELS, STATUSES } from '~/types/todo';
-
-const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'すべて' },
-  { value: 'active', label: '未完了' },
-  ...STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] })),
-];
+import {
+  type SortKey,
+  STATUS_FILTER_OPTIONS,
+  type StatusFilter,
+  type TodoFilters,
+} from '~/lib/todo-filters';
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'due', label: '期限順' },
@@ -34,7 +32,7 @@ export function TodoToolbar({ filters, onChange, tags, counts }: TodoToolbarProp
           onChange={(event) => update({ status: event.target.value as StatusFilter })}
           aria-label="ステータスで絞り込み"
         >
-          {STATUS_OPTIONS.map(({ value, label }) => (
+          {STATUS_FILTER_OPTIONS.map(({ value, label }) => (
             <option key={value} value={value}>
               {label} ({counts[value]})
             </option>

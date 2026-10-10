@@ -1,7 +1,10 @@
-import { PRIORITIES, type Todo, type TodoStatus } from '~/types/todo';
+import { PRIORITIES, STATUS_LABELS, STATUSES, type Todo, type TodoStatus } from '~/types/todo';
 
-/** 'active' は完了以外のすべて */
-export type StatusFilter = 'all' | 'active' | TodoStatus;
+export type StatusFilter = 'all' | TodoStatus;
+export const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: 'all', label: 'すべて' },
+  ...STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] })),
+];
 export type SortKey = 'due' | 'priority' | 'status' | 'created';
 
 export interface TodoFilters {
@@ -31,7 +34,6 @@ function matchesKeyword(todo: Todo, keyword: string): boolean {
 
 function matchesStatus(todo: Todo, status: StatusFilter): boolean {
   if (status === 'all') return true;
-  if (status === 'active') return todo.status !== 'done';
   return todo.status === status;
 }
 
@@ -87,7 +89,6 @@ export function applyFilters(todos: readonly Todo[], filters: TodoFilters): Todo
 export function countByStatus(todos: readonly Todo[]): Record<StatusFilter, number> {
   const counts: Record<StatusFilter, number> = {
     all: todos.length,
-    active: 0,
     todo: 0,
     in_progress: 0,
     on_hold: 0,
@@ -95,7 +96,6 @@ export function countByStatus(todos: readonly Todo[]): Record<StatusFilter, numb
   };
   for (const todo of todos) {
     counts[todo.status]++;
-    if (todo.status !== 'done') counts.active++;
   }
   return counts;
 }

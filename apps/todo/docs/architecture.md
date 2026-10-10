@@ -57,6 +57,7 @@ app/
   types/folder.ts               Folder type, factories, and validation
   components/layout/            Header with export and import buttons, the shared modal, and the folder list resizer
   components/folder/            Folder list, create/edit dialog, and folder selector
+  components/todo/status-sidebar.tsx Status filter buttons and counts, sharing filters with the toolbar
   components/todo/              Add/edit form, toolbar, list, and item
   components/data/              Import confirmation dialog
 e2e/                            Playwright tests against wrangler dev
