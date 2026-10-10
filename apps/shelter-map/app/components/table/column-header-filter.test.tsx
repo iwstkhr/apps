@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { ColumnHeaderWithFilter } from '~/components/table/column-header-filter';
 import { emptyShelterColumnFilters, type ShelterFilterColumnId } from '~/types/shelter-filters';
 
@@ -37,10 +37,6 @@ function renderHeader({
 }
 
 describe('ColumnHeaderWithFilter', () => {
-  afterEach(() => {
-    cleanup();
-  });
-
   it('renders the label and toggles the filter popover', () => {
     const { onToggle } = renderHeader({ className: 'sticky left-0' });
 

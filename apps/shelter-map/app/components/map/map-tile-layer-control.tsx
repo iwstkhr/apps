@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { useShelterMapContext } from '~/hooks/use-shelter-map-context';
 import {
   DEFAULT_TILE_LAYER,
   TILE_LAYERS,
@@ -7,15 +5,7 @@ import {
   tileLayerKeys,
 } from '~/types/tile-layer';
 
-export function MapTileLayerControl() {
-  const { changeTileLayer } = useShelterMapContext();
-  const [tileLayer, setTileLayer] = useState<TileLayerKey>(DEFAULT_TILE_LAYER);
-
-  const selectTileLayer = (nextTileLayer: TileLayerKey) => {
-    setTileLayer(nextTileLayer);
-    changeTileLayer(nextTileLayer);
-  };
-
+export function MapTileLayerControl({ onChange }: { onChange: (tileLayer: TileLayerKey) => void }) {
   return (
     <fieldset className="m-0 border-0 p-0">
       <legend className="sr-only">地図タイル</legend>
@@ -27,8 +17,8 @@ export function MapTileLayerControl() {
               type="radio"
               name="tile_layer"
               value={key}
-              checked={tileLayer === key}
-              onChange={() => selectTileLayer(key)}
+              defaultChecked={key === DEFAULT_TILE_LAYER}
+              onChange={() => onChange(key)}
               className="size-3.5"
             />
             {TILE_LAYERS[key].label}

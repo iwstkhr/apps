@@ -2,23 +2,22 @@ import { describe, expect, it } from 'vitest';
 import {
   getShelterTypeTableLabel,
   isShelterTypeKey,
-  ShelterTypeEnum,
   ShelterTypeJapanese,
   shelterTypeKeys,
 } from '~/types/shelter-type';
 
 describe('getShelterTypeTableLabel', () => {
   it('abbreviates landslide for table headers', () => {
-    expect(getShelterTypeTableLabel(ShelterTypeEnum.Landslide)).toBe('崖崩れ');
+    expect(getShelterTypeTableLabel('landslide')).toBe('崖崩れ');
   });
 
   it('abbreviates big fire for table headers', () => {
-    expect(getShelterTypeTableLabel(ShelterTypeEnum.BigFire)).toBe('火事');
+    expect(getShelterTypeTableLabel('big_fire')).toBe('火事');
   });
 
   it('returns the full Japanese label for other types', () => {
-    expect(getShelterTypeTableLabel(ShelterTypeEnum.Flood)).toBe('洪水');
-    expect(getShelterTypeTableLabel(ShelterTypeEnum.Earthquake)).toBe('地震');
+    expect(getShelterTypeTableLabel('flood')).toBe('洪水');
+    expect(getShelterTypeTableLabel('earthquake')).toBe('地震');
   });
 
   it('returns a non-empty label for every disaster type', () => {

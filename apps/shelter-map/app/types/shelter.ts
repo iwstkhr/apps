@@ -36,10 +36,6 @@ export interface ShelterGeoJsonFeature {
   properties: ShelterGeoJsonProperties;
 }
 
-function isDesignated(value: string | undefined): boolean {
-  return value === '1';
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -86,10 +82,7 @@ export function createShelterFromGeoJsonFeature(feature: unknown): Shelter | nul
     name,
     address,
     type: Object.fromEntries(
-      shelterTypeKeys.map((key) => {
-        const value = properties[ShelterTypeJapanese[key]];
-        return [key, isDesignated(typeof value === 'string' ? value : undefined)];
-      }),
+      shelterTypeKeys.map((key) => [key, properties[ShelterTypeJapanese[key]] === '1']),
     ) as ShelterType,
     latitude,
     longitude,

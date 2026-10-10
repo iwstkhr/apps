@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useDebouncedValueEffect } from '~/hooks/use-debounced-value-effect';
 import {
   emptyShelterColumnFilters,
   type ShelterColumnFilters,
@@ -14,7 +13,10 @@ export function useShelterTableFilters(
   const [draftFilters, setDraftFilters] = useState<ShelterColumnFilters>(emptyShelterColumnFilters);
   const [openFilterColumn, setOpenFilterColumn] = useState<ShelterFilterColumnId | null>(null);
 
-  useDebouncedValueEffect(draftFilters, updateColumnFilters, DEBOUNCE_MS);
+  useEffect(() => {
+    const timer = window.setTimeout(() => updateColumnFilters(draftFilters), DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [draftFilters, updateColumnFilters]);
 
   useEffect(() => {
     if (!openFilterColumn) {

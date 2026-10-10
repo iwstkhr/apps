@@ -2,7 +2,7 @@
 
 import { render, waitFor } from '@testing-library/react';
 import { useEffect, useRef } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLeafletMap } from '~/hooks/use-leaflet-map';
 import { INITIAL_ZOOM, MAP_CENTER } from '~/lib/map/constants';
 import { TILE_LAYERS } from '~/types/tile-layer';
@@ -41,37 +41,31 @@ function MapHarness({ onReady }: { onReady: (api: ReturnType<typeof useLeafletMa
   return <div ref={containerRef} data-testid="map-container" style={{ width: 400, height: 400 }} />;
 }
 
+async function renderMap() {
+  let api: ReturnType<typeof useLeafletMap> | undefined;
+
+  render(
+    <MapHarness
+      onReady={(value) => {
+        api = value;
+      }}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(api?.mapReady).toBe(true);
+  });
+
+  return api as ReturnType<typeof useLeafletMap>;
+}
+
 describe('useLeafletMap', () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe = vi.fn();
-        unobserve = vi.fn();
-        disconnect = vi.fn();
-      },
-    );
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
   it('initializes a Leaflet map on the container', async () => {
-    let api: ReturnType<typeof useLeafletMap> | undefined;
-
-    render(
-      <MapHarness
-        onReady={(value) => {
-          api = value;
-        }}
-      />,
-    );
-
-    await waitFor(() => {
-      expect(api?.mapReady).toBe(true);
-    });
+    await renderMap();
 
     const { L, bindModifierScrollWheelZoom } = await import('~/lib/leaflet');
 
@@ -83,19 +77,7 @@ describe('useLeafletMap', () => {
   });
 
   it('creates each tile layer from the shared tile layer definitions', async () => {
-    let api: ReturnType<typeof useLeafletMap> | undefined;
-
-    render(
-      <MapHarness
-        onReady={(value) => {
-          api = value;
-        }}
-      />,
-    );
-
-    await waitFor(() => {
-      expect(api?.mapReady).toBe(true);
-    });
+    await renderMap();
 
     const { L } = await import('~/lib/leaflet');
 
@@ -105,49 +87,25 @@ describe('useLeafletMap', () => {
   });
 
   it('switches between OSM and GSI photo tile layers', async () => {
-    let api: ReturnType<typeof useLeafletMap> | undefined;
+    const api = await renderMap();
 
-    render(
-      <MapHarness
-        onReady={(value) => {
-          api = value;
-        }}
-      />,
-    );
-
-    await waitFor(() => {
-      expect(api?.mapReady).toBe(true);
-    });
-
-    api?.changeTileLayer('gia_photo');
+    api.changeTileLayer('gia_photo');
 
     expect(tileLayerOsm.remove).toHaveBeenCalled();
     expect(tileLayerGiaPhoto.remove).not.toHaveBeenCalled();
     expect(mockMap.addLayer).toHaveBeenLastCalledWith(tileLayerGiaPhoto);
 
-    api?.changeTileLayer('osm');
+    api.changeTileLayer('osm');
 
     expect(tileLayerGiaPhoto.remove).toHaveBeenCalledOnce();
     expect(mockMap.addLayer).toHaveBeenLastCalledWith(tileLayerOsm);
   });
 
   it('ignores requests to select the active tile layer', async () => {
-    let api: ReturnType<typeof useLeafletMap> | undefined;
-
-    render(
-      <MapHarness
-        onReady={(value) => {
-          api = value;
-        }}
-      />,
-    );
-
-    await waitFor(() => {
-      expect(api?.mapReady).toBe(true);
-    });
+    const api = await renderMap();
     mockMap.addLayer.mockClear();
 
-    api?.changeTileLayer('osm');
+    api.changeTileLayer('osm');
 
     expect(tileLayerOsm.remove).not.toHaveBeenCalled();
     expect(tileLayerGiaPhoto.remove).not.toHaveBeenCalled();

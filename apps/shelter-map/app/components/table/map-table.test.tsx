@@ -1,28 +1,17 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MapTable } from '~/components/table/map-table';
 import { createShelter } from '~/test/fixtures';
-import { renderWithShelterMap } from '~/test/render-with-shelter-map';
 import { emptyShelterColumnFilters } from '~/types/shelter-filters';
 
 describe('MapTable', () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
-      },
-    );
     vi.useFakeTimers();
   });
 
   afterEach(() => {
-    cleanup();
-    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -32,11 +21,10 @@ describe('MapTable', () => {
       createShelter({ id: 'kawasaki', name: '川崎避難所', address: '神奈川県川崎市' }),
     ];
 
-    renderWithShelterMap(
+    render(
       <div className="flex h-[32rem] flex-col">
-        <MapTable />
+        <MapTable shelters={shelters} onFiltersChange={vi.fn()} />
       </div>,
-      { displayedShelters: shelters },
     );
 
     expect(screen.getByText('2 件')).toBeInTheDocument();
@@ -47,9 +35,10 @@ describe('MapTable', () => {
   });
 
   it('debounces column filter changes before updating the map', () => {
-    const { container, contextValue } = renderWithShelterMap(
+    const onFiltersChange = vi.fn();
+    const { container } = render(
       <div className="flex h-[32rem] flex-col">
-        <MapTable />
+        <MapTable shelters={[createShelter()]} onFiltersChange={onFiltersChange} />
       </div>,
     );
     const table = within(container).getByRole('table');
@@ -59,12 +48,12 @@ describe('MapTable', () => {
     const filterInput = within(table).getByPlaceholderText('名前で絞り込み');
     fireEvent.change(filterInput, { target: { value: '横浜' } });
 
-    expect(contextValue.updateColumnFilters).not.toHaveBeenCalled();
+    expect(onFiltersChange).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(200);
 
-    expect(contextValue.updateColumnFilters).toHaveBeenCalledOnce();
-    expect(contextValue.updateColumnFilters).toHaveBeenCalledWith({
+    expect(onFiltersChange).toHaveBeenCalledOnce();
+    expect(onFiltersChange).toHaveBeenCalledWith({
       ...emptyShelterColumnFilters,
       name: '横浜',
     });

@@ -43,18 +43,13 @@ export function useLeafletMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       return;
     }
 
-    const map = L.map(container, {
-      preferCanvas: true,
-      scrollWheelZoom: false,
-      zoomControl: true,
-    }).setView(MAP_CENTER, INITIAL_ZOOM);
+    const map = L.map(container, { preferCanvas: true }).setView(MAP_CENTER, INITIAL_ZOOM);
     mapRef.current = map;
     setMapReady(true);
     const unbindModifierScrollWheelZoom = bindModifierScrollWheelZoom(map);
 
     const tileLayers = createTileLayers();
     tileLayersRef.current = tileLayers;
-    activeTileLayerRef.current = DEFAULT_TILE_LAYER;
     map.addLayer(tileLayers[DEFAULT_TILE_LAYER]);
 
     const resizeObserver = new ResizeObserver(() => {

@@ -1,26 +1,12 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { cn } from '~/lib/cn';
 import type { Shelter } from '~/types/shelter';
-import { isShelterTypeKey, shelterTypeKeys } from '~/types/shelter-type';
-import { SHELTER_TABLE_GRID_TEMPLATE } from './shelter-table-layout';
+import { shelterTypeKeys } from '~/types/shelter-type';
+import { SHELTER_TABLE_GRID_TEMPLATE, SHELTER_TYPE_COLUMN_CLASS } from './shelter-table-layout';
 
 const ROW_ESTIMATE_HEIGHT = 56;
-const SHELTER_TYPE_COLUMN_CLASS = 'px-1 text-center';
-const NAME_COLUMN_CLASS =
-  'sticky left-0 z-10 bg-white group-hover:bg-blue-50 group-odd:bg-white group-even:bg-slate-50 group-even:group-hover:bg-blue-50';
-
-function ShelterTypeCell({ ready }: { ready: boolean }) {
-  return <span className={ready ? 'app-content-ready' : 'app-content-not-ready'} />;
-}
-
-function getCellClassName(columnId: string): string {
-  return cn(
-    'px-3 py-2',
-    (columnId === 'name' || columnId === 'address') && 'break-words leading-snug',
-    columnId === 'name' && NAME_COLUMN_CLASS,
-    isShelterTypeKey(columnId) && SHELTER_TYPE_COLUMN_CLASS,
-  );
-}
+const ADDRESS_CELL_CLASS = 'px-3 py-2 break-words leading-snug';
+const NAME_CELL_CLASS = `${ADDRESS_CELL_CLASS} sticky left-0 z-10 bg-white group-hover:bg-blue-50 group-odd:bg-white group-even:bg-slate-50 group-even:group-hover:bg-blue-50`;
+const SHELTER_TYPE_CELL_CLASS = `px-3 py-2 ${SHELTER_TYPE_COLUMN_CLASS}`;
 
 export function ShelterTableRows({
   shelters,
@@ -59,15 +45,17 @@ export function ShelterTableRows({
             }}
             role="row"
           >
-            <div className={getCellClassName('name')} role="cell">
+            <div className={NAME_CELL_CLASS} role="cell">
               {shelter.name}
             </div>
-            <div className={getCellClassName('address')} role="cell">
+            <div className={ADDRESS_CELL_CLASS} role="cell">
               {shelter.address}
             </div>
             {shelterTypeKeys.map((key) => (
-              <div key={key} className={getCellClassName(key)} role="cell">
-                <ShelterTypeCell ready={shelter.type[key]} />
+              <div key={key} className={SHELTER_TYPE_CELL_CLASS} role="cell">
+                <span
+                  className={shelter.type[key] ? 'app-content-ready' : 'app-content-not-ready'}
+                />
               </div>
             ))}
           </div>
