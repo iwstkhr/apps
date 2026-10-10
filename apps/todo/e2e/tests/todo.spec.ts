@@ -29,13 +29,15 @@ test('filters from the status pane and its narrow-screen toggle', async ({ page 
   await addTodo(page, '掃除');
   await page.getByRole('combobox', { name: '「掃除」のステータス' }).selectOption('done');
   const sidebar = page.getByRole('navigation', { name: 'ステータス', exact: true });
-  const toolbar = page.getByRole('combobox', { name: 'ステータスで絞り込み' });
+  await expect(page.getByRole('combobox', { name: 'ステータスで絞り込み' })).toHaveCount(0);
   await sidebar.getByRole('button', { name: '完了 1', exact: true }).click();
-  await expect(toolbar).toHaveValue('done');
+  await expect(sidebar.getByRole('button', { name: '完了 1', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await expect(todoItems(page)).toHaveText([/掃除/]);
   await expect(sidebar.getByRole('button', { name: /未完了/ })).toHaveCount(0);
-  await expect(toolbar.getByRole('option', { name: /未完了/ })).toHaveCount(0);
-  await toolbar.selectOption('todo');
+  await sidebar.getByRole('button', { name: '未着手 1' }).click();
   await expect(sidebar.getByRole('button', { name: '未着手 1' })).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -46,7 +48,6 @@ test('filters from the status pane and its narrow-screen toggle', async ({ page 
   await page.getByRole('button', { name: 'フォルダ: すべて' }).click();
   await sidebar.getByRole('button', { name: '完了 1', exact: true }).click();
   await expect(sidebar).toBeHidden();
-  await expect(toolbar).toHaveValue('done');
   await expect(todoItems(page)).toHaveText([/掃除/]);
 });
 
@@ -56,10 +57,10 @@ test('completes, edits and deletes todos', async ({ page }) => {
 
   await page.getByRole('combobox', { name: '「掃除」のステータス' }).selectOption('進行中');
   await page.getByRole('checkbox', { name: '「洗濯」を完了にする' }).check();
-  const statusFilter = page.getByRole('combobox', { name: 'ステータスで絞り込み' });
-  await statusFilter.selectOption('in_progress');
+  const sidebar = page.getByRole('navigation', { name: 'ステータス', exact: true });
+  await sidebar.getByRole('button', { name: '進行中 1' }).click();
   await expect(todoItems(page)).toHaveText([/掃除/]);
-  await statusFilter.selectOption('all');
+  await sidebar.getByRole('button', { name: 'すべて 2' }).click();
 
   // ステータスもリロード後に残る
   await page.reload();

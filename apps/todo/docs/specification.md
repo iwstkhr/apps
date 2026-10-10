@@ -27,7 +27,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 ### Folders
 
-- The left pane includes a ステータス section with すべて, 未着手, 進行中, 保留, and 完了. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. This selection is synchronized with the toolbar's status selector. On narrow screens, open the pane with the folder toggle; selecting a status closes it.
+- The left pane includes a ステータス section with すべて, 未着手, 進行中, 保留, and 完了. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. The main toolbar contains sorting, tag, and keyword controls; status selection is available only in the left pane. On narrow screens, open the pane with the folder toggle; selecting a status closes it.
 
 - Folders can be nested to any depth. Each todo belongs to at most one folder; todos without a folder are 未分類 (unfiled).
 - The folder list shows すべて (all), 未分類, and the folder tree, with the number of open (not 完了) todos next to each. A folder's count includes its subfolders.
@@ -63,7 +63,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 ├────────────────┬─────────────────────────────────────────────┤
 │ すべて       5 │ 仕事 / 案件 A                               │
 │ 未分類       2 │ Add form: [やること      ] [詳細] [追加]    │
-│ フォルダ   [+] │ Filters: [ステータス] [並び順] [タグ]        │
+│ フォルダ   [+] │ Filters: [並び順] [タグ]        │
 │ ▾ 仕事       2 │ [キーワードで検索                         ] │
 │   ▾ 案件 A   1 │ ┌─────────────────────────────────────────┐ │
 │       資料   1 │ │ ☐ Title                        ✎  🗑    │ │

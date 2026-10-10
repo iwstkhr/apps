@@ -1,10 +1,5 @@
 import { fieldClass, inputClass } from '~/lib/styles';
-import {
-  type SortKey,
-  STATUS_FILTER_OPTIONS,
-  type StatusFilter,
-  type TodoFilters,
-} from '~/lib/todo-filters';
+import type { SortKey, TodoFilters } from '~/lib/todo-filters';
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'due', label: '期限順' },
@@ -17,28 +12,14 @@ interface TodoToolbarProps {
   filters: TodoFilters;
   onChange: (filters: TodoFilters) => void;
   tags: string[];
-  counts: Record<StatusFilter, number>;
 }
 
-export function TodoToolbar({ filters, onChange, tags, counts }: TodoToolbarProps) {
+export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
   const update = (patch: Partial<TodoFilters>) => onChange({ ...filters, ...patch });
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
-        <select
-          className={fieldClass}
-          value={filters.status}
-          onChange={(event) => update({ status: event.target.value as StatusFilter })}
-          aria-label="ステータスで絞り込み"
-        >
-          {STATUS_FILTER_OPTIONS.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label} ({counts[value]})
-            </option>
-          ))}
-        </select>
-
         <select
           className={fieldClass}
           value={filters.sort}

@@ -324,7 +324,7 @@ export default function Home() {
               />
             </section>
 
-            <TodoToolbar filters={filters} onChange={setFilters} tags={tags} counts={counts} />
+            <TodoToolbar filters={filters} onChange={setFilters} tags={tags} />
 
             {isLoading ? (
               <p className="p-8 text-center text-sm text-slate-500" role="status">

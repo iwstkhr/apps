@@ -10,7 +10,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Organize todos in nested folders with eight preset icon colors; a folder shows the todos in its subfolders too, and todos can be dragged onto a folder to move them
 - Set a due date (overdue and due-today items are highlighted), a priority (high / medium / low), a multi-line memo, and tags
 - Filter by status, tag, and keyword (title, memo, tags), and sort by due date, priority, status, or creation date
-- Select a status in the left pane to filter the current folder, with counts and selection synchronized with the toolbar
+- Select a status in the left pane to filter the current folder, with counts for each status
 - Delete all completed todos at once
 - Export all todos and folders to a JSON file, and import a file by merging it with or replacing the current data
 - Sync changes across tabs of the same browser

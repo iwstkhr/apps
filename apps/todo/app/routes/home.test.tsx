@@ -107,12 +107,13 @@ describe('Home', () => {
     const user = await renderHome();
     expect(items()).toHaveLength(3);
 
-    const statusFilter = screen.getByRole('combobox', { name: 'ステータスで絞り込み' });
-    expect(within(statusFilter).getByRole('option', { name: '保留 (1)' })).toBeInTheDocument();
-    expect(within(statusFilter).queryByRole('option', { name: /未完了/ })).not.toBeInTheDocument();
-    await user.selectOptions(statusFilter, 'on_hold');
+    const statusSidebar = within(screen.getByRole('navigation', { name: 'ステータス' }));
+    expect(
+      screen.queryByRole('combobox', { name: 'ステータスで絞り込み' }),
+    ).not.toBeInTheDocument();
+    await user.click(statusSidebar.getByRole('button', { name: '保留 1' }));
     expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('返事待ち')]);
-    await user.selectOptions(statusFilter, 'all');
+    await user.click(statusSidebar.getByRole('button', { name: 'すべて 3' }));
 
     await user.click(screen.getByRole('button', { name: '#家' }));
     expect(screen.getByRole('combobox', { name: 'タグで絞り込み' })).toHaveValue('家');
@@ -123,7 +124,7 @@ describe('Home', () => {
     expect(screen.getByText('条件に合う TODO はありません。')).toBeInTheDocument();
   });
 
-  it('filters from the status sidebar within a folder and syncs with the toolbar', async () => {
+  it('filters from the status sidebar within a folder', async () => {
     const folder = createFolderFixture({ name: '仕事' });
     const child = createFolderFixture({ name: '案件', parentId: folder.id });
     await putAll({
@@ -142,7 +143,6 @@ describe('Home', () => {
     });
     const user = await renderHome();
     const sidebar = within(screen.getByRole('navigation', { name: 'ステータス' }));
-    const toolbar = screen.getByRole('combobox', { name: 'ステータスで絞り込み' });
     expect(sidebar.getByRole('button', { name: '完了 2' })).toBeInTheDocument();
     await user.click(
       within(screen.getByRole('navigation', { name: 'フォルダ' })).getByRole('button', {
@@ -151,11 +151,11 @@ describe('Home', () => {
     );
     expect(sidebar.getByRole('button', { name: '完了 1' })).toBeInTheDocument();
     await user.click(sidebar.getByRole('button', { name: '保留 1' }));
-    expect(toolbar).toHaveValue('on_hold');
+    expect(sidebar.getByRole('button', { name: '保留 1' })).toHaveAttribute('aria-pressed', 'true');
     expect(items()).toHaveLength(1);
     expect(items()[0]).toHaveTextContent('返事待ち');
     expect(sidebar.queryByRole('button', { name: /未完了/ })).not.toBeInTheDocument();
-    await user.selectOptions(toolbar, 'all');
+    await user.click(sidebar.getByRole('button', { name: 'すべて 3' }));
     expect(sidebar.getByRole('button', { name: 'すべて 3' })).toHaveAttribute(
       'aria-pressed',
       'true',
