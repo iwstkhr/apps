@@ -97,22 +97,33 @@ export const english: Record<string, string> = {
   'ログインが無いため、管理用 URL を表示できるのはこの画面だけです。ページを閉じる前に「コピー」してメモに貼るか、ブックマークしてください。':
     'Without sign-in, the management URL is shown only here at creation. Select “Copy” and save it in a note, or bookmark it before closing the page.',
   '共有用 URL を参加者に送る': 'Send the shared URL to participants',
-  '「コピー」した共有用 URL を、チャットやメールで参加者に送ります。スマートフォンでは「共有」ボタンから直接アプリに送れます。 その場にいる人には、「QR コード」を押して 10 秒間表示される QR コードを、スマートフォンのカメラで読み取ってもらうこともできます。 参加者はログインせずに回答できます。':
-    'Copy the shared URL and send it by chat or email. On smartphones, “Share” sends it directly to another app. People nearby can also scan the QR code, shown for 10 seconds after selecting “QR code”, with their smartphone camera. Participants do not need to sign in.',
+  '「コピー」した共有用 URL を、チャットやメールで参加者に送ります。スマートフォンでは「共有」ボタンから直接アプリに送れます。':
+    'Copy the shared URL and send it by chat or email. On smartphones, “Share” sends it directly to another app.',
+  'その場にいる人には、「QR コード」を押して 10 秒間表示される QR コードを、スマートフォンのカメラで読み取ってもらうこともできます。':
+    'People nearby can also scan the QR code, shown for 10 seconds after selecting “QR code”, with their smartphone camera.',
+  '参加者はログインせずに回答できます。': 'Participants do not need to sign in.',
   管理ページで回答状況を確認する: 'Review responses on the management page',
-  '管理用 URL を開くと管理ページが表示されます。上部には共有用 URL と管理用 URL がいつでも表示されるので、送り忘れた場合もここからコピーできます。 管理用 URL の「QR コード」を押して読み取れば、自分のスマートフォンでも管理ページを開けます。 「参加者から見た画面」で、参加者と同じイベントページを確認できます。':
-    'Open the management URL to manage the event. Shared and management URLs remain available at the top for copying. Select “QR code” on the management URL and scan it to open the management page on your own smartphone. Select “Participant view” to see the event as participants do.',
+  '管理用 URL を開くと管理ページが表示されます。上部には共有用 URL と管理用 URL がいつでも表示されるので、送り忘れた場合もここからコピーできます。':
+    'Open the management URL to manage the event. Shared and management URLs remain available at the top for copying.',
+  '管理用 URL の「QR コード」を押して読み取れば、自分のスマートフォンでも管理ページを開けます。':
+    'Select “QR code” on the management URL and scan it to open the management page on your own smartphone.',
+  '「参加者から見た画面」で、参加者と同じイベントページを確認できます。':
+    'Select “Participant view” to see the event as participants do.',
   '管理ページの上部。イベント名「チーム歓迎会」と、共有用 URL・管理用 URL のコピー欄':
     'Top of the management page with the team welcome party title and fields for copying shared and management URLs',
-  '「回答状況」には回答者ごとの ○△× が一覧で表示されます。各候補の見出しに ○△× の人数が出て、○ がいちばん多い候補は緑色で「最多」と示されます。 いたずらや重複の回答は、行の右の「削除」で消せます。':
-    "“Responses” lists each person's ○△× choices and the counts per candidate. The best candidate is highlighted in green. Remove unwanted or duplicate responses with “Delete” beside the row.",
+  '「回答状況」には回答者ごとの ○△× が一覧で表示されます。各候補の見出しに ○△× の人数が出て、○ がいちばん多い候補は緑色で「最多」と示されます。':
+    "“Responses” lists each person's ○△× choices and the counts per candidate. The best candidate is highlighted in green.",
+  'いたずらや重複の回答は、行の右の「削除」で消せます。':
+    'Remove unwanted or duplicate responses with “Delete” beside the row.',
   '管理ページの回答状況。4 名の回答が並び、○ が 4 人の 3 つ目の候補が「最多」として強調されている。各回答の右に削除ボタン':
     'Management response table with four respondents, the third candidate highlighted as best, and a delete button for each response',
   'この例では 3 つ目の候補に全員が参加でき、「最多」になっています':
     'Everyone can attend the third candidate in this example, making it the best option',
   内容を編集する: 'Edit details',
-  '「内容を編集」で、イベント名・候補・参加費・メモをあとから変更できます。 変更は「変更を保存」を押すと参加者の画面にも反映されます。':
-    'Under “Edit details”, change the title, candidates, fee, or memo. Select “Save changes” to update the participant view too.',
+  '「内容を編集」で、イベント名・候補・参加費・メモをあとから変更できます。':
+    'Under “Edit details”, change the title, candidates, fee, or memo.',
+  '変更は「変更を保存」を押すと参加者の画面にも反映されます。':
+    'Select “Save changes” to update the participant view too.',
   '候補を削除すると、その候補への回答も消えます。':
     'Deleting a candidate also removes the choices for it.',
   '候補を追加すると、すでに回答した人のその候補は「△ 未定」になります。':
@@ -120,10 +131,12 @@ export const english: Record<string, string> = {
   '管理ページの内容の編集フォーム。作成時と同じイベント名・候補・参加費・メモの入力欄':
     'Management edit form with the same title, candidate, fee, and memo fields as creation',
   '回答を締め切る・イベントを削除する': 'Close responses or delete the event',
-  '日程が決まったら「回答を締め切る」を押します。締切中は参加者が新しく回答したり、回答を変更したりできなくなります。 「受付を再開する」でいつでも元に戻せます。':
-    'Once you choose a date, select “Close responses”. Participants can no longer submit or edit responses. Select “Reopen responses” to resume at any time.',
-  '「イベントを削除」を押すと、イベントとすべての回答が削除されます（元に戻せません）。 削除しなくても、作成から':
-    '“Delete event” removes the event and all responses permanently. Even without deleting it, automatic deletion occurs after ',
+  '日程が決まったら「回答を締め切る」を押します。締切中は参加者が新しく回答したり、回答を変更したりできなくなります。':
+    'Once you choose a date, select “Close responses”. Participants can no longer submit or edit responses.',
+  '「受付を再開する」でいつでも元に戻せます。': 'Select “Reopen responses” to resume at any time.',
+  '「イベントを削除」を押すと、イベントとすべての回答が削除されます（元に戻せません）。':
+    '“Delete event” removes the event and all responses permanently.',
+  '削除しなくても、作成から': 'Even without deleting it, automatic deletion occurs after ',
   'ヶ月後に自動で削除されます。': ' months from creation.',
   '管理ページの締切と削除。「回答を締め切る」ボタンと「イベントを削除」ボタン、自動削除日の案内':
     'Management controls for closing responses and deleting the event, with the automatic deletion date',
@@ -163,16 +176,23 @@ export const english: Record<string, string> = {
   'ページを閉じる前に「コピー」してメモに貼るか、ブックマークしてください。この URL を知っている人はあなたの回答を変更できるので、他の人には共有しないでください。':
     'Before closing the page, select “Copy” and save the URL in a note, or bookmark it. Anyone with this URL can change your response, so keep it private.',
   '回答を変更・削除する': 'Change or delete your response',
-  '控えておいた回答編集 URL を開くと、自分の回答が入った状態のフォームが表示されます。 内容を直して「回答を更新する」を押すと変更でき、「自分の回答を削除」で回答を取り消せます。 回答状況の表では、自分の行に「自分」と表示されます。':
-    'Open your saved response edit URL to see the form with your response. Edit it and select “Update response”, or select “Delete your response” to remove it. Your row in the response table is marked “You”.',
+  '控えておいた回答編集 URL を開くと、自分の回答が入った状態のフォームが表示されます。':
+    'Open your saved response edit URL to see the form with your response.',
+  '内容を直して「回答を更新する」を押すと変更でき、「自分の回答を削除」で回答を取り消せます。':
+    'Edit it and select “Update response”, or select “Delete your response” to remove it.',
+  '回答状況の表では、自分の行に「自分」と表示されます。':
+    'Your row in the response table is marked “You”.',
   締め切られた場合: 'When responses are closed',
-  '主催者が回答を締め切ると、回答フォームの代わりに次の案内が表示され、新しい回答や変更はできなくなります。 回答状況はそのまま見られます。':
-    'When the host closes responses, a notice replaces the form. New responses and edits are disabled, but you can still view the response table.',
+  '主催者が回答を締め切ると、回答フォームの代わりに次の案内が表示され、新しい回答や変更はできなくなります。':
+    'When the host closes responses, a notice replaces the form. New responses and edits are disabled.',
+  '回答状況はそのまま見られます。': 'You can still view the response table.',
   '締切後のイベントページ。「このイベントは締め切られているため、回答できません。」という案内':
     'Closed event page with a notice that the event no longer accepts responses',
   '管理用 URL（または回答編集 URL）をなくしました': 'I lost the management or response edit URL',
-  '再発行はできません。共有 PC で他の人に使われないよう、URL に含まれる鍵をブラウザにもサーバにも平文では残していないためです。 管理用 URL をなくした場合は、新しくイベントを作り直してください。':
-    'URLs cannot be reissued. Their keys are not saved in plaintext in the browser or server, to protect users on shared computers. If you lose the management URL, create a new event.',
+  '再発行はできません。共有 PC で他の人に使われないよう、URL に含まれる鍵をブラウザにもサーバにも平文では残していないためです。':
+    'URLs cannot be reissued. Their keys are not saved in plaintext in the browser or server, to protect users on shared computers.',
+  '管理用 URL をなくした場合は、新しくイベントを作り直してください。':
+    'If you lose the management URL, create a new event.',
   '「管理用 URL が必要です」と表示されます': 'I see “Management URL required”',
   '管理ページを再読み込みすると、鍵が画面から消えるため操作できなくなります。控えておいた管理用 URL（末尾に':
     'Reloading the management page clears the key from memory. Reopen your saved management URL (ending in ',
@@ -181,14 +201,19 @@ export const english: Record<string, string> = {
   '同じイベントで同じ名前は 1 回しか回答できません。自分の回答を直したい場合は、回答時に控えた回答編集 URL を開いてください。別の人の場合は、名前を少し変えて（名字を足すなど）回答してください。':
     'Each name can respond only once per event. To edit your response, open the edit URL you saved after submitting. If you are a different person, use a distinguishable name, such as adding your surname.',
   イベントページは安全ですか: 'Is the event page safe?',
-  '共有用 URL を知っている人は、ログインせずにイベントの内容と回答状況（お名前・○△×・メッセージ）を見られます。 URL には推測できないランダムな文字列を使い、検索エンジンにも載らないようにしていますが、URL が転送されればその人も見られます。 送る相手に気をつけ、電話番号や住所など知られて困る情報は書かないでください。':
-    'Anyone with the share URL can view the event details and responses (names, ○△×, and messages) without signing in. The URL contains an unguessable random string and is kept out of search engines, but anyone it is forwarded to can view it too. Be careful who you send it to, and do not write anything you would not want others to know, such as phone numbers or addresses.',
+  '共有用 URL を知っている人は、ログインせずにイベントの内容と回答状況（お名前・○△×・メッセージ）を見られます。':
+    'Anyone with the share URL can view the event details and responses (names, ○△×, and messages) without signing in.',
+  'URL には推測できないランダムな文字列を使い、検索エンジンにも載らないようにしていますが、URL が転送されればその人も見られます。':
+    'The URL contains an unguessable random string and is kept out of search engines, but anyone it is forwarded to can view it too.',
+  '送る相手に気をつけ、電話番号や住所など知られて困る情報は書かないでください。':
+    'Be careful who you send it to, and do not write anything you would not want others to know, such as phone numbers or addresses.',
   'ページを見られても、イベントや回答を変更されることはありません。 変更には管理用 URL・回答編集 URL に含まれる鍵が必要で、サーバには鍵そのものではなく、元に戻せない形に変換した値だけを保存しています。':
     'Viewing the page does not let anyone change the event or responses. Changes require the key in the management URL or response edit URL, and the server stores only an irreversibly transformed value, never the key itself.',
   データはいつまで残りますか: 'How long is data kept?',
   'イベントと回答は、作成から': 'Events and responses are deleted automatically after ',
-  'ヶ月後に自動で削除されます。編集や回答をしても期限は延びません。削除される日付はイベントページと管理ページに表示されます。':
-    ' months from creation. Edits and responses do not extend the deadline. The deletion date appears on the event and management pages.',
+  '編集や回答をしても期限は延びません。': ' Edits and responses do not extend the deadline.',
+  '削除される日付はイベントページと管理ページに表示されます。':
+    'The deletion date appears on the event and management pages.',
   イベントを作成: 'Create an event',
   '作成すると共有用の URL が発行されます。参加予定者はログインなしで回答できます。':
     'Creating an event issues a shared URL. Participants can respond without signing in.',
