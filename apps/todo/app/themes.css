@@ -153,6 +153,15 @@
   background: #ffffff18;
 }
 
+/* 左の ☰ (フォルダとステータスを開く) も濃いヘッダーの上で読めるようにする */
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .header-nav-button {
+  color: #f8fafc;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .header-nav-button:hover {
+  background: #ffffff18;
+}
+
 :root[data-theme]:not([data-theme="indigo"]) .theme-header .app-logo {
   color: #f8fafc;
 }

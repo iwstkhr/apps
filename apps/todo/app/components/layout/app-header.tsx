@@ -34,7 +34,7 @@ export function AppHeader({
             aria-label={t('メニューを開く')}
             aria-expanded={menuOpen}
             aria-controls="folder-panel"
-            className="shrink-0 rounded-md p-2 text-slate-700 hover:bg-slate-100 lg:hidden dark:text-slate-200 dark:hover:bg-slate-800"
+            className="header-nav-button shrink-0 rounded-md p-2 text-slate-700 hover:bg-slate-100 lg:hidden dark:text-slate-200 dark:hover:bg-slate-800"
             onClick={onOpenMenu}
           >
             <FaBars aria-hidden="true" />
