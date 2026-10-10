@@ -125,8 +125,7 @@ export default function Home() {
   const selectedFolderObject = isRealFolder
     ? folders.find((folder) => folder.id === selection)
     : undefined;
-  const selectedFolderColor =
-    folders.find((folder) => folder.id === selection)?.color ?? DEFAULT_FOLDER_COLOR;
+  const selectedFolderColor = selectedFolderObject?.color ?? DEFAULT_FOLDER_COLOR;
 
   const today = toLocalDateString(new Date());
   const tags = useMemo(() => collectTags(todos), [todos]);

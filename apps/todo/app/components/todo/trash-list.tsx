@@ -1,7 +1,7 @@
 import { FaFolder, FaInbox, FaTrashRestore } from 'react-icons/fa';
 import { formatFolderPath } from '~/lib/folder-tree';
 import { t } from '~/lib/i18n';
-import { secondaryButtonClass } from '~/lib/styles';
+import { dangerButtonClass, secondaryButtonClass } from '~/lib/styles';
 import type { Folder } from '~/types/folder';
 import { daysUntilPurge, type Todo, TRASH_RETENTION_DAYS } from '~/types/todo';
 
@@ -13,8 +13,6 @@ interface TrashListProps {
   onDeleteForever: (todo: Todo) => void;
   onEmpty: () => void;
 }
-
-const dangerButtonClass = `${secondaryButtonClass} border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950`;
 
 /**
  * ゴミ箱の中身。ゴミ箱のタスクは編集できないので、一覧のカードではなく

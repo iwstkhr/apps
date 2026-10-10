@@ -1,7 +1,7 @@
 import { Modal } from '~/components/layout/modal';
 import type { ImportMode } from '~/hooks/use-todos';
 import { t } from '~/lib/i18n';
-import { primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
+import { dangerButtonClass, primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
 
 interface ImportDialogProps {
   fileName: string;
@@ -46,11 +46,7 @@ export function ImportDialog({
         <button type="button" className={secondaryButtonClass} onClick={onCancel}>
           {t('キャンセル')}
         </button>
-        <button
-          type="button"
-          className={`${secondaryButtonClass} border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950`}
-          onClick={() => onConfirm('replace')}
-        >
+        <button type="button" className={dangerButtonClass} onClick={() => onConfirm('replace')}>
           {t('置き換え')}
         </button>
         {/* 開いたときはマージ (最後のボタン) にフォーカスする */}
