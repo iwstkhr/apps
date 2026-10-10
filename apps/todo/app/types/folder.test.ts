@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createFolderFixture } from '~/test/fixtures';
-import { createFolder, toFolder, updateFolder } from '~/types/folder';
+import { createFolder, DEFAULT_FOLDER_COLOR, toFolder, updateFolder } from '~/types/folder';
 
 const NOW = new Date('2026-10-10T03:00:00.000Z');
 
@@ -10,6 +10,7 @@ describe('createFolder / updateFolder', () => {
     expect(folder).toMatchObject({
       name: '仕事',
       parentId: 'p',
+      color: DEFAULT_FOLDER_COLOR,
       createdAt: NOW.toISOString(),
       updatedAt: NOW.toISOString(),
     });
@@ -25,6 +26,15 @@ describe('createFolder / updateFolder', () => {
       updatedAt: NOW.toISOString(),
     });
   });
+
+  it('sets and changes the color, preserving it when omitted from an edit', () => {
+    const folder = createFolder({ name: '仕事', parentId: null, color: '#AABBCC' }, NOW);
+    expect(folder.color).toBe('#aabbcc');
+    expect(updateFolder(folder, { name: '仕事', parentId: null }).color).toBe('#aabbcc');
+    expect(updateFolder(folder, { name: '仕事', parentId: null, color: '#123456' }).color).toBe(
+      '#123456',
+    );
+  });
 });
 
 describe('toFolder', () => {
@@ -37,6 +47,13 @@ describe('toFolder', () => {
     expect(toFolder({ ...createFolderFixture(), parentId: '' })?.parentId).toBeNull();
     expect(toFolder({ ...createFolderFixture(), parentId: 1 })?.parentId).toBeNull();
   });
+
+  it.each([undefined, null, '', '#abc', 'red', '#zzzzzz', 123])(
+    'uses the default for legacy or invalid color %s',
+    (color) => {
+      expect(toFolder({ ...createFolderFixture(), color })?.color).toBe(DEFAULT_FOLDER_COLOR);
+    },
+  );
 
   it.each([
     ['null', null],

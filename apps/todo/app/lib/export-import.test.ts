@@ -31,7 +31,7 @@ describe('export', () => {
 describe('parseImport', () => {
   it('round-trips an export', () => {
     const parent = createFolderFixture();
-    const child = createFolderFixture({ parentId: parent.id });
+    const child = createFolderFixture({ parentId: parent.id, color: '#2563eb' });
     const todos = [
       createTodoFixture({ folderId: child.id }),
       createTodoFixture({ status: 'on_hold', tags: ['x'] }),

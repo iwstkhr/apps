@@ -1,4 +1,4 @@
-import type { Folder } from '~/types/folder';
+import { DEFAULT_FOLDER_COLOR, type Folder } from '~/types/folder';
 import type { Todo } from '~/types/todo';
 
 let sequence = 0;
@@ -26,6 +26,7 @@ export function createFolderFixture(overrides: Partial<Folder> = {}): Folder {
   return {
     id: `folder-${sequence}`,
     name: `フォルダ ${sequence}`,
+    color: DEFAULT_FOLDER_COLOR,
     parentId: null,
     createdAt: '2026-10-01T00:00:00.000Z',
     updatedAt: '2026-10-01T00:00:00.000Z',
