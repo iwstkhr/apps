@@ -87,7 +87,7 @@ Evacuation site data is based on [GSI designated emergency evacuation sites](htt
 
 ## CI / Deployment
 
-When files under `apps/shelter-map/` change in a PR or a push to `main`, [\[shelter-map\] Test](../../.github/workflows/shelter-map-test.yml) runs. On a push to `main`, [\[shelter-map\] Deploy](../../.github/workflows/shelter-map-deploy.yml) publishes to [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/). Delivery is configured in [`wrangler.jsonc`](wrangler.jsonc), and deployment uses the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. See [Architecture](docs/architecture.md#ci--cd) for details.
+When files under `apps/shelter-map/` change in a PR or a push to `main`, [shelter-map - Test](../../.github/workflows/shelter-map-test.yml) runs. On a push to `main`, [shelter-map - Deploy](../../.github/workflows/shelter-map-deploy.yml) publishes to [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/). Delivery is configured in [`wrangler.jsonc`](wrangler.jsonc), and deployment uses the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. See [Architecture](docs/architecture.md#ci--cd) for details.
 
 Workers serves the app at the domain root, so leave `BASE_PATH` unset. Set it at build time only when serving under a subpath:
 
