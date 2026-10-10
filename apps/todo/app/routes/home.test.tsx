@@ -46,7 +46,7 @@ describe('Home', () => {
     await user.click(
       within(
         items().find((item) => item.textContent?.includes('資料を作る')) as HTMLElement,
-      ).getByRole('button', { name: '#仕事', exact: true }),
+      ).getByRole('button', { name: '#仕事' }),
     );
     await user.click(screen.getByRole('button', { name: '「資料を作る」からタグ「仕事」を削除' }));
     await waitFor(() => expect(items()).toHaveLength(1));
@@ -58,7 +58,7 @@ describe('Home', () => {
     });
     await user.selectOptions(screen.getByRole('combobox', { name: 'タグで絞り込み' }), '');
     expect(items()).toHaveLength(2);
-    expect(screen.getByRole('button', { name: '#家', exact: true })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '#家' })).toBeInTheDocument();
   });
 
   it('shows the copyright notice with the current year in the footer', async () => {
