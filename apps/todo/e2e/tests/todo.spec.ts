@@ -19,7 +19,7 @@ test('keeps todos after reloading', async ({ page }) => {
   await expect(item).toHaveCount(1);
   await expect(item).toContainText('牛乳を買う');
   await expect(item).toContainText('低脂肪');
-  await expect(item).toContainText('優先度: 高');
+  await expect(item.getByRole('combobox', { name: '「牛乳を買う」の優先度' })).toHaveValue('high');
   await expect(item).toContainText('期限: 2000/01/01 (期限切れ)');
   await expect(item.getByRole('button', { name: '#買い物' })).toBeVisible();
 });
@@ -187,4 +187,18 @@ test('renders Markdown memos and preserves their source when editing and reloadi
   expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(375);
   await page.getByRole('button', { name: '「手順を確認」を編集' }).click();
   await expect(page.getByRole('textbox', { name: 'メモ' })).toHaveValue(memo);
+});
+
+test('changes task priority from the list and persists it after reloading', async ({ page }) => {
+  await addTodo(page, '優先度を変更');
+  const priority = page.getByRole('combobox', { name: '「優先度を変更」の優先度' });
+  await priority.selectOption('high');
+  await expect(priority).toHaveValue('high');
+  await page.reload();
+  await expect(priority).toHaveValue('high');
+  await page.setViewportSize({ width: 375, height: 800 });
+  await priority.selectOption('low');
+  await expect(priority).toHaveValue('low');
+  await page.reload();
+  await expect(priority).toHaveValue('low');
 });

@@ -65,7 +65,7 @@ describe('Home', () => {
 
     expect(items()).toHaveLength(1);
     expect(screen.getByText('低脂肪')).toBeInTheDocument();
-    expect(screen.getByText('優先度: 高')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '「牛乳を買う」の優先度' })).toHaveValue('high');
     expect(screen.getByRole('button', { name: '#買い物' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'タイトル' })).toHaveValue('');
     await waitFor(async () => expect((await getAll()).todos).toHaveLength(1));

@@ -59,6 +59,7 @@ export default function Home() {
     addTodo,
     editTodo,
     changeStatus,
+    changePriority,
     moveTodo,
     reorderTodo,
     removeTodo,
@@ -353,6 +354,7 @@ export default function Home() {
                         )
                     : undefined
                 }
+                onPriorityChange={(id, priority) => void changePriority(id, priority)}
                 onStatusChange={(id, status) => void changeStatus(id, status)}
                 onEdit={editTodo}
                 onRemove={handleRemove}

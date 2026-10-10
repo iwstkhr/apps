@@ -73,6 +73,25 @@ describe('useTodos', () => {
     expect((await getAll()).todos).toEqual([]);
   });
 
+  it('changes priority and preserves completion and other task fields', async () => {
+    const todo = createTodoFixture({
+      status: 'done',
+      completedAt: '2026-01-01T00:00:00.000Z',
+      customOrder: 3,
+      memo: '内容を保持',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    await putAll({ folders: [], todos: [todo] });
+    const { result } = await renderLoaded();
+    await act(() => result.current.changePriority(todo.id, 'high'));
+    const saved = (await getAll()).todos[0];
+    expect(saved).toEqual({ ...todo, priority: 'high', updatedAt: expect.any(String) });
+    expect(saved.updatedAt).not.toBe(todo.updatedAt);
+    expect(result.current.todos).toEqual([saved]);
+    await act(() => result.current.changePriority(todo.id, 'high'));
+    expect((await getAll()).todos).toEqual([saved]);
+  });
+
   it('moves a todo to a folder and back to unfiled', async () => {
     const folder = createFolderFixture();
     const todo = createTodoFixture();

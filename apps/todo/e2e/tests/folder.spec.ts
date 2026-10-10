@@ -74,7 +74,9 @@ test('moves a todo to another folder by drag and drop', async ({ page }) => {
   await card
     .getByText('洗剤を用意する')
     .dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
-  await card.getByText('優先度: 中').dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
+  await card
+    .getByRole('combobox', { name: '「洗濯」の優先度' })
+    .dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
   await page.reload();
   await expect(card).not.toContainText('フォルダ: 家');
 

@@ -15,6 +15,7 @@ import { createFolder, type Folder, type FolderInput, updateFolder } from '~/typ
 import {
   createTodo,
   moveTodoToFolder,
+  type Priority,
   setTodoStatus,
   type Todo,
   type TodoInput,
@@ -35,6 +36,7 @@ export interface UseTodos {
   addTodo: (input: TodoInput) => Promise<void>;
   editTodo: (id: string, input: TodoInput) => Promise<void>;
   changeStatus: (id: string, status: TodoStatus) => Promise<void>;
+  changePriority: (id: string, priority: Priority) => Promise<void>;
   /** folderId が null なら未分類に移す */
   moveTodo: (id: string, folderId: string | null) => Promise<void>;
   reorderTodo: (
@@ -163,6 +165,16 @@ export function useTodos(): UseTodos {
     [replaceOne],
   );
 
+  const changePriority = useCallback(
+    (id: string, priority: Priority) =>
+      replaceOne(id, (todo) =>
+        todo.priority === priority
+          ? todo
+          : { ...todo, priority, updatedAt: new Date().toISOString() },
+      ),
+    [replaceOne],
+  );
+
   const moveTodo = useCallback(
     (id: string, folderId: string | null) =>
       replaceOne(id, (todo) => moveTodoToFolder(todo, folderId)),
@@ -269,6 +281,7 @@ export function useTodos(): UseTodos {
     addTodo,
     editTodo,
     changeStatus,
+    changePriority,
     moveTodo,
     reorderTodo,
     removeTodo,

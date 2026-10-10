@@ -8,6 +8,7 @@ import type { DropPosition } from '~/lib/todo-order';
 import type { Folder } from '~/types/folder';
 import {
   getDueStatus,
+  PRIORITIES,
   PRIORITY_LABELS,
   type Priority,
   STATUS_LABELS,
@@ -44,6 +45,7 @@ interface TodoItemProps {
   /** 表示するフォルダの道のり。今見ているフォルダと同じなら null */
   folderPath: string | null;
   onStatusChange: (id: string, status: TodoStatus) => void;
+  onPriorityChange: (id: string, priority: Priority) => void;
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
   onTagClick: (tag: string) => void;
@@ -59,6 +61,7 @@ export function TodoItem({
   folders,
   folderPath,
   onStatusChange,
+  onPriorityChange,
   onEdit,
   onRemove,
   onTagClick,
@@ -146,11 +149,21 @@ export function TodoItem({
               </option>
             ))}
           </select>
-          <span
-            className={cn('rounded px-1.5 py-0.5 font-medium', PRIORITY_CLASSES[todo.priority])}
+          <select
+            className={cn(
+              'cursor-pointer rounded border border-transparent px-1 py-0.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40',
+              PRIORITY_CLASSES[todo.priority],
+            )}
+            value={todo.priority}
+            onChange={(event) => onPriorityChange(todo.id, event.target.value as Priority)}
+            aria-label={`「${todo.title}」の優先度`}
           >
-            優先度: {PRIORITY_LABELS[todo.priority]}
-          </span>
+            {PRIORITIES.map((priority) => (
+              <option key={priority} value={priority}>
+                優先度: {PRIORITY_LABELS[priority]}
+              </option>
+            ))}
+          </select>
           {todo.dueDate && (
             <span
               className={cn(

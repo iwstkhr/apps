@@ -25,6 +25,10 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
 
+### Priority
+
+Change priority (高 / 中 / 低) directly with the selector on each task in the list, or in the edit form. Changes are saved immediately and reflected in priority-based sorting, without altering the task status or other fields.
+
 ### Color themes
 
 The header's テーマ button opens a dialog with five presets: スタンダード, フォレスト, サクラ, サンド, and ラベンダー. Inspired by Slack, non-default presets use a shared dark color for the header and sidebar, with bright text and a distinct selected row, while the main content retains neutral backgrounds, text, and borders for readability. Buttons, links, focus indicators, and selected rows use shades of the same subdued accent hue, including Markdown links. The header logo follows the theme. The 表示モード controls offer ライト, ダーク, and 自動. Light and dark override the OS preference; 自動 (the default) follows OS changes immediately. Folder icon colors and semantic warning, priority, and completed-status colors remain distinct.

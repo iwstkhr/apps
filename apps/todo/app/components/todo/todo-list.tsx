@@ -4,7 +4,7 @@ import { type FolderSelection, formatFolderPath } from '~/lib/folder-tree';
 import { getDraggedTodo, isDraggingTodo } from '~/lib/todo-drag';
 import type { DropPosition } from '~/lib/todo-order';
 import type { Folder } from '~/types/folder';
-import type { Todo, TodoInput, TodoStatus } from '~/types/todo';
+import type { Priority, Todo, TodoInput, TodoStatus } from '~/types/todo';
 
 interface TodoListProps {
   todos: Todo[];
@@ -15,6 +15,7 @@ interface TodoListProps {
   tagSuggestions: string[];
   emptyMessage: string;
   onStatusChange: (id: string, status: TodoStatus) => void;
+  onPriorityChange: (id: string, priority: Priority) => void;
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
   onTagClick: (tag: string) => void;
