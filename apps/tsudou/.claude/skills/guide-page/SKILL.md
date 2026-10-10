@@ -49,7 +49,7 @@ Update `capture-guide.mjs` when capturing a new screen or state, or when wording
 
 ### 3. Recapture screenshots
 
-Start both development servers. If the Browser pane is available, use `preview_start` to start `api` and `frontend` from `.claude/launch.json`. Otherwise, ask the user to start `pnpm run dev:api` and `pnpm run dev`.
+Start both development servers. If the Browser pane is available, use `preview_start` to start `api` and `frontend` from `.claude/launch.json`. Otherwise, ask the user to start `pnpm run dev`, which starts both.
 
 ```bash
 pnpm run guide:capture

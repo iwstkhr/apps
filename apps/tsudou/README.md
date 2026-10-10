@@ -77,19 +77,17 @@ Run `pnpm install` once anywhere in the repository to install all packages. Run 
 
 ### Local development
 
-Start the API and UI development servers in separate terminals. No Cloudflare account is required.
-
-```bash
-pnpm run dev:api
-```
+Start the API and UI development servers together. No Cloudflare account is required.
 
 ```bash
 pnpm run dev
 ```
 
+`pnpm run dev` runs both servers in parallel in one terminal (output is prefixed with the package name); stop both with Ctrl-C. To start only one, use `pnpm run dev:api` or `pnpm run dev:ui`.
+
 - `pnpm run dev:api` applies migrations (`backend/migrations/`) to local D1, then starts the Worker with `wrangler dev` at `http://localhost:8080`. Saving source files reloads it.
   D1 data is stored in `backend/.wrangler/` and survives shutdown. The directory is gitignored; to clear it, stop the server and delete the directory.
-- `pnpm run dev` starts Vite at `http://localhost:5173`. Requests to `/api` are proxied to `localhost:8080` (`server.proxy` in `frontend/vite.config.ts`), so API calls use the same origin, as in production.
+- `pnpm run dev:ui` starts Vite at `http://localhost:5173`. Requests to `/api` are proxied to `localhost:8080` (`server.proxy` in `frontend/vite.config.ts`), so API calls use the same origin, as in production.
 - After building the frontend with `pnpm run build`, you can also use `http://localhost:8080` to verify the production arrangement: the same Worker serves the UI and API.
 - Cron Triggers do not run automatically locally. To test expiry cleanup, call `curl http://localhost:8080/cdn-cgi/local/scheduled`.
 
@@ -109,7 +107,7 @@ pnpm run guide:capture     # Recapture user guide screenshots (development serve
 
 When changing API routes or input/output, update `backend/src/schemas.ts` (Zod schemas) and `backend/src/openapi.ts` (route definitions), then regenerate `docs/openapi.yaml` with `pnpm run openapi`. `pnpm test` detects outdated generated documentation.
 
-After changing the UI appearance, run `pnpm run guide:capture` with both `pnpm run dev:api` and `pnpm run dev` running to recapture guide screenshots for each display language (`frontend/src/assets/guide/ja/` and `frontend/src/assets/guide/en/`).
+After changing the UI appearance, run `pnpm run guide:capture` with `pnpm run dev` running to recapture guide screenshots for each display language (`frontend/src/assets/guide/ja/` and `frontend/src/assets/guide/en/`).
 The script creates sample data per language (a "チーム歓迎会" / "Team welcome party" event and four responses) in local D1 and captures it using the installed Google Chrome.
 It also writes image dimensions to `frontend/src/assets/guide/sizes.json`, which `frontend/src/routes/Guide.tsx` uses for `width` / `height`, so no manual updates are needed.
 

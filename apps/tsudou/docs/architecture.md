@@ -69,7 +69,7 @@ Authorization (token checks) and input validation always run on the server.
 ## Repository structure
 
 Tsudou has four packages in the monorepo pnpm workspace (`pnpm-workspace.yaml` at the repository root): `frontend/` (`@tsudou/frontend`), `backend/` (`@tsudou/backend`), shared code in `shared/` (`@tsudou/shared`), and E2E tests in `e2e/` (`@tsudou/e2e`).
-Each package has its own dependencies and scripts in `package.json`. `apps/tsudou/package.json` contains Biome and shortcuts that invoke package scripts (`pnpm run dev` / `pnpm run dev:api` / `pnpm test`, etc.).
+Each package has its own dependencies and scripts in `package.json`. `apps/tsudou/package.json` contains Biome and shortcuts that invoke package scripts (`pnpm run dev` / `pnpm run dev:api` / `pnpm run dev:ui` / `pnpm test`, etc.).
 
 Both frontend and backend depend on `@tsudou/shared` through `workspace:*`, importing modules such as `@tsudou/shared/limits`.
 The frontend does not depend on the backend package and cannot import server internals (see "Code shared by server and frontend").
@@ -409,13 +409,13 @@ Although tokens are in fragments, `<meta name="referrer" content="no-referrer">`
 
 ## Local development
 
-Start API (`pnpm run dev:api`) and UI (`pnpm run dev`) development servers separately.
+`pnpm run dev` starts the API and UI development servers in parallel. Use `pnpm run dev:api` or `pnpm run dev:ui` to start only one.
 
 `pnpm run dev:api` applies local migrations with `wrangler d1 migrations apply tsudou --local`, then starts the Worker with `wrangler dev --port 8080`. wrangler uses the production runtime (workerd) and substitutes local D1 and Rate Limiting implementations. No Cloudflare account is required.
 Local D1 data persists in `backend/.wrangler/state/` after shutdown.
 Since wrangler requires `assets.directory` (`frontend/dist/`) to exist, an empty directory is created first if needed.
 
-Vite (`pnpm run dev`) proxies `/api` to `localhost:8080`, preserving the same-origin behavior seen in production.
+Vite (`pnpm run dev:ui`) proxies `/api` to `localhost:8080`, preserving the same-origin behavior seen in production.
 After `pnpm run build`, opening `localhost:8080` lets you verify the production arrangement with one Worker serving everything.
 
 Cron Triggers do not run automatically locally; invoke them with `curl http://localhost:8080/cdn-cgi/local/scheduled`.

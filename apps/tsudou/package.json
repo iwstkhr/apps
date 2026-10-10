@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @tsudou/frontend run dev",
+    "dev": "pnpm --parallel --filter @tsudou/backend --filter @tsudou/frontend run dev",
     "dev:api": "pnpm --filter @tsudou/backend run dev",
+    "dev:ui": "pnpm --filter @tsudou/frontend run dev",
     "build": "pnpm --filter @tsudou/frontend run build",
     "build:api": "pnpm --filter @tsudou/backend run build",
     "openapi": "pnpm --filter @tsudou/backend run openapi",
