@@ -38,8 +38,10 @@ const EXPAND_ON_HOVER_MS = 700;
 
 const rowClass =
   'group flex min-w-0 items-center gap-1 rounded-md text-sm transition-colors hover:bg-slate-100 dark:hover:bg-slate-800';
+// ドロップ先は選択中の行 (薄い青) と見分けられるよう、明るさの差が大きい塗りつぶしにする。
+// ダークモードでも同じ色にし、名前と件数も白にする
 const dropTargetRowClass =
-  'bg-blue-100 ring-2 ring-blue-500 ring-inset dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900';
+  'bg-blue-600 text-white ring-2 ring-blue-300 hover:bg-blue-600 dark:bg-blue-500 dark:ring-blue-200 dark:hover:bg-blue-500 [&_span]:text-white';
 const selectedRowClass =
   'bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-200 dark:hover:bg-blue-900';
 const actionClass =
@@ -101,8 +103,8 @@ export function FolderSidebar({
     <li
       className={cn(
         rowClass,
-        selection === value && selectedRowClass,
-        dropTarget === value && dropTargetRowClass,
+        // ドロップ先の色を優先する (両方付けると CSS の並び順次第でどちらかが勝つ)
+        dropTarget === value ? dropTargetRowClass : selection === value && selectedRowClass,
       )}
       {...(value === 'unfiled' ? dropHandlers('unfiled') : {})}
     >
@@ -155,8 +157,7 @@ export function FolderSidebar({
                 key={folder.id}
                 className={cn(
                   rowClass,
-                  isSelected && selectedRowClass,
-                  dropTarget === folder.id && dropTargetRowClass,
+                  dropTarget === folder.id ? dropTargetRowClass : isSelected && selectedRowClass,
                 )}
                 style={{ paddingLeft: `${depth * 0.875}rem` }}
                 {...dropHandlers(folder.id)}

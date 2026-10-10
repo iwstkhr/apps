@@ -328,9 +328,9 @@ describe('Home', () => {
 
         const toFolder = dragTodoTo('見積もり', /^仕事/);
         expect(toFolder.accepted).toBe(true);
-        expect(toFolder.row).toHaveClass('ring-2');
+        expect(toFolder.row).toHaveClass('bg-blue-600');
         toFolder.drop();
-        expect(toFolder.row).not.toHaveClass('ring-2');
+        expect(toFolder.row).not.toHaveClass('bg-blue-600');
 
         expect(
           await screen.findByText('「見積もり」を「仕事」に移動しました。'),
@@ -343,6 +343,16 @@ describe('Home', () => {
           await screen.findByText('「見積もり」を「未分類」に移動しました。'),
         ).toBeInTheDocument();
         await waitFor(async () => expect((await getAll()).todos[0].folderId).toBeNull());
+      });
+
+      it('shows the drop target style instead of the selected style on the selected folder', async () => {
+        await putAll({ todos: [createTodoFixture({ title: '見積もり' })] });
+        const user = await renderHome();
+        await user.click(within(folderNav()).getByRole('button', { name: /^未分類/ }));
+
+        const { row } = dragTodoTo('見積もり', /^未分類/);
+        expect(row).toHaveClass('bg-blue-600');
+        expect(row).not.toHaveClass('bg-blue-50');
       });
 
       it('does not accept drops on すべて or drags of something other than a todo', async () => {
