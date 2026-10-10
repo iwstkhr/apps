@@ -1,11 +1,22 @@
 import { useCallback, useMemo, useState } from 'react';
+import { FaChevronDown, FaChevronUp, FaFolder } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
+import { FolderDialog } from '~/components/folder/folder-dialog';
+import { FolderSidebar } from '~/components/folder/folder-sidebar';
 import { AppHeader } from '~/components/layout/app-header';
 import { TodoForm } from '~/components/todo/todo-form';
 import { TodoList } from '~/components/todo/todo-list';
 import { TodoToolbar } from '~/components/todo/todo-toolbar';
 import { type ImportMode, useTodos } from '~/hooks/use-todos';
+import { cn } from '~/lib/cn';
 import { downloadExport, ImportError, type ParsedImport, parseImport } from '~/lib/export-import';
+import {
+  countOpenByFolder,
+  type FolderSelection,
+  filterByFolder,
+  formatFolderPath,
+  getSubtreeIds,
+} from '~/lib/folder-tree';
 import { secondaryButtonClass } from '~/lib/styles';
 import {
   applyFilters,
@@ -14,6 +25,7 @@ import {
   DEFAULT_FILTERS,
   type TodoFilters,
 } from '~/lib/todo-filters';
+import type { Folder, FolderInput } from '~/types/folder';
 import { toLocalDateString } from '~/types/todo';
 import type { Route } from './+types/home';
 
@@ -31,9 +43,14 @@ interface PendingImport extends ParsedImport {
   fileName: string;
 }
 
+type FolderDialogState =
+  | { mode: 'create'; parentId: string | null }
+  | { mode: 'edit'; folder: Folder };
+
 export default function Home() {
   const {
     todos,
+    folders,
     isLoading,
     error,
     addTodo,
@@ -41,17 +58,85 @@ export default function Home() {
     changeStatus,
     removeTodo,
     removeCompleted,
-    importTodos,
+    addFolder,
+    editFolder,
+    removeFolder,
+    importData,
   } = useTodos();
   const [filters, setFilters] = useState<TodoFilters>(DEFAULT_FILTERS);
+  const [selectedFolder, setSelectedFolder] = useState<FolderSelection>('all');
+  const [collapsedFolders, setCollapsedFolders] = useState<ReadonlySet<string>>(new Set());
+  const [showFolders, setShowFolders] = useState(false);
+  const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
   const [notice, setNotice] = useState<{ kind: 'info' | 'error'; text: string } | null>(null);
 
+  // 選んでいたフォルダが消えたら (別タブで消した場合も) すべてに戻す
+  const selection: FolderSelection =
+    selectedFolder === 'all' ||
+    selectedFolder === 'unfiled' ||
+    folders.some((folder) => folder.id === selectedFolder)
+      ? selectedFolder
+      : 'all';
+  const selectionLabel =
+    selection === 'all'
+      ? 'すべて'
+      : selection === 'unfiled'
+        ? '未分類'
+        : formatFolderPath(folders, selection);
+  const isRealFolder = selection !== 'all' && selection !== 'unfiled';
+
   const today = toLocalDateString(new Date());
   const tags = useMemo(() => collectTags(todos), [todos]);
-  const visibleTodos = useMemo(() => applyFilters(todos, filters), [todos, filters]);
-  const counts = useMemo(() => countByStatus(todos), [todos]);
+  const openCounts = useMemo(() => countOpenByFolder(todos, folders), [todos, folders]);
+  const folderTodos = useMemo(
+    () => filterByFolder(todos, folders, selection),
+    [todos, folders, selection],
+  );
+  const visibleTodos = useMemo(() => applyFilters(folderTodos, filters), [folderTodos, filters]);
+  const counts = useMemo(() => countByStatus(folderTodos), [folderTodos]);
   const doneCount = counts.done;
+
+  const selectFolder = (next: FolderSelection) => {
+    setSelectedFolder(next);
+    setShowFolders(false);
+  };
+
+  const toggleCollapsed = (id: string) =>
+    setCollapsedFolders((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+
+  const handleFolderSubmit = async (input: FolderInput) => {
+    if (!folderDialog) return;
+    setFolderDialog(null);
+    if (folderDialog.mode === 'edit') {
+      await editFolder(folderDialog.folder.id, input);
+      return;
+    }
+    const folder = await addFolder(input);
+    // 作ったフォルダが見えるよう親を開いてから選ぶ
+    if (input.parentId !== null) {
+      setCollapsedFolders((current) => {
+        const next = new Set(current);
+        next.delete(input.parentId as string);
+        return next;
+      });
+    }
+    selectFolder(folder.id);
+  };
+
+  const handleRemoveFolder = (folder: Folder) => {
+    const ids = getSubtreeIds(folders, folder.id);
+    const subfolderCount = ids.size - 1;
+    const todoCount = todos.filter((t) => t.folderId !== null && ids.has(t.folderId)).length;
+    const lines = [`フォルダ「${folder.name}」を削除しますか？`];
+    if (subfolderCount > 0) lines.push(`中のフォルダ ${subfolderCount} 件も削除されます。`);
+    if (todoCount > 0) lines.push(`中の TODO ${todoCount} 件は未分類に移ります。`);
+    if (window.confirm(lines.join('\n'))) void removeFolder(folder.id);
+  };
 
   const handleImportFile = async (file: File) => {
     try {
@@ -68,15 +153,17 @@ export default function Home() {
 
   const handleImportConfirm = async (mode: ImportMode) => {
     if (!pendingImport) return;
-    await importTodos(pendingImport.todos, mode);
+    const { todos: importedTodos, folders: importedFolders } = pendingImport;
+    setPendingImport(null);
+    await importData({ todos: importedTodos, folders: importedFolders }, mode);
     setNotice({
       kind: 'info',
-      text: `${pendingImport.todos.length} 件の TODO をインポートしました。`,
+      text: `TODO ${importedTodos.length} 件とフォルダ ${importedFolders.length} 件をインポートしました。`,
     });
-    setPendingImport(null);
   };
 
   const cancelImport = useCallback(() => setPendingImport(null), []);
+  const cancelFolderDialog = useCallback(() => setFolderDialog(null), []);
 
   const handleRemove = (id: string) => {
     const todo = todos.find((t) => t.id === id);
@@ -89,69 +176,130 @@ export default function Home() {
 
   const isFiltered =
     filters.keyword.trim() !== '' || filters.status !== 'all' || filters.tag !== null;
+  const emptyMessage = isFiltered
+    ? '条件に合う TODO はありません。'
+    : todos.length === 0
+      ? 'TODO はまだありません。上のフォームから追加してください。'
+      : 'ここに TODO はありません。';
 
   return (
     <div className="flex min-h-svh flex-col">
       <AppHeader
-        onExport={() => downloadExport(todos)}
+        onExport={() => downloadExport({ todos, folders })}
         onImportFile={(file) => void handleImportFile(file)}
-        exportDisabled={todos.length === 0}
+        exportDisabled={todos.length === 0 && folders.length === 0}
       />
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-3 py-4 sm:px-4">
-        {(error || notice) && (
-          <div
-            role={error || notice?.kind === 'error' ? 'alert' : 'status'}
-            className={
-              error || notice?.kind === 'error'
-                ? 'rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-300'
-                : 'rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-            }
+      <div className="mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-4 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <aside className="mb-4 lg:sticky lg:top-16 lg:mb-0">
+          {/* 狭い画面ではフォルダ一覧を畳んでおく */}
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 lg:hidden dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+            aria-expanded={showFolders}
+            aria-controls="folder-panel"
+            onClick={() => setShowFolders((value) => !value)}
           >
-            {error ?? notice?.text}
+            <span className="flex min-w-0 items-center gap-2">
+              <FaFolder className="shrink-0 text-amber-500" aria-hidden="true" />
+              <span className="truncate">フォルダ: {selectionLabel}</span>
+            </span>
+            {showFolders ? (
+              <FaChevronUp aria-hidden="true" />
+            ) : (
+              <FaChevronDown aria-hidden="true" />
+            )}
+          </button>
+          <div
+            id="folder-panel"
+            className={cn(
+              'mt-2 rounded-lg border border-slate-200 bg-white p-2 lg:mt-0 lg:block dark:border-slate-800 dark:bg-slate-900',
+              !showFolders && 'hidden',
+            )}
+          >
+            <FolderSidebar
+              folders={folders}
+              openCounts={openCounts}
+              selection={selection}
+              onSelect={selectFolder}
+              collapsed={collapsedFolders}
+              onToggleCollapsed={toggleCollapsed}
+              onAdd={(parentId) => setFolderDialog({ mode: 'create', parentId })}
+              onEdit={(folder) => setFolderDialog({ mode: 'edit', folder })}
+              onRemove={handleRemoveFolder}
+            />
           </div>
-        )}
+        </aside>
 
-        <section
-          aria-label="TODO を追加"
-          className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
-        >
-          <TodoForm submitLabel="追加" collapsible tagSuggestions={tags} onSubmit={addTodo} />
-        </section>
+        <main className="flex min-w-0 flex-col gap-4">
+          {(error || notice) && (
+            <div
+              role={error || notice?.kind === 'error' ? 'alert' : 'status'}
+              className={
+                error || notice?.kind === 'error'
+                  ? 'rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-300'
+                  : 'rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+              }
+            >
+              {error ?? notice?.text}
+            </div>
+          )}
 
-        <TodoToolbar filters={filters} onChange={setFilters} tags={tags} counts={counts} />
+          <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
+            {isRealFolder && <FaFolder className="shrink-0 text-amber-500" aria-hidden="true" />}
+            <span className="truncate">{selectionLabel}</span>
+          </h2>
 
-        {isLoading ? (
-          <p className="p-8 text-center text-sm text-slate-500" role="status">
-            読み込み中…
-          </p>
-        ) : (
-          <TodoList
-            todos={visibleTodos}
-            today={today}
-            tagSuggestions={tags}
-            emptyMessage={
-              isFiltered
-                ? '条件に合う TODO はありません。'
-                : 'TODO はまだありません。上のフォームから追加してください。'
-            }
-            onStatusChange={(id, status) => void changeStatus(id, status)}
-            onEdit={editTodo}
-            onRemove={handleRemove}
-            onTagClick={(tag) => setFilters((current) => ({ ...current, tag }))}
-          />
-        )}
+          <section
+            aria-label="TODO を追加"
+            className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
+          >
+            <TodoForm
+              submitLabel="追加"
+              collapsible
+              tagSuggestions={tags}
+              folders={folders}
+              defaultFolderId={isRealFolder ? selection : null}
+              onSubmit={addTodo}
+            />
+          </section>
 
-        {doneCount > 0 && (
-          <div className="flex justify-end">
-            <button type="button" className={secondaryButtonClass} onClick={handleRemoveCompleted}>
-              完了済みを削除 ({doneCount})
-            </button>
-          </div>
-        )}
-      </main>
+          <TodoToolbar filters={filters} onChange={setFilters} tags={tags} counts={counts} />
 
-      <footer className="mx-auto w-full max-w-3xl px-3 pb-6 text-xs text-slate-500 sm:px-4 dark:text-slate-400">
+          {isLoading ? (
+            <p className="p-8 text-center text-sm text-slate-500" role="status">
+              読み込み中…
+            </p>
+          ) : (
+            <TodoList
+              todos={visibleTodos}
+              folders={folders}
+              folderSelection={selection}
+              today={today}
+              tagSuggestions={tags}
+              emptyMessage={emptyMessage}
+              onStatusChange={(id, status) => void changeStatus(id, status)}
+              onEdit={editTodo}
+              onRemove={handleRemove}
+              onTagClick={(tag) => setFilters((current) => ({ ...current, tag }))}
+            />
+          )}
+
+          {doneCount > 0 && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className={secondaryButtonClass}
+                onClick={handleRemoveCompleted}
+              >
+                完了済みを削除 ({doneCount})
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
+
+      <footer className="mx-auto w-full max-w-5xl px-3 pb-6 text-xs text-slate-500 sm:px-4 dark:text-slate-400">
         <p>
           データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。
           ブラウザのデータを削除すると TODO
@@ -162,12 +310,24 @@ export default function Home() {
         </p>
       </footer>
 
+      {folderDialog && (
+        <FolderDialog
+          folders={folders}
+          folder={folderDialog.mode === 'edit' ? folderDialog.folder : undefined}
+          defaultParentId={folderDialog.mode === 'create' ? folderDialog.parentId : null}
+          onSubmit={(input) => void handleFolderSubmit(input)}
+          onCancel={cancelFolderDialog}
+        />
+      )}
+
       {pendingImport && (
         <ImportDialog
           fileName={pendingImport.fileName}
-          importCount={pendingImport.todos.length}
+          todoCount={pendingImport.todos.length}
+          folderCount={pendingImport.folders.length}
           skipped={pendingImport.skipped}
-          currentCount={todos.length}
+          currentTodoCount={todos.length}
+          currentFolderCount={folders.length}
           onConfirm={(mode) => void handleImportConfirm(mode)}
           onCancel={cancelImport}
         />

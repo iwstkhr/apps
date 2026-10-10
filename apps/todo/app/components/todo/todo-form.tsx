@@ -1,5 +1,7 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { FolderSelect } from '~/components/folder/folder-select';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
+import type { Folder } from '~/types/folder';
 import {
   PRIORITIES,
   PRIORITY_LABELS,
@@ -8,7 +10,14 @@ import {
   type TodoInput,
 } from '~/types/todo';
 
-const EMPTY_INPUT: TodoInput = { title: '', memo: '', priority: 'medium', dueDate: null, tags: [] };
+const EMPTY_INPUT: TodoInput = {
+  title: '',
+  memo: '',
+  priority: 'medium',
+  dueDate: null,
+  tags: [],
+  folderId: null,
+};
 
 interface TodoFormProps {
   initial?: TodoInput;
@@ -19,6 +28,9 @@ interface TodoFormProps {
   collapsible?: boolean;
   /** 既存のタグ (入力候補) */
   tagSuggestions?: string[];
+  folders?: Folder[];
+  /** 追加フォームで入れる先のフォルダ。一覧で選んでいるフォルダに合わせて変わる */
+  defaultFolderId?: string | null;
 }
 
 export function TodoForm({
@@ -28,6 +40,8 @@ export function TodoForm({
   onCancel,
   collapsible = false,
   tagSuggestions = [],
+  folders = [],
+  defaultFolderId = null,
 }: TodoFormProps) {
   const id = useId();
   const [title, setTitle] = useState(initial.title);
@@ -35,7 +49,14 @@ export function TodoForm({
   const [priority, setPriority] = useState<Priority>(initial.priority);
   const [dueDate, setDueDate] = useState(initial.dueDate ?? '');
   const [tagText, setTagText] = useState(initial.tags.join(', '));
+  const [folderId, setFolderId] = useState(initial.title ? initial.folderId : defaultFolderId);
   const [expanded, setExpanded] = useState(!collapsible);
+  const isEditing = Boolean(initial.title);
+
+  // 追加フォームは一覧で別のフォルダを選んだらそのフォルダに入れる
+  useEffect(() => {
+    if (!isEditing) setFolderId(defaultFolderId);
+  }, [isEditing, defaultFolderId]);
 
   const canSubmit = title.trim() !== '';
 
@@ -59,9 +80,10 @@ export function TodoForm({
           priority,
           dueDate: dueDate || null,
           tags: parseTagText(tagText),
+          folderId,
         };
         // 保存を待たずに空にして、続けて入力した文字が消えたり前の入力に混ざったりしないようにする
-        if (!initial.title) reset();
+        if (!isEditing) reset();
         await onSubmit(input);
       }}
       onKeyDown={(event) => {
@@ -146,6 +168,19 @@ export function TodoForm({
               ))}
             </select>
           </label>
+          <div className="flex items-center gap-1.5 text-sm sm:col-span-3">
+            <span className="shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true">
+              フォルダ
+            </span>
+            <FolderSelect
+              className={inputClass}
+              folders={folders}
+              value={folderId}
+              onChange={setFolderId}
+              noneLabel="未分類"
+              aria-label="フォルダ"
+            />
+          </div>
         </div>
       )}
 

@@ -12,7 +12,7 @@ export async function openApp(page: Page): Promise<void> {
 /** タイトルだけで TODO を追加する。 */
 export async function addTodo(page: Page, title: string): Promise<void> {
   await page.getByRole('textbox', { name: 'タイトル' }).fill(title);
-  await page.getByRole('button', { name: '追加' }).click();
+  await page.getByRole('button', { name: '追加', exact: true }).click();
   await expect(todoItems(page).filter({ hasText: title })).toHaveCount(1);
 }
 

@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { mergeTodos } from '~/lib/export-import';
-import { deleteTodos, getAllTodos, putTodos, replaceAllTodos } from '~/lib/todo-db';
+import { mergeData } from '~/lib/export-import';
+import { getSubtreeIds, wouldCreateCycle } from '~/lib/folder-tree';
+import {
+  deleteFolders,
+  deleteTodos,
+  getAll,
+  putAll,
+  putTodos,
+  replaceAll,
+  type StoredData,
+} from '~/lib/todo-db';
+import { createFolder, type Folder, type FolderInput, updateFolder } from '~/types/folder';
 import {
   createTodo,
   setTodoStatus,
@@ -17,6 +27,7 @@ export type ImportMode = 'replace' | 'merge';
 
 export interface UseTodos {
   todos: Todo[];
+  folders: Folder[];
   isLoading: boolean;
   error: string | null;
   addTodo: (input: TodoInput) => Promise<void>;
@@ -24,25 +35,32 @@ export interface UseTodos {
   changeStatus: (id: string, status: TodoStatus) => Promise<void>;
   removeTodo: (id: string) => Promise<void>;
   removeCompleted: () => Promise<void>;
-  importTodos: (incoming: Todo[], mode: ImportMode) => Promise<void>;
+  /** 作ったフォルダを返す */
+  addFolder: (input: FolderInput) => Promise<Folder>;
+  editFolder: (id: string, input: FolderInput) => Promise<void>;
+  /** フォルダと子孫を消し、中の TODO は未分類に移す */
+  removeFolder: (id: string) => Promise<void>;
+  importData: (incoming: StoredData, mode: ImportMode) => Promise<void>;
 }
 
+const EMPTY: StoredData = { todos: [], folders: [] };
+
 export function useTodos(): UseTodos {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [data, setData] = useState<StoredData>(EMPTY);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // 非同期の処理から常に最新の一覧を読むため
-  const todosRef = useRef<Todo[]>([]);
+  // 非同期の処理から常に最新のデータを読むため
+  const dataRef = useRef<StoredData>(EMPTY);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
-  const apply = useCallback((next: Todo[]) => {
-    todosRef.current = next;
-    setTodos(next);
+  const apply = useCallback((next: StoredData) => {
+    dataRef.current = next;
+    setData(next);
   }, []);
 
   const reload = useCallback(async () => {
     try {
-      apply(await getAllTodos());
+      apply(await getAll());
       setError(null);
     } catch {
       setError(
@@ -70,7 +88,7 @@ export function useTodos(): UseTodos {
 
   /** 画面を先に更新してから保存する。保存に失敗したら DB の内容に戻す。 */
   const commit = useCallback(
-    async (next: Todo[], persist: () => Promise<void>) => {
+    async (next: StoredData, persist: () => Promise<void>) => {
       apply(next);
       try {
         await persist();
@@ -84,26 +102,31 @@ export function useTodos(): UseTodos {
     [apply, reload],
   );
 
+  const setTodos = useCallback(
+    (todos: Todo[], persist: () => Promise<void>) => commit({ ...dataRef.current, todos }, persist),
+    [commit],
+  );
+
   const addTodo = useCallback(
     async (input: TodoInput) => {
       const todo = createTodo(input);
-      await commit([...todosRef.current, todo], () => putTodos([todo]));
+      await setTodos([...dataRef.current.todos, todo], () => putTodos([todo]));
     },
-    [commit],
+    [setTodos],
   );
 
   const replaceOne = useCallback(
     async (id: string, change: (todo: Todo) => Todo) => {
-      const current = todosRef.current.find((todo) => todo.id === id);
+      const current = dataRef.current.todos.find((todo) => todo.id === id);
       if (!current) return;
       const updated = change(current);
       if (updated === current) return;
-      await commit(
-        todosRef.current.map((todo) => (todo.id === id ? updated : todo)),
+      await setTodos(
+        dataRef.current.todos.map((todo) => (todo.id === id ? updated : todo)),
         () => putTodos([updated]),
       );
     },
-    [commit],
+    [setTodos],
   );
 
   const editTodo = useCallback(
@@ -118,37 +141,88 @@ export function useTodos(): UseTodos {
 
   const removeTodo = useCallback(
     async (id: string) => {
-      await commit(
-        todosRef.current.filter((todo) => todo.id !== id),
+      await setTodos(
+        dataRef.current.todos.filter((todo) => todo.id !== id),
         () => deleteTodos([id]),
+      );
+    },
+    [setTodos],
+  );
+
+  const removeCompleted = useCallback(async () => {
+    const { todos } = dataRef.current;
+    const ids = todos.filter((todo) => todo.status === 'done').map((todo) => todo.id);
+    if (ids.length === 0) return;
+    await setTodos(
+      todos.filter((todo) => todo.status !== 'done'),
+      () => deleteTodos(ids),
+    );
+  }, [setTodos]);
+
+  const addFolder = useCallback(
+    async (input: FolderInput) => {
+      const folder = createFolder(input);
+      await commit({ ...dataRef.current, folders: [...dataRef.current.folders, folder] }, () =>
+        putAll({ folders: [folder] }),
+      );
+      return folder;
+    },
+    [commit],
+  );
+
+  const editFolder = useCallback(
+    async (id: string, input: FolderInput) => {
+      const { folders } = dataRef.current;
+      const current = folders.find((folder) => folder.id === id);
+      // 自分や子孫の下には動かせない (画面でも選べないようにしている)
+      if (!current || wouldCreateCycle(folders, id, input.parentId)) return;
+      const updated = updateFolder(current, input);
+      await commit(
+        {
+          ...dataRef.current,
+          folders: folders.map((folder) => (folder.id === id ? updated : folder)),
+        },
+        () => putAll({ folders: [updated] }),
       );
     },
     [commit],
   );
 
-  const removeCompleted = useCallback(async () => {
-    const ids = todosRef.current.filter((todo) => todo.status === 'done').map((todo) => todo.id);
-    if (ids.length === 0) return;
-    await commit(
-      todosRef.current.filter((todo) => todo.status !== 'done'),
-      () => deleteTodos(ids),
-    );
-  }, [commit]);
+  const removeFolder = useCallback(
+    async (id: string) => {
+      const { todos, folders } = dataRef.current;
+      const ids = getSubtreeIds(folders, id);
+      const now = new Date().toISOString();
+      const moved: Todo[] = [];
+      const nextTodos = todos.map((todo) => {
+        if (todo.folderId === null || !ids.has(todo.folderId)) return todo;
+        const unfiled = { ...todo, folderId: null, updatedAt: now };
+        moved.push(unfiled);
+        return unfiled;
+      });
+      await commit(
+        { todos: nextTodos, folders: folders.filter((folder) => !ids.has(folder.id)) },
+        () => deleteFolders([...ids], moved),
+      );
+    },
+    [commit],
+  );
 
-  const importTodos = useCallback(
-    async (incoming: Todo[], mode: ImportMode) => {
+  const importData = useCallback(
+    async (incoming: StoredData, mode: ImportMode) => {
       if (mode === 'replace') {
-        await commit(incoming, () => replaceAllTodos(incoming));
+        await commit(incoming, () => replaceAll(incoming));
       } else {
-        const merged = mergeTodos(todosRef.current, incoming);
-        await commit(merged, () => putTodos(merged));
+        const merged = mergeData(dataRef.current, incoming);
+        await commit(merged, () => putAll(merged));
       }
     },
     [commit],
   );
 
   return {
-    todos,
+    todos: data.todos,
+    folders: data.folders,
     isLoading,
     error,
     addTodo,
@@ -156,6 +230,9 @@ export function useTodos(): UseTodos {
     changeStatus,
     removeTodo,
     removeCompleted,
-    importTodos,
+    addFolder,
+    editFolder,
+    removeFolder,
+    importData,
   };
 }

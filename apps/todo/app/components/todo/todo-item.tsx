@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { FaPen, FaTrash } from 'react-icons/fa';
+import { FaFolder, FaPen, FaTrash } from 'react-icons/fa';
 import { TodoForm } from '~/components/todo/todo-form';
 import { cn } from '~/lib/cn';
+import type { Folder } from '~/types/folder';
 import {
   getDueStatus,
   PRIORITY_LABELS,
@@ -35,6 +36,9 @@ interface TodoItemProps {
   todo: Todo;
   today: string;
   tagSuggestions: string[];
+  folders: Folder[];
+  /** 表示するフォルダの道のり。今見ているフォルダと同じなら null */
+  folderPath: string | null;
   onStatusChange: (id: string, status: TodoStatus) => void;
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
@@ -45,6 +49,8 @@ export function TodoItem({
   todo,
   today,
   tagSuggestions,
+  folders,
+  folderPath,
   onStatusChange,
   onEdit,
   onRemove,
@@ -61,6 +67,7 @@ export function TodoItem({
           initial={todo}
           submitLabel="保存"
           tagSuggestions={tagSuggestions}
+          folders={folders}
           onSubmit={async (input) => {
             await onEdit(todo.id, input);
             setEditing(false);
@@ -128,6 +135,13 @@ export function TodoItem({
               期限: {todo.dueDate.replaceAll('-', '/')}
               {dueStatus === 'overdue' && ' (期限切れ)'}
               {dueStatus === 'today' && ' (今日)'}
+            </span>
+          )}
+          {folderPath && (
+            <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+              <FaFolder aria-hidden="true" />
+              <span className="sr-only">フォルダ: </span>
+              {folderPath}
             </span>
           )}
           {todo.tags.map((tag) => (

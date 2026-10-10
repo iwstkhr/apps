@@ -26,7 +26,14 @@ describe('tags', () => {
 describe('createTodo / updateTodo / setTodoStatus', () => {
   it('creates an open todo with timestamps', () => {
     const todo = createTodo(
-      { title: '  牛乳を買う ', memo: 'm', priority: 'high', dueDate: '2026-10-11', tags: ['家'] },
+      {
+        title: '  牛乳を買う ',
+        memo: 'm',
+        priority: 'high',
+        dueDate: '2026-10-11',
+        tags: ['家'],
+        folderId: 'f1',
+      },
       NOW,
     );
     expect(todo).toMatchObject({
@@ -35,6 +42,7 @@ describe('createTodo / updateTodo / setTodoStatus', () => {
       priority: 'high',
       dueDate: '2026-10-11',
       tags: ['家'],
+      folderId: 'f1',
       createdAt: NOW.toISOString(),
       updatedAt: NOW.toISOString(),
       completedAt: null,
@@ -46,7 +54,7 @@ describe('createTodo / updateTodo / setTodoStatus', () => {
     const todo = createTodoFixture();
     const updated = updateTodo(
       todo,
-      { title: 'new', memo: 'x', priority: 'low', dueDate: null, tags: [] },
+      { title: 'new', memo: 'x', priority: 'low', dueDate: null, tags: [], folderId: null },
       NOW,
     );
     expect(updated).toMatchObject({ id: todo.id, createdAt: todo.createdAt, title: 'new' });
@@ -91,6 +99,7 @@ describe('toTodo', () => {
       dueDate: '10/11',
       tags: ['a', 2, ' a '],
       status: 'started',
+      folderId: 3,
       completedAt: 'x',
     });
     expect(todo).toMatchObject({
@@ -99,6 +108,7 @@ describe('toTodo', () => {
       dueDate: null,
       tags: ['a'],
       status: 'todo',
+      folderId: null,
       completedAt: null,
     });
   });

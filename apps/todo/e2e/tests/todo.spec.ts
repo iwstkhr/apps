@@ -12,7 +12,7 @@ test('keeps todos after reloading', async ({ page }) => {
   await page.getByRole('combobox', { name: 'タグ', exact: true }).fill('家, 買い物');
   await page.getByLabel('期限').fill('2000-01-01');
   await page.getByRole('combobox', { name: '優先度' }).selectOption('高');
-  await page.getByRole('button', { name: '追加' }).click();
+  await page.getByRole('button', { name: '追加', exact: true }).click();
 
   await page.reload();
   const item = todoItems(page);
@@ -73,10 +73,12 @@ test('exports and imports todos', async ({ page }) => {
 
   await page.getByLabel('インポートするファイル').setInputFiles(path);
   const dialog = page.getByRole('dialog', { name: 'インポート' });
-  await expect(dialog).toContainText('1 件の TODO を読み込みます');
+  await expect(dialog).toContainText('TODO 1 件とフォルダ 0 件を読み込みます');
   await dialog.getByRole('button', { name: '置き換え' }).click();
 
-  await expect(page.getByRole('status')).toHaveText('1 件の TODO をインポートしました。');
+  await expect(page.getByRole('status')).toHaveText(
+    'TODO 1 件とフォルダ 0 件をインポートしました。',
+  );
   await expect(todoItems(page)).toHaveText([/バックアップ対象/]);
   await page.reload();
   await expect(todoItems(page)).toHaveCount(1);

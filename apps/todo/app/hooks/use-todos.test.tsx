@@ -3,25 +3,21 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { useTodos } from '~/hooks/use-todos';
-import { closeDbForTesting, getAllTodos, putTodos } from '~/lib/todo-db';
-import { createTodoFixture } from '~/test/fixtures';
+import { getAll, putAll, putTodos } from '~/lib/todo-db';
+import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
+import { resetDb } from '~/test/indexed-db';
 import type { TodoInput } from '~/types/todo';
 
-const input = (title: string): TodoInput => ({
+const input = (title: string, folderId: string | null = null): TodoInput => ({
   title,
   memo: '',
   priority: 'medium',
   dueDate: null,
   tags: [],
+  folderId,
 });
 
-afterEach(async () => {
-  await closeDbForTesting();
-  await new Promise<void>((resolve) => {
-    const request = indexedDB.deleteDatabase('todo');
-    request.onsuccess = () => resolve();
-  });
-});
+afterEach(resetDb);
 
 async function renderLoaded() {
   const hook = renderHook(() => useTodos());
@@ -30,11 +26,13 @@ async function renderLoaded() {
 }
 
 describe('useTodos', () => {
-  it('loads todos saved earlier', async () => {
-    const saved = createTodoFixture();
-    await putTodos([saved]);
+  it('loads todos and folders saved earlier', async () => {
+    const folder = createFolderFixture();
+    const saved = createTodoFixture({ folderId: folder.id });
+    await putAll({ todos: [saved], folders: [folder] });
     const { result } = await renderLoaded();
     expect(result.current.todos).toEqual([saved]);
+    expect(result.current.folders).toEqual([folder]);
   });
 
   it('adds, edits, changes the status of and removes todos and persists them', async () => {
@@ -46,11 +44,11 @@ describe('useTodos', () => {
     await act(() => result.current.changeStatus(id, 'in_progress'));
 
     expect(result.current.todos[0]).toMatchObject({ title: 'b', status: 'in_progress' });
-    expect(await getAllTodos()).toEqual(result.current.todos);
+    expect((await getAll()).todos).toEqual(result.current.todos);
 
     await act(() => result.current.removeTodo(id));
     expect(result.current.todos).toEqual([]);
-    expect(await getAllTodos()).toEqual([]);
+    expect((await getAll()).todos).toEqual([]);
   });
 
   it('removes only completed todos', async () => {
@@ -58,20 +56,65 @@ describe('useTodos', () => {
     const { result } = await renderLoaded();
     await act(() => result.current.removeCompleted());
     expect(result.current.todos.map((t) => t.title)).toEqual(['open']);
-    expect(await getAllTodos()).toHaveLength(1);
+    expect((await getAll()).todos).toHaveLength(1);
+  });
+
+  it('adds, renames and moves folders', async () => {
+    const { result } = await renderLoaded();
+
+    const work = await act(() => result.current.addFolder({ name: '仕事', parentId: null }));
+    const project = await act(() => result.current.addFolder({ name: '案件', parentId: work.id }));
+    await act(() => result.current.editFolder(project.id, { name: '案件 A', parentId: null }));
+
+    expect(result.current.folders.find((f) => f.id === project.id)).toMatchObject({
+      name: '案件 A',
+      parentId: null,
+    });
+    // DB は id 順に返すので順番は比べない
+    const stored = (await getAll()).folders;
+    expect(stored).toHaveLength(2);
+    expect(stored).toEqual(expect.arrayContaining(result.current.folders));
+  });
+
+  it('refuses to move a folder under its own descendant', async () => {
+    const parent = createFolderFixture();
+    const child = createFolderFixture({ parentId: parent.id });
+    await putAll({ folders: [parent, child] });
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.editFolder(parent.id, { name: 'x', parentId: child.id }));
+    expect(result.current.folders.find((f) => f.id === parent.id)).toEqual(parent);
+  });
+
+  it('removes a folder with its subfolders and moves their todos to unfiled', async () => {
+    const parent = createFolderFixture();
+    const child = createFolderFixture({ parentId: parent.id });
+    const other = createFolderFixture();
+    const inChild = createTodoFixture({ folderId: child.id });
+    const inOther = createTodoFixture({ folderId: other.id });
+    await putAll({ folders: [parent, child, other], todos: [inChild, inOther] });
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.removeFolder(parent.id));
+
+    expect(result.current.folders).toEqual([other]);
+    expect(result.current.todos.find((t) => t.id === inChild.id)?.folderId).toBeNull();
+    expect(result.current.todos.find((t) => t.id === inOther.id)?.folderId).toBe(other.id);
+    expect(await getAll()).toEqual({ todos: result.current.todos, folders: [other] });
   });
 
   it('imports by merging or replacing', async () => {
     const existing = createTodoFixture({ title: 'existing' });
     await putTodos([existing]);
     const { result } = await renderLoaded();
-    const incoming = createTodoFixture({ title: 'incoming' });
+    const folder = createFolderFixture();
+    const incoming = { todos: [createTodoFixture({ folderId: folder.id })], folders: [folder] };
 
-    await act(() => result.current.importTodos([incoming], 'merge'));
-    expect(await getAllTodos()).toHaveLength(2);
+    await act(() => result.current.importData(incoming, 'merge'));
+    expect((await getAll()).todos).toHaveLength(2);
 
-    await act(() => result.current.importTodos([incoming], 'replace'));
-    expect(result.current.todos).toEqual([incoming]);
-    expect(await getAllTodos()).toEqual([incoming]);
+    await act(() => result.current.importData(incoming, 'replace'));
+    expect(result.current.todos).toEqual(incoming.todos);
+    expect(await getAll()).toEqual(incoming);
   });
 });

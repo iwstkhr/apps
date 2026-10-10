@@ -28,6 +28,8 @@ export interface Todo {
   /** 'YYYY-MM-DD' (ローカル日付) */
   dueDate: string | null;
   tags: string[];
+  /** 入っているフォルダ。null なら未分類 */
+  folderId: string | null;
   /** ISO 8601 */
   createdAt: string;
   updatedAt: string;
@@ -42,6 +44,7 @@ export interface TodoInput {
   priority: Priority;
   dueDate: string | null;
   tags: string[];
+  folderId: string | null;
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -87,6 +90,7 @@ export function createTodo(input: TodoInput, now: Date = new Date()): Todo {
     priority: input.priority,
     dueDate: input.dueDate,
     tags: normalizeTags(input.tags),
+    folderId: input.folderId,
     createdAt: timestamp,
     updatedAt: timestamp,
     completedAt: null,
@@ -101,6 +105,7 @@ export function updateTodo(todo: Todo, input: TodoInput, now: Date = new Date())
     priority: input.priority,
     dueDate: input.dueDate,
     tags: normalizeTags(input.tags),
+    folderId: input.folderId,
     updatedAt: now.toISOString(),
   };
 }
@@ -140,6 +145,8 @@ export function toTodo(value: unknown): Todo | null {
     tags: Array.isArray(v.tags)
       ? normalizeTags(v.tags.filter((tag): tag is string => typeof tag === 'string'))
       : [],
+    // フォルダが存在するかはここでは見ない (sanitizeTodoFolders が見る)
+    folderId: typeof v.folderId === 'string' && v.folderId !== '' ? v.folderId : null,
     createdAt: v.createdAt,
     updatedAt: v.updatedAt,
     completedAt: status === 'done' && isIsoDateTime(v.completedAt) ? v.completedAt : null,

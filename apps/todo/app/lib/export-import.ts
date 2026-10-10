@@ -1,3 +1,6 @@
+import { sanitizeFolders, sanitizeTodoFolders } from '~/lib/folder-tree';
+import type { StoredData } from '~/lib/todo-db';
+import { type Folder, toFolder } from '~/types/folder';
 import { type Todo, toLocalDateString, toTodo } from '~/types/todo';
 
 export const EXPORT_APP = 'todo';
@@ -7,14 +10,16 @@ export interface TodoExport {
   app: typeof EXPORT_APP;
   version: typeof EXPORT_VERSION;
   exportedAt: string;
+  folders: Folder[];
   todos: Todo[];
 }
 
-export function createExport(todos: readonly Todo[], now: Date = new Date()): TodoExport {
+export function createExport({ todos, folders }: StoredData, now: Date = new Date()): TodoExport {
   return {
     app: EXPORT_APP,
     version: EXPORT_VERSION,
     exportedAt: now.toISOString(),
+    folders: [...folders],
     todos: [...todos],
   };
 }
@@ -24,8 +29,8 @@ export function exportFileName(now: Date = new Date()): string {
 }
 
 /** JSON をファイルとして保存させる。 */
-export function downloadExport(todos: readonly Todo[], now: Date = new Date()): void {
-  const json = JSON.stringify(createExport(todos, now), null, 2);
+export function downloadExport(data: StoredData, now: Date = new Date()): void {
+  const json = JSON.stringify(createExport(data, now), null, 2);
   const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
@@ -41,13 +46,38 @@ export class ImportError extends Error {
   override name = 'ImportError';
 }
 
-export interface ParsedImport {
-  todos: Todo[];
-  /** 形式が正しくなく読み飛ばした件数 */
+export interface ParsedImport extends StoredData {
+  /** 形式が正しくない・重複していて読み飛ばした件数 (TODO とフォルダの合計) */
   skipped: number;
 }
 
-/** エクスポートしたファイルの中身 (文字列) を検証して TODO を取り出す。 */
+/** id が重複していたら更新日時が新しい方を残す。 */
+function dedupe<T extends { id: string; updatedAt: string }>(
+  items: readonly unknown[],
+  convert: (value: unknown) => T | null,
+): { items: T[]; skipped: number } {
+  const byId = new Map<string, T>();
+  let skipped = 0;
+  for (const value of items) {
+    const item = convert(value);
+    if (item === null) {
+      skipped++;
+      continue;
+    }
+    const existing = byId.get(item.id);
+    if (existing) skipped++;
+    if (!existing || existing.updatedAt < item.updatedAt) byId.set(item.id, item);
+  }
+  return { items: [...byId.values()], skipped };
+}
+
+/** 親の無いフォルダや存在しないフォルダを指す TODO を直す。 */
+export function sanitizeData({ todos, folders }: StoredData): StoredData {
+  const fixedFolders = sanitizeFolders(folders);
+  return { folders: fixedFolders, todos: sanitizeTodoFolders(todos, fixedFolders) };
+}
+
+/** エクスポートしたファイルの中身 (文字列) を検証して TODO とフォルダを取り出す。 */
 export function parseImport(text: string): ParsedImport {
   let data: unknown;
   try {
@@ -67,34 +97,32 @@ export function parseImport(text: string): ParsedImport {
     throw new ImportError(`対応していない形式のバージョンです (${String(record.version)})。`);
   }
 
-  const byId = new Map<string, Todo>();
-  let skipped = 0;
-  for (const item of record.todos) {
-    const todo = toTodo(item);
-    if (todo === null) {
-      skipped++;
-      continue;
-    }
-    // 同じ id が重複していたら更新日時が新しい方を残す
-    const existing = byId.get(todo.id);
-    if (existing && existing.updatedAt >= todo.updatedAt) {
-      skipped++;
-      continue;
-    }
-    if (existing) skipped++;
-    byId.set(todo.id, todo);
-  }
-  return { todos: [...byId.values()], skipped };
+  const todos = dedupe(record.todos, toTodo);
+  const folders = dedupe(Array.isArray(record.folders) ? record.folders : [], toFolder);
+  return {
+    ...sanitizeData({ todos: todos.items, folders: folders.items }),
+    skipped: todos.skipped + folders.skipped,
+  };
 }
 
-/** 今の TODO にインポートした TODO を合わせる。id が同じものは更新日時が新しい方を採る。 */
-export function mergeTodos(current: readonly Todo[], incoming: readonly Todo[]): Todo[] {
-  const byId = new Map(current.map((todo) => [todo.id, todo]));
-  for (const todo of incoming) {
-    const existing = byId.get(todo.id);
-    if (!existing || Date.parse(todo.updatedAt) > Date.parse(existing.updatedAt)) {
-      byId.set(todo.id, todo);
+function mergeById<T extends { id: string; updatedAt: string }>(
+  current: readonly T[],
+  incoming: readonly T[],
+): T[] {
+  const byId = new Map(current.map((item) => [item.id, item]));
+  for (const item of incoming) {
+    const existing = byId.get(item.id);
+    if (!existing || Date.parse(item.updatedAt) > Date.parse(existing.updatedAt)) {
+      byId.set(item.id, item);
     }
   }
   return [...byId.values()];
+}
+
+/** 今のデータにインポートしたデータを合わせる。id が同じものは更新日時が新しい方を採る。 */
+export function mergeData(current: StoredData, incoming: StoredData): StoredData {
+  return sanitizeData({
+    todos: mergeById(current.todos, incoming.todos),
+    folders: mergeById(current.folders, incoming.folders),
+  });
 }

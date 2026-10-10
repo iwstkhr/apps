@@ -4,9 +4,9 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createExport } from '~/lib/export-import';
-import { closeDbForTesting, getAllTodos, putTodos } from '~/lib/todo-db';
+import { closeDbForTesting, getAll, putAll, putTodos } from '~/lib/todo-db';
 import Home from '~/routes/home';
-import { createTodoFixture } from '~/test/fixtures';
+import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -66,7 +66,7 @@ describe('Home', () => {
     expect(screen.getByText('優先度: 高')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '#買い物' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'タイトル' })).toHaveValue('');
-    await waitFor(async () => expect(await getAllTodos()).toHaveLength(1));
+    await waitFor(async () => expect((await getAll()).todos).toHaveLength(1));
   });
 
   it('changes the status, edits and deletes a todo', async () => {
@@ -126,17 +126,23 @@ describe('Home', () => {
     await putTodos([createTodoFixture({ title: '既存' })]);
     const user = await renderHome();
     const file = new File(
-      [JSON.stringify(createExport([createTodoFixture({ title: '読み込んだ' })]))],
+      [
+        JSON.stringify(
+          createExport({ todos: [createTodoFixture({ title: '読み込んだ' })], folders: [] }),
+        ),
+      ],
       'backup.json',
       { type: 'application/json' },
     );
 
     await user.upload(screen.getByLabelText('インポートするファイル'), file);
     const dialog = await screen.findByRole('dialog', { name: 'インポート' });
-    expect(within(dialog).getByText(/1 件の TODO を読み込みます/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/TODO 1 件とフォルダ 0 件を読み込みます/)).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'マージ' }));
 
-    expect(await screen.findByText('1 件の TODO をインポートしました。')).toBeInTheDocument();
+    expect(
+      await screen.findByText('TODO 1 件とフォルダ 0 件をインポートしました。'),
+    ).toBeInTheDocument();
     expect(items()).toHaveLength(2);
   });
 
@@ -147,5 +153,161 @@ describe('Home', () => {
       new File(['not json'], 'x.json', { type: 'application/json' }),
     );
     expect(await screen.findByRole('alert')).toHaveTextContent('JSON として読み込めませんでした。');
+  });
+
+  describe('folders', () => {
+    const folderNav = () => screen.getByRole('navigation', { name: 'フォルダ' });
+
+    async function createFolder(
+      user: ReturnType<typeof userEvent.setup>,
+      name: string,
+      parent?: string,
+    ) {
+      await user.click(
+        within(folderNav()).getByRole('button', {
+          name: parent ? `フォルダ「${parent}」の中にフォルダを追加` : '新しいフォルダ',
+        }),
+      );
+      const dialog = screen.getByRole('dialog', { name: '新しいフォルダ' });
+      await user.type(within(dialog).getByRole('textbox', { name: 'フォルダ名' }), name);
+      await user.click(within(dialog).getByRole('button', { name: '作成' }));
+    }
+
+    it('creates nested folders and adds todos to the selected folder', async () => {
+      const user = await renderHome();
+      await createFolder(user, '仕事');
+      await createFolder(user, '案件', '仕事');
+
+      // 作ったフォルダが選ばれ、見出しに道のりが出る
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('仕事 / 案件');
+      expect(
+        within(folderNav()).getByRole('button', { name: /^案件/, current: true }),
+      ).toBeInTheDocument();
+
+      await user.type(screen.getByRole('textbox', { name: 'タイトル' }), '見積もり');
+      await user.click(screen.getByRole('button', { name: '追加' }));
+      expect(items()).toHaveLength(1);
+
+      const { todos, folders } = await getAll();
+      const project = folders.find((f) => f.name === '案件');
+      expect(project?.parentId).toBe(folders.find((f) => f.name === '仕事')?.id);
+      expect(todos[0].folderId).toBe(project?.id);
+
+      // 親フォルダには子フォルダの TODO も出て、フォルダ名が付く
+      await user.click(within(folderNav()).getByRole('button', { name: /^仕事/ }));
+      expect(items()[0]).toHaveTextContent('フォルダ: 仕事 / 案件');
+
+      await user.click(within(folderNav()).getByRole('button', { name: /^未分類/ }));
+      expect(screen.getByText('ここに TODO はありません。')).toBeInTheDocument();
+    });
+
+    it('collapses a folder and shows open todo counts', async () => {
+      const parent = createFolderFixture({ name: '仕事' });
+      const child = createFolderFixture({ name: '案件', parentId: parent.id });
+      await putAll({
+        folders: [parent, child],
+        todos: [
+          createTodoFixture({ folderId: child.id }),
+          createTodoFixture({ folderId: child.id, status: 'done' }),
+        ],
+      });
+      const user = await renderHome();
+
+      expect(within(folderNav()).getByRole('button', { name: '仕事 1' })).toBeInTheDocument();
+      await user.click(
+        within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を閉じる' }),
+      );
+      expect(within(folderNav()).queryByRole('button', { name: /^案件/ })).not.toBeInTheDocument();
+      await user.click(within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を開く' }));
+      expect(within(folderNav()).getByRole('button', { name: /^案件/ })).toBeInTheDocument();
+    });
+
+    it('renames and moves a folder but not under itself', async () => {
+      const parent = createFolderFixture({ name: '仕事' });
+      const child = createFolderFixture({ name: '案件', parentId: parent.id });
+      const other = createFolderFixture({ name: '家' });
+      await putAll({ folders: [parent, child, other] });
+      const user = await renderHome();
+
+      await user.click(within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を編集' }));
+      const dialog = screen.getByRole('dialog', { name: 'フォルダを編集' });
+      const parentSelect = within(dialog).getByRole('combobox', { name: '親フォルダ' });
+      const options = within(parentSelect)
+        .getAllByRole('option')
+        .map((option) => option.textContent?.trim());
+      expect(options).toEqual(['なし (最上位)', '家']);
+
+      const name = within(dialog).getByRole('textbox', { name: 'フォルダ名' });
+      await user.clear(name);
+      await user.type(name, 'しごと');
+      await user.selectOptions(parentSelect, '家');
+      await user.click(within(dialog).getByRole('button', { name: '保存' }));
+
+      const saved = (await getAll()).folders.find((f) => f.id === parent.id);
+      expect(saved).toMatchObject({ name: 'しごと', parentId: other.id });
+    });
+
+    it('deletes a folder with its subfolders and moves their todos to unfiled', async () => {
+      const parent = createFolderFixture({ name: '仕事' });
+      const child = createFolderFixture({ name: '案件', parentId: parent.id });
+      await putAll({
+        folders: [parent, child],
+        todos: [createTodoFixture({ title: '見積もり', folderId: child.id })],
+      });
+      const user = await renderHome();
+      await user.click(within(folderNav()).getByRole('button', { name: /^仕事/ }));
+
+      await user.click(within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を削除' }));
+      expect(window.confirm).toHaveBeenCalledWith(
+        'フォルダ「仕事」を削除しますか？\n中のフォルダ 1 件も削除されます。\n中の TODO 1 件は未分類に移ります。',
+      );
+
+      // 選んでいたフォルダが消えたらすべてに戻る
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('すべて');
+      expect(within(folderNav()).getByText('フォルダはまだありません。')).toBeInTheDocument();
+      await user.click(within(folderNav()).getByRole('button', { name: /^未分類/ }));
+      expect(items()[0]).toHaveTextContent('見積もり');
+      await waitFor(async () => expect((await getAll()).folders).toEqual([]));
+    });
+
+    it('moves a todo to another folder from the edit form', async () => {
+      const folder = createFolderFixture({ name: '家' });
+      await putAll({ folders: [folder], todos: [createTodoFixture({ title: '洗濯' })] });
+      const user = await renderHome();
+
+      await user.click(screen.getByRole('button', { name: '「洗濯」を編集' }));
+      await user.selectOptions(
+        within(items()[0]).getByRole('combobox', { name: 'フォルダ' }),
+        '家',
+      );
+      await user.click(screen.getByRole('button', { name: '保存' }));
+
+      expect(items()[0]).toHaveTextContent('フォルダ: 家');
+      await waitFor(async () => expect((await getAll()).todos[0].folderId).toBe(folder.id));
+    });
+
+    it('imports folders with todos', async () => {
+      const folder = createFolderFixture({ name: '旅行' });
+      const user = await renderHome();
+      const file = new File(
+        [
+          JSON.stringify(
+            createExport({
+              folders: [folder],
+              todos: [createTodoFixture({ title: '切符', folderId: folder.id })],
+            }),
+          ),
+        ],
+        'backup.json',
+        { type: 'application/json' },
+      );
+
+      await user.upload(screen.getByLabelText('インポートするファイル'), file);
+      const dialog = await screen.findByRole('dialog', { name: 'インポート' });
+      await user.click(within(dialog).getByRole('button', { name: '置き換え' }));
+
+      await user.click(within(folderNav()).getByRole('button', { name: /^旅行/ }));
+      expect(items()[0]).toHaveTextContent('切符');
+    });
   });
 });
