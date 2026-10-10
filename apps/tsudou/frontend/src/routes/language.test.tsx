@@ -42,20 +42,27 @@ function renderPage(page: 'home' | 'guide' = 'home') {
 }
 
 describe('language switching', () => {
-  it('shows Japanese on a first visit with a Japanese browser preference', () => {
+  it('shows Japanese on a first visit with a Japanese browser preference', async () => {
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['ja-JP', 'en-US']);
     localStorage.clear();
     renderPage();
     expect(screen.getByLabelText(/^イベント名/)).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: '言語' })).toHaveValue('ja');
+    await userEvent.setup().click(screen.getByRole('button', { name: 'メニュー' }));
+    expect(screen.getByRole('button', { name: '日本語' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'English' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
     expect(localStorage.getItem(LANGUAGE_KEY)).toBeNull();
   });
 
-  it('shows English on a first visit without a saved language', () => {
+  it('shows English on a first visit without a saved language', async () => {
     localStorage.clear();
     renderPage();
     expect(screen.getByRole('heading', { name: 'Create an event' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menu' }));
+    expect(screen.getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '日本語' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('switches the whole screen without losing an event draft or existing validation errors', async () => {
@@ -68,7 +75,8 @@ describe('language switching', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('参加費は0以上の整数で入力してください');
     const candidate = screen.getByLabelText('候補 1 の日時') as HTMLInputElement;
     const date = candidate.value;
-    await user.selectOptions(screen.getByRole('combobox', { name: '言語' }), 'en');
+    await user.click(screen.getByRole('button', { name: 'メニュー' }));
+    await user.click(screen.getByRole('button', { name: 'English' }));
     expect(screen.getByRole('heading', { name: 'Create an event' })).toBeInTheDocument();
     expect(screen.getByLabelText(/^Event title/)).toHaveValue('日本語のイベント');
     expect(screen.getByLabelText('Memo (optional)')).toHaveValue('Keep this draft');
@@ -82,7 +90,7 @@ describe('language switching', () => {
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(localStorage.getItem(LANGUAGE_KEY)).toBe('en');
     expect(document.documentElement.lang).toBe('en');
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Language' }), 'ja');
+    await user.click(screen.getByRole('button', { name: '日本語' }));
     expect(screen.getByLabelText(/^イベント名/)).toHaveValue('日本語のイベント');
     expect(screen.getByRole('alert')).toHaveTextContent('参加費は0以上の整数で入力してください');
   });

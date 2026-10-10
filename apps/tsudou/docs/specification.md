@@ -64,7 +64,7 @@ Displays the event creation form.
 
 ### User guide (`/guide`)
 
-Explains host and participant workflows with screenshots captured using sample data. Links appear in the header as "使い方" (user guide) and above the home page form.
+Explains host and participant workflows with screenshots captured using sample data. Links appear in the header menu as "使い方" (user guide) and above the home page form.
 
 - The table of contents (host / participant / FAQ) uses page anchors (`#host` / `#guest` / `#faq`). Opening a URL with an anchor scrolls to that heading after rendering.
 - Tapping or clicking a screenshot opens the full-size image in a new tab.
@@ -312,7 +312,7 @@ Storage uses ISO 8601 (UTC); input uses `<input type="datetime-local">`.
 
 ## Display language
 
-The header offers **日本語** and **English** on every page. Without a saved choice, the first supported language in `navigator.languages` is used (`ja-JP` maps to Japanese and `en-US` to English). An empty list falls back to `navigator.language`; if no language matches, English is used. Changes apply immediately to navigation, forms, status labels, notices, confirmation dialogs, validation errors, date weekdays, and guide text and alternative text. Document language, title, and description follow the selection.
+The header menu offers **日本語** and **English** as always-visible language buttons when expanded, with a checkmark and pressed state for the selected language, on every page. Without a saved choice, the first supported language in `navigator.languages` is used (`ja-JP` maps to Japanese and `en-US` to English). An empty list falls back to `navigator.language`; if no language matches, English is used. Changes apply immediately to navigation, forms, status labels, notices, confirmation dialogs, validation errors, date weekdays, and guide text and alternative text. Document language, title, and description follow the selection.
 
 The selection is saved as `tsudou:language` (`ja` / `en`) and restored on subsequent visits. Saved choices take priority over browser preferences. Unsupported saved values fall back to browser language detection. Storage failures keep switching functional for the current session. Changes in another tab synchronize through the browser storage event.
 
@@ -338,7 +338,7 @@ Legacy `tsudou:hosted` / `tsudou:answered` entries are deleted at startup.
 - `<meta name="referrer" content="no-referrer">` suppresses Referer headers on external links. Cloudflare also returns `Referrer-Policy: no-referrer`, HSTS, and other security headers.
 - Only the home page (`/`) is indexed by search engines. Since the SPA returns the same `index.html` for every path, indexing is controlled through `_headers` with `X-Robots-Tag: noindex, nofollow`, rather than an HTML robots meta tag. It applies to every path except the home page, so new routes default to exclusion. No `robots.txt` blocks crawling, because that would prevent crawlers from reading `noindex`.
 - Preserve line breaks in memos and messages, but never interpret them as HTML.
-- Support mobile widths and light/dark themes. The header opens a theme modal with labeled Light / Dark / Automatic controls; Automatic follows OS settings by default. The same modal previews six Slack-inspired presets: Indigo (default), Aubergine, Ocean, Mint, Sunset, and Graphite. Selection immediately recolors the entire app in either light or dark mode and survives reloads; invalid saved values fall back to Indigo.
+- Support mobile widths and light/dark themes. The header menu opens a theme modal with labeled Light / Dark / Automatic controls; Automatic follows OS settings by default. The same modal previews six Slack-inspired presets: Indigo (default), Aubergine, Ocean, Mint, Sunset, and Graphite. Selection immediately recolors the entire app in either light or dark mode and survives reloads; invalid saved values fall back to Indigo.
 - The unauthenticated API limits abuse to 100 requests per IP per 60 seconds. CORS is not enabled for other origins, preventing browser calls from pages on other sites.
 
 ## Out of scope

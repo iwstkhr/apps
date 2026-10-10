@@ -1,5 +1,6 @@
 // Japanese source text maps to English UI text. User-provided content is never translated.
 export const english: Record<string, string> = {
+  メニュー: 'Menu',
   配色: 'Colors',
   配色テーマ: 'Color theme',
   テーマを選択: 'Choose theme',
@@ -328,8 +329,8 @@ export const english: Record<string, string> = {
   '通信に失敗しました。時間をおいて再度お試しください':
     'Connection failed. Please try again later.',
   予期しないエラーが発生しました: 'An unexpected error occurred.',
-  'ヘッダーで「日本語」または「English」を選ぶと、表示言語を切り替えられます。選択はこのブラウザに保存されます。入力したイベント名やメッセージは翻訳されません。':
-    'Choose 日本語 or English in the header to change the display language. Your choice is saved in this browser. Event titles and messages you enter are not translated.',
+  'ヘッダーのメニューで「日本語」または「English」を選ぶと、表示言語を切り替えられます。選択はこのブラウザに保存されます。入力したイベント名やメッセージは翻訳されません。':
+    'Choose 日本語 or English in the header menu to change the display language. Your choice is saved in this browser. Event titles and messages you enter are not translated.',
   '集合: 渋谷駅ハチ公前\n会費は当日現金でお願いします':
     'Meet at the station entrance\nPlease pay in cash on the day',
 };
