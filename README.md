@@ -6,6 +6,7 @@ A monorepo for personal app projects. Each app lives under `apps/`, and the enti
 | :-- | :-- |
 | [`apps/shelter-map/`](apps/shelter-map/) | Designated emergency evacuation site map (React Router, Cloudflare Workers) |
 | [`apps/tsudou/`](apps/tsudou/) | Tsudou scheduling app (React, Express, Cloudflare Workers + D1) |
+| [`apps/todo/`](apps/todo/) | Local-only TODO manager with JSON export and import (React Router, IndexedDB, Cloudflare Workers) |
 
 ## Setup
 
@@ -31,7 +32,7 @@ Build and deployment procedures differ between apps, so run those commands from 
 
 ## Shared configuration
 
-These files live at the repository root and are shared by both apps.
+These files live at the repository root and are shared by all apps.
 
 | File | Contents |
 | :-- | :-- |

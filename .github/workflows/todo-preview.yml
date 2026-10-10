@@ -1,0 +1,121 @@
+name: "todo - Preview"
+
+# PR ごとに Cloudflare Workers の Preview (wrangler preview) を作り、URL を PR にコメントする。
+# Preview は PR を閉じたときに消す。設定は apps/todo/wrangler.jsonc の preview_urls と previews。
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - 'apps/todo/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'mise.toml'
+      - '.github/workflows/todo-preview.yml'
+
+permissions:
+  contents: read
+
+# 同じ PR の古い Preview 作成は取り消すが、閉じたときの削除は取り消さない
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: ${{ github.event.action != 'closed' }}
+
+defaults:
+  run:
+    working-directory: apps/todo
+
+env:
+  PREVIEW_NAME: pr-${{ github.event.pull_request.number }}
+
+jobs:
+  preview:
+    # フォークからの PR ではシークレットが読めないので飛ばす
+    if: ${{ github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    # シークレットは依存パッケージのスクリプトから読まれないよう、Cloudflare を操作するステップにだけ渡す
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup mise
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5  # v5
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      # ダッシュボードの Preview base config は使わず、wrangler.jsonc だけで設定する
+      - name: Create or update Preview
+        id: preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          output="$(pnpm exec wrangler preview --name "$PREVIEW_NAME" --ignore-base-config --json)"
+          printf '%s\n' "$output"
+          # wrangler は --json でもアセットのアップロード状況を JSON より前に標準出力へ書く
+          preview_url="$(printf '%s\n' "$output" | sed -n '/^{/,$p' | jq -ser '.[0].preview.urls[0]')"
+          echo "url=$preview_url" >> "$GITHUB_OUTPUT"
+
+      # コメントは 1 つだけにして、push のたびに同じコメントを書き換える
+      - name: Comment Preview URL
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PREVIEW_URL: ${{ steps.preview.outputs.url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          marker='<!-- todo-preview -->'
+          body="$(printf '%s\n### todo Preview\n\n%s\n\nCommit: %s\n' "$marker" "$PREVIEW_URL" "$HEAD_SHA")"
+          comment_id="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" | head -n 1)"
+          if [ -n "$comment_id" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment_id" -f body="$body" > /dev/null
+          else
+            gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$body"
+          fi
+
+  cleanup:
+    if: ${{ github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup mise
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5  # v5
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Delete Preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler preview delete --name "$PREVIEW_NAME" --skip-confirmation
+
+  # 失敗したときだけ Slack に流す。フォークからの PR では上のジョブごと飛ぶので通知もしない
+  notify:
+    name: Notify
+    needs: [preview, cleanup]
+    if: ${{ failure() }}
+    uses: iwstkhr/shared-config/.github/workflows/slack-notify.yml@main
+    with:
+      status: failure
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}

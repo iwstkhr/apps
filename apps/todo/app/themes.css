@@ -1,0 +1,167 @@
+/* 本文の中立色は保ち、サイドバーとアクセントでテーマを表す。 */
+/* 既定。ヘッダーとサイドバーは白いまま、アクセントの青をインディゴにする。
+   保存したテーマを読み出す前 (data-theme が無い間) も同じ色にして、一瞬青く見えないようにする */
+:root:is([data-theme="indigo"], :not([data-theme])) {
+  --color-blue-50: #eef2ff;
+  --color-blue-100: #e0e7ff;
+  --color-blue-200: #c7d2fe;
+  --color-blue-300: #a5b4fc;
+  --color-blue-400: #818cf8;
+  --color-blue-500: #6366f1;
+  --color-blue-600: #4f46e5;
+  --color-blue-700: #4338ca;
+  --color-blue-800: #3730a3;
+  --color-blue-900: #312e81;
+  --color-blue-950: #1e1b4b;
+}
+
+:root[data-theme="aubergine"] {
+  --sidebar-background: #3f0e40;
+  --sidebar-selection: #6a2c6b;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+:root[data-theme="ocean"] {
+  --sidebar-background: #0b3954;
+  --sidebar-selection: #1a6896;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+:root[data-theme="mint"] {
+  --sidebar-background: #123f3a;
+  --sidebar-selection: #1d7564;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+:root[data-theme="sunset"] {
+  --sidebar-background: #4a1c2c;
+  --sidebar-selection: #b0422b;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+:root[data-theme="graphite"] {
+  --sidebar-background: #1f2328;
+  --sidebar-selection: #4b5563;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+/* Slack のように、濃いナビゲーション領域には明るい文字を合わせる。 */
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar {
+  background: var(--sidebar-background);
+  color: #f8fafc;
+  border-color: #ffffff30;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar :is(nav, nav > div) {
+  border-color: #ffffff30;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar > div:first-child {
+  border-color: #ffffff30;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar :is(button, nav span, nav p) {
+  color: #f8fafc;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar svg:not([style]) {
+  color: #e2e8f0;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar button:hover,
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar li.group:not(.ring-2):hover {
+  background: #ffffff18;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar [aria-pressed="true"],
+:root[data-theme]:not([data-theme="indigo"])
+  .theme-sidebar
+  li:has(> button[aria-current="true"]):not(.ring-2) {
+  background: var(--sidebar-selection);
+  color: #fff;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+/* ヘッダーとナビゲーションは同じ色面、操作ボタンはその明るい階調に揃える。 */
+:root[data-theme]:not([data-theme="indigo"]) .theme-header {
+  background: var(--sidebar-background);
+  color: #f8fafc;
+  border-color: #ffffff30;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .header-menu-button {
+  background: #ffffff0a;
+  color: #f8fafc;
+  border-color: #ffffff40;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .header-menu-button:hover {
+  background: #ffffff18;
+}
+
+/* 左の ☰ (フォルダとステータスを開く) も濃いヘッダーの上で読めるようにする */
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .header-nav-button {
+  color: #f8fafc;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .header-nav-button:hover {
+  background: #ffffff18;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .app-logo {
+  color: #f8fafc;
+}

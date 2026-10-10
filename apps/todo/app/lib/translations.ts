@@ -1,0 +1,197 @@
+// 日本語の文言 → 英語。t() に渡す文言はすべてここに載せる (i18n.test.ts が漏れを見つける)。
+export const english: Record<string, string> = {
+  // アプリ全体
+  'ブラウザだけで使える TODO 管理アプリ。データは端末の中にだけ保存されます。':
+    'A TODO app that runs entirely in your browser. Your data stays on this device.',
+  言語: 'Language',
+  エラーが発生しました: 'An error occurred',
+  '予期しないエラーが発生しました。': 'An unexpected error occurred.',
+  エラー: 'Error',
+  'お探しのページは見つかりませんでした。': 'The page you are looking for was not found.',
+  '読み込み中…': 'Loading…',
+  閉じる: 'Close',
+  キャンセル: 'Cancel',
+  保存: 'Save',
+  作成: 'Create',
+  削除: 'Delete',
+  追加: 'Add',
+  すべて: 'All',
+  未分類: 'Unfiled',
+  画像: 'Image',
+
+  // ヘッダー・メニュー
+  メニュー: 'Menu',
+  フォルダとステータス: 'Folders and statuses',
+  フォルダとステータスを開く: 'Open folders and statuses',
+  フォルダとステータスを閉じる: 'Close folders and statuses',
+  フォルダとステータスの背景を閉じる: 'Close the folders and statuses backdrop',
+  エクスポート: 'Export',
+  インポート: 'Import',
+  'すべての TODO を JSON ファイルに保存します': 'Save all todos to a JSON file',
+  'エクスポートした JSON ファイルを読み込みます': 'Load an exported JSON file',
+  インポートするファイル: 'File to import',
+
+  // ヘッダーのメニュー
+  'テーマ…': 'Theme…',
+
+  // テーマ
+  テーマ: 'Theme',
+  テーマを選ぶ: 'Choose theme',
+  表示モード: 'Appearance',
+  自動: 'Automatic',
+  ライト: 'Light',
+  ダーク: 'Dark',
+  インディゴ: 'Indigo',
+  オーベルジーヌ: 'Aubergine',
+  オーシャン: 'Ocean',
+  ミント: 'Mint',
+  サンセット: 'Sunset',
+  グラファイト: 'Graphite',
+
+  // ステータス・優先度
+  ステータス: 'Status',
+  未着手: 'Not started',
+  進行中: 'In progress',
+  保留: 'On hold',
+  完了: 'Done',
+  高: 'High',
+  中: 'Medium',
+  低: 'Low',
+
+  // フォルダ欄
+  フォルダ: 'Folders',
+  'フォルダ|項目': 'Folder',
+  'フォルダ: {0}': 'Folder: {0}',
+  新しいフォルダ: 'New folder',
+  'フォルダはまだありません。': 'No folders yet.',
+  'フォルダ「{0}」を開く': 'Expand folder "{0}"',
+  'フォルダ「{0}」を閉じる': 'Collapse folder "{0}"',
+  'フォルダ「{0}」の中にフォルダを追加': 'Add a folder inside "{0}"',
+  この中にフォルダを追加: 'Add a folder inside',
+  'フォルダ「{0}」を編集': 'Edit folder "{0}"',
+  '名前・色・場所を変更': 'Change name, color, or location',
+  'フォルダ「{0}」を削除': 'Delete folder "{0}"',
+  フォルダ欄の幅: 'Folder list width',
+  'ドラッグで幅を変更 (ダブルクリックで元に戻す)': 'Drag to resize (double-click to reset)',
+
+  // フォルダのダイアログ
+  フォルダを編集: 'Edit folder',
+  名前: 'Name',
+  フォルダ名: 'Folder name',
+  色: 'Color',
+  親フォルダ: 'Parent folder',
+  'なし (最上位)': 'None (top level)',
+  黄色: 'Yellow',
+  オレンジ: 'Orange',
+  赤: 'Red',
+  ピンク: 'Pink',
+  紫: 'Purple',
+  青: 'Blue',
+  緑: 'Green',
+  グレー: 'Gray',
+
+  // 一覧と追加フォーム
+  'TODO を追加': 'Add a todo',
+  'TODO 一覧': 'Todo list',
+  やること: 'What to do',
+  タイトル: 'Title',
+  詳細: 'Details',
+  メモ: 'Memo',
+  'タグ (カンマ区切り)': 'Tags (comma-separated)',
+  タグ: 'Tags',
+  期限: 'Due',
+  優先度: 'Priority',
+  'ヘッダーをドラッグするか、上下ボタンで順序を変更できます。':
+    'Drag a card by its header or use the up and down buttons to reorder.',
+  並び順: 'Sort order',
+  期限順: 'Due date',
+  優先度順: 'Priority',
+  ステータス順: 'Status',
+  新しい順: 'Newest',
+  カスタム: 'Custom',
+  タグで絞り込み: 'Filter by tag',
+  すべてのタグ: 'All tags',
+  'キーワードで検索 (タイトル・メモ・タグ)': 'Search (title, memo, tags)',
+  キーワードで検索: 'Search',
+  '条件に合う TODO はありません。': 'No todos match the filters.',
+  'TODO はまだありません。上のフォームから追加してください。':
+    'No todos yet. Add one with the form above.',
+  'ここに TODO はありません。': 'No todos here.',
+  通知を閉じる: 'Dismiss notification',
+
+  // タスクのカード
+  '「{0}」を未着手に戻す': 'Mark "{0}" as not started',
+  '「{0}」を完了にする': 'Mark "{0}" as done',
+  '「{0}」のヘッダー': 'Header of "{0}"',
+  '「{0}」のステータス': 'Status of "{0}"',
+  '「{0}」の優先度': 'Priority of "{0}"',
+  '優先度: {0}': 'Priority: {0}',
+  '期限: {0}': 'Due: {0}',
+  ' (期限切れ)': ' (overdue)',
+  ' (今日)': ' (today)',
+  'フォルダ: ': 'Folder: ',
+  'タグ「{0}」で絞り込む': 'Filter by tag "{0}"',
+  '「{0}」からタグ「{1}」を削除': 'Remove tag "{1}" from "{0}"',
+  'タグ「{0}」を削除': 'Remove tag "{0}"',
+  '「{0}」を上へ移動': 'Move "{0}" up',
+  上へ移動: 'Move up',
+  '「{0}」を下へ移動': 'Move "{0}" down',
+  下へ移動: 'Move down',
+  '「{0}」を編集': 'Edit "{0}"',
+
+  // 確認・通知
+  'フォルダ「{0}」を削除しますか？': 'Delete folder "{0}"?',
+  '中のフォルダ {0} 件も削除されます。': 'Its {0} subfolders will also be deleted.',
+  '中の TODO {0} 件は未分類に移ります。': 'Its {0} todos will be moved to Unfiled.',
+  '「{0}」を「{1}」に移動しました。': 'Moved "{0}" to "{1}".',
+  'ファイルを読み込めませんでした。': 'Could not read the file.',
+  'TODO {0} 件とフォルダ {1} 件をインポートしました。': 'Imported {0} todos and {1} folders.',
+  'データを読み込めませんでした。ブラウザの設定で保存が許可されているか確認してください。':
+    'Could not load your data. Check that your browser allows this site to store data.',
+  '保存できませんでした。もう一度お試しください。': 'Could not save. Please try again.',
+  'データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。':
+    'Your data is stored only in this browser (IndexedDB) and is never sent to a server.',
+  'ブラウザのデータを削除すると TODO も消えるため、定期的にエクスポートしてバックアップしてください。':
+    'Clearing browser data also deletes your todos, so export a backup regularly.',
+
+  // ゴミ箱
+  ゴミ箱: 'Trash',
+  'ゴミ箱の TODO': 'Todos in the trash',
+  ゴミ箱に移動: 'Move to trash',
+  '「{0}」をゴミ箱に移動': 'Move "{0}" to trash',
+  '「{0}」をゴミ箱に移動しました。': 'Moved "{0}" to the trash.',
+  '完了済みの {0} 件をゴミ箱に移動しました。': 'Moved {0} completed todos to the trash.',
+  '完了済みをゴミ箱に移動 ({0})': 'Move completed to trash ({0})',
+  元に戻す: 'Undo',
+  '「{0}」を元に戻す': 'Restore "{0}"',
+  '「{0}」を元に戻しました。': 'Restored "{0}".',
+  '{0} 件を元に戻しました。': 'Restored {0} todos.',
+  完全に削除: 'Delete forever',
+  '「{0}」を完全に削除': 'Delete "{0}" forever',
+  '「{0}」を完全に削除しますか？この操作は元に戻せません。':
+    'Delete "{0}" forever? This cannot be undone.',
+  ゴミ箱を空にする: 'Empty trash',
+  'ゴミ箱の {0} 件を完全に削除しますか？この操作は元に戻せません。':
+    'Delete all {0} todos in the trash forever? This cannot be undone.',
+  'ゴミ箱は空です。': 'The trash is empty.',
+  'ゴミ箱のタスクは {0} 日たつと自動で完全に削除されます。':
+    'Todos in the trash are deleted forever after {0} days.',
+  'あと {0} 日で自動で削除': 'Deleted in {0} days',
+  明日までに自動で削除: 'Deleted within a day',
+  '元の場所: ': 'Original location: ',
+
+  // インポート
+  'JSON として読み込めませんでした。': 'The file is not valid JSON.',
+  'このアプリでエクスポートしたファイルではありません。':
+    'This file was not exported from this app.',
+  '対応していない形式のバージョンです ({0})。': 'Unsupported format version ({0}).',
+  '今の TODO {0} 件とフォルダ {1} 件': 'the current {0} todos and {1} folders',
+  'TODO {0} 件とフォルダ {1} 件を読み込みます。': 'This will import {0} todos and {1} folders.',
+  ' (形式が正しくない・重複している {0} 件は読み飛ばします)':
+    ' ({0} invalid or duplicate items will be skipped.)',
+  マージ: 'Merge',
+  置き換え: 'Replace',
+  '{0}に追加します。同じものは更新日時が新しい方を残します。':
+    'Adds to {0}. When an item exists in both, the more recently updated one is kept.',
+  '{0}をすべて削除してから読み込みます。': 'Deletes {0}, then imports.',
+};

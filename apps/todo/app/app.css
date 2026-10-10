@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@import "./themes.css";
+
+@custom-variant dark {
+  &:where([data-mode="dark"], [data-mode="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-mode]), :root:not([data-mode]) *) {
+      @slot;
+    }
+  }
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100svh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-mode="light"] {
+  color-scheme: light;
+}
+
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+.todo-memo > * + * {
+  margin-top: 0.5rem;
+}
+
+.todo-memo p {
+  white-space: pre-wrap;
+}
+
+.todo-memo :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 700;
+}
+
+.todo-memo h1 {
+  font-size: 1.25rem;
+}
+
+.todo-memo h2 {
+  font-size: 1.125rem;
+}
+
+.todo-memo :is(ul, ol) {
+  padding-left: 1.5rem;
+}
+
+.todo-memo ul {
+  list-style: disc;
+}
+
+.todo-memo ol {
+  list-style: decimal;
+}
+
+.todo-memo .contains-task-list {
+  list-style: none;
+}
+
+.todo-memo input[type="checkbox"] {
+  margin-right: 0.375rem;
+}
+
+.todo-memo a {
+  color: light-dark(var(--color-blue-600), var(--color-blue-300));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.todo-memo blockquote {
+  border-left: 3px solid light-dark(var(--color-slate-300), var(--color-slate-600));
+  padding-left: 0.75rem;
+}
+
+.todo-memo code {
+  border-radius: 0.25rem;
+  background: light-dark(var(--color-slate-100), var(--color-slate-800));
+  padding: 0.125rem 0.25rem;
+  font-size: 0.875em;
+}
+
+.todo-memo pre {
+  overflow-x: auto;
+  border-radius: 0.375rem;
+  background: light-dark(var(--color-slate-100), var(--color-slate-800));
+  padding: 0.75rem;
+}
+
+.todo-memo pre code {
+  padding: 0;
+  font-size: inherit;
+}
+
+.todo-memo table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.todo-memo :is(th, td) {
+  border: 1px solid light-dark(var(--color-slate-300), var(--color-slate-600));
+  padding: 0.375rem 0.5rem;
+}
+
+.todo-memo hr {
+  border-color: light-dark(var(--color-slate-300), var(--color-slate-600));
+}
