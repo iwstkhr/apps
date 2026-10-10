@@ -1,0 +1,64 @@
+import { useEffect, useState } from 'react';
+import type { FolderSelection } from '~/lib/folder-tree';
+
+// 表示の状態 (選んでいるフォルダ・畳んだフォルダ) はこの端末だけの好みなので、TODO のデータとは分けて置く
+export const VIEW_STATE_KEY = 'todo:view';
+
+export interface ViewState {
+  folder: FolderSelection;
+  collapsed: string[];
+}
+
+/** 保存した表示の状態を読む。無い・壊れている・読めない (プライベートモードなど) ときは null。 */
+export function readViewState(): ViewState | null {
+  try {
+    const raw = localStorage.getItem(VIEW_STATE_KEY);
+    if (raw === null) return null;
+    const data: unknown = JSON.parse(raw);
+    if (typeof data !== 'object' || data === null) return null;
+    const { folder, collapsed } = data as Record<string, unknown>;
+    return {
+      folder: typeof folder === 'string' && folder !== '' ? folder : 'all',
+      collapsed: Array.isArray(collapsed)
+        ? collapsed.filter((id): id is string => typeof id === 'string')
+        : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function writeViewState(state: ViewState): void {
+  try {
+    localStorage.setItem(VIEW_STATE_KEY, JSON.stringify(state));
+  } catch {
+    // 保存できなくても画面はそのまま使える
+  }
+}
+
+/**
+ * 選んでいるフォルダと畳んだフォルダを、リロードしても戻るように localStorage に覚えておく。
+ * 消えたフォルダを指していても、画面の側で「すべて」として扱う。
+ */
+export function useViewState() {
+  const [selectedFolder, setSelectedFolder] = useState<FolderSelection>('all');
+  const [collapsedFolders, setCollapsedFolders] = useState<ReadonlySet<string>>(new Set());
+  const [restored, setRestored] = useState(false);
+
+  // ビルド時に作る HTML と食い違わないよう、読み出しは表示した後に行う
+  useEffect(() => {
+    const saved = readViewState();
+    if (saved) {
+      setSelectedFolder(saved.folder);
+      setCollapsedFolders(new Set(saved.collapsed));
+    }
+    setRestored(true);
+  }, []);
+
+  // 読み出す前の初期値で上書きしない
+  useEffect(() => {
+    if (restored) writeViewState({ folder: selectedFolder, collapsed: [...collapsedFolders] });
+  }, [restored, selectedFolder, collapsedFolders]);
+
+  return { selectedFolder, setSelectedFolder, collapsedFolders, setCollapsedFolders };
+}

@@ -8,6 +8,7 @@ import { TodoForm } from '~/components/todo/todo-form';
 import { TodoList } from '~/components/todo/todo-list';
 import { TodoToolbar } from '~/components/todo/todo-toolbar';
 import { type ImportMode, useTodos } from '~/hooks/use-todos';
+import { useViewState } from '~/hooks/use-view-state';
 import { cn } from '~/lib/cn';
 import { downloadExport, ImportError, type ParsedImport, parseImport } from '~/lib/export-import';
 import {
@@ -64,8 +65,8 @@ export default function Home() {
     importData,
   } = useTodos();
   const [filters, setFilters] = useState<TodoFilters>(DEFAULT_FILTERS);
-  const [selectedFolder, setSelectedFolder] = useState<FolderSelection>('all');
-  const [collapsedFolders, setCollapsedFolders] = useState<ReadonlySet<string>>(new Set());
+  const { selectedFolder, setSelectedFolder, collapsedFolders, setCollapsedFolders } =
+    useViewState();
   const [showFolders, setShowFolders] = useState(false);
   const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);

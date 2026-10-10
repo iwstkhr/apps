@@ -38,6 +38,20 @@ test('organizes todos in nested folders and keeps them after reloading', async (
   await expect(page.getByText('ここに TODO はありません。')).toBeVisible();
 });
 
+test('restores the selected and collapsed folders after reloading', async ({ page }) => {
+  await createFolder(page, '仕事');
+  await createFolder(page, '案件', '仕事');
+  await folderNav(page).getByRole('button', { name: /^仕事/ }).click();
+  await folderNav(page).getByRole('button', { name: 'フォルダ「仕事」を閉じる' }).click();
+
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText('仕事');
+  await expect(
+    folderNav(page).getByRole('button', { name: 'フォルダ「仕事」を開く' }),
+  ).toBeVisible();
+  await expect(folderNav(page).getByRole('button', { name: /^案件/ })).toBeHidden();
+});
+
 test('moves todos to unfiled when their folder is deleted', async ({ page }) => {
   await createFolder(page, '旅行');
   await addTodo(page, '切符を取る');

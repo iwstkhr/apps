@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createExport } from '~/lib/export-import';
@@ -18,6 +18,7 @@ beforeEach(() => {
 afterEach(async () => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
+  localStorage.clear();
   await closeDbForTesting();
   await new Promise<void>((resolve) => {
     const request = indexedDB.deleteDatabase('todo');
@@ -268,6 +269,32 @@ describe('Home', () => {
       await user.click(within(folderNav()).getByRole('button', { name: /^未分類/ }));
       expect(items()[0]).toHaveTextContent('見積もり');
       await waitFor(async () => expect((await getAll()).folders).toEqual([]));
+    });
+
+    it('restores the selected and collapsed folders after reloading', async () => {
+      const parent = createFolderFixture({ name: '仕事' });
+      const child = createFolderFixture({ name: '案件', parentId: parent.id });
+      await putAll({ folders: [parent, child] });
+      const user = await renderHome();
+      await user.click(within(folderNav()).getByRole('button', { name: /^仕事/ }));
+      await user.click(
+        within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を閉じる' }),
+      );
+
+      // リロードの代わりに画面を作り直す
+      cleanup();
+      await renderHome();
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('仕事');
+      expect(
+        within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を開く' }),
+      ).toBeInTheDocument();
+      expect(within(folderNav()).queryByRole('button', { name: /^案件/ })).not.toBeInTheDocument();
+    });
+
+    it('shows all todos when the restored folder no longer exists', async () => {
+      localStorage.setItem('todo:view', JSON.stringify({ folder: 'deleted', collapsed: [] }));
+      await renderHome();
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('すべて');
     });
 
     it('moves a todo to another folder from the edit form', async () => {
