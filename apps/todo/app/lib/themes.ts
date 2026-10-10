@@ -1,10 +1,15 @@
+// 先頭のインディゴが既定。白いヘッダー・サイドバーにインディゴのアクセントを合わせる。
+// ほかは濃いヘッダー・サイドバーにする (色の組み合わせは themes.css)
 export const THEMES = [
-  { id: 'standard', label: 'スタンダード', colors: ['#f8fafc', '#334155', '#2563eb'] },
-  { id: 'forest', label: 'フォレスト', colors: ['#12372a', '#ffffff', '#245a48'] },
-  { id: 'sakura', label: 'サクラ', colors: ['#4a2034', '#ffffff', '#783f59'] },
-  { id: 'sand', label: 'サンド', colors: ['#3e3025', '#ffffff', '#71513c'] },
-  { id: 'lavender', label: 'ラベンダー', colors: ['#3f0e40', '#ffffff', '#5b2b60'] },
+  { id: 'indigo', label: 'インディゴ', colors: ['#f8fafc', '#334155', '#4f46e5'] },
+  { id: 'aubergine', label: 'オーベルジーヌ', colors: ['#3f0e40', '#ffffff', '#6a2c6b'] },
+  { id: 'ocean', label: 'オーシャン', colors: ['#0b3954', '#ffffff', '#1a6896'] },
+  { id: 'mint', label: 'ミント', colors: ['#123f3a', '#ffffff', '#1d7564'] },
+  { id: 'sunset', label: 'サンセット', colors: ['#4a1c2c', '#ffffff', '#b0422b'] },
+  { id: 'graphite', label: 'グラファイト', colors: ['#1f2328', '#ffffff', '#4b5563'] },
 ] as const;
+
+export const DEFAULT_THEME = THEMES[0].id;
 
 export type Theme = (typeof THEMES)[number]['id'];
 export const THEME_KEY = 'todo:theme';
@@ -21,5 +26,5 @@ export function toAppearance(value: unknown): Appearance {
 }
 
 export function toTheme(value: unknown): Theme {
-  return THEMES.find((theme) => theme.id === value)?.id ?? 'standard';
+  return THEMES.find((theme) => theme.id === value)?.id ?? DEFAULT_THEME;
 }

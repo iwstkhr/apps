@@ -10,14 +10,14 @@ test('selects light and dark modes independently of the OS and follows it in aut
   const dialog = page.getByRole('dialog', { name: 'テーマ', exact: true });
   await button.click();
   await expect(dialog.getByRole('radio', { name: '自動', exact: true })).toBeChecked();
-  await dialog.getByText('フォレスト', { exact: true }).click();
+  await dialog.getByText('オーシャン', { exact: true }).click();
   await dialog.getByText('ダーク', { exact: true }).click();
   await expect(root).toHaveAttribute('data-mode', 'dark');
   await expect(root).toHaveCSS('color-scheme', 'dark');
   const dark = await page.locator('body').evaluate((el) => getComputedStyle(el).backgroundColor);
   await page.reload();
   await expect(root).toHaveAttribute('data-mode', 'dark');
-  await expect(root).toHaveAttribute('data-theme', 'forest');
+  await expect(root).toHaveAttribute('data-theme', 'ocean');
   await expect(page.locator('body')).toHaveCSS('background-color', dark);
   await button.click();
   await expect(dialog.getByRole('radio', { name: 'ダーク', exact: true })).toBeChecked();
@@ -30,7 +30,7 @@ test('selects light and dark modes independently of the OS and follows it in aut
   await expect(root).toHaveAttribute('data-mode', 'dark');
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(root).toHaveAttribute('data-mode', 'light');
-  await expect(root).toHaveAttribute('data-theme', 'forest');
+  await expect(root).toHaveAttribute('data-theme', 'ocean');
 });
 
 test('keeps content neutral with readable sidebar palettes, restores it, and supports dark mode and mobile', async ({
@@ -51,9 +51,19 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   const sidebarColor = () => sidebar.evaluate((el) => getComputedStyle(el).backgroundColor);
   const backgrounds = new Set<string>([await sidebarColor()]);
 
+  // 既定のインディゴは白いサイドバーのまま、主ボタンをインディゴ (#4f46e5) にする
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'indigo');
+  // 追加した直後はポインタが追加ボタンの上にあり、ホバーの色になるので外す
+  await page.mouse.move(0, 0);
+  await expect(page.locator('main button[type="submit"]')).toHaveCSS(
+    'background-color',
+    'rgb(79, 70, 229)',
+  );
+  await expect(sidebar).not.toHaveCSS('background-color', 'rgb(31, 35, 40)');
+
   await button.click();
-  await expect(dialog.getByRole('radio', { name: 'スタンダード' })).toBeChecked();
-  for (const name of ['フォレスト', 'サクラ', 'サンド', 'ラベンダー']) {
+  await expect(dialog.getByRole('radio', { name: 'インディゴ' })).toBeChecked();
+  for (const name of ['オーベルジーヌ', 'オーシャン', 'ミント', 'サンセット', 'グラファイト']) {
     await dialog.getByText(name, { exact: true }).click();
     await expect(dialog.getByRole('radio', { name })).toBeChecked();
     expect(await bodyColor()).toBe(initialBackground);
@@ -107,26 +117,26 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
       });
     await expect.poll(async () => Math.min(...(await contrast()))).toBeGreaterThanOrEqual(4.5);
   }
-  expect(backgrounds.size).toBe(5);
+  expect(backgrounds.size).toBe(6);
   await dialog.getByRole('button', { name: '閉じる', exact: true }).click();
   await expect(dialog).toBeHidden();
   await expect(button).toBeFocused();
   await page.screenshot({ path: testInfo.outputPath('light-theme.png') });
-  const lavenderBackground = await bodyColor();
+  const graphiteBackground = await bodyColor();
   await page.reload();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'lavender');
-  expect(await bodyColor()).toBe(lavenderBackground);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'graphite');
+  expect(await bodyColor()).toBe(graphiteBackground);
   await expect(todoItems(page)).toHaveText([/配色を確認/]);
 
   await page.emulateMedia({ colorScheme: 'dark' });
-  await expect.poll(bodyColor).not.toBe(lavenderBackground);
+  await expect.poll(bodyColor).not.toBe(graphiteBackground);
   await page.screenshot({ path: testInfo.outputPath('dark-theme.png') });
   await page.setViewportSize({ width: 320, height: 800 });
   await button.click();
   await expect(dialog).toBeVisible();
-  await dialog.getByRole('radio', { name: 'ラベンダー' }).focus();
+  await dialog.getByRole('radio', { name: 'グラファイト' }).focus();
   await page.keyboard.press('ArrowLeft');
-  await expect(dialog.getByRole('radio', { name: 'サンド' })).toBeChecked();
+  await expect(dialog.getByRole('radio', { name: 'サンセット' })).toBeChecked();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(button).toBeFocused();

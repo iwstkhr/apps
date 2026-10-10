@@ -19,7 +19,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Export all todos and folders to a JSON file, and import a file by merging it with or replacing the current data
 - Sync changes across tabs of the same browser
 - Use the app on mobile screens and in dark mode
-- Choose from five color themes using テーマ in the header; choose ライト, ダーク, or 自動 for the display mode; selections are saved in this browser
+- Choose from six color themes using テーマ in the header; choose ライト, ダーク, or 自動 for the display mode; selections are saved in this browser
 
 ## Technology stack
 

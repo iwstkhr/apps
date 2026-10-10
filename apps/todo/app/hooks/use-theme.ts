@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   APPEARANCE_KEY,
   type Appearance,
+  DEFAULT_THEME,
   THEME_KEY,
   type Theme,
   toAppearance,
@@ -10,7 +11,7 @@ import {
 
 /** データとは別に、このブラウザの配色設定を保存する。 */
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>('standard');
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
   const [appearance, setAppearance] = useState<Appearance>('system');
   const [restored, setRestored] = useState(false);
 
