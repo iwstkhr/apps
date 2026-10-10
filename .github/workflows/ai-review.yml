@@ -2,7 +2,8 @@ name: "repo - AI Review"
 
 on:
   pull_request:
-    types: [labeled]
+    # Remove synchronize to skip reviewing again on each push
+    types: [labeled, synchronize]
 
 permissions:
   contents: read
