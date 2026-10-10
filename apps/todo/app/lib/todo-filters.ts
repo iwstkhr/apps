@@ -38,9 +38,8 @@ function matchesStatus(todo: Todo, status: StatusFilter): boolean {
   return todo.status === status;
 }
 
-// ステータス順は手を付けているものを先に出す
-const STATUS_ORDER: readonly TodoStatus[] = ['in_progress', 'todo', 'on_hold', 'done'];
-const statusRank = (todo: Todo) => STATUS_ORDER.indexOf(todo.status);
+// ステータスの定義順（未着手 → 進行中 → 保留 → 完了）の昇順
+const statusRank = (todo: Todo) => STATUSES.indexOf(todo.status);
 
 const priorityRank = (todo: Todo) => PRIORITIES.indexOf(todo.priority);
 

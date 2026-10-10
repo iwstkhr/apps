@@ -87,10 +87,10 @@ describe('statuses', () => {
     expect(by('all')).toEqual(['保留', '未着手', '進行中', '完了']);
   });
 
-  it('sorts in progress, not started, on hold, then done', () => {
+  it('sorts statuses in logical ascending order: not started, in progress, on hold, then done', () => {
     expect(titles(applyFilters(todos, { ...DEFAULT_FILTERS, sort: 'status' }))).toEqual([
-      '進行中',
       '未着手',
+      '進行中',
       '保留',
       '完了',
     ]);

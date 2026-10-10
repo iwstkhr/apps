@@ -54,7 +54,7 @@ Editing shows the original Markdown source. Storage, keyword search, and JSON ex
 | --- | --- |
 | 期限順 | Due date ascending (todos without a due date last), then priority, then newest first |
 | 優先度順 | Priority (high → low), then due date, then newest first |
-| ステータス順 | 進行中 → 未着手 → 保留 → 完了, then due date, then priority, then newest first |
+| ステータス順 | 未着手 → 進行中 → 保留 → 完了 (logical ascending order), then due date, then priority, then newest first |
 | 新しい順 | Creation time, newest first |
 | カスタム | User-defined order, including completed todos |
 
