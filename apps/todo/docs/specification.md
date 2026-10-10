@@ -41,7 +41,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ Header: TODO  [エクスポート] [インポート] [GitHub] │
+│ Header: TODO          [エクスポート] [インポート] │
 ├──────────────────────────────────────────────┤
 │ Add form: [やること          ] [詳細] [追加]  │
 │   (memo / tags / due date / priority)        │

@@ -1,8 +1,6 @@
 import { useRef } from 'react';
-import { FaFileExport, FaFileImport, FaGithub } from 'react-icons/fa';
+import { FaFileExport, FaFileImport } from 'react-icons/fa';
 import { publicUrl } from '~/lib/public-url';
-
-const GITHUB_URL = 'https://github.com/iwstkhr/apps';
 
 const actionClass =
   'inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700';
@@ -62,15 +60,6 @@ export function AppHeader({ onExport, onImportFile, exportDisabled }: AppHeaderP
               if (file) onImportFile(file);
             }}
           />
-          <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-md p-1 text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-            aria-label="GitHub リポジトリを開く"
-          >
-            <FaGithub className="h-7 w-7" aria-hidden="true" />
-          </a>
         </div>
       </div>
     </header>
