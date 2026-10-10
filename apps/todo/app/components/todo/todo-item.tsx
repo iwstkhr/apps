@@ -30,8 +30,9 @@ const STATUS_CLASSES: Record<TodoStatus, string> = {
   done: 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
 };
 
+// カードはつかむカーソルになるので、中のボタンはクリックできることが分かるよう指のカーソルにする
 const iconButtonClass =
-  'rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
+  'cursor-pointer rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
 
 interface TodoItemProps {
   todo: Todo;
@@ -90,14 +91,15 @@ export function TodoItem({
       }}
       onDragEnd={() => setDragging(false)}
       className={cn(
-        'group/item flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
+        // フォルダ欄が横に出ている広い画面では、カード全体をつかんでドラッグできることをカーソルで示す
+        'group/item flex items-start gap-3 rounded-lg border lg:cursor-grab lg:active:cursor-grabbing border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
         done && 'opacity-60',
         dragging && 'border-dashed border-blue-400 opacity-40',
       )}
     >
       {/* フォルダ欄が横に出ている広い画面でだけ、ドラッグできることを示す */}
       <FaGripVertical
-        className="-mx-1.5 mt-1.5 hidden shrink-0 cursor-grab text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
+        className="-mx-1.5 mt-1.5 hidden shrink-0 text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
         aria-hidden="true"
       />
       <input
@@ -163,7 +165,7 @@ export function TodoItem({
             <button
               key={tag}
               type="button"
-              className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
+              className="cursor-pointer rounded-full bg-blue-50 px-2 py-0.5 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
               onClick={() => onTagClick(tag)}
               title={`タグ「${tag}」で絞り込む`}
             >

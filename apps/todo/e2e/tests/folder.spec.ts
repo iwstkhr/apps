@@ -60,6 +60,11 @@ test('moves a todo to another folder by drag and drop', async ({ page }) => {
     .click();
   await addTodo(page, '洗濯');
 
+  // カードはつかむカーソル、中のボタンは指のカーソル
+  const card = todoItems(page).filter({ hasText: '洗濯' });
+  await expect(card).toHaveCSS('cursor', 'grab');
+  await expect(card.getByRole('button', { name: '「洗濯」を編集' })).toHaveCSS('cursor', 'pointer');
+
   await todoItems(page)
     .filter({ hasText: '洗濯' })
     .dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
