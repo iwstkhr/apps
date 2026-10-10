@@ -37,6 +37,7 @@ export interface UseTodos {
   editTodo: (id: string, input: TodoInput) => Promise<void>;
   changeStatus: (id: string, status: TodoStatus) => Promise<void>;
   changePriority: (id: string, priority: Priority) => Promise<void>;
+  removeTag: (id: string, tag: string) => Promise<void>;
   /** folderId が null なら未分類に移す */
   moveTodo: (id: string, folderId: string | null) => Promise<void>;
   reorderTodo: (
@@ -175,6 +176,20 @@ export function useTodos(): UseTodos {
     [replaceOne],
   );
 
+  const removeTag = useCallback(
+    (id: string, tag: string) =>
+      replaceOne(id, (todo) =>
+        todo.tags.includes(tag)
+          ? {
+              ...todo,
+              tags: todo.tags.filter((value) => value !== tag),
+              updatedAt: new Date().toISOString(),
+            }
+          : todo,
+      ),
+    [replaceOne],
+  );
+
   const moveTodo = useCallback(
     (id: string, folderId: string | null) =>
       replaceOne(id, (todo) => moveTodoToFolder(todo, folderId)),
@@ -282,6 +297,7 @@ export function useTodos(): UseTodos {
     editTodo,
     changeStatus,
     changePriority,
+    removeTag,
     moveTodo,
     reorderTodo,
     removeTodo,

@@ -60,6 +60,7 @@ export default function Home() {
     editTodo,
     changeStatus,
     changePriority,
+    removeTag,
     moveTodo,
     reorderTodo,
     removeTodo,
@@ -358,6 +359,7 @@ export default function Home() {
                 onStatusChange={(id, status) => void changeStatus(id, status)}
                 onEdit={editTodo}
                 onRemove={handleRemove}
+                onRemoveTag={(id, tag) => void removeTag(id, tag)}
                 onTagClick={(tag) => setFilters((current) => ({ ...current, tag }))}
               />
             )}

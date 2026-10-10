@@ -25,6 +25,10 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
 
+### Tags
+
+Click a tag name in the task list to filter by it. The adjacent × button removes only that tag from that task and saves immediately; it does not activate the tag filter. Other tasks with the same tag are unchanged. If a removed tag no longer matches the current filter, the task leaves the filtered list.
+
 ### Priority
 
 Change priority (高 / 中 / 低) directly with the selector on each task in the list, or in the edit form. Changes are saved immediately and reflected in priority-based sorting, without altering the task status or other fields.

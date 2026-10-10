@@ -1,5 +1,22 @@
 import { addTodo, expect, openApp, test, todoItems } from '../fixtures';
 
+test('removes a tag using its close button without filtering and saves the change', async ({
+  page,
+}) => {
+  await addTodo(page, 'タグを整理');
+  await page.getByRole('button', { name: '「タグを整理」を編集' }).click();
+  await page.getByRole('combobox', { name: 'タグ', exact: true }).fill('仕事, 家');
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.getByRole('button', { name: '「タグを整理」からタグ「仕事」を削除' }).click();
+  await expect(page.getByRole('button', { name: '#仕事', exact: true })).toBeHidden();
+  await expect(page.getByRole('button', { name: '#家', exact: true })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'タグで絞り込み' })).toHaveValue('');
+  await page.reload();
+  await expect(page.getByRole('button', { name: '#仕事', exact: true })).toBeHidden();
+  await expect(page.getByRole('button', { name: '#家', exact: true })).toBeVisible();
+});
+
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (dialog) => dialog.accept());
   await openApp(page);

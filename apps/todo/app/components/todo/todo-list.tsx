@@ -19,6 +19,7 @@ interface TodoListProps {
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
   onTagClick: (tag: string) => void;
+  onRemoveTag: (id: string, tag: string) => void;
   onReorder?: (id: string, targetId: string, position: DropPosition) => void;
 }
 

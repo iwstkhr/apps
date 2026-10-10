@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { FaArrowDown, FaArrowUp, FaFolder, FaGripVertical, FaPen, FaTrash } from 'react-icons/fa';
+import {
+  FaArrowDown,
+  FaArrowUp,
+  FaFolder,
+  FaGripVertical,
+  FaPen,
+  FaTimes,
+  FaTrash,
+} from 'react-icons/fa';
 import { MarkdownMemo } from '~/components/todo/markdown-memo';
 import { TodoForm } from '~/components/todo/todo-form';
 import { cn } from '~/lib/cn';
@@ -49,6 +57,7 @@ interface TodoItemProps {
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
   onTagClick: (tag: string) => void;
+  onRemoveTag: (id: string, tag: string) => void;
   dropPosition?: DropPosition;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -65,6 +74,7 @@ export function TodoItem({
   onEdit,
   onRemove,
   onTagClick,
+  onRemoveTag,
   dropPosition,
   onMoveUp,
   onMoveDown,
@@ -187,15 +197,28 @@ export function TodoItem({
             </span>
           )}
           {todo.tags.map((tag) => (
-            <button
+            <span
               key={tag}
-              type="button"
-              className="cursor-pointer rounded-full bg-blue-50 px-2 py-0.5 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
-              onClick={() => onTagClick(tag)}
-              title={`タグ「${tag}」で絞り込む`}
+              className="inline-flex items-center overflow-hidden rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
             >
-              #{tag}
-            </button>
+              <button
+                type="button"
+                className="cursor-pointer py-0.5 pl-2 pr-1 hover:bg-blue-100 dark:hover:bg-blue-900"
+                onClick={() => onTagClick(tag)}
+                title={`タグ「${tag}」で絞り込む`}
+              >
+                #{tag}
+              </button>
+              <button
+                type="button"
+                className="cursor-pointer py-1 pl-1 pr-2 hover:bg-blue-100 dark:hover:bg-blue-900"
+                onClick={() => onRemoveTag(todo.id, tag)}
+                aria-label={`「${todo.title}」からタグ「${tag}」を削除`}
+                title={`タグ「${tag}」を削除`}
+              >
+                <FaTimes className="h-2.5 w-2.5" aria-hidden="true" />
+              </button>
+            </span>
           ))}
         </div>
       </div>

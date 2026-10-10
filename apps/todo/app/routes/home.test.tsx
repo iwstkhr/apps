@@ -38,6 +38,29 @@ const items = () =>
   within(screen.getByRole('list', { name: 'TODO 一覧' })).getAllByRole('listitem');
 
 describe('Home', () => {
+  it('removes a tag from only its task and updates the filtered list', async () => {
+    const first = createTodoFixture({ title: '資料を作る', tags: ['仕事', '家'] });
+    const second = createTodoFixture({ title: '会議に出る', tags: ['仕事'] });
+    await putAll({ folders: [], todos: [first, second] });
+    const user = await renderHome();
+    await user.click(
+      within(
+        items().find((item) => item.textContent?.includes('資料を作る')) as HTMLElement,
+      ).getByRole('button', { name: '#仕事', exact: true }),
+    );
+    await user.click(screen.getByRole('button', { name: '「資料を作る」からタグ「仕事」を削除' }));
+    await waitFor(() => expect(items()).toHaveLength(1));
+    expect(items()[0]).toHaveTextContent('会議に出る');
+    await waitFor(async () => {
+      const saved = (await getAll()).todos;
+      expect(saved.find((todo) => todo.id === first.id)?.tags).toEqual(['家']);
+      expect(saved.find((todo) => todo.id === second.id)?.tags).toEqual(['仕事']);
+    });
+    await user.selectOptions(screen.getByRole('combobox', { name: 'タグで絞り込み' }), '');
+    expect(items()).toHaveLength(2);
+    expect(screen.getByRole('button', { name: '#家', exact: true })).toBeInTheDocument();
+  });
+
   it('shows the copyright notice with the current year in the footer', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2031-06-01T00:00:00'));
