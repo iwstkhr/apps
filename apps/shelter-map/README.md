@@ -99,53 +99,7 @@ Reference static assets under `public/` through `publicUrl()` (`app/lib/public-u
 
 ## Contributing
 
-### Git hooks
-
-Run `pre-commit install` after `mise install` to enable the hooks in [`.pre-commit-config.yaml`](../../.pre-commit-config.yaml) at the repository root when committing.
-
-To run them manually on all files (from the repository root):
-
-```bash
-pre-commit run --all-files
-```
-
-To run the same checks as CI (run `pre-commit` from the repository root and `pnpm` from `apps/shelter-map/`):
-
-```bash
-pre-commit run --all-files
-pnpm run check
-pnpm run typecheck
-pnpm run test
-pnpm run test:e2e
-```
-
-`pnpm run test:e2e` builds the app and serves `build/client/` with `wrangler dev` at `http://localhost:8789`, as in production, then drives it with the installed Google Chrome (no browser download is needed). Map tiles are stubbed, and most scenarios replace the GeoJSON with a small fixture in `e2e/fixtures.ts`; one scenario loads the real dataset. Set `E2E_SKIP_BUILD=1` to reuse an existing `build/client/`.
-
-### File names
-
-Name source files in kebab-case (`app-header.tsx`, `use-shelter-map.ts`), including components and hooks.
-Biome's `useFilenamingConvention` rule enforces this in `pnpm run check`.
-
-### Commit messages
-
-This repository follows [Conventional Commits](https://www.conventionalcommits.org/).
-
-```text
-<type>[optional scope]: <description>
-```
-
-- Write the **description** in English using the imperative, starting with a lowercase letter and omitting the final period
-- Choose a **type** that matches the change (`feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`)
-- Add a **scope** when appropriate (`map`, `table`, `data`, `deploy`, etc.)
-
-Examples:
-
-```text
-feat(table): add spreadsheet-style column filters
-fix(map): require modifier key for map scroll zoom
-chore(data): update shelter GeoJSON data
-docs: document project setup in readme
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md) for Git hooks, checks, implementation conventions, and commit messages.
 
 ## License
 

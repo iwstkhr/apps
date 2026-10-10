@@ -2,7 +2,7 @@
 
 Specifications and architecture for the Designated Emergency Evacuation Site Map.
 
-See the app's [README.md](../README.md) for setup, development commands, and contribution guidelines.
+See the app's [README.md](../README.md) for setup and development commands, and [CONTRIBUTING.md](../CONTRIBUTING.md) for contribution guidelines.
 
 | Document | Contents |
 | --- | --- |
