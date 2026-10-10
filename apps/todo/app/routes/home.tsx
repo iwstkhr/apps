@@ -152,9 +152,14 @@ export default function Home() {
       </main>
 
       <footer className="mx-auto w-full max-w-3xl px-3 pb-6 text-xs text-slate-500 sm:px-4 dark:text-slate-400">
-        データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。
-        ブラウザのデータを削除すると TODO
-        も消えるため、定期的にエクスポートしてバックアップしてください。
+        <p>
+          データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。
+          ブラウザのデータを削除すると TODO
+          も消えるため、定期的にエクスポートしてバックアップしてください。
+        </p>
+        <p className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-slate-800">
+          © {new Date().getFullYear()} wasabee.dev. All Rights Reserved.
+        </p>
       </footer>
 
       {pendingImport && (

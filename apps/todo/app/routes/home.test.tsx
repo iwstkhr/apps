@@ -17,6 +17,7 @@ beforeEach(() => {
 
 afterEach(async () => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
   await closeDbForTesting();
   await new Promise<void>((resolve) => {
     const request = indexedDB.deleteDatabase('todo');
@@ -35,6 +36,16 @@ const items = () =>
   within(screen.getByRole('list', { name: 'TODO 一覧' })).getAllByRole('listitem');
 
 describe('Home', () => {
+  it('shows the copyright notice with the current year in the footer', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2031-06-01T00:00:00'));
+    await renderHome();
+
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(
+      '© 2031 wasabee.dev. All Rights Reserved.',
+    );
+  });
+
   it('shows the empty state', async () => {
     await renderHome();
     expect(screen.getByText(/TODO はまだありません/)).toBeInTheDocument();

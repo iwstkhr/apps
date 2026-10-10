@@ -54,6 +54,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 │ └──────────────────────────────────────────┘ │
 │                         [完了済みを削除 (n)] │
 │ Footer: note on local storage and backups    │
+│         © <year> wasabee.dev. All Rights ... │
 └──────────────────────────────────────────────┘
 ```
 
