@@ -1,32 +1,21 @@
 import type { Shelter } from '~/types/shelter';
-import { type ShelterTypeKey, shelterTypeKeys } from '~/types/shelter-type';
+import { isShelterTypeKey, type ShelterTypeKey, shelterTypeKeys } from '~/types/shelter-type';
 
 export type ShelterTypeFilterValue = 'all' | 'yes' | 'no';
+
+type ShelterTypeFilters = Record<ShelterTypeKey, ShelterTypeFilterValue>;
 
 export interface ShelterColumnFilters {
   name: string;
   address: string;
-  types: Record<ShelterTypeKey, ShelterTypeFilterValue>;
-}
-
-export function createEmptyShelterTypeFilters(): Record<ShelterTypeKey, ShelterTypeFilterValue> {
-  return Object.fromEntries(shelterTypeKeys.map((key) => [key, 'all'])) as Record<
-    ShelterTypeKey,
-    ShelterTypeFilterValue
-  >;
+  types: ShelterTypeFilters;
 }
 
 export const emptyShelterColumnFilters: ShelterColumnFilters = {
   name: '',
   address: '',
-  types: createEmptyShelterTypeFilters(),
+  types: Object.fromEntries(shelterTypeKeys.map((key) => [key, 'all'])) as ShelterTypeFilters,
 };
-
-function hasActiveShelterTypeFilters(
-  types: Record<ShelterTypeKey, ShelterTypeFilterValue>,
-): boolean {
-  return shelterTypeKeys.some((key) => types[key] !== 'all');
-}
 
 export type ShelterFilterColumnId = 'name' | 'address' | ShelterTypeKey;
 
@@ -34,10 +23,10 @@ export function isColumnFilterActive(
   columnId: ShelterFilterColumnId,
   filters: ShelterColumnFilters,
 ): boolean {
-  if (columnId === 'name' || columnId === 'address') {
-    return filters[columnId].trim() !== '';
+  if (isShelterTypeKey(columnId)) {
+    return filters.types[columnId] !== 'all';
   }
-  return filters.types[columnId] !== 'all';
+  return filters[columnId].trim() !== '';
 }
 
 export function filterSheltersByColumns(
@@ -46,7 +35,7 @@ export function filterSheltersByColumns(
 ): Shelter[] {
   const name = filters.name.trim();
   const address = filters.address.trim();
-  const hasTypeFilters = hasActiveShelterTypeFilters(filters.types);
+  const hasTypeFilters = shelterTypeKeys.some((key) => filters.types[key] !== 'all');
 
   if (!name && !address && !hasTypeFilters) {
     return shelters;
@@ -62,10 +51,7 @@ export function filterSheltersByColumns(
 
     for (const key of shelterTypeKeys) {
       const typeFilter = filters.types[key];
-      if (typeFilter === 'yes' && !shelter.type[key]) {
-        return false;
-      }
-      if (typeFilter === 'no' && shelter.type[key]) {
+      if (typeFilter !== 'all' && (typeFilter === 'yes') !== shelter.type[key]) {
         return false;
       }
     }

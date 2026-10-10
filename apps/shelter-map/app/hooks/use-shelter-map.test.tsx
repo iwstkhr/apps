@@ -16,10 +16,9 @@ import { emptyShelterColumnFilters } from '~/types/shelter-filters';
 vi.mock('~/hooks/use-leaflet-map');
 vi.mock('~/hooks/use-shelter-data');
 
-const shelters = [
-  createShelter({ id: 'yokohama', name: '横浜避難所' }),
-  createShelter({ id: 'kawasaki', name: '川崎避難所', address: '神奈川県川崎市' }),
-];
+const yokohama = createShelter({ id: 'yokohama', name: '横浜避難所' });
+const kawasaki = createShelter({ id: 'kawasaki', name: '川崎避難所', address: '神奈川県川崎市' });
+const shelters = [yokohama, kawasaki];
 
 const mockMap = {
   on: vi.fn(),
@@ -66,11 +65,6 @@ describe('useShelterMap', () => {
   });
 
   it('updates displayed shelters when column filters change', async () => {
-    const firstShelter = shelters[0];
-    if (!firstShelter) {
-      throw new Error('expected shelter fixture');
-    }
-
     const mapContainerRef = createRef<HTMLDivElement>();
     const { result } = renderHook(() => useShelterMap(mapContainerRef));
 
@@ -85,21 +79,16 @@ describe('useShelterMap', () => {
       });
     });
 
-    expect(result.current.displayedShelters).toEqual([firstShelter]);
+    expect(result.current.displayedShelters).toEqual([yokohama]);
     expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.any(Map),
-      [firstShelter],
+      [yokohama],
       15,
     );
   });
 
   it('applies column filters entered while data is loading once data loads', async () => {
-    const firstShelter = shelters[0];
-    if (!firstShelter) {
-      throw new Error('expected shelter fixture');
-    }
-
     vi.mocked(useShelterData).mockReturnValue({
       shelters: [],
       isLoading: true,
@@ -127,12 +116,12 @@ describe('useShelterMap', () => {
     rerender();
 
     await waitFor(() => {
-      expect(result.current.displayedShelters).toEqual([firstShelter]);
+      expect(result.current.displayedShelters).toEqual([yokohama]);
     });
     expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.any(Map),
-      [firstShelter],
+      [yokohama],
       15,
     );
     // A stable updater keeps the table's debounced filter sync from re-rendering the map on load.
@@ -140,14 +129,9 @@ describe('useShelterMap', () => {
   });
 
   it('keeps the full filtered list in the table when the map moves', async () => {
-    const firstShelter = shelters[0];
-    if (!firstShelter) {
-      throw new Error('expected shelter fixture');
-    }
-
     vi.spyOn(viewportFilter, 'filterSheltersWithinMap')
       .mockReturnValueOnce(shelters)
-      .mockReturnValue([firstShelter]);
+      .mockReturnValue([yokohama]);
 
     const mapContainerRef = createRef<HTMLDivElement>();
     const { result } = renderHook(() => useShelterMap(mapContainerRef));
@@ -171,7 +155,7 @@ describe('useShelterMap', () => {
     expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.any(Map),
-      [firstShelter],
+      [yokohama],
       15,
     );
   });

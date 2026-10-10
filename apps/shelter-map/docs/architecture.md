@@ -16,7 +16,7 @@ See [specification.md](./specification.md) for features, screens, and data speci
 ┌──────────────────────────────────────────────────────────────┐
 │ Browser SPA (React Router / Vite, ssr: false)                  │
 │                                                              │
-│ ShelterMapProvider                                           │
+│ Home (routes/home.tsx)                                       │
 │   ├─ useShelterData ──► fetchShelters → Shelter[]              │
 │   ├─ useLeafletMap  ──► Leaflet Map + tiles                    │
 │   └─ useShelterMap  ──► filters + viewport sync                │
@@ -49,7 +49,6 @@ app/
     layout/     # Header and app shell
     map/        # Tile switching, interaction hints, loading spinner
     table/      # Table header, rows, column filters, virtual scrolling
-  context/      # ShelterMapContext and Provider
   data/         # Fetch gzip GeoJSON
   generated/    # Data update date metadata (generated)
   hooks/        # Data loading, map, and shared state
@@ -78,19 +77,18 @@ scripts/        # Generate dataset-meta
 
 ```text
 Home
-  └─ ShelterMapProvider
-       └─ useShelterMap
-            └─ useShelterData
-                 └─ fetchShelters()
-                      ├─ publicUrl('assets/mergeFromCity_2.geojson.gz')
-                      ├─ decompressGzipResponse (decompress gzip if needed)
-                      ├─ JSON.parse
-                      └─ parseShelterGeoJson → Shelter[]
+  └─ useShelterMap
+       └─ useShelterData
+            └─ fetchShelters()
+                 ├─ publicUrl('assets/mergeFromCity_2.geojson.gz')
+                 ├─ decompressGzipResponse (decompress gzip if needed)
+                 ├─ JSON.parse
+                 └─ parseShelterGeoJson → Shelter[]
 ```
 
 - `fetchShelters` caches the result at module scope
 - It also handles hosts that return an already decompressed body (gzip is detected using the magic bytes `1f 8b`)
-- Loading state reaches the UI through Context as `isLoading` / `loadError`
+- Loading state reaches the UI through `Home` as `isLoading` / `loadError`
 
 ### 2. Shared filters
 
@@ -121,17 +119,14 @@ On `moveend` / `zoomlevelschange`, the app:
 
 ## Module responsibilities
 
-### Context / Hooks
+### Hooks
 
 | Module | Responsibility |
 | --- | --- |
-| `ShelterMapProvider` | Provide the map container ref and shared state |
 | `useShelterMap` | Integrate data, filters, and viewport synchronization |
 | `useShelterData` | Manage the GeoJSON loading lifecycle |
 | `useLeafletMap` | Initialize Leaflet, switch tiles, and handle resizing |
-| `useShelterMapContext` | Subscribe to Context (throw an error outside a Provider) |
 | `useShelterTableFilters` | Manage draft filters and debounced updates |
-| `useDebouncedValueEffect` | Debounce effects triggered by value changes |
 
 ### Data / Types
 
@@ -161,7 +156,7 @@ On `moveend` / `zoomlevelschange`, the app:
 | map | `MapTileLayerControl`, `MapHelpHint`, loading overlay |
 | table | `MapTable`, header, rows, column filters |
 
-`routes/home.tsx` is a thin page that assembles the map and table under the Provider.
+`routes/home.tsx` owns the map container ref, calls `useShelterMap`, and passes its state to the map and table as props.
 
 ## Routing and build
 
@@ -219,7 +214,7 @@ Preview serves each PR at `https://pr-<number>-shelter-map.<subdomain>.workers.d
 
 ## Design considerations
 
-1. **Single source of state** — Share filtered results through Context to keep the map and table consistent
+1. **Single source of state** — Pass filtered results from `useShelterMap` to keep the map and table consistent
 1. **Reduced rendering cost** — Render only the map viewport, use circles at low zoom, and update layers incrementally
 1. **Large result sets** — Use virtual scrolling to handle all rows in the table
 1. **Simple delivery** — Serve a static SPA and gzip assets on Cloudflare Workers without an API or Worker script

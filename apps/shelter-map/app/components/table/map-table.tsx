@@ -3,16 +3,21 @@ import { ShelterTableHeader } from '~/components/table/shelter-table-header';
 import { ShelterTableRows } from '~/components/table/shelter-table-rows';
 import { useShelterTableFilters } from '~/components/table/use-shelter-table-filters';
 import { DATASET_UPDATED_AT } from '~/generated/dataset-meta';
-import { useShelterMapContext } from '~/hooks/use-shelter-map-context';
+import type { Shelter } from '~/types/shelter';
+import type { ShelterColumnFilters } from '~/types/shelter-filters';
 
 const DATASET_SOURCE_URL = 'https://www.gsi.go.jp/bousaichiri/hinanbasho.html';
 const DATASET_SOURCE_LABEL = '国土地理院 指定緊急避難場所データ';
 
-export function MapTable() {
-  const { displayedShelters, updateColumnFilters } = useShelterMapContext();
+interface MapTableProps {
+  shelters: Shelter[];
+  onFiltersChange: (filters: ShelterColumnFilters) => void;
+}
+
+export function MapTable({ shelters, onFiltersChange }: MapTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { draftFilters, openFilterColumn, setDraftFilters, toggleFilterColumn } =
-    useShelterTableFilters(updateColumnFilters);
+    useShelterTableFilters(onFiltersChange);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
@@ -29,7 +34,7 @@ export function MapTable() {
           <span className="text-slate-600"> ({DATASET_UPDATED_AT})</span>
         </p>
         <p className="shrink-0 tabular-nums font-medium text-slate-800">
-          {displayedShelters.length.toLocaleString()} 件
+          {shelters.length.toLocaleString()} 件
         </p>
       </div>
 
@@ -42,7 +47,7 @@ export function MapTable() {
               onToggleFilter={toggleFilterColumn}
               onFiltersChange={setDraftFilters}
             />
-            <ShelterTableRows shelters={displayedShelters} scrollContainerRef={tableContainerRef} />
+            <ShelterTableRows shelters={shelters} scrollContainerRef={tableContainerRef} />
           </div>
         </div>
       </div>

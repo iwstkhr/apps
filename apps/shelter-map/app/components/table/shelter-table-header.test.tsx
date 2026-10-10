@@ -1,14 +1,12 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { ShelterTableHeader } from '~/components/table/shelter-table-header';
 import { emptyShelterColumnFilters } from '~/types/shelter-filters';
 import { shelterTypeKeys } from '~/types/shelter-type';
 
 describe('ShelterTableHeader', () => {
-  afterEach(cleanup);
-
   it('renders text and disaster type columns', () => {
     render(
       <ShelterTableHeader

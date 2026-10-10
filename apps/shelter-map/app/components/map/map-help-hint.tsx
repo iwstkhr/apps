@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 function getModifierKeyLabel(): string {
   if (typeof navigator === 'undefined') {
     return 'Ctrl';
@@ -9,7 +7,7 @@ function getModifierKeyLabel(): string {
 }
 
 export function MapHelpHint() {
-  const modifierKey = useMemo(() => getModifierKeyLabel(), []);
+  const modifierKey = getModifierKeyLabel();
 
   return (
     <section

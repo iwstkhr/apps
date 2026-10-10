@@ -10,11 +10,6 @@ import { isShelterTypeKey } from '~/types/shelter-type';
 const FILTER_INPUT_CLASS =
   'w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs font-normal text-slate-900 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200';
 
-const TEXT_FILTER_PLACEHOLDERS = {
-  name: '名前で絞り込み',
-  address: '住所で絞り込み',
-} as const;
-
 function FilterIcon({ active }: { active: boolean }) {
   return (
     <svg
@@ -28,37 +23,38 @@ function FilterIcon({ active }: { active: boolean }) {
   );
 }
 
-function ColumnFilterInput({
-  value,
-  placeholder,
-  onChange,
+function ColumnFilterControl({
+  columnId,
+  label,
+  filters,
+  onFiltersChange,
 }: {
-  value: string;
-  placeholder: string;
-  onChange: (value: string) => void;
+  columnId: ShelterFilterColumnId;
+  label: string;
+  filters: ShelterColumnFilters;
+  onFiltersChange: (filters: ShelterColumnFilters) => void;
 }) {
-  return (
-    <input
-      type="text"
-      value={value}
-      placeholder={placeholder}
-      onChange={(event) => onChange(event.target.value)}
-      className={FILTER_INPUT_CLASS}
-    />
-  );
-}
+  if (!isShelterTypeKey(columnId)) {
+    return (
+      <input
+        type="text"
+        value={filters[columnId]}
+        placeholder={`${label}で絞り込み`}
+        onChange={(event) => onFiltersChange({ ...filters, [columnId]: event.target.value })}
+        className={FILTER_INPUT_CLASS}
+      />
+    );
+  }
 
-function ColumnFilterSelect({
-  value,
-  onChange,
-}: {
-  value: ShelterTypeFilterValue;
-  onChange: (value: ShelterTypeFilterValue) => void;
-}) {
   return (
     <select
-      value={value}
-      onChange={(event) => onChange(event.target.value as ShelterTypeFilterValue)}
+      value={filters.types[columnId]}
+      onChange={(event) =>
+        onFiltersChange({
+          ...filters,
+          types: { ...filters.types, [columnId]: event.target.value as ShelterTypeFilterValue },
+        })
+      }
       className={FILTER_INPUT_CLASS}
       aria-label="災害種別で絞り込み"
     >
@@ -66,35 +62,6 @@ function ColumnFilterSelect({
       <option value="yes">指定あり (✅)</option>
       <option value="no">指定なし (❌)</option>
     </select>
-  );
-}
-
-function ColumnFilterControl({
-  columnId,
-  filters,
-  onFiltersChange,
-}: {
-  columnId: ShelterFilterColumnId;
-  filters: ShelterColumnFilters;
-  onFiltersChange: (filters: ShelterColumnFilters) => void;
-}) {
-  if (columnId === 'name' || columnId === 'address') {
-    return (
-      <ColumnFilterInput
-        value={filters[columnId]}
-        placeholder={TEXT_FILTER_PLACEHOLDERS[columnId]}
-        onChange={(value) => onFiltersChange({ ...filters, [columnId]: value })}
-      />
-    );
-  }
-
-  return (
-    <ColumnFilterSelect
-      value={filters.types[columnId]}
-      onChange={(value) =>
-        onFiltersChange({ ...filters, types: { ...filters.types, [columnId]: value } })
-      }
-    />
   );
 }
 
@@ -147,6 +114,7 @@ export function ColumnHeaderWithFilter({
           >
             <ColumnFilterControl
               columnId={columnId}
+              label={label}
               filters={filters}
               onFiltersChange={onFiltersChange}
             />

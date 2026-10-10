@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLeafletMap } from '~/hooks/use-leaflet-map';
 import { useShelterData } from '~/hooks/use-shelter-data';
 import { L } from '~/lib/leaflet';
@@ -27,16 +27,6 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
     [shelters, columnFilters],
   );
 
-  const updateVisibleShelters = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) {
-      return;
-    }
-
-    const visible = filterSheltersWithinMap(map, displayedShelters);
-    syncShelterLayers(shelterLayers.group, shelterLayers.registry, visible, map.getZoom());
-  }, [displayedShelters, mapRef, shelterLayers]);
-
   useEffect(() => {
     const map = mapRef.current;
     if (!mapReady || !map) {
@@ -51,19 +41,17 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
   }, [mapReady, mapRef, shelterLayers]);
 
   useEffect(() => {
-    if (!mapReady) {
-      return;
-    }
-
-    updateVisibleShelters();
-  }, [mapReady, updateVisibleShelters]);
-
-  useEffect(() => {
     const map = mapRef.current;
     if (!mapReady || !map) {
       return;
     }
 
+    const updateVisibleShelters = () => {
+      const visible = filterSheltersWithinMap(map, displayedShelters);
+      syncShelterLayers(shelterLayers.group, shelterLayers.registry, visible, map.getZoom());
+    };
+
+    updateVisibleShelters();
     map.on('zoomlevelschange', updateVisibleShelters);
     map.on('moveend', updateVisibleShelters);
 
@@ -71,7 +59,7 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
       map.off('zoomlevelschange', updateVisibleShelters);
       map.off('moveend', updateVisibleShelters);
     };
-  }, [mapReady, mapRef, updateVisibleShelters]);
+  }, [displayedShelters, mapReady, mapRef, shelterLayers]);
 
   return {
     displayedShelters,

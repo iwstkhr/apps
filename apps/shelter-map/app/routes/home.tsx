@@ -1,17 +1,19 @@
+import { useRef } from 'react';
 import { MapHelpHint } from '~/components/map/map-help-hint';
 import { MapTileLayerControl } from '~/components/map/map-tile-layer-control';
 import { ShelterDataLoadingOverlay } from '~/components/map/shelter-data-loading-overlay';
 import { MapTable } from '~/components/table/map-table';
-import { ShelterMapProvider } from '~/context/shelter-map-provider';
-import { useShelterMapContext } from '~/hooks/use-shelter-map-context';
+import { useShelterMap } from '~/hooks/use-shelter-map';
 import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: '指定緊急避難場所マップ' }];
 }
 
-function HomeContent() {
-  const { mapContainerRef, isLoading, loadError } = useShelterMapContext();
+export default function Home() {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const { displayedShelters, isLoading, loadError, updateColumnFilters, changeTileLayer } =
+    useShelterMap(mapContainerRef);
 
   return (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
@@ -24,23 +26,15 @@ function HomeContent() {
         {isLoading && <ShelterDataLoadingOverlay />}
         <div className="pointer-events-none absolute top-2 right-2 z-[1000] max-w-[min(100%-1rem,20rem)] sm:top-3 sm:right-3 sm:max-w-none">
           <div className="pointer-events-auto rounded-md border border-slate-300 bg-white px-2.5 py-1.5 shadow-md sm:px-3 sm:py-2">
-            <MapTileLayerControl />
+            <MapTileLayerControl onChange={changeTileLayer} />
           </div>
         </div>
         <MapHelpHint />
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-[4] flex-col">
-        <MapTable />
+        <MapTable shelters={displayedShelters} onFiltersChange={updateColumnFilters} />
       </div>
     </section>
-  );
-}
-
-export default function Home() {
-  return (
-    <ShelterMapProvider>
-      <HomeContent />
-    </ShelterMapProvider>
   );
 }
