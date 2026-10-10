@@ -18,6 +18,8 @@ Hosts create an event and receive a shareable URL. Anyone with the URL can respo
 
 The header lets users switch between Japanese and English. Without a saved choice, the first supported language in the browser’s preferred languages is used; if none match Japanese or English, English is used. The choice is saved in the browser; event titles, memos, names, and messages stay as entered.
 
+The header’s Theme button opens a modal with Light / Dark / Automatic appearance settings and six color presets (Indigo, Aubergine, Ocean, Mint, Sunset, and Graphite), inspired by Slack’s palettes. Colors apply across all pages, forms, buttons, and links. Color selection is independent of system / light / dark mode; both preferences are saved in the browser.
+
 The app supports PWA installation on smartphone home screens and desktop computers.
 
 The in-app user guide (`/guide`) explains how to use the screens with screenshots.

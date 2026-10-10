@@ -8,7 +8,7 @@ export function Root() {
   useLanguage();
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <header className="theme-header border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <Link to="/" className="flex items-center gap-2 text-slate-900 dark:text-slate-50">
             {/* リンク名はテキストの「Tsudou」で足りるので、アイコンは装飾扱い */}

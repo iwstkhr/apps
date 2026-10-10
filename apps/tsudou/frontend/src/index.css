@@ -25,3 +25,70 @@ body {
 input[type='datetime-local'] {
   min-height: 2.5rem;
 }
+
+/* Palette tokens recolor all existing slate/indigo utilities, including forms and dialogs.
+   Status colors (red, amber, emerald) retain their meaning. White stays white for button text. */
+html[data-palette='aubergine'] {
+  --palette-accent: #611f69;
+  --palette-neutral: #29182e;
+  --palette-header: #faf5fb;
+}
+html[data-palette='ocean'] {
+  --palette-accent: #12617a;
+  --palette-neutral: #102a36;
+  --palette-header: #f1f9fc;
+}
+html[data-palette='mint'] {
+  --palette-accent: #16654c;
+  --palette-neutral: #142e25;
+  --palette-header: #f1faf6;
+}
+html[data-palette='sunset'] {
+  --palette-accent: #9b4516;
+  --palette-neutral: #352318;
+  --palette-header: #fff7f0;
+}
+html[data-palette='graphite'] {
+  --palette-accent: #454b54;
+  --palette-neutral: #22262c;
+  --palette-header: #f6f7f8;
+}
+html[data-palette]:not([data-palette='default']) {
+  --color-slate-50: color-mix(in srgb, var(--palette-neutral) 3%, white);
+  --color-slate-100: color-mix(in srgb, var(--palette-neutral) 6%, white);
+  --color-slate-200: color-mix(in srgb, var(--palette-neutral) 14%, white);
+  --color-slate-300: color-mix(in srgb, var(--palette-neutral) 25%, white);
+  --color-slate-400: color-mix(in srgb, var(--palette-neutral) 64%, white);
+  --color-slate-500: color-mix(in srgb, var(--palette-neutral) 66%, white);
+  --color-slate-600: color-mix(in srgb, var(--palette-neutral) 78%, white);
+  --color-slate-700: color-mix(in srgb, var(--palette-neutral) 88%, white);
+  --color-slate-800: color-mix(in srgb, var(--palette-neutral) 96%, white);
+  --color-slate-900: var(--palette-neutral);
+  --color-slate-950: color-mix(in srgb, var(--palette-neutral) 70%, black);
+  --color-indigo-50: color-mix(in srgb, var(--palette-accent) 5%, white);
+  --color-indigo-100: color-mix(in srgb, var(--palette-accent) 10%, white);
+  --color-indigo-200: color-mix(in srgb, var(--palette-accent) 22%, white);
+  --color-indigo-300: color-mix(in srgb, var(--palette-accent) 36%, white);
+  --color-indigo-400: color-mix(in srgb, var(--palette-accent) 48%, white);
+  --color-indigo-500: color-mix(in srgb, var(--palette-accent) 90%, white);
+  --color-indigo-600: var(--palette-accent);
+  --color-indigo-700: color-mix(in srgb, var(--palette-accent) 85%, black);
+  --color-indigo-800: color-mix(in srgb, var(--palette-accent) 70%, black);
+  --color-indigo-900: color-mix(in srgb, var(--palette-accent) 55%, black);
+  --color-indigo-950: color-mix(in srgb, var(--palette-accent) 35%, black);
+}
+html[data-palette]:not([data-palette='default'])[data-theme='light'] .theme-header {
+  background-color: var(--palette-header);
+}
+
+/* Dark surfaces need a separate ramp: borders must stay distinct from cards,
+   and secondary text and links must remain legible on every palette. */
+html[data-palette]:not([data-palette='default'])[data-theme='dark'] {
+  --color-slate-300: color-mix(in srgb, var(--palette-neutral) 18%, white);
+  --color-slate-400: color-mix(in srgb, var(--palette-neutral) 30%, white);
+  --color-slate-500: color-mix(in srgb, var(--palette-neutral) 45%, white);
+  --color-slate-600: color-mix(in srgb, var(--palette-neutral) 58%, white);
+  --color-slate-700: color-mix(in srgb, var(--palette-neutral) 70%, white);
+  --color-slate-800: color-mix(in srgb, var(--palette-neutral) 88%, white);
+  --color-indigo-400: color-mix(in srgb, var(--palette-accent) 30%, white);
+}

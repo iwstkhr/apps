@@ -76,7 +76,10 @@ describe('language switching', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Enter a nonnegative whole number for the fee.',
     );
-    expect(screen.getByRole('button', { name: 'Dark theme' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Choose theme' }));
+    expect(screen.getByRole('button', { name: 'Dark' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Automatic' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(localStorage.getItem(LANGUAGE_KEY)).toBe('en');
     expect(document.documentElement.lang).toBe('en');
     await user.selectOptions(screen.getByRole('combobox', { name: 'Language' }), 'ja');

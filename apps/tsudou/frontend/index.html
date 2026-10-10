@@ -36,11 +36,26 @@
         } catch {}
         const dark =
           pref === 'dark' ||
-          (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          (pref !== 'light' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+        // Keep palette IDs and header colors in sync with src/lib/theme-presets.ts.
+        const palettes = {
+          default: ['#ffffff', '#0f172b'],
+          aubergine: ['#faf5fb', '#29182e'],
+          ocean: ['#f1f9fc', '#102a36'],
+          mint: ['#f1faf6', '#142e25'],
+          sunset: ['#fff7f0', '#352318'],
+          graphite: ['#f6f7f8', '#22262c'],
+        };
+        let palette = 'default';
+        try {
+          const saved = localStorage.getItem('tsudou:palette');
+          if (Object.hasOwn(palettes, saved)) palette = saved;
+        } catch {}
+        document.documentElement.dataset.palette = palette;
         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         document
           .querySelector('meta[name="theme-color"]')
-          .setAttribute('content', dark ? '#0f172b' : '#ffffff');
+          .setAttribute('content', palettes[palette][dark ? 1 : 0]);
       })();
     </script>
   </head>

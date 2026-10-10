@@ -1,5 +1,21 @@
 // Japanese source text maps to English UI text. User-provided content is never translated.
 export const english: Record<string, string> = {
+  配色: 'Colors',
+  配色テーマ: 'Color theme',
+  テーマを選択: 'Choose theme',
+  表示モード: 'Appearance',
+  ライト: 'Light',
+  ダーク: 'Dark',
+  自動: 'Automatic',
+  '自動は端末の設定に合わせます。': 'Automatic follows your device settings.',
+  '配色はアプリ全体にすぐ反映され、このブラウザに保存されます。':
+    'Colors apply immediately across the app and are saved in this browser.',
+  インディゴ: 'Indigo',
+  オーベルジーヌ: 'Aubergine',
+  オーシャン: 'Ocean',
+  ミント: 'Mint',
+  サンセット: 'Sunset',
+  グラファイト: 'Graphite',
   '何もしなくても {0} 以降に自動削除されます。': 'Automatically deleted on or after {0}.',
   'イベントが指定されていません。': 'No event was specified.',
   イベントを作成しました: 'Event created',

@@ -325,6 +325,7 @@ Only theme and language preferences are persisted in `localStorage`. Read/write 
 | Key | Contents |
 | --- | --- |
 | `tsudou:language` | Display language (`ja` / `en`); defaults to the first supported browser language, otherwise English |
+| `tsudou:palette` | Color preset (`aubergine` / `ocean` / `mint` / `sunset` / `graphite`); choosing default Indigo removes the key |
 | `tsudou:theme` | Theme choice (`light` / `dark`); choosing system removes the key |
 
 Management tokens and response edit keys are **never persisted**, preventing the next user of a shared computer from changing events or responses.
@@ -337,7 +338,7 @@ Legacy `tsudou:hosted` / `tsudou:answered` entries are deleted at startup.
 - `<meta name="referrer" content="no-referrer">` suppresses Referer headers on external links. Cloudflare also returns `Referrer-Policy: no-referrer`, HSTS, and other security headers.
 - Only the home page (`/`) is indexed by search engines. Since the SPA returns the same `index.html` for every path, indexing is controlled through `_headers` with `X-Robots-Tag: noindex, nofollow`, rather than an HTML robots meta tag. It applies to every path except the home page, so new routes default to exclusion. No `robots.txt` blocks crawling, because that would prevent crawlers from reading `noindex`.
 - Preserve line breaks in memos and messages, but never interpret them as HTML.
-- Support mobile widths and light/dark themes. The header offers system / light / dark; the default system choice follows OS settings.
+- Support mobile widths and light/dark themes. The header opens a theme modal with labeled Light / Dark / Automatic controls; Automatic follows OS settings by default. The same modal previews six Slack-inspired presets: Indigo (default), Aubergine, Ocean, Mint, Sunset, and Graphite. Selection immediately recolors the entire app in either light or dark mode and survives reloads; invalid saved values fall back to Indigo.
 - The unauthenticated API limits abuse to 100 requests per IP per 60 seconds. CORS is not enabled for other origins, preventing browser calls from pages on other sites.
 
 ## Out of scope
