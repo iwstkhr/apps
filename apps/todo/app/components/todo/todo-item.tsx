@@ -11,6 +11,7 @@ import {
 import { MarkdownMemo } from '~/components/todo/markdown-memo';
 import { TodoForm } from '~/components/todo/todo-form';
 import { cn } from '~/lib/cn';
+import { t } from '~/lib/i18n';
 import { setDraggedTodo } from '~/lib/todo-drag';
 import type { DropPosition } from '~/lib/todo-order';
 import type { Folder } from '~/types/folder';
@@ -89,7 +90,7 @@ export function TodoItem({
       <li className="rounded-lg border border-blue-300 bg-white p-3 dark:border-blue-800 dark:bg-slate-900">
         <TodoForm
           initial={todo}
-          submitLabel="保存"
+          submitLabel={t('保存')}
           tagSuggestions={tagSuggestions}
           folders={folders}
           onSubmit={async (input) => {
@@ -120,12 +121,12 @@ export function TodoItem({
         checked={done}
         // 完了を外したときは未着手に戻す
         onChange={() => onStatusChange(todo.id, done ? 'todo' : 'done')}
-        aria-label={`「${todo.title}」を${done ? '未着手に戻す' : '完了にする'}`}
+        aria-label={t(done ? '「{0}」を未着手に戻す' : '「{0}」を完了にする', [todo.title])}
       />
 
       <div className="min-w-0 flex-1">
         <section
-          aria-label={`「${todo.title}」のヘッダー`}
+          aria-label={t('「{0}」のヘッダー', [todo.title])}
           draggable
           onDragStart={(event) => {
             setDraggedTodo(event.dataTransfer, todo.id, todo.title);
@@ -151,11 +152,11 @@ export function TodoItem({
             )}
             value={todo.status}
             onChange={(event) => onStatusChange(todo.id, event.target.value as TodoStatus)}
-            aria-label={`「${todo.title}」のステータス`}
+            aria-label={t('「{0}」のステータス', [todo.title])}
           >
             {STATUSES.map((status) => (
               <option key={status} value={status}>
-                {STATUS_LABELS[status]}
+                {t(STATUS_LABELS[status])}
               </option>
             ))}
           </select>
@@ -166,11 +167,11 @@ export function TodoItem({
             )}
             value={todo.priority}
             onChange={(event) => onPriorityChange(todo.id, event.target.value as Priority)}
-            aria-label={`「${todo.title}」の優先度`}
+            aria-label={t('「{0}」の優先度', [todo.title])}
           >
             {PRIORITIES.map((priority) => (
               <option key={priority} value={priority}>
-                優先度: {PRIORITY_LABELS[priority]}
+                {t('優先度: {0}', [t(PRIORITY_LABELS[priority])])}
               </option>
             ))}
           </select>
@@ -184,15 +185,15 @@ export function TodoItem({
                   'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
               )}
             >
-              期限: {todo.dueDate.replaceAll('-', '/')}
-              {dueStatus === 'overdue' && ' (期限切れ)'}
-              {dueStatus === 'today' && ' (今日)'}
+              {t('期限: {0}', [todo.dueDate.replaceAll('-', '/')])}
+              {dueStatus === 'overdue' && t(' (期限切れ)')}
+              {dueStatus === 'today' && t(' (今日)')}
             </span>
           )}
           {folderPath && (
             <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
               <FaFolder aria-hidden="true" />
-              <span className="sr-only">フォルダ: </span>
+              <span className="sr-only">{t('フォルダ: ')}</span>
               {folderPath}
             </span>
           )}
@@ -205,7 +206,7 @@ export function TodoItem({
                 type="button"
                 className="cursor-pointer py-0.5 pl-2 pr-1 hover:bg-blue-100 dark:hover:bg-blue-900"
                 onClick={() => onTagClick(tag)}
-                title={`タグ「${tag}」で絞り込む`}
+                title={t('タグ「{0}」で絞り込む', [tag])}
               >
                 #{tag}
               </button>
@@ -213,8 +214,8 @@ export function TodoItem({
                 type="button"
                 className="cursor-pointer py-1 pl-1 pr-2 hover:bg-blue-100 dark:hover:bg-blue-900"
                 onClick={() => onRemoveTag(todo.id, tag)}
-                aria-label={`「${todo.title}」からタグ「${tag}」を削除`}
-                title={`タグ「${tag}」を削除`}
+                aria-label={t('「{0}」からタグ「{1}」を削除', [todo.title, tag])}
+                title={t('タグ「{0}」を削除', [tag])}
               >
                 <FaTimes className="h-2.5 w-2.5" aria-hidden="true" />
               </button>
@@ -229,8 +230,8 @@ export function TodoItem({
             type="button"
             className={iconButtonClass}
             onClick={onMoveUp}
-            aria-label={`「${todo.title}」を上へ移動`}
-            title="上へ移動"
+            aria-label={t('「{0}」を上へ移動', [todo.title])}
+            title={t('上へ移動')}
           >
             <FaArrowUp aria-hidden="true" />
           </button>
@@ -240,8 +241,8 @@ export function TodoItem({
             type="button"
             className={iconButtonClass}
             onClick={onMoveDown}
-            aria-label={`「${todo.title}」を下へ移動`}
-            title="下へ移動"
+            aria-label={t('「{0}」を下へ移動', [todo.title])}
+            title={t('下へ移動')}
           >
             <FaArrowDown aria-hidden="true" />
           </button>
@@ -250,7 +251,7 @@ export function TodoItem({
           type="button"
           className={iconButtonClass}
           onClick={() => setEditing(true)}
-          aria-label={`「${todo.title}」を編集`}
+          aria-label={t('「{0}」を編集', [todo.title])}
         >
           <FaPen aria-hidden="true" />
         </button>
@@ -258,7 +259,7 @@ export function TodoItem({
           type="button"
           className={cn(iconButtonClass, 'hover:text-red-600 dark:hover:text-red-400')}
           onClick={() => onRemove(todo.id)}
-          aria-label={`「${todo.title}」を削除`}
+          aria-label={t('「{0}」を削除', [todo.title])}
         >
           <FaTrash aria-hidden="true" />
         </button>

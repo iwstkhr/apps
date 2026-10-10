@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { cn } from '~/lib/cn';
+import { t } from '~/lib/i18n';
 
 interface SidebarPanelProps {
   open: boolean;
@@ -75,7 +76,7 @@ export function SidebarPanel({ open, onClose, children }: SidebarPanelProps) {
       {open && !desktop && (
         <button
           type="button"
-          aria-label="メニューの背景を閉じる"
+          aria-label={t('メニューの背景を閉じる')}
           tabIndex={-1}
           className="fixed inset-0 z-30 bg-slate-900/50 lg:hidden"
           onClick={onClose}
@@ -85,7 +86,7 @@ export function SidebarPanel({ open, onClose, children }: SidebarPanelProps) {
         id="folder-panel"
         ref={panelRef}
         {...(open && !desktop
-          ? { role: 'dialog', 'aria-modal': true, 'aria-label': 'メニュー' }
+          ? { role: 'dialog', 'aria-modal': true, 'aria-label': t('メニュー') }
           : {})}
         aria-hidden={!open && !desktop ? true : undefined}
         inert={!open && !desktop ? true : undefined}
@@ -95,11 +96,11 @@ export function SidebarPanel({ open, onClose, children }: SidebarPanelProps) {
         )}
       >
         <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-2 lg:hidden dark:border-slate-800">
-          <span className="font-semibold">メニュー</span>
+          <span className="font-semibold">{t('メニュー')}</span>
           <button
             ref={closeRef}
             type="button"
-            aria-label="メニューを閉じる"
+            aria-label={t('メニューを閉じる')}
             className="rounded-md p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
             onClick={onClose}
           >

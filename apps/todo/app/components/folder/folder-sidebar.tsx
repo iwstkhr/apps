@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa';
 import { cn } from '~/lib/cn';
 import { type FolderSelection, flattenFolderTree } from '~/lib/folder-tree';
+import { t } from '~/lib/i18n';
 import { getDraggedTodo, isDraggingTodo } from '~/lib/todo-drag';
 import type { Folder } from '~/types/folder';
 
@@ -115,14 +116,14 @@ export function FolderSidebar({
         aria-current={selection === value ? 'true' : undefined}
       >
         <Icon className="shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-        <span className="truncate">{label}</span>
+        <span className="truncate">{t(label)}</span>
         <Count value={openCounts.get(value)} />
       </button>
     </li>
   );
 
   return (
-    <nav aria-label="フォルダ" className="flex flex-col gap-2">
+    <nav aria-label={t('フォルダ')} className="flex flex-col gap-2">
       <ul className="flex flex-col gap-0.5">
         {fixedItem('all', 'すべて', FaLayerGroup)}
         {fixedItem('unfiled', '未分類', FaInbox)}
@@ -130,14 +131,14 @@ export function FolderSidebar({
 
       <div className="flex items-center justify-between border-t border-slate-200 pt-2 dark:border-slate-800">
         <span className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-          フォルダ
+          {t('フォルダ')}
         </span>
         <button
           type="button"
           className={actionClass}
           onClick={() => onAdd(null)}
-          aria-label="新しいフォルダ"
-          title="新しいフォルダ"
+          aria-label={t('新しいフォルダ')}
+          title={t('新しいフォルダ')}
         >
           <FaFolderPlus aria-hidden="true" />
         </button>
@@ -145,7 +146,7 @@ export function FolderSidebar({
 
       {entries.length === 0 ? (
         <p className="px-2 text-xs text-slate-500 dark:text-slate-400">
-          フォルダはまだありません。
+          {t('フォルダはまだありません。')}
         </p>
       ) : (
         <ul className="flex flex-col gap-0.5">
@@ -168,7 +169,10 @@ export function FolderSidebar({
                     className="shrink-0 rounded p-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
                     onClick={() => onToggleCollapsed(folder.id)}
                     aria-expanded={!isCollapsed}
-                    aria-label={`フォルダ「${folder.name}」を${isCollapsed ? '開く' : '閉じる'}`}
+                    aria-label={t(
+                      isCollapsed ? 'フォルダ「{0}」を開く' : 'フォルダ「{0}」を閉じる',
+                      [folder.name],
+                    )}
                   >
                     {isCollapsed ? (
                       <FaChevronRight className="h-3 w-3" aria-hidden="true" />
@@ -207,8 +211,8 @@ export function FolderSidebar({
                     type="button"
                     className={actionClass}
                     onClick={() => onAdd(folder.id)}
-                    aria-label={`フォルダ「${folder.name}」の中にフォルダを追加`}
-                    title="この中にフォルダを追加"
+                    aria-label={t('フォルダ「{0}」の中にフォルダを追加', [folder.name])}
+                    title={t('この中にフォルダを追加')}
                   >
                     <FaFolderPlus className="h-3 w-3" aria-hidden="true" />
                   </button>
@@ -216,8 +220,8 @@ export function FolderSidebar({
                     type="button"
                     className={actionClass}
                     onClick={() => onEdit(folder)}
-                    aria-label={`フォルダ「${folder.name}」を編集`}
-                    title="名前・色・場所を変更"
+                    aria-label={t('フォルダ「{0}」を編集', [folder.name])}
+                    title={t('名前・色・場所を変更')}
                   >
                     <FaPen className="h-3 w-3" aria-hidden="true" />
                   </button>
@@ -225,8 +229,8 @@ export function FolderSidebar({
                     type="button"
                     className={cn(actionClass, 'hover:text-red-600 dark:hover:text-red-400')}
                     onClick={() => onRemove(folder)}
-                    aria-label={`フォルダ「${folder.name}」を削除`}
-                    title="削除"
+                    aria-label={t('フォルダ「{0}」を削除', [folder.name])}
+                    title={t('削除')}
                   >
                     <FaTrash className="h-3 w-3" aria-hidden="true" />
                   </button>

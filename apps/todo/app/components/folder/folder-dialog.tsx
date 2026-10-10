@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FaFolder } from 'react-icons/fa';
 import { FolderSelect } from '~/components/folder/folder-select';
 import { Modal } from '~/components/layout/modal';
+import { t } from '~/lib/i18n';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
 import {
   DEFAULT_FOLDER_COLOR,
@@ -44,7 +45,7 @@ export function FolderDialog({
   const canSubmit = name.trim() !== '';
 
   return (
-    <Modal title={folder ? 'フォルダを編集' : '新しいフォルダ'} onClose={onCancel}>
+    <Modal title={t(folder ? 'フォルダを編集' : '新しいフォルダ')} onClose={onCancel}>
       <form
         className="mt-4 flex flex-col gap-3"
         onSubmit={(event) => {
@@ -53,17 +54,17 @@ export function FolderDialog({
         }}
       >
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-slate-600 dark:text-slate-400">名前</span>
+          <span className="text-slate-600 dark:text-slate-400">{t('名前')}</span>
           <input
             className={inputClass}
             value={name}
             onChange={(event) => setName(event.target.value)}
             maxLength={FOLDER_NAME_MAX_LENGTH}
-            aria-label="フォルダ名"
+            aria-label={t('フォルダ名')}
           />
         </label>
         <fieldset>
-          <legend className="mb-2 text-sm text-slate-600 dark:text-slate-400">色</legend>
+          <legend className="mb-2 text-sm text-slate-600 dark:text-slate-400">{t('色')}</legend>
           <div className="grid grid-cols-4 gap-2">
             {COLOR_PRESETS.map((preset) => (
               <label key={preset.value} className="cursor-pointer">
@@ -74,7 +75,7 @@ export function FolderDialog({
                   checked={color === preset.value}
                   onChange={() => setColor(preset.value)}
                   className="peer sr-only"
-                  aria-label={preset.label}
+                  aria-label={t(preset.label)}
                 />
                 <span className="flex flex-col items-center gap-1 rounded-md border border-slate-300 px-2 py-2 text-xs peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:ring-1 peer-checked:ring-blue-500 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-500 dark:border-slate-700 dark:peer-checked:border-blue-400 dark:peer-checked:bg-blue-950 dark:peer-checked:ring-blue-400">
                   <FaFolder
@@ -82,7 +83,7 @@ export function FolderDialog({
                     style={{ color: preset.value }}
                     aria-hidden="true"
                   />
-                  {preset.label}
+                  {t(preset.label)}
                 </span>
               </label>
             ))}
@@ -90,24 +91,24 @@ export function FolderDialog({
         </fieldset>
         <div className="flex flex-col gap-1 text-sm">
           <span className="text-slate-600 dark:text-slate-400" aria-hidden="true">
-            親フォルダ
+            {t('親フォルダ')}
           </span>
           <FolderSelect
             className={inputClass}
             folders={folders}
             value={parentId}
             onChange={setParentId}
-            noneLabel="なし (最上位)"
+            noneLabel={t('なし (最上位)')}
             excludeSubtreeOf={folder?.id}
-            aria-label="親フォルダ"
+            aria-label={t('親フォルダ')}
           />
         </div>
         <div className="mt-2 flex justify-end gap-2">
           <button type="button" className={secondaryButtonClass} onClick={onCancel}>
-            キャンセル
+            {t('キャンセル')}
           </button>
           <button type="submit" className={primaryButtonClass} disabled={!canSubmit}>
-            {folder ? '保存' : '作成'}
+            {t(folder ? '保存' : '作成')}
           </button>
         </div>
       </form>

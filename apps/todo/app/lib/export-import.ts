@@ -1,4 +1,5 @@
 import { sanitizeFolders, sanitizeTodoFolders } from '~/lib/folder-tree';
+import { t } from '~/lib/i18n';
 import type { StoredData } from '~/lib/todo-db';
 import { type Folder, toFolder } from '~/types/folder';
 import { type Todo, toLocalDateString, toTodo } from '~/types/todo';
@@ -83,18 +84,20 @@ export function parseImport(text: string): ParsedImport {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new ImportError('JSON として読み込めませんでした。');
+    throw new ImportError(t('JSON として読み込めませんでした。'));
   }
 
   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-    throw new ImportError('このアプリでエクスポートしたファイルではありません。');
+    throw new ImportError(t('このアプリでエクスポートしたファイルではありません。'));
   }
   const record = data as Record<string, unknown>;
   if (record.app !== EXPORT_APP || !Array.isArray(record.todos)) {
-    throw new ImportError('このアプリでエクスポートしたファイルではありません。');
+    throw new ImportError(t('このアプリでエクスポートしたファイルではありません。'));
   }
   if (record.version !== EXPORT_VERSION) {
-    throw new ImportError(`対応していない形式のバージョンです (${String(record.version)})。`);
+    throw new ImportError(
+      t('対応していない形式のバージョンです ({0})。', [String(record.version)]),
+    );
   }
 
   const todos = dedupe(record.todos, toTodo);

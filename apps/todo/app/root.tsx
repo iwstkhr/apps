@@ -9,6 +9,7 @@ import {
 import { publicUrl } from '~/lib/public-url';
 import type { Route } from './+types/root';
 import './app.css';
+import { t } from '~/lib/i18n';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', href: publicUrl('favicon.svg'), type: 'image/svg+xml' },
@@ -37,13 +38,15 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = 'エラーが発生しました';
-  let details = '予期しないエラーが発生しました。';
+  let message = t('エラーが発生しました');
+  let details = t('予期しないエラーが発生しました。');
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'エラー';
+    message = error.status === 404 ? '404' : t('エラー');
     details =
-      error.status === 404 ? 'お探しのページは見つかりませんでした。' : error.statusText || details;
+      error.status === 404
+        ? t('お探しのページは見つかりませんでした。')
+        : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
   }

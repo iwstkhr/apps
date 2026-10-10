@@ -153,6 +153,23 @@
   background: #ffffff18;
 }
 
+/* 言語の切り替えもヘッダーのボタンと同じ見た目にする */
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .language-select {
+  background: #ffffff0a;
+  color: #f8fafc;
+  border-color: #ffffff40;
+}
+
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .language-select:hover {
+  background: #ffffff18;
+}
+
+/* 開いた選択肢の一覧はブラウザの既定の配色のまま読めるようにする */
+.theme-header .language-select option {
+  color: initial;
+  background: initial;
+}
+
 :root[data-theme]:not([data-theme="indigo"]) .theme-header .app-logo {
   color: #f8fafc;
 }

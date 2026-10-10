@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createExport } from '~/lib/export-import';
+import { LANGUAGE_KEY } from '~/lib/i18n';
 import { closeDbForTesting, getAll, putAll, putTodos } from '~/lib/todo-db';
 import Home from '~/routes/home';
 import { createDataTransfer } from '~/test/drag';
@@ -18,6 +19,7 @@ beforeEach(() => {
 
 afterEach(async () => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   vi.useRealTimers();
   localStorage.clear();
   await closeDbForTesting();
@@ -69,6 +71,44 @@ describe('Home', () => {
     expect(screen.getByRole('contentinfo')).toHaveTextContent(
       '© 2031 wasabee.dev. All Rights Reserved.',
     );
+  });
+
+  describe('language', () => {
+    it('switches the screen to English, keeps user data as is, and remembers the choice', async () => {
+      await putTodos([createTodoFixture({ title: '牛乳を買う', status: 'in_progress' })]);
+      const user = await renderHome();
+
+      await user.selectOptions(screen.getByRole('combobox', { name: '言語' }), 'en');
+      expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+      expect(screen.getByRole('navigation', { name: 'Folders' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('checkbox', { name: 'Mark "牛乳を買う" as done' }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: 'Status of "牛乳を買う"' })).toHaveDisplayValue(
+        'In progress',
+      );
+      expect(document.documentElement.lang).toBe('en');
+      expect(localStorage.getItem(LANGUAGE_KEY)).toBe('en');
+
+      // 作り直しても英語のまま
+      cleanup();
+      await renderHome();
+      expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+
+      await userEvent
+        .setup()
+        .selectOptions(screen.getByRole('combobox', { name: 'Language' }), 'ja');
+      expect(screen.getByRole('button', { name: '追加' })).toBeInTheDocument();
+      expect(document.documentElement.lang).toBe('ja');
+    });
+
+    it('follows the browser language until a language is chosen', async () => {
+      localStorage.removeItem(LANGUAGE_KEY);
+      vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US', 'ja-JP']);
+      await renderHome();
+      expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
+    });
   });
 
   it('shows the empty state', async () => {

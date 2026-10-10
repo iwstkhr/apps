@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { FolderSelect } from '~/components/folder/folder-select';
+import { t } from '~/lib/i18n';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
 import type { Folder } from '~/types/folder';
 import {
@@ -95,8 +96,8 @@ export function TodoForm({
           className={inputClass}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="やること"
-          aria-label="タイトル"
+          placeholder={t('やること')}
+          aria-label={t('タイトル')}
           maxLength={200}
           // biome-ignore lint/a11y/noAutofocus: 編集を始めたらすぐ入力できるようにする
           autoFocus={Boolean(onCancel)}
@@ -109,7 +110,7 @@ export function TodoForm({
             aria-controls={`${id}-details`}
             onClick={() => setExpanded((value) => !value)}
           >
-            詳細
+            {t('詳細')}
           </button>
         )}
         {/* 編集フォームでは保存をキャンセルと並べて下に置く */}
@@ -126,16 +127,16 @@ export function TodoForm({
             className={`${inputClass} sm:col-span-3`}
             value={memo}
             onChange={(event) => setMemo(event.target.value)}
-            placeholder="メモ"
-            aria-label="メモ"
+            placeholder={t('メモ')}
+            aria-label={t('メモ')}
             rows={3}
           />
           <input
             className={inputClass}
             value={tagText}
             onChange={(event) => setTagText(event.target.value)}
-            placeholder="タグ (カンマ区切り)"
-            aria-label="タグ"
+            placeholder={t('タグ (カンマ区切り)')}
+            aria-label={t('タグ')}
             list={`${id}-tags`}
           />
           <datalist id={`${id}-tags`}>
@@ -144,41 +145,41 @@ export function TodoForm({
             ))}
           </datalist>
           <label className="flex items-center gap-1.5 text-sm">
-            <span className="shrink-0 text-slate-600 dark:text-slate-400">期限</span>
+            <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('期限')}</span>
             <input
               type="date"
               className={inputClass}
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
-              aria-label="期限"
+              aria-label={t('期限')}
             />
           </label>
           <label className="flex items-center gap-1.5 text-sm">
-            <span className="shrink-0 text-slate-600 dark:text-slate-400">優先度</span>
+            <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('優先度')}</span>
             <select
               className={inputClass}
               value={priority}
               onChange={(event) => setPriority(event.target.value as Priority)}
-              aria-label="優先度"
+              aria-label={t('優先度')}
             >
               {PRIORITIES.map((value) => (
                 <option key={value} value={value}>
-                  {PRIORITY_LABELS[value]}
+                  {t(PRIORITY_LABELS[value])}
                 </option>
               ))}
             </select>
           </label>
           <div className="flex items-center gap-1.5 text-sm sm:col-span-3">
             <span className="shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true">
-              フォルダ
+              {t('フォルダ|項目')}
             </span>
             <FolderSelect
               className={inputClass}
               folders={folders}
               value={folderId}
               onChange={setFolderId}
-              noneLabel="未分類"
-              aria-label="フォルダ"
+              noneLabel={t('未分類')}
+              aria-label={t('フォルダ|項目')}
             />
           </div>
         </div>
@@ -187,7 +188,7 @@ export function TodoForm({
       {onCancel && (
         <div className="flex justify-end gap-2">
           <button type="button" className={secondaryButtonClass} onClick={onCancel}>
-            キャンセル
+            {t('キャンセル')}
           </button>
           <button type="submit" className={`${primaryButtonClass} shrink-0`} disabled={!canSubmit}>
             {submitLabel}

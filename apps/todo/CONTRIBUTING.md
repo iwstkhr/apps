@@ -51,6 +51,8 @@ Code comments may remain in Japanese. Preserve actual Japanese UI labels when qu
 
 ## Implementation conventions
 
+- Write UI text in Japanese and wrap it with `t()` from `app/lib/i18n.ts`, then add the English text to `app/lib/translations.ts` (use `{0}` placeholders for values instead of building strings).
+  `app/lib/i18n.test.ts` fails when a `t()` string or a `label: '…'` literal has no English translation. Never pass user-entered content to `t()`.
 - Name source files in kebab-case (`app-header.tsx`, `use-todos.ts`), including components and hooks.
   Biome's `useFilenamingConvention` rule enforces this in `pnpm run check`.
 - Reference static assets under `public/` through `publicUrl()` (`app/lib/public-url.ts`).

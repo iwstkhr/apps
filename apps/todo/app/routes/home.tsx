@@ -1,4 +1,4 @@
-import { type CSSProperties, useCallback, useMemo, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
 import { FaFolder, FaTimes } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
@@ -20,6 +20,7 @@ import {
   formatFolderPath,
   getSubtreeIds,
 } from '~/lib/folder-tree';
+import { APP_DESCRIPTION, applyLanguage, t, useLanguage } from '~/lib/i18n';
 import { secondaryButtonClass } from '~/lib/styles';
 import {
   applyFilters,
@@ -37,7 +38,8 @@ export function meta(_args: Route.MetaArgs) {
     { title: 'TODO' },
     {
       name: 'description',
-      content: 'ブラウザだけで使える TODO 管理アプリ。データは端末の中にだけ保存されます。',
+      // 表示した後は applyLanguage() が選んだ言語の説明文に置き換える
+      content: APP_DESCRIPTION,
     },
   ];
 }
@@ -51,6 +53,9 @@ type FolderDialogState =
   | { mode: 'edit'; folder: Folder };
 
 export default function Home() {
+  // 言語を変えたら画面全体を描き直す (各コンポーネントは t() で今の言語の文言を出す)
+  const language = useLanguage();
+  useEffect(() => applyLanguage(language), [language]);
   const {
     todos,
     folders,
@@ -96,9 +101,9 @@ export default function Home() {
       : 'all';
   const selectionLabel =
     selection === 'all'
-      ? 'すべて'
+      ? t('すべて')
       : selection === 'unfiled'
-        ? '未分類'
+        ? t('未分類')
         : formatFolderPath(folders, selection);
   const isRealFolder = selection !== 'all' && selection !== 'unfiled';
   const selectedFolderColor =
@@ -137,8 +142,11 @@ export default function Home() {
     const todo = todos.find((t) => t.id === todoId);
     if (!todo || todo.folderId === folderId) return;
     await moveTodo(todoId, folderId);
-    const destination = folderId === null ? '未分類' : formatFolderPath(folders, folderId);
-    setNotice({ kind: 'info', text: `「${todo.title}」を「${destination}」に移動しました。` });
+    const destination = folderId === null ? t('未分類') : formatFolderPath(folders, folderId);
+    setNotice({
+      kind: 'info',
+      text: t('「{0}」を「{1}」に移動しました。', [todo.title, destination]),
+    });
   };
 
   const handleFolderSubmit = async (input: FolderInput) => {
@@ -164,9 +172,9 @@ export default function Home() {
     const ids = getSubtreeIds(folders, folder.id);
     const subfolderCount = ids.size - 1;
     const todoCount = todos.filter((t) => t.folderId !== null && ids.has(t.folderId)).length;
-    const lines = [`フォルダ「${folder.name}」を削除しますか？`];
-    if (subfolderCount > 0) lines.push(`中のフォルダ ${subfolderCount} 件も削除されます。`);
-    if (todoCount > 0) lines.push(`中の TODO ${todoCount} 件は未分類に移ります。`);
+    const lines = [t('フォルダ「{0}」を削除しますか？', [folder.name])];
+    if (subfolderCount > 0) lines.push(t('中のフォルダ {0} 件も削除されます。', [subfolderCount]));
+    if (todoCount > 0) lines.push(t('中の TODO {0} 件は未分類に移ります。', [todoCount]));
     if (window.confirm(lines.join('\n'))) void removeFolder(folder.id);
   };
 
@@ -178,7 +186,7 @@ export default function Home() {
     } catch (e) {
       setNotice({
         kind: 'error',
-        text: e instanceof ImportError ? e.message : 'ファイルを読み込めませんでした。',
+        text: e instanceof ImportError ? e.message : t('ファイルを読み込めませんでした。'),
       });
     }
   };
@@ -190,7 +198,10 @@ export default function Home() {
     await importData({ todos: importedTodos, folders: importedFolders }, mode);
     setNotice({
       kind: 'info',
-      text: `TODO ${importedTodos.length} 件とフォルダ ${importedFolders.length} 件をインポートしました。`,
+      text: t('TODO {0} 件とフォルダ {1} 件をインポートしました。', [
+        importedTodos.length,
+        importedFolders.length,
+      ]),
     });
   };
 
@@ -199,20 +210,20 @@ export default function Home() {
 
   const handleRemove = (id: string) => {
     const todo = todos.find((t) => t.id === id);
-    if (todo && window.confirm(`「${todo.title}」を削除しますか？`)) void removeTodo(id);
+    if (todo && window.confirm(t('「{0}」を削除しますか？', [todo.title]))) void removeTodo(id);
   };
 
   const handleRemoveCompleted = () => {
-    if (window.confirm(`完了済みの ${doneCount} 件を削除しますか？`)) void removeCompleted();
+    if (window.confirm(t('完了済みの {0} 件を削除しますか？', [doneCount]))) void removeCompleted();
   };
 
   const isFiltered =
     filters.keyword.trim() !== '' || filters.status !== 'all' || filters.tag !== null;
   const emptyMessage = isFiltered
-    ? '条件に合う TODO はありません。'
+    ? t('条件に合う TODO はありません。')
     : todos.length === 0
-      ? 'TODO はまだありません。上のフォームから追加してください。'
-      : 'ここに TODO はありません。';
+      ? t('TODO はまだありません。上のフォームから追加してください。')
+      : t('ここに TODO はありません。');
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -288,7 +299,7 @@ export default function Home() {
                 {!error && notice && (
                   <button
                     type="button"
-                    aria-label="通知を閉じる"
+                    aria-label={t('通知を閉じる')}
                     className="shrink-0 rounded p-1 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:bg-white/10"
                     onClick={() => setNotice(null)}
                   >
@@ -310,11 +321,11 @@ export default function Home() {
             </h2>
 
             <section
-              aria-label="TODO を追加"
+              aria-label={t('TODO を追加')}
               className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
             >
               <TodoForm
-                submitLabel="追加"
+                submitLabel={t('追加')}
                 collapsible
                 tagSuggestions={tags}
                 folders={folders}
@@ -334,7 +345,7 @@ export default function Home() {
 
             {isLoading ? (
               <p className="p-8 text-center text-sm text-slate-500" role="status">
-                読み込み中…
+                {t('読み込み中…')}
               </p>
             ) : (
               <TodoList
@@ -371,16 +382,19 @@ export default function Home() {
                   className={secondaryButtonClass}
                   onClick={handleRemoveCompleted}
                 >
-                  完了済みを削除 ({doneCount})
+                  {t('完了済みを削除 ({0})', [doneCount])}
                 </button>
               </div>
             )}
           </main>
           <footer className="text-xs text-slate-500 dark:text-slate-400">
             <p>
-              データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。
-              ブラウザのデータを削除すると TODO
-              も消えるため、定期的にエクスポートしてバックアップしてください。
+              {t(
+                'データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。',
+              )}{' '}
+              {t(
+                'ブラウザのデータを削除すると TODO も消えるため、定期的にエクスポートしてバックアップしてください。',
+              )}
             </p>
             <p className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-slate-800">
               © {new Date().getFullYear()} wasabee.dev. All Rights Reserved.

@@ -1,6 +1,7 @@
 import { type DragEvent, useState } from 'react';
 import { TodoItem } from '~/components/todo/todo-item';
 import { type FolderSelection, formatFolderPath } from '~/lib/folder-tree';
+import { t } from '~/lib/i18n';
 import { getDraggedTodo, isDraggingTodo } from '~/lib/todo-drag';
 import type { DropPosition } from '~/lib/todo-order';
 import type { Folder } from '~/types/folder';
@@ -54,7 +55,7 @@ export function TodoList({
   return (
     <ul
       className="flex flex-col gap-2"
-      aria-label="TODO 一覧"
+      aria-label={t('TODO 一覧')}
       onDragOver={(event) => {
         if (!onReorder || !isDraggingTodo(event.dataTransfer)) return;
         const target = findDropTarget(event);

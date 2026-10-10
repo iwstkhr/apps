@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { mergeData } from '~/lib/export-import';
 import { getSubtreeIds, wouldCreateCycle } from '~/lib/folder-tree';
+import { t } from '~/lib/i18n';
 import {
   deleteFolders,
   deleteTodos,
@@ -77,7 +78,7 @@ export function useTodos(): UseTodos {
       setError(null);
     } catch {
       setError(
-        'データを読み込めませんでした。ブラウザの設定で保存が許可されているか確認してください。',
+        t('データを読み込めませんでした。ブラウザの設定で保存が許可されているか確認してください。'),
       );
     } finally {
       setIsLoading(false);
@@ -108,7 +109,7 @@ export function useTodos(): UseTodos {
         setError(null);
         channelRef.current?.postMessage('changed');
       } catch {
-        setError('保存できませんでした。もう一度お試しください。');
+        setError(t('保存できませんでした。もう一度お試しください。'));
         await reload();
       }
     },

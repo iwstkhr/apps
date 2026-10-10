@@ -1,12 +1,13 @@
 import Markdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { t } from '~/lib/i18n';
 
 const components: Components = {
   a: ({ node: _node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
   // メモを表示するだけで外部サーバーへ画像を取得しに行かない。
   img: ({ src, alt }) => (
     <a href={src} target="_blank" rel="noopener noreferrer">
-      {alt || '画像'}
+      {alt || t('画像')}
     </a>
   ),
 };

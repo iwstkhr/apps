@@ -39,6 +39,14 @@ The header's テーマ button opens a dialog titled テーマ with six presets: 
 
 The selection is stored separately in localStorage (`todo:theme`) and restored after a reload. Missing, invalid, or inaccessible preferences, including presets that no longer exist, use インディゴ; if storage is unavailable, themes can still be selected for the current session. Display mode is saved separately as `todo:appearance`; missing or invalid values fall back to 自動. Theme and mode settings are not included in task exports. The dialog supports radio-button keyboard navigation, Escape, and a close button, and returns focus to the header button when closed.
 
+### Language
+
+The UI is available in English and Japanese. A language selector in the header (a globe icon with 日本語 / English; only the icon on narrow screens) switches the whole screen immediately, including button labels, accessible names, confirmations, notifications, and import errors. Language names are always shown in their own language.
+
+Until a language is chosen, the app uses the first of Japanese or English found in the browser's preferred languages (`navigator.languages`, falling back to `navigator.language`); browsers that prefer neither use English. The choice is stored in localStorage (`todo:language`) and wins over the browser language after a reload; if storage is unavailable, the choice lasts for the current page. Changing the language in another tab is applied here too. The `lang` attribute of the page and its description follow the selected language.
+
+Content entered by the user (todo titles, memos, tags, and folder names) is never translated. Dates keep the `YYYY/MM/DD` format in both languages. The language setting is not included in task exports.
+
 ### Memos
 
 Memos render as Markdown (CommonMark with GitHub-flavored Markdown), including headings, emphasis, lists, links, quotes, code blocks, tables, strikethrough, and read-only task lists. Plain text keeps its line breaks. Links open in a new tab. Raw HTML is displayed as text, and unsafe URL schemes are blocked. Image references appear as links using their alt text instead of loading remote images automatically. Code blocks and wide tables scroll horizontally within the memo on small screens.

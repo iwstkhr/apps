@@ -54,6 +54,8 @@ app/
   lib/export-import.ts          Export file creation, import parsing, and merging
   lib/todo-filters.ts           Filtering and sorting (pure functions)
   lib/styles.ts                 Shared Tailwind class strings
+  lib/i18n.ts                   Language selection (browser default, saved choice) and t()
+  lib/translations.ts           English text for each Japanese UI string
   types/todo.ts                 Todo type, factories, validation, and date helpers
   types/folder.ts               Folder type, factories, and validation
   components/layout/            Header with export and import buttons, the shared modal, responsive sidebar panel, and folder list resizer
@@ -88,6 +90,7 @@ e2e/                            Playwright tests against wrangler dev
 | `lib/todo-drag.ts` | `setDraggedTodo` (also sets the drag image), `isDraggingTodo` (checks only the type, because data cannot be read during `dragover`), `getDraggedTodo` |
 | `hooks/use-todos.ts` | CRUD API for todos and folders (including `moveTodo`, `changePriority`, and `removeTag`), optimistic updates, error handling, and tab sync |
 | `hooks/use-view-state.ts` | Restores and saves the sort mode, selected and collapsed folders, and the folder list width (clamped to 180–480 px); ignores broken values and storage errors |
+| `lib/i18n.ts` / `lib/translations.ts` | As in tsudou, Japanese UI text is the key and `translations.ts` maps it to English. `t(text, values)` translates and fills `{0}`-style placeholders with values that are never translated; a key may carry context after `\|` (for example `フォルダ\|項目`) when one Japanese word needs different English words, and only the part before `\|` is shown in Japanese. `getLanguage()` returns the saved choice (`todo:language`) or the first supported browser language; `setLanguage()` saves it, updates `lang` and the description, and notifies `useLanguage()` subscribers (also on `storage` events from other tabs). `Home` calls `useLanguage()` so the whole screen re-renders on a change; event handlers and errors call `t()` directly. The prerendered HTML contains only the app shell, so reading the language on the client causes no hydration mismatch |
 | `hooks/use-theme.ts` / `lib/themes.ts` | Validates and restores `todo:theme` and `todo:appearance` after mounting and sets `data-theme` and the resolved `data-mode` on the document root; storage failures do not prevent selection. `themes.css` preserves shared neutral tokens, maps the blue accent tokens to indigo for the default (also when `data-theme` is not set yet) or to shades of each preset's selected-row color, and styles the header and sidebar with a shared dark background and bright text, with accent shades derived from the selected-row color; dark variants follow `data-mode` through the custom variant in `app.css`, and automatic mode listens to OS color-scheme changes; semantic colors remain available |
 | `components/layout/theme-picker.tsx` | Header control with a native modal dialog, palette samples, and radio inputs for six presets; native dialog behavior traps focus, handles Escape, and restores focus on close |
 | `components/todo/markdown-memo.tsx` | Renders memo strings with `react-markdown` and `remark-gfm`. React elements keep raw HTML inert and the default URL transform blocks unsafe schemes. Image references become links to avoid automatic remote requests; CSS in `app.css` styles the output and confines code/table scrolling to the memo. The stored source stays unchanged |
@@ -98,9 +101,9 @@ e2e/                            Playwright tests against wrangler dev
 
 | Level | Tool | Scope |
 | --- | --- | --- |
-| Unit | Vitest | Types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb) |
+| Unit | Vitest | Types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb), language selection, and a check that every `t()` string and label literal has an English translation with the same placeholders. `app/test/setup.ts` selects Japanese before each test, because most tests assert Japanese UI text |
 | Component | Vitest, Testing Library, happy-dom | `useTodos` and the whole `Home` screen |
-| E2E | Playwright | Production build served by `wrangler dev`: persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, and the mobile drawer, including focus trapping, close controls, background scroll locking, and switching back to the desktop sidebar |
+| E2E | Playwright | Production build served by `wrangler dev`: the default language in Japanese and English browsers, switching the language and keeping it after a reload, persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, and the mobile drawer, including focus trapping, close controls, background scroll locking, and switching back to the desktop sidebar |
 
 ## CI / CD
 

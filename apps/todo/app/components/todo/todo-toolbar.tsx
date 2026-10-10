@@ -1,3 +1,4 @@
+import { t } from '~/lib/i18n';
 import { fieldClass, inputClass } from '~/lib/styles';
 import type { SortKey, TodoFilters } from '~/lib/todo-filters';
 
@@ -22,7 +23,7 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
     <div className="flex flex-col gap-2">
       {filters.sort === 'custom' && (
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          ヘッダーをドラッグするか、上下ボタンで順序を変更できます。
+          {t('ヘッダーをドラッグするか、上下ボタンで順序を変更できます。')}
         </p>
       )}
       <div className="flex flex-wrap items-center gap-2">
@@ -30,11 +31,11 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
           className={fieldClass}
           value={filters.sort}
           onChange={(event) => update({ sort: event.target.value as SortKey })}
-          aria-label="並び順"
+          aria-label={t('並び順')}
         >
           {SORT_OPTIONS.map(({ value, label }) => (
             <option key={value} value={value}>
-              {label}
+              {t(label)}
             </option>
           ))}
         </select>
@@ -43,10 +44,10 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
           className={fieldClass}
           value={filters.tag ?? ''}
           onChange={(event) => update({ tag: event.target.value || null })}
-          aria-label="タグで絞り込み"
+          aria-label={t('タグで絞り込み')}
           disabled={tags.length === 0 && filters.tag === null}
         >
-          <option value="">すべてのタグ</option>
+          <option value="">{t('すべてのタグ')}</option>
           {tags.map((tag) => (
             <option key={tag} value={tag}>
               #{tag}
@@ -60,8 +61,8 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
         className={inputClass}
         value={filters.keyword}
         onChange={(event) => update({ keyword: event.target.value })}
-        placeholder="キーワードで検索 (タイトル・メモ・タグ)"
-        aria-label="キーワードで検索"
+        placeholder={t('キーワードで検索 (タイトル・メモ・タグ)')}
+        aria-label={t('キーワードで検索')}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { type PointerEvent, useRef, useState } from 'react';
 import { cn } from '~/lib/cn';
+import { t } from '~/lib/i18n';
 
 interface SidebarResizerProps {
   width: number;
@@ -43,13 +44,13 @@ export function SidebarResizer({
     <div
       role="separator"
       aria-orientation="vertical"
-      aria-label="フォルダ欄の幅"
+      aria-label={t('フォルダ欄の幅')}
       aria-controls={controls}
       aria-valuenow={width}
       aria-valuemin={min}
       aria-valuemax={max}
       tabIndex={0}
-      title="ドラッグで幅を変更 (ダブルクリックで元に戻す)"
+      title={t('ドラッグで幅を変更 (ダブルクリックで元に戻す)')}
       className="group absolute top-0 -right-[1.125rem] hidden h-full w-3 cursor-col-resize touch-none justify-center focus:outline-none lg:flex"
       onPointerDown={(event) => {
         if (event.button !== 0) return;

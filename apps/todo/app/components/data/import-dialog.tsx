@@ -1,5 +1,6 @@
 import { Modal } from '~/components/layout/modal';
 import type { ImportMode } from '~/hooks/use-todos';
+import { t } from '~/lib/i18n';
 import { primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
 
 interface ImportDialogProps {
@@ -23,38 +24,38 @@ export function ImportDialog({
   onConfirm,
   onCancel,
 }: ImportDialogProps) {
-  const current = `今の TODO ${currentTodoCount} 件とフォルダ ${currentFolderCount} 件`;
+  const current = t('今の TODO {0} 件とフォルダ {1} 件', [currentTodoCount, currentFolderCount]);
 
   return (
-    <Modal title="インポート" onClose={onCancel}>
+    <Modal title={t('インポート')} onClose={onCancel}>
       <p className="mt-2 break-all text-sm text-slate-600 dark:text-slate-400">{fileName}</p>
       <p className="mt-3 text-sm">
-        TODO {todoCount} 件とフォルダ {folderCount} 件を読み込みます。
-        {skipped > 0 && ` (形式が正しくない・重複している ${skipped} 件は読み飛ばします)`}
+        {t('TODO {0} 件とフォルダ {1} 件を読み込みます。', [todoCount, folderCount])}
+        {skipped > 0 && t(' (形式が正しくない・重複している {0} 件は読み飛ばします)', [skipped])}
       </p>
       <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
         <li>
-          <strong>マージ</strong>: {current}
-          に追加します。同じものは更新日時が新しい方を残します。
+          <strong>{t('マージ')}</strong>:{' '}
+          {t('{0}に追加します。同じものは更新日時が新しい方を残します。', [current])}
         </li>
         <li>
-          <strong>置き換え</strong>: {current}をすべて削除してから読み込みます。
+          <strong>{t('置き換え')}</strong>: {t('{0}をすべて削除してから読み込みます。', [current])}
         </li>
       </ul>
       <div className="mt-5 flex flex-wrap justify-end gap-2">
         <button type="button" className={secondaryButtonClass} onClick={onCancel}>
-          キャンセル
+          {t('キャンセル')}
         </button>
         <button
           type="button"
           className={`${secondaryButtonClass} border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950`}
           onClick={() => onConfirm('replace')}
         >
-          置き換え
+          {t('置き換え')}
         </button>
         {/* 開いたときはマージ (最後のボタン) にフォーカスする */}
         <button type="button" className={primaryButtonClass} onClick={() => onConfirm('merge')}>
-          マージ
+          {t('マージ')}
         </button>
       </div>
     </Modal>

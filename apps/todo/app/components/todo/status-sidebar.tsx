@@ -1,4 +1,5 @@
 import { cn } from '~/lib/cn';
+import { t } from '~/lib/i18n';
 import { STATUS_FILTER_OPTIONS, type StatusFilter } from '~/lib/todo-filters';
 
 interface StatusSidebarProps {
@@ -10,11 +11,11 @@ interface StatusSidebarProps {
 export function StatusSidebar({ value, counts, onChange }: StatusSidebarProps) {
   return (
     <nav
-      aria-label="ステータス"
+      aria-label={t('ステータス')}
       className="mb-3 border-b border-slate-200 pb-3 dark:border-slate-800"
     >
       <p className="mb-2 px-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-        ステータス
+        {t('ステータス')}
       </p>
       <ul className="flex flex-col gap-0.5">
         {STATUS_FILTER_OPTIONS.map((option) => (
@@ -30,7 +31,7 @@ export function StatusSidebar({ value, counts, onChange }: StatusSidebarProps) {
               )}
               onClick={() => onChange(option.value)}
             >
-              <span>{option.label}</span>
+              <span>{t(option.label)}</span>
               <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
                 {counts[option.value]}
               </span>
