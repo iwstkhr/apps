@@ -1,0 +1,61 @@
+name: "tsudou - Preview Cleanup"
+
+# Preview では Cron Trigger が動かないので、共有の Preview 用 D1 (tsudou-preview) の期限切れデータをここで消す。
+# 本番の Cron Trigger (apps/tsudou/backend/src/worker.ts の scheduled → deleteExpired) と同じ条件で消す。
+# 回答は外部キーの ON DELETE CASCADE でイベントと一緒に消える。
+on:
+  schedule:
+    # 本番の Cron Trigger と同じ毎日 18:00 UTC（日本時間 3:00）
+    - cron: '0 18 * * *'
+  # 手動で消し直すときに使う
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: apps/tsudou/backend
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    # シークレットは依存パッケージのスクリプトから読まれないよう、Cloudflare を操作するステップにだけ渡す
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup mise
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5  # v5
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # wrangler d1 は previews ブロックを読まないので、Preview 用 DB だけを書いた設定ファイルを使う
+      - name: Delete expired events
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm exec wrangler d1 execute tsudou-preview --remote --config wrangler.preview-migrations.jsonc \
+            --command 'DELETE FROM events WHERE expires_at <= unixepoch()'
+
+  # 失敗したときだけ Slack に流す
+  notify:
+    name: Notify
+    needs: cleanup
+    if: ${{ failure() }}
+    uses: iwstkhr/shared-config/.github/workflows/slack-notify.yml@main
+    with:
+      status: failure
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}

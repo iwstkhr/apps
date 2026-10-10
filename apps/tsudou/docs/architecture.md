@@ -61,9 +61,9 @@ Authorization (token checks) and input validation always run on the server.
 | API server | Express 5 |
 | Runtime | Cloudflare Workers (`nodejs_compat`, `httpServerHandler` from `cloudflare:node`); local development uses `wrangler dev` |
 | Persistence | Cloudflare D1 (SQLite; migrations through `wrangler d1 migrations`) |
-| Scheduling | Workers Cron Trigger (expiry cleanup) |
+| Scheduling | Workers Cron Trigger (expiry cleanup); the Preview D1 is cleaned up daily by GitHub Actions (`tsudou-preview-cleanup.yml`) because Cron Triggers do not run on Previews |
 | Configuration | `backend/wrangler.jsonc` (static assets, D1, Rate Limiting, Cron Trigger) |
-| Hosting | One Cloudflare Worker for UI and API on the custom domain `tsudou.wasabee.dev`, deployed with wrangler through GitHub Actions |
+| Hosting | One Cloudflare Worker for UI and API on the custom domain `tsudou.wasabee.dev`, deployed with wrangler through GitHub Actions; pull requests get Worker Previews on `workers.dev` backed by the shared D1 `tsudou-preview` |
 | Quality | Vitest / Testing Library / Playwright / Biome / pre-commit |
 
 ## Repository structure
@@ -77,7 +77,8 @@ The frontend does not depend on the backend package and cannot import server int
 ```text
 backend/                        Backend (@tsudou/backend)
 ├─ package.json                 Dependencies and scripts
-├─ wrangler.jsonc               Worker settings (static assets / D1 / Rate Limiting / Cron Trigger)
+├─ wrangler.jsonc               Worker settings (static assets / D1 / Rate Limiting / Cron Trigger / Previews)
+├─ wrangler.preview-migrations.jsonc  Preview D1 for wrangler d1 migrations
 ├─ migrations/                  D1 migrations (0001_init.sql ...)
 ├─ vitest.config.ts             Backend test configuration (node environment)
 ├─ scripts/openapi.ts           Generate docs/openapi.yaml (pnpm run openapi)

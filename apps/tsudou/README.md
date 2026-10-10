@@ -117,7 +117,7 @@ It also writes image dimensions to `frontend/src/assets/guide/sizes.json`, which
 Every scenario runs in both Japanese and English (Playwright projects `ja` / `en`) with the installed Google Chrome; no browser download is needed.
 To run one language, use `pnpm --filter @tsudou/e2e exec playwright test --project=ja`. Set `E2E_SKIP_BUILD=1` to reuse an existing `frontend/dist/`.
 
-When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou <name>` from `backend/` to add a file under `backend/migrations/`. Do not rewrite migrations that have already been applied.
+When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou <name>` from `backend/` to add a file under `backend/migrations/`. Do not rewrite migrations that have already been applied. Migrations are applied to both the production (`tsudou`) and Preview (`tsudou-preview`) databases.
 
 ## Deployment (Cloudflare Workers)
 
@@ -128,11 +128,22 @@ When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou
 3. Apply pending D1 migrations with `wrangler d1 migrations apply tsudou --remote`.
 4. Run `wrangler deploy` from `backend/` to publish the Worker (`tsudou`) serving the UI and API.
 
+### Pull request Previews
+
+`.github/workflows/tsudou-preview.yml` creates a Worker Preview (`wrangler preview --name pr-<number>`) for each pull request that changes `apps/tsudou/**` and comments its `workers.dev` URL on the pull request. The Preview is deleted when the pull request closes. Pull requests from forks are skipped because secrets are unavailable.
+
+- Settings live in the `previews` block of `backend/wrangler.jsonc`. Bindings are not inherited from production, so `DB` and `RATE_LIMITER` are redeclared there; the rate limiter uses a separate namespace from production.
+- All Previews share the D1 database `tsudou-preview` and never touch the production database. Before each Preview deployment, the workflow applies pending migrations with `wrangler d1 migrations apply tsudou-preview --remote --config wrangler.preview-migrations.jsonc`, because `wrangler d1` commands do not read the `previews` block.
+  `previews.d1_databases` in `wrangler.jsonc` and `wrangler.preview-migrations.jsonc` must point to the same database (`database_id`).
+- Cron Triggers do not run on Previews. Instead, `.github/workflows/tsudou-preview-cleanup.yml` deletes expired events (and their responses, through `ON DELETE CASCADE`) from `tsudou-preview` daily at the same time as production (UTC 18:00), using the same condition as `deleteExpired`. It can also be run manually (`workflow_dispatch`).
+- `preview_urls: true` takes effect on the next `wrangler deploy` to production.
+
 ### Initial setup
 
 1. **Create a Cloudflare API token.** In My Profile → API Tokens, use the "Edit Cloudflare Workers" template, restrict it to the deployment account, and add **Account → D1 → Edit** permission.
    The Worker (`tsudou`) and D1 database (`tsudou`) are created automatically on the first deployment.
    `backend/wrangler.jsonc` resolves the database by name without a `database_id`, so no ID needs to be added to the configuration.
+   The Preview database (`tsudou-preview`) must be created once with `wrangler d1 create tsudou-preview --location apac`, and its ID written to `previews.d1_databases` in `backend/wrangler.jsonc` and to `backend/wrangler.preview-migrations.jsonc`.
 2. **Configure repository secrets** (Settings → Secrets and variables → Actions).
 
    | Type | Name | Value |
@@ -140,7 +151,7 @@ When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou
    | Secret | `CLOUDFLARE_API_TOKEN` | Token from step 1 |
    | Secret | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
 
-   The Worker is served on the custom domain `tsudou.wasabee.dev` (`routes` in `backend/wrangler.jsonc`). `wrangler deploy` creates the DNS record and certificate, so the `wasabee.dev` zone must be in the same account. The `workers.dev` and preview URLs are disabled. No other configuration is needed because the UI and API share an origin.
+   The Worker is served on the custom domain `tsudou.wasabee.dev` (`routes` in `backend/wrangler.jsonc`). `wrangler deploy` creates the DNS record and certificate, so the `wasabee.dev` zone must be in the same account. The production `workers.dev` URL is disabled; Preview URLs are enabled on `workers.dev` for pull request Previews. No other configuration is needed because the UI and API share an origin.
 
 ### Delivery behavior
 
@@ -162,7 +173,8 @@ Static assets bypass the Worker script; only `/api/*` reaches the Worker (Expres
 ```text
 backend/                         @tsudou/backend
 ├─ package.json                  Dependencies and scripts
-├─ wrangler.jsonc                Worker settings (static assets / D1 / Rate Limiting / Cron Trigger)
+├─ wrangler.jsonc                Worker settings (static assets / D1 / Rate Limiting / Cron Trigger / Previews)
+├─ wrangler.preview-migrations.jsonc  Preview D1 for wrangler d1 migrations
 ├─ migrations/                   D1 migrations (wrangler d1 migrations)
 ├─ vitest.config.ts              Backend test configuration (node environment)
 ├─ scripts/openapi.ts            Generate docs/openapi.yaml (pnpm run openapi)

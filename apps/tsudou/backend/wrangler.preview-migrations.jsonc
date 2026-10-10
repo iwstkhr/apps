@@ -1,0 +1,14 @@
+// プレビュー用 D1 (tsudou-preview) にマイグレーションを流すためだけの設定。
+// `wrangler d1 migrations apply` は wrangler.jsonc の previews ブロックを読まないので、ここでトップレベルに置く。
+// wrangler.jsonc の previews.d1_databases と同じ DB を指すこと
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tsudou-preview",
+      "database_id": "1d900f6e-52b9-4c57-88d6-09ef713cbf92",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
