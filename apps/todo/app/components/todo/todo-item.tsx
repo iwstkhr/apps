@@ -85,7 +85,7 @@ export function TodoItem({
     <li
       draggable
       onDragStart={(event) => {
-        setDraggedTodo(event.dataTransfer, todo.id);
+        setDraggedTodo(event.dataTransfer, todo.id, todo.title);
         setDragging(true);
       }}
       onDragEnd={() => setDragging(false)}

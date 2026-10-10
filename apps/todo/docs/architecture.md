@@ -68,7 +68,7 @@ e2e/                            Playwright tests against wrangler dev
 2. Each change updates React state first and then writes to IndexedDB, so the UI responds immediately. If the write fails, an error is shown and the state is reloaded from IndexedDB.
 3. After a successful write, `useTodos` posts a message on the `todo-changes` BroadcastChannel; other tabs reload from IndexedDB when they receive it.
 4. Filters and the sort order live in `routes/home.tsx` state and are not persisted. The selected and collapsed folders and the folder list width come from `useViewState`, which reads `localStorage` (`todo:view`) after the first render, so the prerendered HTML still matches, and writes it on every change. `filterByFolder()` narrows the todos to the selected folder and its subfolders, then `applyFilters()` filters and sorts them.
-5. Dragging a todo puts its id in the `DataTransfer` under the custom type `application/x-todo-id`. Folder rows accept the drop only for that type (so dragged files or text are ignored), and the drop calls `moveTodo()`, which saves only the moved todo.
+5. Dragging a todo puts its id in the `DataTransfer` under the custom type `application/x-todo-id` and replaces the drag image with a small title label offset from the pointer (built off-screen for `setDragImage()` and removed right after). Folder rows accept the drop only for that type (so dragged files or text are ignored), and the drop calls `moveTodo()`, which saves only the moved todo.
 6. Deleting a folder removes its subtree and rewrites the affected todos to 未分類 in one IndexedDB transaction, so a failure leaves both unchanged.
 7. Export serializes the in-memory todos and folders to a Blob and triggers a download. Import reads the file with `File.text()`, validates and repairs it with `parseImport()`, and passes the result to `importData()` after the user picks merge or replace.
 
@@ -82,7 +82,7 @@ e2e/                            Playwright tests against wrangler dev
 | `lib/todo-db.ts` | A single cached connection; every write is one transaction over both stores, so multi-record and cross-store writes are atomic |
 | `lib/export-import.ts` | Export envelope (`app`, `version`, `exportedAt`, `folders`, `todos`), `parseImport` with Japanese error messages, `mergeData` by `updatedAt`, `sanitizeData` |
 | `lib/todo-filters.ts` | Status, tag, and keyword filters; per-status counts; due, priority, status, and creation sorts |
-| `lib/todo-drag.ts` | `setDraggedTodo`, `isDraggingTodo` (checks only the type, because data cannot be read during `dragover`), `getDraggedTodo` |
+| `lib/todo-drag.ts` | `setDraggedTodo` (also sets the drag image), `isDraggingTodo` (checks only the type, because data cannot be read during `dragover`), `getDraggedTodo` |
 | `hooks/use-todos.ts` | CRUD API for todos and folders (including `moveTodo`), optimistic updates, error handling, and tab sync |
 | `hooks/use-view-state.ts` | Restores and saves the selected and collapsed folders and the folder list width (clamped to 180–480 px); ignores broken values and storage errors |
 | `components/layout/sidebar-resizer.tsx` | A `separator` handle that resizes the folder list by pointer drag or keyboard and resets on double click. The width is applied through the `--sidebar-width` CSS variable on the layout grid. The folder list is `sticky` with a height of the window minus the fixed-height (`h-14`) header, and the footer is in the right column so the folder list stays in place down to the end of the page |
