@@ -17,7 +17,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const BUTTON_VARIANTS = {
   primary:
-    'bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:outline-indigo-600 disabled:bg-indigo-300 dark:disabled:bg-indigo-900',
+    'bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:outline-indigo-600 disabled:bg-indigo-300 dark:bg-indigo-400 dark:text-slate-950 dark:hover:bg-indigo-300 dark:focus-visible:outline-indigo-400 dark:disabled:bg-indigo-900 dark:disabled:text-slate-300',
   secondary:
     'bg-white text-slate-700 ring-1 ring-slate-300 ring-inset hover:bg-slate-50 focus-visible:outline-slate-500 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-700',
   ghost:
@@ -86,7 +86,7 @@ function Spinner({ className }: { className?: string }) {
 const CONTROL_CLASS =
   'block w-full rounded-lg border-0 bg-white px-3 py-2.5 text-slate-900 ring-1 ring-slate-300 ring-inset ' +
   'placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset ' +
-  'dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700 dark:placeholder:text-slate-500';
+  'dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700 dark:placeholder:text-slate-500 dark:focus:ring-indigo-400';
 
 export function Field({
   label,

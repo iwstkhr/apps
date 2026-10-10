@@ -17,7 +17,7 @@ export function ThemeToggle() {
         aria-label={t('テーマを選択')}
         aria-haspopup="dialog"
         onClick={() => setPaletteOpen(true)}
-        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 ring-inset hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800"
+        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 ring-inset hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:focus-visible:outline-indigo-400"
       >
         <span
           aria-hidden="true"

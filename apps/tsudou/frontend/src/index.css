@@ -17,6 +17,19 @@ html[data-theme='dark'] {
   color-scheme: dark;
 }
 
+/* Preview each palette in the resolved mode, including automatic OS changes. */
+.theme-preview {
+  background-color: var(--preview-light);
+  --preview-sidebar: var(--preview-dark);
+  --preview-highlight: var(--preview-accent);
+}
+
+html[data-theme='dark'] .theme-preview {
+  background-color: var(--preview-dark);
+  --preview-sidebar: color-mix(in srgb, var(--preview-dark) 88%, white);
+  --preview-highlight: color-mix(in srgb, var(--preview-accent) 30%, white);
+}
+
 body {
   @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
 }

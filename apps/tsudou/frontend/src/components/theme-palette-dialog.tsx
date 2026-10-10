@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react';
+import { type CSSProperties, useEffect, useId, useRef } from 'react';
 import { cx } from '../lib/cx';
 import { t, useLanguage } from '../lib/i18n';
 import type { ThemePreference } from '../lib/theme';
@@ -71,9 +71,9 @@ export function ThemePaletteDialog({
                 aria-pressed={preference === value}
                 onClick={() => onPreferenceChange(value)}
                 className={cx(
-                  'rounded-lg px-3 py-2.5 text-sm font-semibold ring-1 ring-inset focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600',
+                  'rounded-lg px-3 py-2.5 text-sm font-semibold ring-1 ring-inset focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400',
                   preference === value
-                    ? 'bg-indigo-600 text-white ring-indigo-600'
+                    ? 'bg-indigo-600 text-white ring-indigo-600 dark:bg-indigo-400 dark:text-slate-950 dark:ring-indigo-400'
                     : 'bg-slate-50 text-slate-900 ring-slate-300 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-700',
                 )}
               >
@@ -97,25 +97,31 @@ export function ThemePaletteDialog({
                 onChange={() => onSelect(preset.id)}
                 className="peer sr-only"
               />
-              <span className="block overflow-hidden rounded-lg ring-1 ring-slate-200 peer-checked:ring-2 peer-checked:ring-indigo-600 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-indigo-600 dark:ring-slate-700 dark:peer-checked:ring-indigo-400">
+              <span className="block overflow-hidden rounded-lg ring-1 ring-slate-200 peer-checked:ring-2 peer-checked:ring-indigo-600 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-indigo-600 dark:ring-slate-700 dark:peer-checked:ring-indigo-400 dark:peer-focus-visible:outline-indigo-400">
                 <span
                   aria-hidden="true"
-                  className="flex h-16"
-                  style={{ backgroundColor: preset.light }}
+                  className="theme-preview flex h-16"
+                  style={
+                    {
+                      '--preview-light': preset.light,
+                      '--preview-dark': preset.dark,
+                      '--preview-accent': preset.accent,
+                    } as CSSProperties
+                  }
                 >
-                  <span className="w-1/4" style={{ backgroundColor: preset.dark }} />
+                  <span className="w-1/4 bg-[var(--preview-sidebar)]" />
                   <span className="flex flex-1 flex-col justify-center gap-2 px-3">
                     <span
                       className="h-2 w-2/3 rounded-full"
-                      style={{ backgroundColor: preset.accent }}
+                      style={{ backgroundColor: 'var(--preview-highlight)' }}
                     />
                     <span
-                      className="h-2 w-full rounded-full opacity-20"
-                      style={{ backgroundColor: preset.accent }}
+                      className="h-2 w-full rounded-full opacity-20 dark:opacity-40"
+                      style={{ backgroundColor: 'var(--preview-highlight)' }}
                     />
                     <span
-                      className="h-2 w-1/2 rounded-full opacity-20"
-                      style={{ backgroundColor: preset.accent }}
+                      className="h-2 w-1/2 rounded-full opacity-20 dark:opacity-40"
+                      style={{ backgroundColor: 'var(--preview-highlight)' }}
                     />
                   </span>
                 </span>

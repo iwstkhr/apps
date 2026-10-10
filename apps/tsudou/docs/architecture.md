@@ -327,6 +327,7 @@ The `@custom-variant` in `index.css` makes Tailwind's `dark:` depend on `<html d
 An inline script in `index.html` performs the same check before React renders, preventing a flash of the light theme. Update both locations when changing keys or values.
 Both locations also update `<meta name="theme-color">`, which controls browser UI colors (address bar or installed app title bar), to match the header background (`THEME_PRESETS` in `theme-presets.ts`).
 The independent palette choice (`tsudou:palette`) sets `<html data-palette>` before the first paint. `index.css` overrides the slate and indigo color tokens for backgrounds, borders, text, links, buttons, and focus indicators, leaving status colors intact. Dark mode uses a separate neutral ramp to keep borders distinct and secondary text legible. A single theme modal contains the palette picker and Light / Dark / Automatic controls. Keep preset IDs and header colors in `theme-presets.ts`, `index.css`, and the initial HTML script aligned.
+Palette previews follow the resolved `data-theme` through CSS, including OS changes in Automatic mode. In dark mode, selected mode controls and primary buttons use a light accent background with dark text, and input and theme-picker focus indicators use the light accent to remain visible against dark surfaces.
 
 ### Display language
 
