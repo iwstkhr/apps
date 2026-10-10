@@ -41,10 +41,11 @@ export function HeaderMenu() {
       <button
         ref={buttonRef}
         type="button"
+        aria-label={t('メニュー')}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:focus-visible:outline-indigo-400"
+        className="flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:focus-visible:outline-indigo-400"
       >
         <svg
           aria-hidden="true"
@@ -56,7 +57,7 @@ export function HeaderMenu() {
         >
           <path d="M4 6h16M4 12h16M4 18h16" />
         </svg>
-        {t('メニュー')}
+        <span className="hidden sm:inline">{t('メニュー')}</span>
       </button>
       <div
         id={panelId}

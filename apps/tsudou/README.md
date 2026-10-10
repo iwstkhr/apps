@@ -16,7 +16,7 @@ Hosts create an event and receive a shareable URL. Anyone with the URL can respo
 | Host | Create events (title, multiple candidate dates/times, fee, memo), edit details, close/reopen responses, delete responses, and delete events |
 | Participant | Respond with ○△× for each candidate, attach an optional message, and edit/delete their own response |
 
-The header shows the app logo, which links to the home page for creating an event, and a labeled Menu button. The menu groups the user guide, language selector, and theme settings. The menu closes on Escape, outside click, focus leaving it, or navigation.
+The header shows the app logo, which links to the home page for creating an event, and a Menu button whose text label is visible on wider screens (icon only on mobile, with an accessible name). The menu groups the user guide, language selector, and theme settings. The menu closes on Escape, outside click, focus leaving it, or navigation.
 
 The header menu shows Japanese and English as separate buttons, with a checkmark on the selected language. Without a saved choice, the first supported language in the browser’s preferred languages is used; if none match Japanese or English, English is used. The choice is saved in the browser; event titles, memos, names, and messages stay as entered.
 
