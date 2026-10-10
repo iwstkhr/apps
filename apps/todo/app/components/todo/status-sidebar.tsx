@@ -1,3 +1,4 @@
+import { StatusIcon } from '~/components/todo/status-icon';
 import { cn } from '~/lib/cn';
 import { t } from '~/lib/i18n';
 import { STATUS_FILTER_OPTIONS, type StatusFilter } from '~/lib/todo-filters';
@@ -31,7 +32,10 @@ export function StatusSidebar({ value, counts, onChange }: StatusSidebarProps) {
               )}
               onClick={() => onChange(option.value)}
             >
-              <span>{t(option.label)}</span>
+              <span className="flex min-w-0 items-center gap-2">
+                <StatusIcon status={option.value} />
+                {t(option.label)}
+              </span>
               <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
                 {counts[option.value]}
               </span>

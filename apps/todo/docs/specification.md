@@ -19,7 +19,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Status | Each todo has one of 未着手 (not started), 進行中 (in progress), 保留 (on hold), or 完了 (done). Change it with the status selector on the item. The checkbox is a shortcut: checking it sets 完了 and unchecking it returns to 未着手. New todos start as 未着手 |
 | Delete | The trash button deletes one todo after a confirmation. 完了済みを削除 deletes all completed todos in the current view |
 | Folders | See [Folders](#folders) |
-| Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive) |
+| Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive). In the sidebar each status has an icon with its own shape and color: すべて a stack in the text color, 未着手 an empty gray circle, 進行中 a blue play icon, 保留 a purple pause icon, and 完了 a green check. The colors stay the same in every theme and keep at least 3:1 contrast against white, dark mode, and the dark sidebars |
 | Sort | 期限順 (default), 優先度順, ステータス順, 新しい順, カスタム. Completed todos are listed after the others except in カスタム |
 | Header menu | See [Header menu](#header-menu) |
 | Export | Saves every todo and folder to `todo-export-YYYYMMDD.json` |

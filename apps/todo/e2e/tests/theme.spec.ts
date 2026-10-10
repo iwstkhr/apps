@@ -143,3 +143,24 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   await expect(button).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });
+
+test('keeps the status icon colors on dark sidebars', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await openApp(page);
+  const icon = (status: string) => page.locator(`#folder-panel svg[data-status="${status}"]`);
+  const expected = {
+    todo: 'rgb(122, 136, 156)',
+    in_progress: 'rgb(59, 130, 246)',
+    on_hold: 'rgb(168, 85, 247)',
+    done: 'rgb(5, 150, 105)',
+  };
+  for (const theme of ['インディゴ', 'オーシャン', 'グラファイト']) {
+    await chooseFromHeaderMenu(page, 'テーマ…');
+    const dialog = page.getByRole('dialog', { name: 'テーマ', exact: true });
+    await dialog.getByText(theme, { exact: true }).click();
+    await dialog.getByRole('button', { name: '閉じる', exact: true }).click();
+    for (const [status, color] of Object.entries(expected)) {
+      await expect(icon(status)).toHaveCSS('color', color);
+    }
+  }
+});
