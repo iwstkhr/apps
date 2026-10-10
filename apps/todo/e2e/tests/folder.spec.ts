@@ -52,6 +52,27 @@ test('restores the selected and collapsed folders after reloading', async ({ pag
   await expect(folderNav(page).getByRole('button', { name: /^案件/ })).toBeHidden();
 });
 
+test('moves a todo to another folder by drag and drop', async ({ page }) => {
+  await createFolder(page, '仕事');
+  await createFolder(page, '家');
+  await folderNav(page)
+    .getByRole('button', { name: /^すべて/ })
+    .click();
+  await addTodo(page, '洗濯');
+
+  await todoItems(page)
+    .filter({ hasText: '洗濯' })
+    .dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
+  await expect(page.getByRole('status')).toHaveText('「洗濯」を「家」に移動しました。');
+  await expect(todoItems(page)).toHaveText([/洗濯.*フォルダ: 家/]);
+
+  await page.reload();
+  await folderNav(page).getByRole('button', { name: /^家/ }).click();
+  await expect(todoItems(page)).toHaveText([/洗濯/]);
+  await folderNav(page).getByRole('button', { name: /^仕事/ }).click();
+  await expect(page.getByText('ここに TODO はありません。')).toBeVisible();
+});
+
 test('moves todos to unfiled when their folder is deleted', async ({ page }) => {
   await createFolder(page, '旅行');
   await addTodo(page, '切符を取る');

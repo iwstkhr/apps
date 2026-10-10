@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createExport } from '~/lib/export-import';
 import { closeDbForTesting, getAll, putAll, putTodos } from '~/lib/todo-db';
 import Home from '~/routes/home';
+import { createDataTransfer } from '~/test/drag';
 import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
 
 beforeEach(() => {
@@ -295,6 +296,90 @@ describe('Home', () => {
       localStorage.setItem('todo:view', JSON.stringify({ folder: 'deleted', collapsed: [] }));
       await renderHome();
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('すべて');
+    });
+
+    describe('drag and drop', () => {
+      /** タスクの行をフォルダ欄の行へドラッグする。dragover が受け付けられたかを返す。 */
+      function dragTodoTo(title: string, rowName: RegExp) {
+        const dataTransfer = createDataTransfer();
+        const item = items().find((li) => li.textContent?.includes(title));
+        if (!item) throw new Error(`todo not found: ${title}`);
+        const row = within(folderNav()).getByRole('button', { name: rowName }).closest('li');
+        if (!row) throw new Error('folder row not found');
+
+        fireEvent.dragStart(item, { dataTransfer });
+        fireEvent.dragEnter(row, { dataTransfer });
+        // preventDefault されたら (= ドロップできる) false が返る
+        const accepted = !fireEvent.dragOver(row, { dataTransfer });
+        return {
+          accepted,
+          row,
+          drop: () => {
+            fireEvent.drop(row, { dataTransfer });
+            fireEvent.dragEnd(item, { dataTransfer });
+          },
+        };
+      }
+
+      it('moves a todo into a folder and to unfiled', async () => {
+        const folder = createFolderFixture({ name: '仕事' });
+        await putAll({ folders: [folder], todos: [createTodoFixture({ title: '見積もり' })] });
+        await renderHome();
+
+        const toFolder = dragTodoTo('見積もり', /^仕事/);
+        expect(toFolder.accepted).toBe(true);
+        expect(toFolder.row).toHaveClass('ring-2');
+        toFolder.drop();
+        expect(toFolder.row).not.toHaveClass('ring-2');
+
+        expect(
+          await screen.findByText('「見積もり」を「仕事」に移動しました。'),
+        ).toBeInTheDocument();
+        expect(items()[0]).toHaveTextContent('フォルダ: 仕事');
+        await waitFor(async () => expect((await getAll()).todos[0].folderId).toBe(folder.id));
+
+        dragTodoTo('見積もり', /^未分類/).drop();
+        expect(
+          await screen.findByText('「見積もり」を「未分類」に移動しました。'),
+        ).toBeInTheDocument();
+        await waitFor(async () => expect((await getAll()).todos[0].folderId).toBeNull());
+      });
+
+      it('does not accept drops on すべて or drags of something other than a todo', async () => {
+        await putAll({
+          folders: [createFolderFixture({ name: '仕事' })],
+          todos: [createTodoFixture()],
+        });
+        await renderHome();
+
+        expect(dragTodoTo('TODO', /^すべて/).accepted).toBe(false);
+
+        const row = within(folderNav()).getByRole('button', { name: /^仕事/ }).closest('li');
+        const files = createDataTransfer();
+        files.setData('Files', '');
+        expect(fireEvent.dragOver(row as HTMLElement, { dataTransfer: files })).toBe(true);
+      });
+
+      it('opens a collapsed folder while a todo hovers over it', async () => {
+        const parent = createFolderFixture({ name: '仕事' });
+        const child = createFolderFixture({ name: '案件', parentId: parent.id });
+        await putAll({
+          folders: [parent, child],
+          todos: [createTodoFixture({ title: '見積もり' })],
+        });
+        const user = await renderHome();
+        await user.click(
+          within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を閉じる' }),
+        );
+
+        vi.useFakeTimers();
+        dragTodoTo('見積もり', /^仕事/);
+        act(() => {
+          vi.advanceTimersByTime(800);
+        });
+        vi.useRealTimers();
+        expect(within(folderNav()).getByRole('button', { name: /^案件/ })).toBeInTheDocument();
+      });
     });
 
     it('moves a todo to another folder from the edit form', async () => {

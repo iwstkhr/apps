@@ -3,6 +3,7 @@ import { createTodoFixture } from '~/test/fixtures';
 import {
   createTodo,
   getDueStatus,
+  moveTodoToFolder,
   normalizeTags,
   parseTagText,
   setTodoStatus,
@@ -73,6 +74,23 @@ describe('createTodo / updateTodo / setTodoStatus', () => {
   it('returns the same todo when the status does not change', () => {
     const todo = createTodoFixture({ status: 'in_progress' });
     expect(setTodoStatus(todo, 'in_progress', NOW)).toBe(todo);
+  });
+});
+
+describe('moveTodoToFolder', () => {
+  it('moves a todo to another folder or to unfiled', () => {
+    const todo = createTodoFixture({ folderId: 'a' });
+    expect(moveTodoToFolder(todo, 'b', NOW)).toEqual({
+      ...todo,
+      folderId: 'b',
+      updatedAt: NOW.toISOString(),
+    });
+    expect(moveTodoToFolder(todo, null, NOW).folderId).toBeNull();
+  });
+
+  it('returns the same todo when the folder does not change', () => {
+    const todo = createTodoFixture({ folderId: 'a' });
+    expect(moveTodoToFolder(todo, 'a', NOW)).toBe(todo);
   });
 });
 

@@ -58,6 +58,7 @@ export default function Home() {
     addTodo,
     editTodo,
     changeStatus,
+    moveTodo,
     removeTodo,
     removeCompleted,
     addFolder,
@@ -110,12 +111,23 @@ export default function Home() {
     setShowFolders(false);
   };
 
-  const toggleCollapsed = (id: string) =>
-    setCollapsedFolders((current) => {
-      const next = new Set(current);
-      if (!next.delete(id)) next.add(id);
-      return next;
-    });
+  const toggleCollapsed = useCallback(
+    (id: string) =>
+      setCollapsedFolders((current) => {
+        const next = new Set(current);
+        if (!next.delete(id)) next.add(id);
+        return next;
+      }),
+    [setCollapsedFolders],
+  );
+
+  const handleDropTodo = async (todoId: string, folderId: string | null) => {
+    const todo = todos.find((t) => t.id === todoId);
+    if (!todo || todo.folderId === folderId) return;
+    await moveTodo(todoId, folderId);
+    const destination = folderId === null ? '未分類' : formatFolderPath(folders, folderId);
+    setNotice({ kind: 'info', text: `「${todo.title}」を「${destination}」に移動しました。` });
+  };
 
   const handleFolderSubmit = async (input: FolderInput) => {
     if (!folderDialog) return;
@@ -243,6 +255,7 @@ export default function Home() {
               onAdd={(parentId) => setFolderDialog({ mode: 'create', parentId })}
               onEdit={(folder) => setFolderDialog({ mode: 'edit', folder })}
               onRemove={handleRemoveFolder}
+              onDropTodo={(todoId, folderId) => void handleDropTodo(todoId, folderId)}
             />
           </div>
           <SidebarResizer

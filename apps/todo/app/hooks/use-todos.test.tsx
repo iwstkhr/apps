@@ -51,6 +51,20 @@ describe('useTodos', () => {
     expect((await getAll()).todos).toEqual([]);
   });
 
+  it('moves a todo to a folder and back to unfiled', async () => {
+    const folder = createFolderFixture();
+    const todo = createTodoFixture();
+    await putAll({ folders: [folder], todos: [todo] });
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.moveTodo(todo.id, folder.id));
+    expect(result.current.todos[0].folderId).toBe(folder.id);
+    expect((await getAll()).todos[0].folderId).toBe(folder.id);
+
+    await act(() => result.current.moveTodo(todo.id, null));
+    expect((await getAll()).todos[0].folderId).toBeNull();
+  });
+
   it('removes only completed todos', async () => {
     await putTodos([createTodoFixture({ status: 'done' }), createTodoFixture({ title: 'open' })]);
     const { result } = await renderLoaded();

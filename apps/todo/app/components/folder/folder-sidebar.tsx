@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { type DragEvent, useEffect, useMemo, useState } from 'react';
 import {
   FaChevronDown,
   FaChevronRight,
@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa';
 import { cn } from '~/lib/cn';
 import { type FolderSelection, flattenFolderTree } from '~/lib/folder-tree';
+import { getDraggedTodo, isDraggingTodo } from '~/lib/todo-drag';
 import type { Folder } from '~/types/folder';
 
 interface FolderSidebarProps {
@@ -25,10 +26,20 @@ interface FolderSidebarProps {
   onAdd: (parentId: string | null) => void;
   onEdit: (folder: Folder) => void;
   onRemove: (folder: Folder) => void;
+  /** タスクをフォルダ (null は未分類) にドロップした */
+  onDropTodo: (todoId: string, folderId: string | null) => void;
 }
+
+/** ドロップ先。'all' には落とせない */
+type DropTarget = 'unfiled' | string;
+
+// 畳んだフォルダの上でこの時間待つと開いて、中のフォルダにも落とせるようにする
+const EXPAND_ON_HOVER_MS = 700;
 
 const rowClass =
   'group flex min-w-0 items-center gap-1 rounded-md text-sm transition-colors hover:bg-slate-100 dark:hover:bg-slate-800';
+const dropTargetRowClass =
+  'bg-blue-100 ring-2 ring-blue-500 ring-inset dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900';
 const selectedRowClass =
   'bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-200 dark:hover:bg-blue-900';
 const actionClass =
@@ -53,11 +64,48 @@ export function FolderSidebar({
   onAdd,
   onEdit,
   onRemove,
+  onDropTodo,
 }: FolderSidebarProps) {
   const entries = useMemo(() => flattenFolderTree(folders, collapsed), [folders, collapsed]);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+
+  useEffect(() => {
+    if (dropTarget === null || dropTarget === 'unfiled' || !collapsed.has(dropTarget)) return;
+    const timer = setTimeout(() => onToggleCollapsed(dropTarget), EXPAND_ON_HOVER_MS);
+    return () => clearTimeout(timer);
+  }, [dropTarget, collapsed, onToggleCollapsed]);
+
+  /** タスクのドロップを受け付ける行に付けるハンドラ。 */
+  const dropHandlers = (target: DropTarget) => ({
+    onDragOver: (event: DragEvent) => {
+      if (!isDraggingTodo(event.dataTransfer)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      if (dropTarget !== target) setDropTarget(target);
+    },
+    onDragLeave: (event: DragEvent) => {
+      // 行の中の要素へ移っただけなら外れていない
+      if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+      setDropTarget((current) => (current === target ? null : current));
+    },
+    onDrop: (event: DragEvent) => {
+      const todoId = getDraggedTodo(event.dataTransfer);
+      setDropTarget(null);
+      if (!todoId) return;
+      event.preventDefault();
+      onDropTodo(todoId, target === 'unfiled' ? null : target);
+    },
+  });
 
   const fixedItem = (value: FolderSelection, label: string, Icon: typeof FaInbox) => (
-    <li className={cn(rowClass, selection === value && selectedRowClass)}>
+    <li
+      className={cn(
+        rowClass,
+        selection === value && selectedRowClass,
+        dropTarget === value && dropTargetRowClass,
+      )}
+      {...(value === 'unfiled' ? dropHandlers('unfiled') : {})}
+    >
       <button
         type="button"
         className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left"
@@ -105,8 +153,13 @@ export function FolderSidebar({
             return (
               <li
                 key={folder.id}
-                className={cn(rowClass, isSelected && selectedRowClass)}
+                className={cn(
+                  rowClass,
+                  isSelected && selectedRowClass,
+                  dropTarget === folder.id && dropTargetRowClass,
+                )}
                 style={{ paddingLeft: `${depth * 0.875}rem` }}
+                {...dropHandlers(folder.id)}
               >
                 {hasChildren ? (
                   <button

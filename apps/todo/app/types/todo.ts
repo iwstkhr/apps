@@ -121,6 +121,16 @@ export function setTodoStatus(todo: Todo, status: TodoStatus, now: Date = new Da
   };
 }
 
+/** フォルダを移す。同じフォルダなら同じオブジェクトを返す。 */
+export function moveTodoToFolder(
+  todo: Todo,
+  folderId: string | null,
+  now: Date = new Date(),
+): Todo {
+  if (todo.folderId === folderId) return todo;
+  return { ...todo, folderId, updatedAt: now.toISOString() };
+}
+
 /**
  * 外部から来た値 (インポートしたファイル) を Todo に直す。
  * 必須項目 (id / title / createdAt / updatedAt) が欠けていれば null を返し、

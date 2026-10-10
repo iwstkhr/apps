@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { FaFolder, FaPen, FaTrash } from 'react-icons/fa';
+import { FaFolder, FaGripVertical, FaPen, FaTrash } from 'react-icons/fa';
 import { TodoForm } from '~/components/todo/todo-form';
 import { cn } from '~/lib/cn';
+import { setDraggedTodo } from '~/lib/todo-drag';
 import type { Folder } from '~/types/folder';
 import {
   getDueStatus,
@@ -57,6 +58,7 @@ export function TodoItem({
   onTagClick,
 }: TodoItemProps) {
   const [editing, setEditing] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const dueStatus = getDueStatus(todo, today);
   const done = todo.status === 'done';
 
@@ -79,12 +81,25 @@ export function TodoItem({
   }
 
   return (
+    // フォルダ欄へドラッグして別のフォルダに移せる
     <li
+      draggable
+      onDragStart={(event) => {
+        setDraggedTodo(event.dataTransfer, todo.id);
+        setDragging(true);
+      }}
+      onDragEnd={() => setDragging(false)}
       className={cn(
-        'flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
+        'group/item flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
         done && 'opacity-60',
+        dragging && 'border-dashed border-blue-400 opacity-40',
       )}
     >
+      {/* フォルダ欄が横に出ている広い画面でだけ、ドラッグできることを示す */}
+      <FaGripVertical
+        className="-mx-1.5 mt-1.5 hidden shrink-0 cursor-grab text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
+        aria-hidden="true"
+      />
       <input
         type="checkbox"
         className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-blue-600"

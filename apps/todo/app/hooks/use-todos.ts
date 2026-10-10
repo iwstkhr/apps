@@ -13,6 +13,7 @@ import {
 import { createFolder, type Folder, type FolderInput, updateFolder } from '~/types/folder';
 import {
   createTodo,
+  moveTodoToFolder,
   setTodoStatus,
   type Todo,
   type TodoInput,
@@ -33,6 +34,8 @@ export interface UseTodos {
   addTodo: (input: TodoInput) => Promise<void>;
   editTodo: (id: string, input: TodoInput) => Promise<void>;
   changeStatus: (id: string, status: TodoStatus) => Promise<void>;
+  /** folderId が null なら未分類に移す */
+  moveTodo: (id: string, folderId: string | null) => Promise<void>;
   removeTodo: (id: string) => Promise<void>;
   removeCompleted: () => Promise<void>;
   /** 作ったフォルダを返す */
@@ -139,6 +142,12 @@ export function useTodos(): UseTodos {
     [replaceOne],
   );
 
+  const moveTodo = useCallback(
+    (id: string, folderId: string | null) =>
+      replaceOne(id, (todo) => moveTodoToFolder(todo, folderId)),
+    [replaceOne],
+  );
+
   const removeTodo = useCallback(
     async (id: string) => {
       await setTodos(
@@ -228,6 +237,7 @@ export function useTodos(): UseTodos {
     addTodo,
     editTodo,
     changeStatus,
+    moveTodo,
     removeTodo,
     removeCompleted,
     addFolder,
