@@ -58,9 +58,13 @@ export interface UseTodos {
   ) => Promise<void>;
   /** ゴミ箱に移す */
   removeTodo: (id: string) => Promise<void>;
-  /** 完了済みをゴミ箱に移し、移した id を返す (元に戻すため) */
-  removeCompleted: () => Promise<string[]>;
-  restoreTodos: (ids: readonly string[]) => Promise<void>;
+  /**
+   * 完了済みをゴミ箱に移し、移した id を返す (元に戻すため)。
+   * scopeIds を渡すとその中 (今見ているフォルダのタスク) だけを対象にする
+   */
+  removeCompleted: (scopeIds?: readonly string[]) => Promise<string[]>;
+  /** ゴミ箱から戻し、実際に戻した件数を返す (完全に削除済みなら 0) */
+  restoreTodos: (ids: readonly string[]) => Promise<number>;
   /** ゴミ箱から完全に削除する */
   deleteTodosForever: (ids: readonly string[]) => Promise<void>;
   emptyTrash: () => Promise<void>;
@@ -93,9 +97,10 @@ export function useTodos(): UseTodos {
       // ゴミ箱に入れてから期限を過ぎたものは、開いたときに完全に削除する
       const expired = loaded.todos.filter((todo) => shouldPurge(todo)).map((todo) => todo.id);
       if (expired.length > 0) {
-        await deleteTodos(expired);
         const ids = new Set(expired);
         loaded.todos = loaded.todos.filter((todo) => !ids.has(todo.id));
+        // 削除に失敗しても読み込んだデータは表示する (次に開いたときにまた試す)
+        void deleteTodos(expired).catch(() => {});
       }
       apply(loaded);
       setError(null);
@@ -231,14 +236,17 @@ export function useTodos(): UseTodos {
         if (updated !== todo) changed.push(updated);
         return updated;
       });
-      if (changed.length === 0) return;
+      if (changed.length === 0) return 0;
       await setTodos(next, () => putTodos(changed));
+      return changed.length;
     },
     [setTodos],
   );
 
   const removeTodo = useCallback(
-    (id: string) => replaceMany([id], (todo) => moveTodoToTrash(todo)),
+    async (id: string) => {
+      await replaceMany([id], (todo) => moveTodoToTrash(todo));
+    },
     [replaceMany],
   );
 
@@ -280,13 +288,19 @@ export function useTodos(): UseTodos {
     [setTodos],
   );
 
-  const removeCompleted = useCallback(async () => {
-    const ids = dataRef.current.todos
-      .filter((todo) => todo.status === 'done' && !isTrashed(todo))
-      .map((todo) => todo.id);
-    await replaceMany(ids, (todo) => moveTodoToTrash(todo));
-    return ids;
-  }, [replaceMany]);
+  const removeCompleted = useCallback(
+    async (scopeIds?: readonly string[]) => {
+      const scope = scopeIds ? new Set(scopeIds) : null;
+      const ids = dataRef.current.todos
+        .filter(
+          (todo) => todo.status === 'done' && !isTrashed(todo) && (!scope || scope.has(todo.id)),
+        )
+        .map((todo) => todo.id);
+      await replaceMany(ids, (todo) => moveTodoToTrash(todo));
+      return ids;
+    },
+    [replaceMany],
+  );
 
   const addFolder = useCallback(
     async (input: FolderInput) => {

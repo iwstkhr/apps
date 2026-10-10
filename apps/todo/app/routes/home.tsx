@@ -240,27 +240,33 @@ export default function Home() {
   };
 
   const handleRemoveCompleted = async () => {
-    const ids = await removeCompleted();
+    // ボタンの件数どおり、今見ているフォルダの完了済みだけを移す
+    const ids = await removeCompleted(folderTodos.map((todo) => todo.id));
     if (ids.length === 0) return;
     setNotice({
       kind: 'info',
       text: t('完了済みの {0} 件をゴミ箱に移動しました。', [ids.length]),
-      undo: () => {
-        void restoreTodos(ids);
-        setNotice({ kind: 'info', text: t('{0} 件を元に戻しました。', [ids.length]) });
-      },
+      undo: () => void handleRestoreIds(ids),
     });
   };
 
   const handleRestore = async (restored: Todo[]) => {
-    await restoreTodos(restored.map((todo) => todo.id));
+    const count = await restoreTodos(restored.map((todo) => todo.id));
+    // 完全に削除した後や、もう戻した後に古い通知の「元に戻す」を押したときは何も言わない
+    if (count === 0) return setNotice(null);
     setNotice({
       kind: 'info',
       text:
         restored.length === 1
           ? t('「{0}」を元に戻しました。', [restored[0].title])
-          : t('{0} 件を元に戻しました。', [restored.length]),
+          : t('{0} 件を元に戻しました。', [count]),
     });
+  };
+
+  const handleRestoreIds = async (ids: readonly string[]) => {
+    const count = await restoreTodos(ids);
+    if (count === 0) return setNotice(null);
+    setNotice({ kind: 'info', text: t('{0} 件を元に戻しました。', [count]) });
   };
 
   // 完全に削除すると戻せないので、こちらは確認する

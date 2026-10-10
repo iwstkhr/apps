@@ -119,6 +119,30 @@ describe('useTodos', () => {
     expect((await getAll()).todos.filter((t) => t.deletedAt !== null)).toHaveLength(1);
   });
 
+  it('moves only the completed todos in the given scope to the trash', async () => {
+    const here = createTodoFixture({ title: 'here', status: 'done' });
+    const elsewhere = createTodoFixture({ title: 'elsewhere', status: 'done' });
+    await putTodos([here, elsewhere]);
+    const { result } = await renderLoaded();
+
+    const ids = await act(() => result.current.removeCompleted([here.id]));
+    expect(ids).toEqual([here.id]);
+    expect(result.current.todos.map((t) => t.title)).toEqual(['elsewhere']);
+  });
+
+  it('reports how many todos were actually restored', async () => {
+    const todo = createTodoFixture();
+    await putTodos([todo]);
+    const { result } = await renderLoaded();
+    await act(() => result.current.removeTodo(todo.id));
+    expect(await act(() => result.current.restoreTodos([todo.id]))).toBe(1);
+    // もう戻っている・完全に削除済みなら 0
+    expect(await act(() => result.current.restoreTodos([todo.id]))).toBe(0);
+    await act(() => result.current.removeTodo(todo.id));
+    await act(() => result.current.deleteTodosForever([todo.id]));
+    expect(await act(() => result.current.restoreTodos([todo.id]))).toBe(0);
+  });
+
   it('restores, deletes forever, and empties the trash', async () => {
     const a = createTodoFixture({ title: 'a' });
     const b = createTodoFixture({ title: 'b' });

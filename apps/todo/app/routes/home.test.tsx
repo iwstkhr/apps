@@ -312,6 +312,42 @@ describe('Home', () => {
       expect(items()).toHaveLength(3);
     });
 
+    it('moves only the completed todos of the selected folder to the trash', async () => {
+      const work = createFolderFixture({ name: '仕事' });
+      const home = createFolderFixture({ name: '家' });
+      await putAll({
+        folders: [work, home],
+        todos: [
+          createTodoFixture({ title: '報告', status: 'done', folderId: work.id }),
+          createTodoFixture({ title: '洗濯', status: 'done', folderId: home.id }),
+          createTodoFixture({ title: '掃除', status: 'done', folderId: home.id }),
+        ],
+      });
+      const user = await renderHome();
+      await user.click(within(nav()).getByRole('button', { name: /^仕事/ }));
+
+      await user.click(screen.getByRole('button', { name: '完了済みをゴミ箱に移動 (1)' }));
+      expect(screen.getByRole('status')).toHaveTextContent(
+        '完了済みの 1 件をゴミ箱に移動しました。',
+      );
+      await user.click(within(nav()).getByRole('button', { name: /^家/ }));
+      expect(items()).toHaveLength(2);
+    });
+
+    it('does not claim to restore a todo that was deleted forever', async () => {
+      await putTodos([createTodoFixture({ title: '洗濯' })]);
+      const user = await renderHome();
+      await user.click(screen.getByRole('button', { name: '「洗濯」をゴミ箱に移動' }));
+      const undo = screen.getByRole('button', { name: '元に戻す' });
+
+      await user.click(trashRow());
+      await user.click(screen.getByRole('button', { name: '「洗濯」を完全に削除' }));
+      // 削除した後に残っていた通知の「元に戻す」を押しても、戻したとは言わない
+      await user.click(undo);
+      await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+      expect(screen.queryByText('「洗濯」を元に戻しました。')).not.toBeInTheDocument();
+    });
+
     it('shows the trash with restore, delete forever, and empty actions', async () => {
       const folder = createFolderFixture({ name: '家' });
       const now = Date.now();
