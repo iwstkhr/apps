@@ -6,9 +6,9 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 
 ## Features
 
-- Add, edit, complete, and delete todos
+- Add, edit, and delete todos, and manage their status (未着手 / 進行中 / 保留 / 完了)
 - Set a due date (overdue and due-today items are highlighted), a priority (high / medium / low), a multi-line memo, and tags
-- Filter by status, tag, and keyword (title, memo, tags), and sort by due date, priority, or creation date
+- Filter by status, tag, and keyword (title, memo, tags), and sort by due date, priority, status, or creation date
 - Delete all completed todos at once
 - Export all todos to a JSON file, and import a file by merging it with or replacing the current todos
 - Sync changes across tabs of the same browser

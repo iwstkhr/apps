@@ -7,7 +7,13 @@ import { TodoToolbar } from '~/components/todo/todo-toolbar';
 import { type ImportMode, useTodos } from '~/hooks/use-todos';
 import { downloadExport, ImportError, type ParsedImport, parseImport } from '~/lib/export-import';
 import { secondaryButtonClass } from '~/lib/styles';
-import { applyFilters, collectTags, DEFAULT_FILTERS, type TodoFilters } from '~/lib/todo-filters';
+import {
+  applyFilters,
+  collectTags,
+  countByStatus,
+  DEFAULT_FILTERS,
+  type TodoFilters,
+} from '~/lib/todo-filters';
 import { toLocalDateString } from '~/types/todo';
 import type { Route } from './+types/home';
 
@@ -32,7 +38,7 @@ export default function Home() {
     error,
     addTodo,
     editTodo,
-    toggleTodo,
+    changeStatus,
     removeTodo,
     removeCompleted,
     importTodos,
@@ -44,8 +50,8 @@ export default function Home() {
   const today = toLocalDateString(new Date());
   const tags = useMemo(() => collectTags(todos), [todos]);
   const visibleTodos = useMemo(() => applyFilters(todos, filters), [todos, filters]);
-  const doneCount = todos.filter((todo) => todo.done).length;
-  const counts = { all: todos.length, active: todos.length - doneCount, done: doneCount };
+  const counts = useMemo(() => countByStatus(todos), [todos]);
+  const doneCount = counts.done;
 
   const handleImportFile = async (file: File) => {
     try {
@@ -129,7 +135,7 @@ export default function Home() {
                 ? '条件に合う TODO はありません。'
                 : 'TODO はまだありません。上のフォームから追加してください。'
             }
-            onToggle={(id) => void toggleTodo(id)}
+            onStatusChange={(id, status) => void changeStatus(id, status)}
             onEdit={editTodo}
             onRemove={handleRemove}
             onTagClick={(tag) => setFilters((current) => ({ ...current, tag }))}

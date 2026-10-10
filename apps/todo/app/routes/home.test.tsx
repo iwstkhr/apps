@@ -58,12 +58,21 @@ describe('Home', () => {
     await waitFor(async () => expect(await getAllTodos()).toHaveLength(1));
   });
 
-  it('toggles, edits and deletes a todo', async () => {
+  it('changes the status, edits and deletes a todo', async () => {
     await putTodos([createTodoFixture({ title: '洗濯' })]);
     const user = await renderHome();
 
+    const status = screen.getByRole('combobox', { name: '「洗濯」のステータス' });
+    expect(status).toHaveValue('todo');
+    await user.selectOptions(status, '進行中');
+    expect(status).toHaveValue('in_progress');
+
     await user.click(screen.getByRole('checkbox', { name: '「洗濯」を完了にする' }));
+    expect(status).toHaveValue('done');
     expect(screen.getByRole('button', { name: '完了済みを削除 (1)' })).toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: '「洗濯」を未着手に戻す' }));
+    expect(status).toHaveValue('todo');
+    await user.click(screen.getByRole('checkbox', { name: '「洗濯」を完了にする' }));
 
     await user.click(screen.getByRole('button', { name: '「洗濯」を編集' }));
     const title = within(items()[0]).getByRole('textbox', { name: 'タイトル' });
@@ -79,14 +88,19 @@ describe('Home', () => {
   it('filters by status, tag and keyword', async () => {
     await putTodos([
       createTodoFixture({ title: '会議', tags: ['仕事'] }),
-      createTodoFixture({ title: '掃除', tags: ['家'], done: true }),
+      createTodoFixture({ title: '掃除', tags: ['家'], status: 'done' }),
+      createTodoFixture({ title: '返事待ち', status: 'on_hold' }),
     ]);
     const user = await renderHome();
-    expect(items()).toHaveLength(2);
+    expect(items()).toHaveLength(3);
 
-    await user.click(screen.getByRole('radio', { name: /未完了/ }));
-    expect(items()).toHaveLength(1);
-    await user.click(screen.getByRole('radio', { name: /すべて/ }));
+    const statusFilter = screen.getByRole('combobox', { name: 'ステータスで絞り込み' });
+    expect(within(statusFilter).getByRole('option', { name: '保留 (1)' })).toBeInTheDocument();
+    await user.selectOptions(statusFilter, 'active');
+    expect(items()).toHaveLength(2);
+    await user.selectOptions(statusFilter, 'on_hold');
+    expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('返事待ち')]);
+    await user.selectOptions(statusFilter, 'all');
 
     await user.click(screen.getByRole('button', { name: '#家' }));
     expect(screen.getByRole('combobox', { name: 'タグで絞り込み' })).toHaveValue('家');

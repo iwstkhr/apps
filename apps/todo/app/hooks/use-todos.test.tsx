@@ -37,15 +37,15 @@ describe('useTodos', () => {
     expect(result.current.todos).toEqual([saved]);
   });
 
-  it('adds, edits, toggles and removes todos and persists them', async () => {
+  it('adds, edits, changes the status of and removes todos and persists them', async () => {
     const { result } = await renderLoaded();
 
     await act(() => result.current.addTodo(input('a')));
     const id = result.current.todos[0].id;
     await act(() => result.current.editTodo(id, input('b')));
-    await act(() => result.current.toggleTodo(id));
+    await act(() => result.current.changeStatus(id, 'in_progress'));
 
-    expect(result.current.todos[0]).toMatchObject({ title: 'b', done: true });
+    expect(result.current.todos[0]).toMatchObject({ title: 'b', status: 'in_progress' });
     expect(await getAllTodos()).toEqual(result.current.todos);
 
     await act(() => result.current.removeTodo(id));
@@ -54,7 +54,7 @@ describe('useTodos', () => {
   });
 
   it('removes only completed todos', async () => {
-    await putTodos([createTodoFixture({ done: true }), createTodoFixture({ title: 'open' })]);
+    await putTodos([createTodoFixture({ status: 'done' }), createTodoFixture({ title: 'open' })]);
     const { result } = await renderLoaded();
     await act(() => result.current.removeCompleted());
     expect(result.current.todos.map((t) => t.title)).toEqual(['open']);

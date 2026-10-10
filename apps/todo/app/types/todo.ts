@@ -8,11 +8,22 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
   low: '低',
 };
 
+export const STATUSES = ['todo', 'in_progress', 'on_hold', 'done'] as const;
+
+export type TodoStatus = (typeof STATUSES)[number];
+
+export const STATUS_LABELS: Record<TodoStatus, string> = {
+  todo: '未着手',
+  in_progress: '進行中',
+  on_hold: '保留',
+  done: '完了',
+};
+
 export interface Todo {
   id: string;
   title: string;
   memo: string;
-  done: boolean;
+  status: TodoStatus;
   priority: Priority;
   /** 'YYYY-MM-DD' (ローカル日付) */
   dueDate: string | null;
@@ -20,6 +31,7 @@ export interface Todo {
   /** ISO 8601 */
   createdAt: string;
   updatedAt: string;
+  /** status が 'done' になった日時。ほかのステータスに戻すと null */
   completedAt: string | null;
 }
 
@@ -36,6 +48,10 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export function isPriority(value: unknown): value is Priority {
   return typeof value === 'string' && (PRIORITIES as readonly string[]).includes(value);
+}
+
+export function isStatus(value: unknown): value is TodoStatus {
+  return typeof value === 'string' && (STATUSES as readonly string[]).includes(value);
 }
 
 export function isDateString(value: unknown): value is string {
@@ -67,7 +83,7 @@ export function createTodo(input: TodoInput, now: Date = new Date()): Todo {
     id: crypto.randomUUID(),
     title: input.title.trim(),
     memo: input.memo,
-    done: false,
+    status: 'todo',
     priority: input.priority,
     dueDate: input.dueDate,
     tags: normalizeTags(input.tags),
@@ -89,9 +105,15 @@ export function updateTodo(todo: Todo, input: TodoInput, now: Date = new Date())
   };
 }
 
-export function setTodoDone(todo: Todo, done: boolean, now: Date = new Date()): Todo {
+export function setTodoStatus(todo: Todo, status: TodoStatus, now: Date = new Date()): Todo {
+  if (todo.status === status) return todo;
   const timestamp = now.toISOString();
-  return { ...todo, done, completedAt: done ? timestamp : null, updatedAt: timestamp };
+  return {
+    ...todo,
+    status,
+    completedAt: status === 'done' ? timestamp : null,
+    updatedAt: timestamp,
+  };
 }
 
 /**
@@ -107,12 +129,12 @@ export function toTodo(value: unknown): Todo | null {
   if (typeof v.title !== 'string' || v.title.trim() === '') return null;
   if (!isIsoDateTime(v.createdAt) || !isIsoDateTime(v.updatedAt)) return null;
 
-  const done = v.done === true;
+  const status: TodoStatus = isStatus(v.status) ? v.status : 'todo';
   return {
     id: v.id,
     title: v.title.trim(),
     memo: typeof v.memo === 'string' ? v.memo : '',
-    done,
+    status,
     priority: isPriority(v.priority) ? v.priority : 'medium',
     dueDate: isDateString(v.dueDate) ? v.dueDate : null,
     tags: Array.isArray(v.tags)
@@ -120,7 +142,7 @@ export function toTodo(value: unknown): Todo | null {
       : [],
     createdAt: v.createdAt,
     updatedAt: v.updatedAt,
-    completedAt: done && isIsoDateTime(v.completedAt) ? v.completedAt : null,
+    completedAt: status === 'done' && isIsoDateTime(v.completedAt) ? v.completedAt : null,
   };
 }
 
@@ -136,7 +158,7 @@ export type DueStatus = 'overdue' | 'today' | 'upcoming' | 'none';
 
 /** 未完了の TODO の期限が過ぎているか・今日か。完了済みは 'none'。 */
 export function getDueStatus(todo: Todo, today: string): DueStatus {
-  if (todo.done || todo.dueDate === null) return 'none';
+  if (todo.status === 'done' || todo.dueDate === null) return 'none';
   if (todo.dueDate < today) return 'overdue';
   if (todo.dueDate === today) return 'today';
   return 'upcoming';

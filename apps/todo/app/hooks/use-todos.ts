@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { mergeTodos } from '~/lib/export-import';
 import { deleteTodos, getAllTodos, putTodos, replaceAllTodos } from '~/lib/todo-db';
-import { createTodo, setTodoDone, type Todo, type TodoInput, updateTodo } from '~/types/todo';
+import {
+  createTodo,
+  setTodoStatus,
+  type Todo,
+  type TodoInput,
+  type TodoStatus,
+  updateTodo,
+} from '~/types/todo';
 
 // 同じブラウザの別タブで変更されたら読み直す
 const CHANNEL_NAME = 'todo-changes';
@@ -14,7 +21,7 @@ export interface UseTodos {
   error: string | null;
   addTodo: (input: TodoInput) => Promise<void>;
   editTodo: (id: string, input: TodoInput) => Promise<void>;
-  toggleTodo: (id: string) => Promise<void>;
+  changeStatus: (id: string, status: TodoStatus) => Promise<void>;
   removeTodo: (id: string) => Promise<void>;
   removeCompleted: () => Promise<void>;
   importTodos: (incoming: Todo[], mode: ImportMode) => Promise<void>;
@@ -90,6 +97,7 @@ export function useTodos(): UseTodos {
       const current = todosRef.current.find((todo) => todo.id === id);
       if (!current) return;
       const updated = change(current);
+      if (updated === current) return;
       await commit(
         todosRef.current.map((todo) => (todo.id === id ? updated : todo)),
         () => putTodos([updated]),
@@ -103,8 +111,8 @@ export function useTodos(): UseTodos {
     [replaceOne],
   );
 
-  const toggleTodo = useCallback(
-    (id: string) => replaceOne(id, (todo) => setTodoDone(todo, !todo.done)),
+  const changeStatus = useCallback(
+    (id: string, status: TodoStatus) => replaceOne(id, (todo) => setTodoStatus(todo, status)),
     [replaceOne],
   );
 
@@ -119,10 +127,10 @@ export function useTodos(): UseTodos {
   );
 
   const removeCompleted = useCallback(async () => {
-    const ids = todosRef.current.filter((todo) => todo.done).map((todo) => todo.id);
+    const ids = todosRef.current.filter((todo) => todo.status === 'done').map((todo) => todo.id);
     if (ids.length === 0) return;
     await commit(
-      todosRef.current.filter((todo) => !todo.done),
+      todosRef.current.filter((todo) => todo.status !== 'done'),
       () => deleteTodos(ids),
     );
   }, [commit]);
@@ -145,7 +153,7 @@ export function useTodos(): UseTodos {
     error,
     addTodo,
     editTodo,
-    toggleTodo,
+    changeStatus,
     removeTodo,
     removeCompleted,
     importTodos,

@@ -1,12 +1,12 @@
 import { TodoItem } from '~/components/todo/todo-item';
-import type { Todo, TodoInput } from '~/types/todo';
+import type { Todo, TodoInput, TodoStatus } from '~/types/todo';
 
 interface TodoListProps {
   todos: Todo[];
   today: string;
   tagSuggestions: string[];
   emptyMessage: string;
-  onToggle: (id: string) => void;
+  onStatusChange: (id: string, status: TodoStatus) => void;
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
   onTagClick: (tag: string) => void;

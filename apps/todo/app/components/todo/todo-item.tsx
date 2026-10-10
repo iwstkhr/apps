@@ -6,14 +6,26 @@ import {
   getDueStatus,
   PRIORITY_LABELS,
   type Priority,
+  STATUS_LABELS,
+  STATUSES,
   type Todo,
   type TodoInput,
+  type TodoStatus,
 } from '~/types/todo';
 
 const PRIORITY_CLASSES: Record<Priority, string> = {
   high: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
   medium: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
   low: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+};
+
+const STATUS_CLASSES: Record<TodoStatus, string> = {
+  todo: 'border-slate-300 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200',
+  in_progress:
+    'border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300',
+  on_hold:
+    'border-purple-300 bg-purple-50 text-purple-800 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300',
+  done: 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
 };
 
 const iconButtonClass =
@@ -23,7 +35,7 @@ interface TodoItemProps {
   todo: Todo;
   today: string;
   tagSuggestions: string[];
-  onToggle: (id: string) => void;
+  onStatusChange: (id: string, status: TodoStatus) => void;
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
   onTagClick: (tag: string) => void;
@@ -33,13 +45,14 @@ export function TodoItem({
   todo,
   today,
   tagSuggestions,
-  onToggle,
+  onStatusChange,
   onEdit,
   onRemove,
   onTagClick,
 }: TodoItemProps) {
   const [editing, setEditing] = useState(false);
   const dueStatus = getDueStatus(todo, today);
+  const done = todo.status === 'done';
 
   if (editing) {
     return (
@@ -62,25 +75,41 @@ export function TodoItem({
     <li
       className={cn(
         'flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
-        todo.done && 'opacity-60',
+        done && 'opacity-60',
       )}
     >
       <input
         type="checkbox"
         className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-blue-600"
-        checked={todo.done}
-        onChange={() => onToggle(todo.id)}
-        aria-label={`「${todo.title}」を${todo.done ? '未完了に戻す' : '完了にする'}`}
+        checked={done}
+        // 完了を外したときは未着手に戻す
+        onChange={() => onStatusChange(todo.id, done ? 'todo' : 'done')}
+        aria-label={`「${todo.title}」を${done ? '未着手に戻す' : '完了にする'}`}
       />
 
       <div className="min-w-0 flex-1">
-        <p className={cn('break-words font-medium', todo.done && 'line-through')}>{todo.title}</p>
+        <p className={cn('break-words font-medium', done && 'line-through')}>{todo.title}</p>
         {todo.memo && (
           <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-600 dark:text-slate-400">
             {todo.memo}
           </p>
         )}
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+          <select
+            className={cn(
+              'cursor-pointer rounded border px-1 py-0.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40',
+              STATUS_CLASSES[todo.status],
+            )}
+            value={todo.status}
+            onChange={(event) => onStatusChange(todo.id, event.target.value as TodoStatus)}
+            aria-label={`「${todo.title}」のステータス`}
+          >
+            {STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {STATUS_LABELS[status]}
+              </option>
+            ))}
+          </select>
           <span
             className={cn('rounded px-1.5 py-0.5 font-medium', PRIORITY_CLASSES[todo.priority])}
           >

@@ -28,10 +28,20 @@ test('completes, edits and deletes todos', async ({ page }) => {
   await addTodo(page, '洗濯');
   await addTodo(page, '掃除');
 
+  await page.getByRole('combobox', { name: '「掃除」のステータス' }).selectOption('進行中');
   await page.getByRole('checkbox', { name: '「洗濯」を完了にする' }).check();
-  await page.getByRole('radio', { name: /未完了/ }).check({ force: true });
+  const statusFilter = page.getByRole('combobox', { name: 'ステータスで絞り込み' });
+  await statusFilter.selectOption('in_progress');
+  await expect(todoItems(page)).toHaveText([/掃除/]);
+  await statusFilter.selectOption('active');
   await expect(todoItems(page)).toHaveCount(1);
-  await page.getByRole('radio', { name: /すべて/ }).check({ force: true });
+  await statusFilter.selectOption('all');
+
+  // ステータスもリロード後に残る
+  await page.reload();
+  await expect(page.getByRole('combobox', { name: '「掃除」のステータス' })).toHaveValue(
+    'in_progress',
+  );
 
   await page.getByRole('button', { name: '「掃除」を編集' }).click();
   await todoItems(page).getByRole('textbox', { name: 'タイトル' }).fill('部屋の掃除');

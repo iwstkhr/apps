@@ -8,7 +8,7 @@ export function createTodoFixture(overrides: Partial<Todo> = {}): Todo {
     id: `todo-${sequence}`,
     title: `TODO ${sequence}`,
     memo: '',
-    done: false,
+    status: 'todo',
     priority: 'medium',
     dueDate: null,
     tags: [],

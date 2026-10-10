@@ -67,10 +67,10 @@ e2e/                            Playwright tests against wrangler dev
 
 | Module | Responsibility |
 | --- | --- |
-| `types/todo.ts` | `createTodo`, `updateTodo`, `setTodoDone`, tag parsing, `toTodo` (validation and defaults for untrusted data), `getDueStatus` |
+| `types/todo.ts` | `createTodo`, `updateTodo`, `setTodoStatus`, tag parsing, `toTodo` (validation and defaults for untrusted data), `getDueStatus` |
 | `lib/todo-db.ts` | A single cached connection; one transaction per write so multi-record writes are atomic |
 | `lib/export-import.ts` | Export envelope (`app`, `version`, `exportedAt`, `todos`), `parseImport` with Japanese error messages, `mergeTodos` by `updatedAt` |
-| `lib/todo-filters.ts` | Status, tag, and keyword filters; due, priority, and creation sorts |
+| `lib/todo-filters.ts` | Status, tag, and keyword filters; per-status counts; due, priority, status, and creation sorts |
 | `hooks/use-todos.ts` | CRUD API for components, optimistic updates, error handling, and tab sync |
 
 ## Testing

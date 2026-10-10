@@ -1,16 +1,17 @@
-import { cn } from '~/lib/cn';
 import { fieldClass, inputClass } from '~/lib/styles';
 import type { SortKey, StatusFilter, TodoFilters } from '~/lib/todo-filters';
+import { STATUS_LABELS, STATUSES } from '~/types/todo';
 
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'すべて' },
   { value: 'active', label: '未完了' },
-  { value: 'done', label: '完了' },
+  ...STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] })),
 ];
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'due', label: '期限順' },
   { value: 'priority', label: '優先度順' },
+  { value: 'status', label: 'ステータス順' },
   { value: 'created', label: '新しい順' },
 ];
 
@@ -27,30 +28,18 @@ export function TodoToolbar({ filters, onChange, tags, counts }: TodoToolbarProp
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
-        <fieldset className="flex overflow-hidden rounded-md border border-slate-300 dark:border-slate-600">
-          <legend className="sr-only">状態</legend>
+        <select
+          className={fieldClass}
+          value={filters.status}
+          onChange={(event) => update({ status: event.target.value as StatusFilter })}
+          aria-label="ステータスで絞り込み"
+        >
           {STATUS_OPTIONS.map(({ value, label }) => (
-            <label
-              key={value}
-              className={cn(
-                'cursor-pointer px-2.5 py-1.5 text-sm has-focus-visible:ring-2 has-focus-visible:ring-blue-500',
-                filters.status === value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700',
-              )}
-            >
-              <input
-                type="radio"
-                name="status"
-                value={value}
-                checked={filters.status === value}
-                onChange={() => update({ status: value })}
-                className="sr-only"
-              />
-              {label} <span className="tabular-nums">{counts[value]}</span>
-            </label>
+            <option key={value} value={value}>
+              {label} ({counts[value]})
+            </option>
           ))}
-        </fieldset>
+        </select>
 
         <select
           className={fieldClass}

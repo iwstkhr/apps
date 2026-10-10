@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyFilters, collectTags, DEFAULT_FILTERS } from '~/lib/todo-filters';
+import { applyFilters, collectTags, countByStatus, DEFAULT_FILTERS } from '~/lib/todo-filters';
 import { createTodoFixture } from '~/test/fixtures';
 
 const a = createTodoFixture({
@@ -23,7 +23,7 @@ const c = createTodoFixture({
   tags: ['仕事'],
   createdAt: '2026-10-02T00:00:00.000Z',
 });
-const done = createTodoFixture({ title: '完了したもの', done: true, dueDate: '2026-10-01' });
+const done = createTodoFixture({ title: '完了したもの', status: 'done', dueDate: '2026-10-01' });
 const all = [a, b, c, done];
 
 const titles = (todos: { title: string }[]) => todos.map((todo) => todo.title);
@@ -64,6 +64,48 @@ describe('applyFilters', () => {
       '牛乳',
     ]);
     expect(applyFilters(all, { ...DEFAULT_FILTERS, keyword: ' 仕事 ' })).toHaveLength(2);
+  });
+});
+
+describe('statuses', () => {
+  const progress = createTodoFixture({
+    title: '進行中',
+    status: 'in_progress',
+    dueDate: '2026-12-01',
+  });
+  const hold = createTodoFixture({ title: '保留', status: 'on_hold', dueDate: '2026-10-01' });
+  const open = createTodoFixture({ title: '未着手', dueDate: '2026-10-05' });
+  const finished = createTodoFixture({ title: '完了', status: 'done' });
+  const todos = [finished, hold, open, progress];
+
+  it('filters by each status and by "active" (everything but done)', () => {
+    const by = (status: Parameters<typeof applyFilters>[1]['status']) =>
+      titles(applyFilters(todos, { ...DEFAULT_FILTERS, status }));
+    expect(by('in_progress')).toEqual(['進行中']);
+    expect(by('on_hold')).toEqual(['保留']);
+    expect(by('todo')).toEqual(['未着手']);
+    expect(by('done')).toEqual(['完了']);
+    expect(by('active')).toEqual(['保留', '未着手', '進行中']);
+  });
+
+  it('sorts in progress, not started, on hold, then done', () => {
+    expect(titles(applyFilters(todos, { ...DEFAULT_FILTERS, sort: 'status' }))).toEqual([
+      '進行中',
+      '未着手',
+      '保留',
+      '完了',
+    ]);
+  });
+
+  it('counts todos per filter', () => {
+    expect(countByStatus(todos)).toEqual({
+      all: 4,
+      active: 3,
+      todo: 1,
+      in_progress: 1,
+      on_hold: 1,
+      done: 1,
+    });
   });
 });
 

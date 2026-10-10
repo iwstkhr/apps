@@ -5,7 +5,7 @@ import {
   getDueStatus,
   normalizeTags,
   parseTagText,
-  setTodoDone,
+  setTodoStatus,
   toLocalDateString,
   toTodo,
   updateTodo,
@@ -23,7 +23,7 @@ describe('tags', () => {
   });
 });
 
-describe('createTodo / updateTodo / setTodoDone', () => {
+describe('createTodo / updateTodo / setTodoStatus', () => {
   it('creates an open todo with timestamps', () => {
     const todo = createTodo(
       { title: '  牛乳を買う ', memo: 'm', priority: 'high', dueDate: '2026-10-11', tags: ['家'] },
@@ -31,7 +31,7 @@ describe('createTodo / updateTodo / setTodoDone', () => {
     );
     expect(todo).toMatchObject({
       title: '牛乳を買う',
-      done: false,
+      status: 'todo',
       priority: 'high',
       dueDate: '2026-10-11',
       tags: ['家'],
@@ -54,9 +54,17 @@ describe('createTodo / updateTodo / setTodoDone', () => {
   });
 
   it('records and clears completedAt', () => {
-    const done = setTodoDone(createTodoFixture(), true, NOW);
-    expect(done).toMatchObject({ done: true, completedAt: NOW.toISOString() });
-    expect(setTodoDone(done, false, NOW)).toMatchObject({ done: false, completedAt: null });
+    const done = setTodoStatus(createTodoFixture(), 'done', NOW);
+    expect(done).toMatchObject({ status: 'done', completedAt: NOW.toISOString() });
+    expect(setTodoStatus(done, 'on_hold', NOW)).toMatchObject({
+      status: 'on_hold',
+      completedAt: null,
+    });
+  });
+
+  it('returns the same todo when the status does not change', () => {
+    const todo = createTodoFixture({ status: 'in_progress' });
+    expect(setTodoStatus(todo, 'in_progress', NOW)).toBe(todo);
   });
 });
 
@@ -82,7 +90,7 @@ describe('toTodo', () => {
       priority: 'urgent',
       dueDate: '10/11',
       tags: ['a', 2, ' a '],
-      done: 'yes',
+      status: 'started',
       completedAt: 'x',
     });
     expect(todo).toMatchObject({
@@ -90,7 +98,7 @@ describe('toTodo', () => {
       priority: 'medium',
       dueDate: null,
       tags: ['a'],
-      done: false,
+      status: 'todo',
       completedAt: null,
     });
   });
@@ -107,7 +115,7 @@ describe('dates', () => {
     expect(getDueStatus(createTodoFixture({ dueDate: today }), today)).toBe('today');
     expect(getDueStatus(createTodoFixture({ dueDate: '2026-10-11' }), today)).toBe('upcoming');
     expect(getDueStatus(createTodoFixture(), today)).toBe('none');
-    expect(getDueStatus(createTodoFixture({ dueDate: '2026-10-09', done: true }), today)).toBe(
+    expect(getDueStatus(createTodoFixture({ dueDate: '2026-10-09', status: 'done' }), today)).toBe(
       'none',
     );
   });

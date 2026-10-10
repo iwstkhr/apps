@@ -16,10 +16,10 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | --- | --- |
 | Add | Enter a title and press Enter or 追加. 詳細 opens the memo, tags, due date, and priority fields |
 | Edit | The pencil button turns an item into an edit form. Escape or キャンセル discards the changes |
-| Complete | The checkbox toggles completion and records the completion time |
+| Status | Each todo has one of 未着手 (not started), 進行中 (in progress), 保留 (on hold), or 完了 (done). Change it with the status selector on the item. The checkbox is a shortcut: checking it sets 完了 and unchecking it returns to 未着手. New todos start as 未着手 |
 | Delete | The trash button deletes one todo after a confirmation. 完了済みを削除 deletes all completed todos |
-| Filter | Status (すべて / 未完了 / 完了 with counts), tag, and keyword (title, memo, and tags, case-insensitive) |
-| Sort | 期限順 (default), 優先度順, 新しい順. Completed todos are always listed after open ones |
+| Filter | Status (すべて / 未完了 (everything but 完了) / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive) |
+| Sort | 期限順 (default), 優先度順, ステータス順, 新しい順. Completed todos are always listed after the others |
 | Export | Saves every todo to `todo-export-YYYYMMDD.json` |
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
@@ -30,6 +30,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | --- | --- |
 | 期限順 | Due date ascending (todos without a due date last), then priority, then newest first |
 | 優先度順 | Priority (high → low), then due date, then newest first |
+| ステータス順 | 進行中 → 未着手 → 保留 → 完了, then due date, then priority, then newest first |
 | 新しい順 | Creation time, newest first |
 
 ### Due date display
@@ -44,12 +45,12 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 ├──────────────────────────────────────────────┤
 │ Add form: [やること          ] [詳細] [追加]  │
 │   (memo / tags / due date / priority)        │
-│ Filters: [すべて|未完了|完了] [並び順] [タグ]  │
+│ Filters: [ステータス] [並び順] [タグ]          │
 │ [キーワードで検索                           ] │
 │ ┌──────────────────────────────────────────┐ │
 │ │ ☐ Title                        ✎  🗑     │ │
 │ │   Memo                                   │ │
-│ │   優先度: 高  期限: 2026/10/10 (今日) #tag │ │
+│ │   [進行中▾] 優先度: 高  期限: 10/10 (今日) │ │
 │ └──────────────────────────────────────────┘ │
 │                         [完了済みを削除 (n)] │
 │ Footer: note on local storage and backups    │
@@ -65,13 +66,13 @@ interface Todo {
   id: string;                 // crypto.randomUUID()
   title: string;              // required, trimmed
   memo: string;
-  done: boolean;
+  status: 'todo' | 'in_progress' | 'on_hold' | 'done';
   priority: 'high' | 'medium' | 'low';
   dueDate: string | null;     // 'YYYY-MM-DD' in local time
   tags: string[];             // trimmed, unique
   createdAt: string;          // ISO 8601
   updatedAt: string;          // ISO 8601
-  completedAt: string | null; // ISO 8601, set only while done
+  completedAt: string | null; // ISO 8601, set only while status is 'done'
 }
 ```
 

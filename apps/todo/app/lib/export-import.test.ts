@@ -28,7 +28,7 @@ describe('export', () => {
 
 describe('parseImport', () => {
   it('round-trips an export', () => {
-    const todos = [createTodoFixture(), createTodoFixture({ done: true, tags: ['x'] })];
+    const todos = [createTodoFixture(), createTodoFixture({ status: 'on_hold', tags: ['x'] })];
     expect(parseImport(JSON.stringify(createExport(todos)))).toEqual({ todos, skipped: 0 });
   });
 
