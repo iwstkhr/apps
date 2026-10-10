@@ -90,9 +90,12 @@ export function TodoForm({
             詳細
           </button>
         )}
-        <button type="submit" className={`${primaryButtonClass} shrink-0`} disabled={!canSubmit}>
-          {submitLabel}
-        </button>
+        {/* 編集フォームでは保存をキャンセルと並べて下に置く */}
+        {!onCancel && (
+          <button type="submit" className={`${primaryButtonClass} shrink-0`} disabled={!canSubmit}>
+            {submitLabel}
+          </button>
+        )}
       </div>
 
       {expanded && (
@@ -147,9 +150,12 @@ export function TodoForm({
       )}
 
       {onCancel && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
           <button type="button" className={secondaryButtonClass} onClick={onCancel}>
             キャンセル
+          </button>
+          <button type="submit" className={`${primaryButtonClass} shrink-0`} disabled={!canSubmit}>
+            {submitLabel}
           </button>
         </div>
       )}
