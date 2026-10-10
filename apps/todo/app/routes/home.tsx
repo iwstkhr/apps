@@ -1,14 +1,15 @@
-import { useCallback, useMemo, useState } from 'react';
+import { type CSSProperties, useCallback, useMemo, useState } from 'react';
 import { FaChevronDown, FaChevronUp, FaFolder } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
 import { AppHeader } from '~/components/layout/app-header';
+import { SidebarResizer } from '~/components/layout/sidebar-resizer';
 import { TodoForm } from '~/components/todo/todo-form';
 import { TodoList } from '~/components/todo/todo-list';
 import { TodoToolbar } from '~/components/todo/todo-toolbar';
 import { type ImportMode, useTodos } from '~/hooks/use-todos';
-import { useViewState } from '~/hooks/use-view-state';
+import { SIDEBAR_WIDTH, useViewState } from '~/hooks/use-view-state';
 import { cn } from '~/lib/cn';
 import { downloadExport, ImportError, type ParsedImport, parseImport } from '~/lib/export-import';
 import {
@@ -65,8 +66,14 @@ export default function Home() {
     importData,
   } = useTodos();
   const [filters, setFilters] = useState<TodoFilters>(DEFAULT_FILTERS);
-  const { selectedFolder, setSelectedFolder, collapsedFolders, setCollapsedFolders } =
-    useViewState();
+  const {
+    selectedFolder,
+    setSelectedFolder,
+    collapsedFolders,
+    setCollapsedFolders,
+    sidebarWidth,
+    setSidebarWidth,
+  } = useViewState();
   const [showFolders, setShowFolders] = useState(false);
   const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
@@ -191,8 +198,11 @@ export default function Home() {
         exportDisabled={todos.length === 0 && folders.length === 0}
       />
 
-      <div className="mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-4 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-6">
-        <aside className="mb-4 lg:sticky lg:top-16 lg:mb-0">
+      <div
+        className="mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-4 lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:items-start lg:gap-6"
+        style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
+      >
+        <aside id="folder-sidebar" className="relative mb-4 lg:sticky lg:top-16 lg:mb-0">
           {/* 狭い画面ではフォルダ一覧を畳んでおく */}
           <button
             type="button"
@@ -230,6 +240,14 @@ export default function Home() {
               onRemove={handleRemoveFolder}
             />
           </div>
+          <SidebarResizer
+            width={sidebarWidth}
+            min={SIDEBAR_WIDTH.min}
+            max={SIDEBAR_WIDTH.max}
+            defaultWidth={SIDEBAR_WIDTH.default}
+            onChange={setSidebarWidth}
+            controls="folder-sidebar"
+          />
         </aside>
 
         <main className="flex min-w-0 flex-col gap-4">

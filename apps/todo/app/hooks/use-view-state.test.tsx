@@ -3,7 +3,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  clampSidebarWidth,
   readViewState,
+  SIDEBAR_WIDTH,
   useViewState,
   VIEW_STATE_KEY,
   writeViewState,
@@ -16,8 +18,8 @@ afterEach(() => {
 
 describe('readViewState / writeViewState', () => {
   it('round-trips the view state', () => {
-    writeViewState({ folder: 'f1', collapsed: ['f2'] });
-    expect(readViewState()).toEqual({ folder: 'f1', collapsed: ['f2'] });
+    writeViewState({ folder: 'f1', collapsed: ['f2'], sidebarWidth: 300 });
+    expect(readViewState()).toEqual({ folder: 'f1', collapsed: ['f2'], sidebarWidth: 300 });
   });
 
   it('returns null when nothing is saved or the value is broken', () => {
@@ -27,8 +29,25 @@ describe('readViewState / writeViewState', () => {
   });
 
   it('falls back to defaults for invalid fields', () => {
-    localStorage.setItem(VIEW_STATE_KEY, JSON.stringify({ folder: 1, collapsed: ['a', 2] }));
-    expect(readViewState()).toEqual({ folder: 'all', collapsed: ['a'] });
+    localStorage.setItem(
+      VIEW_STATE_KEY,
+      JSON.stringify({ folder: 1, collapsed: ['a', 2], sidebarWidth: 'wide' }),
+    );
+    expect(readViewState()).toEqual({
+      folder: 'all',
+      collapsed: ['a'],
+      sidebarWidth: SIDEBAR_WIDTH.default,
+    });
+  });
+
+  it('reads the state saved before the sidebar width existed', () => {
+    localStorage.setItem(VIEW_STATE_KEY, JSON.stringify({ folder: 'f1', collapsed: [] }));
+    expect(readViewState()?.sidebarWidth).toBe(SIDEBAR_WIDTH.default);
+  });
+
+  it('keeps a saved width within the limits', () => {
+    writeViewState({ folder: 'all', collapsed: [], sidebarWidth: 9999 });
+    expect(readViewState()?.sidebarWidth).toBe(SIDEBAR_WIDTH.max);
   });
 
   it('ignores storage errors', () => {
@@ -39,27 +58,43 @@ describe('readViewState / writeViewState', () => {
       throw new Error('blocked');
     });
     expect(readViewState()).toBeNull();
-    expect(() => writeViewState({ folder: 'all', collapsed: [] })).not.toThrow();
+    expect(() =>
+      writeViewState({ folder: 'all', collapsed: [], sidebarWidth: SIDEBAR_WIDTH.default }),
+    ).not.toThrow();
+  });
+});
+
+describe('clampSidebarWidth', () => {
+  it('rounds and limits the width', () => {
+    expect(clampSidebarWidth(100)).toBe(SIDEBAR_WIDTH.min);
+    expect(clampSidebarWidth(250.6)).toBe(251);
+    expect(clampSidebarWidth(1000)).toBe(SIDEBAR_WIDTH.max);
   });
 });
 
 describe('useViewState', () => {
   it('restores the saved state and saves changes', async () => {
-    writeViewState({ folder: 'f1', collapsed: ['f2'] });
+    writeViewState({ folder: 'f1', collapsed: ['f2'], sidebarWidth: 320 });
     const { result } = renderHook(() => useViewState());
 
     await waitFor(() => expect(result.current.selectedFolder).toBe('f1'));
     expect([...result.current.collapsedFolders]).toEqual(['f2']);
+    expect(result.current.sidebarWidth).toBe(320);
 
     act(() => result.current.setSelectedFolder('unfiled'));
     act(() => result.current.setCollapsedFolders(new Set()));
-    expect(readViewState()).toEqual({ folder: 'unfiled', collapsed: [] });
+    act(() => result.current.setSidebarWidth(10_000));
+    expect(readViewState()).toEqual({
+      folder: 'unfiled',
+      collapsed: [],
+      sidebarWidth: SIDEBAR_WIDTH.max,
+    });
   });
 
   it('does not overwrite the saved state with the defaults before restoring', async () => {
-    writeViewState({ folder: 'f1', collapsed: [] });
+    writeViewState({ folder: 'f1', collapsed: [], sidebarWidth: 300 });
     const { result } = renderHook(() => useViewState());
     await waitFor(() => expect(result.current.selectedFolder).toBe('f1'));
-    expect(readViewState()?.folder).toBe('f1');
+    expect(readViewState()).toMatchObject({ folder: 'f1', sidebarWidth: 300 });
   });
 });

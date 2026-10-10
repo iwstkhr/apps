@@ -46,7 +46,7 @@ app/
   root.tsx                      HTML layout and error boundary
   routes/home.tsx               The only screen; wires state, filters, and import/export
   hooks/use-todos.ts            Todo state, persistence, and cross-tab sync
-  hooks/use-view-state.ts       Selected and collapsed folders, kept in localStorage
+  hooks/use-view-state.ts       Selected and collapsed folders and the folder list width, kept in localStorage
   lib/todo-db.ts                IndexedDB access (open, read, put, delete, replace)
   lib/folder-tree.ts            Folder tree helpers: ordering, paths, subtrees, repair, counts
   lib/export-import.ts          Export file creation, import parsing, and merging
@@ -54,7 +54,7 @@ app/
   lib/styles.ts                 Shared Tailwind class strings
   types/todo.ts                 Todo type, factories, validation, and date helpers
   types/folder.ts               Folder type, factories, and validation
-  components/layout/            Header with export and import buttons, and the shared modal
+  components/layout/            Header with export and import buttons, the shared modal, and the folder list resizer
   components/folder/            Folder list, create/edit dialog, and folder selector
   components/todo/              Add/edit form, toolbar, list, and item
   components/data/              Import confirmation dialog
@@ -66,7 +66,7 @@ e2e/                            Playwright tests against wrangler dev
 1. On mount, `useTodos` reads every record from the `todos` and `folders` object stores (key path `id`) and normalizes them with `toTodo()` and `toFolder()`. The database is at version 2; version 1 had only the `todos` store, and the upgrade adds `folders`.
 2. Each change updates React state first and then writes to IndexedDB, so the UI responds immediately. If the write fails, an error is shown and the state is reloaded from IndexedDB.
 3. After a successful write, `useTodos` posts a message on the `todo-changes` BroadcastChannel; other tabs reload from IndexedDB when they receive it.
-4. Filters and the sort order live in `routes/home.tsx` state and are not persisted. The selected and collapsed folders come from `useViewState`, which reads `localStorage` (`todo:view`) after the first render, so the prerendered HTML still matches, and writes it on every change. `filterByFolder()` narrows the todos to the selected folder and its subfolders, then `applyFilters()` filters and sorts them.
+4. Filters and the sort order live in `routes/home.tsx` state and are not persisted. The selected and collapsed folders and the folder list width come from `useViewState`, which reads `localStorage` (`todo:view`) after the first render, so the prerendered HTML still matches, and writes it on every change. `filterByFolder()` narrows the todos to the selected folder and its subfolders, then `applyFilters()` filters and sorts them.
 5. Deleting a folder removes its subtree and rewrites the affected todos to 未分類 in one IndexedDB transaction, so a failure leaves both unchanged.
 6. Export serializes the in-memory todos and folders to a Blob and triggers a download. Import reads the file with `File.text()`, validates and repairs it with `parseImport()`, and passes the result to `importData()` after the user picks merge or replace.
 
@@ -81,7 +81,8 @@ e2e/                            Playwright tests against wrangler dev
 | `lib/export-import.ts` | Export envelope (`app`, `version`, `exportedAt`, `folders`, `todos`), `parseImport` with Japanese error messages, `mergeData` by `updatedAt`, `sanitizeData` |
 | `lib/todo-filters.ts` | Status, tag, and keyword filters; per-status counts; due, priority, status, and creation sorts |
 | `hooks/use-todos.ts` | CRUD API for todos and folders, optimistic updates, error handling, and tab sync |
-| `hooks/use-view-state.ts` | Restores and saves the selected and collapsed folders; ignores broken values and storage errors |
+| `hooks/use-view-state.ts` | Restores and saves the selected and collapsed folders and the folder list width (clamped to 180–480 px); ignores broken values and storage errors |
+| `components/layout/sidebar-resizer.tsx` | A `separator` handle that resizes the folder list by pointer drag or keyboard and resets on double click. The width is applied through the `--sidebar-width` CSS variable on the layout grid. |
 
 ## Testing
 
@@ -89,7 +90,7 @@ e2e/                            Playwright tests against wrangler dev
 | --- | --- | --- |
 | Unit | Vitest | Types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb) |
 | Component | Vitest, Testing Library, happy-dom | `useTodos` and the whole `Home` screen |
-| E2E | Playwright | Production build served by `wrangler dev`: persistence across reloads, editing, nested folders, folder deletion, export → delete → import, restoring the folder view after a reload, and the folder toggle on narrow screens |
+| E2E | Playwright | Production build served by `wrangler dev`: persistence across reloads, editing, nested folders, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, and the folder toggle on narrow screens |
 
 ## CI / CD
 

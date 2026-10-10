@@ -93,3 +93,30 @@ test('opens the folder list from a button on narrow screens', async ({ page }) =
   await expect(folderNav(page)).toBeHidden();
   await expect(page.getByRole('button', { name: 'フォルダ: 買い物' })).toBeVisible();
 });
+
+test('resizes the folder pane by dragging and keeps the width after reloading', async ({
+  page,
+}) => {
+  const pane = page.locator('#folder-sidebar');
+  const handle = page.getByRole('separator', { name: 'フォルダ欄の幅' });
+  await expect(handle).toHaveAttribute('aria-valuenow', '240');
+  const before = (await pane.boundingBox())?.width ?? 0;
+
+  const box = await handle.boundingBox();
+  if (!box) throw new Error('resize handle is not visible');
+  const y = box.y + 20;
+  await page.mouse.move(box.x + box.width / 2, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 100, y, { steps: 5 });
+  await page.mouse.up();
+
+  await expect(handle).toHaveAttribute('aria-valuenow', '340');
+  expect((await pane.boundingBox())?.width).toBeCloseTo(before + 100, 0);
+
+  await page.reload();
+  await expect(handle).toHaveAttribute('aria-valuenow', '340');
+
+  // ダブルクリックで元の幅に戻る
+  await handle.dblclick();
+  await expect(handle).toHaveAttribute('aria-valuenow', '240');
+});
