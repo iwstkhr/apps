@@ -25,6 +25,12 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
 
+### Color themes
+
+The header's テーマ button opens a dialog with five presets: スタンダード, フォレスト, サクラ, サンド, and ラベンダー. Inspired by Slack, non-default presets use a shared dark color for the header and sidebar, with bright text and a distinct selected row, while the main content retains neutral backgrounds, text, and borders for readability. Buttons, links, focus indicators, and selected rows use shades of the same subdued accent hue, including Markdown links. The header logo follows the theme. The 表示モード controls offer ライト, ダーク, and 自動. Light and dark override the OS preference; 自動 (the default) follows OS changes immediately. Folder icon colors and semantic warning, priority, and completed-status colors remain distinct.
+
+The selection is stored separately in localStorage (`todo:theme`) and restored after a reload. Missing, invalid, or inaccessible preferences use スタンダード; if storage is unavailable, themes can still be selected for the current session. Display mode is saved separately as `todo:appearance`; missing or invalid values fall back to 自動. Theme and mode settings are not included in task exports. The dialog supports radio-button keyboard navigation, Escape, and a close button, and returns focus to the header button when closed.
+
 ### Memos
 
 Memos render as Markdown (CommonMark with GitHub-flavored Markdown), including headings, emphasis, lists, links, quotes, code blocks, tables, strikethrough, and read-only task lists. Plain text keeps its line breaks. Links open in a new tab. Raw HTML is displayed as text, and unsafe URL schemes are blocked. Image references appear as links using their alt text instead of loading remote images automatically. Code blocks and wide tables scroll horizontally within the memo on small screens.

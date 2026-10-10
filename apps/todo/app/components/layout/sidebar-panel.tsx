@@ -90,7 +90,7 @@ export function SidebarPanel({ open, onClose, children }: SidebarPanelProps) {
         aria-hidden={!open && !desktop ? true : undefined}
         inert={!open && !desktop ? true : undefined}
         className={cn(
-          'fixed inset-y-0 left-0 z-40 flex w-[min(20rem,85vw)] flex-col border-r border-slate-200 bg-white p-3 shadow-xl transition-[translate,visibility] duration-200 motion-reduce:transition-none lg:visible lg:static lg:z-auto lg:w-auto lg:min-h-0 lg:flex-1 lg:translate-x-0 lg:rounded-lg lg:border lg:p-2 lg:shadow-none dark:border-slate-800 dark:bg-slate-900',
+          'theme-sidebar fixed inset-y-0 left-0 z-40 flex w-[min(20rem,85vw)] flex-col border-r border-slate-200 bg-white p-3 shadow-xl transition-[translate,visibility] duration-200 motion-reduce:transition-none lg:visible lg:static lg:z-auto lg:w-auto lg:min-h-0 lg:flex-1 lg:translate-x-0 lg:rounded-lg lg:border lg:p-2 lg:shadow-none dark:border-slate-800 dark:bg-slate-900',
           open ? 'visible translate-x-0' : 'invisible -translate-x-full',
         )}
       >

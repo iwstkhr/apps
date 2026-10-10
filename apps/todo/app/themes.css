@@ -1,0 +1,126 @@
+/* 本文の中立色は保ち、サイドバーとアクセントでテーマを表す。 */
+:root[data-theme="forest"] {
+  --sidebar-background: #12372a;
+  --sidebar-selection: #245a48;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+:root[data-theme="sakura"] {
+  --sidebar-background: #4a2034;
+  --sidebar-selection: #783f59;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+:root[data-theme="sand"] {
+  --sidebar-background: #3e3025;
+  --sidebar-selection: #71513c;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+:root[data-theme="lavender"] {
+  --sidebar-background: #3f0e40;
+  --sidebar-selection: #5b2b60;
+  --color-blue-50: color-mix(in srgb, var(--sidebar-selection) 5%, white);
+  --color-blue-100: color-mix(in srgb, var(--sidebar-selection) 12%, white);
+  --color-blue-200: color-mix(in srgb, var(--sidebar-selection) 25%, white);
+  --color-blue-300: color-mix(in srgb, var(--sidebar-selection) 35%, white);
+  --color-blue-400: color-mix(in srgb, var(--sidebar-selection) 55%, white);
+  --color-blue-500: var(--sidebar-selection);
+  --color-blue-600: var(--sidebar-selection);
+  --color-blue-700: color-mix(in srgb, var(--sidebar-selection) 85%, black);
+  --color-blue-800: var(--sidebar-background);
+  --color-blue-900: var(--sidebar-background);
+  --color-blue-950: var(--sidebar-background);
+}
+
+/* Slack のように、濃いナビゲーション領域には明るい文字を合わせる。 */
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar {
+  background: var(--sidebar-background);
+  color: #f8fafc;
+  border-color: #ffffff30;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar :is(nav, nav > div) {
+  border-color: #ffffff30;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar > div:first-child {
+  border-color: #ffffff30;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar :is(button, nav span, nav p) {
+  color: #f8fafc;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar svg:not([style]) {
+  color: #e2e8f0;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar button:hover,
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar li.group:not(.ring-2):hover {
+  background: #ffffff18;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar [aria-pressed="true"],
+:root[data-theme]:not([data-theme="standard"])
+  .theme-sidebar
+  li:has(> button[aria-current="true"]):not(.ring-2) {
+  background: var(--sidebar-selection);
+  color: #fff;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-sidebar button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+/* ヘッダーとナビゲーションは同じ色面、操作ボタンはその明るい階調に揃える。 */
+:root[data-theme]:not([data-theme="standard"]) .theme-header {
+  background: var(--sidebar-background);
+  color: #f8fafc;
+  border-color: #ffffff30;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-header > div > div > button {
+  background: #ffffff0a;
+  color: #f8fafc;
+  border-color: #ffffff40;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-header > div > div > button:hover {
+  background: #ffffff18;
+}
+
+:root[data-theme]:not([data-theme="standard"]) .theme-header .app-logo {
+  color: #f8fafc;
+}
