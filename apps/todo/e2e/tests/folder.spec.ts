@@ -59,15 +59,26 @@ test('moves a todo to another folder by drag and drop', async ({ page }) => {
     .getByRole('button', { name: /^すべて/ })
     .click();
   await addTodo(page, '洗濯');
+  await page.getByRole('button', { name: '「洗濯」を編集' }).click();
+  await page.getByRole('textbox', { name: 'メモ' }).fill('洗剤を用意する');
+  await page.getByRole('button', { name: '保存', exact: true }).click();
 
-  // カードはつかむカーソル、中のボタンは指のカーソル
+  // ヘッダーだけをつかめて、操作ボタンは指のカーソル
   const card = todoItems(page).filter({ hasText: '洗濯' });
-  await expect(card).toHaveCSS('cursor', 'grab');
+  const header = card.locator('[draggable="true"]');
+  await expect(card).not.toHaveAttribute('draggable', 'true');
+  await expect(header).toHaveAttribute('draggable', 'true');
+  await expect(header).toHaveCSS('cursor', 'grab');
   await expect(card.getByRole('button', { name: '「洗濯」を編集' })).toHaveCSS('cursor', 'pointer');
 
-  await todoItems(page)
-    .filter({ hasText: '洗濯' })
+  await card
+    .getByText('洗剤を用意する')
     .dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
+  await card.getByText('優先度: 中').dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
+  await page.reload();
+  await expect(card).not.toContainText('フォルダ: 家');
+
+  await header.dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
   await expect(page.getByRole('status')).toHaveText('「洗濯」を「家」に移動しました。');
   await expect(todoItems(page)).toHaveText([/洗濯.*フォルダ: 家/]);
 

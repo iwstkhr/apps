@@ -353,7 +353,9 @@ describe('Home', () => {
         const row = within(folderNav()).getByRole('button', { name: rowName }).closest('li');
         if (!row) throw new Error('folder row not found');
 
-        fireEvent.dragStart(item, { dataTransfer });
+        const header = item.querySelector('[draggable="true"]');
+        if (!header) throw new Error('todo header not found');
+        fireEvent.dragStart(header, { dataTransfer });
         fireEvent.dragEnter(row, { dataTransfer });
         // preventDefault されたら (= ドロップできる) false が返る
         const accepted = !fireEvent.dragOver(row, { dataTransfer });
@@ -362,7 +364,7 @@ describe('Home', () => {
           row,
           drop: () => {
             fireEvent.drop(row, { dataTransfer });
-            fireEvent.dragEnd(item, { dataTransfer });
+            fireEvent.dragEnd(header, { dataTransfer });
           },
         };
       }

@@ -30,7 +30,7 @@ const STATUS_CLASSES: Record<TodoStatus, string> = {
   done: 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
 };
 
-// カードはつかむカーソルになるので、中のボタンはクリックできることが分かるよう指のカーソルにする
+// 操作ボタンはクリックできることが分かるよう指のカーソルにする
 const iconButtonClass =
   'cursor-pointer rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
 
@@ -84,24 +84,12 @@ export function TodoItem({
   return (
     // フォルダ欄へドラッグして別のフォルダに移せる
     <li
-      draggable
-      onDragStart={(event) => {
-        setDraggedTodo(event.dataTransfer, todo.id, todo.title);
-        setDragging(true);
-      }}
-      onDragEnd={() => setDragging(false)}
       className={cn(
-        // フォルダ欄が横に出ている広い画面では、カード全体をつかんでドラッグできることをカーソルで示す
-        'group/item flex items-start gap-3 rounded-lg border lg:cursor-grab lg:active:cursor-grabbing border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
+        'group/item flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
         done && 'opacity-60',
         dragging && 'border-dashed border-blue-400 opacity-40',
       )}
     >
-      {/* フォルダ欄が横に出ている広い画面でだけ、ドラッグできることを示す */}
-      <FaGripVertical
-        className="-mx-1.5 mt-1.5 hidden shrink-0 text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
-        aria-hidden="true"
-      />
       <input
         type="checkbox"
         className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-blue-600"
@@ -112,7 +100,24 @@ export function TodoItem({
       />
 
       <div className="min-w-0 flex-1">
-        <p className={cn('break-words font-medium', done && 'line-through')}>{todo.title}</p>
+        <section
+          aria-label={`「${todo.title}」のヘッダー`}
+          draggable
+          onDragStart={(event) => {
+            setDraggedTodo(event.dataTransfer, todo.id, todo.title);
+            setDragging(true);
+          }}
+          onDragEnd={() => setDragging(false)}
+          className="flex items-start gap-2 lg:cursor-grab lg:active:cursor-grabbing"
+        >
+          <FaGripVertical
+            className="mt-1 hidden shrink-0 text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
+            aria-hidden="true"
+          />
+          <p className={cn('min-w-0 break-words font-medium', done && 'line-through')}>
+            {todo.title}
+          </p>
+        </section>
         {todo.memo && (
           <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-600 dark:text-slate-400">
             {todo.memo}
