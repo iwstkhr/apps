@@ -45,6 +45,15 @@
             "ignoreRestSiblings": true
           }
         }
+      },
+      "style": {
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "requireAscii": true,
+            "filenameCases": ["kebab-case"]
+          }
+        }
       }
     }
   },

@@ -70,6 +70,8 @@ Code comments may remain in Japanese. Preserve actual Japanese UI labels when qu
   The schema-level default (`allow.resource(eventApi)`) applies; individual model authorization would allow clients to perform CRUD directly.
 - When changing API routes or input/output, update `backend/src/schemas.ts` and `backend/src/openapi.ts`, regenerate `docs/openapi.yaml` with `pnpm run openapi`, and include it in the commit. Otherwise, `pnpm test` fails.
 - Use `a.customType` (`EventView` / `AnswerView`) for public API responses instead of returning models directly, to avoid exposing token hashes.
+- Name source files in kebab-case (`answer-form.tsx`, `use-async-action.ts`), including components and hooks.
+  Biome's `useFilenamingConvention` rule enforces this in `pnpm run lint`.
 
 ## Development
 
