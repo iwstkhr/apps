@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createExport } from '~/lib/export-import';
-import { LANGUAGE_KEY } from '~/lib/i18n';
+import { forgetSavedLanguageForTesting, LANGUAGE_KEY } from '~/lib/i18n';
 import { closeDbForTesting, getAll, putAll, putTodos } from '~/lib/todo-db';
 import Home from '~/routes/home';
 import { createDataTransfer } from '~/test/drag';
@@ -18,6 +18,8 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  // 画面を閉じると表示の状態を保存するので、localStorage を消す前に閉じる
+  cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   vi.useRealTimers();
@@ -105,6 +107,7 @@ describe('Home', () => {
 
     it('follows the browser language until a language is chosen', async () => {
       localStorage.removeItem(LANGUAGE_KEY);
+      forgetSavedLanguageForTesting();
       vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US', 'ja-JP']);
       const user = await renderHome();
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();

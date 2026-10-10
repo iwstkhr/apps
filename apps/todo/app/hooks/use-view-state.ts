@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FolderSelection } from '~/lib/folder-tree';
 import { DEFAULT_FILTERS, type SortKey } from '~/lib/todo-filters';
 
@@ -11,6 +11,9 @@ export const SIDEBAR_WIDTH = { min: 180, max: 480, default: 240 } as const;
 export function clampSidebarWidth(width: number): number {
   return Math.round(Math.min(SIDEBAR_WIDTH.max, Math.max(SIDEBAR_WIDTH.min, width)));
 }
+
+/** 表示の状態を保存するまで待つ時間 (ms) */
+const SAVE_DELAY_MS = 200;
 
 export interface ViewState {
   folder: FolderSelection;
@@ -81,17 +84,34 @@ export function useViewState() {
     setRestored(true);
   }, []);
 
-  // 読み出す前の初期値で上書きしない
+  // 幅のドラッグ中は値が何度も変わるので、変化が落ち着いてからまとめて保存する。
+  // 読み出す前の初期値では上書きしない
+  const pending = useRef<ViewState | null>(null);
+  const flushPending = useCallback(() => {
+    if (!pending.current) return;
+    writeViewState(pending.current);
+    pending.current = null;
+  }, []);
   useEffect(() => {
-    if (restored) {
-      writeViewState({
-        folder: selectedFolder,
-        collapsed: [...collapsedFolders],
-        sidebarWidth,
-        sort,
-      });
-    }
-  }, [restored, selectedFolder, collapsedFolders, sidebarWidth, sort]);
+    if (!restored) return;
+    pending.current = {
+      folder: selectedFolder,
+      collapsed: [...collapsedFolders],
+      sidebarWidth,
+      sort,
+    };
+    const timer = setTimeout(flushPending, SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [restored, selectedFolder, collapsedFolders, sidebarWidth, sort, flushPending]);
+
+  // 画面を離れる・閉じるときは待たずに保存する
+  useEffect(() => {
+    window.addEventListener('pagehide', flushPending);
+    return () => {
+      window.removeEventListener('pagehide', flushPending);
+      flushPending();
+    };
+  }, [flushPending]);
 
   const setSidebarWidth = useCallback(
     (width: number) => setSidebarWidthState(clampSidebarWidth(width)),

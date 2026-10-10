@@ -4,6 +4,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_DESCRIPTION,
+  forgetSavedLanguageForTesting,
   getBrowserLanguage,
   getLanguage,
   LANGUAGE_KEY,
@@ -24,6 +25,7 @@ function browserLanguages(languages: string[], language = languages[0] ?? '') {
 beforeEach(() => {
   // setup.ts が日本語にしているので、ここでは保存なしの状態から始める
   localStorage.removeItem(LANGUAGE_KEY);
+  forgetSavedLanguageForTesting();
 });
 
 afterEach(() => {
@@ -66,6 +68,7 @@ describe('choosing a language', () => {
   it('ignores an invalid saved value', () => {
     browserLanguages(['ja-JP']);
     localStorage.setItem(LANGUAGE_KEY, 'fr');
+    forgetSavedLanguageForTesting();
     expect(getLanguage()).toBe('ja');
   });
 
@@ -100,6 +103,27 @@ describe('choosing a language', () => {
     expect(result.current).toBe('ja');
     act(() => setLanguage('en'));
     expect(result.current).toBe('en');
+  });
+});
+
+describe('saved language cache', () => {
+  it('reads localStorage once instead of on every t() call', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'en');
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    for (let i = 0; i < 50; i++) t('追加');
+    expect(t('追加')).toBe('Add');
+    expect(getItem).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads it again when another tab changes the language', () => {
+    setLanguage('ja');
+    const { result } = renderHook(() => useLanguage());
+    localStorage.setItem(LANGUAGE_KEY, 'en');
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: LANGUAGE_KEY }));
+    });
+    expect(result.current).toBe('en');
+    expect(t('追加')).toBe('Add');
   });
 });
 

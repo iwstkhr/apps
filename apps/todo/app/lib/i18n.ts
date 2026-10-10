@@ -15,6 +15,27 @@ export const LANGUAGE_KEY = 'todo:language';
 const listeners = new Set<() => void>();
 // 保存できない環境 (プライベートモードなど) で選んだ言語をこの画面の間だけ覚えておく
 let unsavedLanguage: Language | null = null;
+// t() は描画のたびに何百回も呼ばれるので、localStorage は一度だけ読んで覚えておく。
+// undefined はまだ読んでいない、null は保存されていない
+let savedLanguage: Language | null | undefined;
+
+function readSavedLanguage(): Language | null {
+  if (savedLanguage !== undefined) return savedLanguage;
+  try {
+    const saved = localStorage.getItem(LANGUAGE_KEY);
+    savedLanguage = isLanguage(saved) ? saved : null;
+  } catch {
+    // 保存領域を読めなくてもブラウザの言語で表示する
+    savedLanguage = null;
+  }
+  return savedLanguage;
+}
+
+/** テスト用: 覚えている言語を忘れ、次は localStorage から読み直す。 */
+export function forgetSavedLanguageForTesting(): void {
+  savedLanguage = undefined;
+  unsavedLanguage = null;
+}
 
 function isLanguage(value: unknown): value is Language {
   return LANGUAGES.some((language) => language.id === value);
@@ -33,14 +54,7 @@ export function getBrowserLanguage(): Language {
 
 /** 選んだ言語。まだ選んでいなければブラウザの言語に合わせる。 */
 export function getLanguage(): Language {
-  if (unsavedLanguage) return unsavedLanguage;
-  try {
-    const saved = localStorage.getItem(LANGUAGE_KEY);
-    if (isLanguage(saved)) return saved;
-  } catch {
-    // 保存領域を読めなくてもブラウザの言語で表示する
-  }
-  return getBrowserLanguage();
+  return unsavedLanguage ?? readSavedLanguage() ?? getBrowserLanguage();
 }
 
 /** html の lang と説明文を言語に合わせる。 */
@@ -59,6 +73,7 @@ export function setLanguage(language: Language): void {
   try {
     localStorage.setItem(LANGUAGE_KEY, language);
     unsavedLanguage = null;
+    savedLanguage = language;
   } catch {
     unsavedLanguage = language;
   }
@@ -72,6 +87,7 @@ function subscribe(listener: () => void) {
   const onStorage = (event: StorageEvent) => {
     if (event.key === LANGUAGE_KEY || event.key === null) {
       unsavedLanguage = null;
+      savedLanguage = undefined;
       applyLanguage(getLanguage());
       listener();
     }

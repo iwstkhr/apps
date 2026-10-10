@@ -155,7 +155,14 @@ export function countOpenByFolder(
       counts.set('unfiled', (counts.get('unfiled') ?? 0) + 1);
       continue;
     }
-    for (const folder of getFolderPath(folders, todo.folderId)) {
+    // 親をたどって数える (getFolderPath は呼ぶたびに Map を作るので使わない)
+    const seen = new Set<string>();
+    for (
+      let folder = byId.get(todo.folderId);
+      folder && !seen.has(folder.id);
+      folder = folder.parentId === null ? undefined : byId.get(folder.parentId)
+    ) {
+      seen.add(folder.id);
       counts.set(folder.id, (counts.get(folder.id) ?? 0) + 1);
     }
   }
