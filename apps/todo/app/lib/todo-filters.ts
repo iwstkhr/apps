@@ -1,3 +1,4 @@
+import { compareCustomOrder } from '~/lib/todo-order';
 import { PRIORITIES, STATUS_LABELS, STATUSES, type Todo, type TodoStatus } from '~/types/todo';
 
 export type StatusFilter = 'all' | TodoStatus;
@@ -5,7 +6,7 @@ export const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'すべて' },
   ...STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] })),
 ];
-export type SortKey = 'due' | 'priority' | 'status' | 'created';
+export type SortKey = 'due' | 'priority' | 'status' | 'created' | 'custom';
 
 export interface TodoFilters {
   keyword: string;
@@ -49,6 +50,8 @@ const dueRank = (todo: Todo) => todo.dueDate ?? '9999-99-99';
 function compareBy(sort: SortKey): (a: Todo, b: Todo) => number {
   const newerFirst = (a: Todo, b: Todo) => b.createdAt.localeCompare(a.createdAt);
   switch (sort) {
+    case 'custom':
+      return compareCustomOrder;
     case 'due':
       return (a, b) =>
         dueRank(a).localeCompare(dueRank(b)) ||
@@ -72,7 +75,7 @@ function compareBy(sort: SortKey): (a: Todo, b: Todo) => number {
 
 const isDone = (todo: Todo) => Number(todo.status === 'done');
 
-/** 絞り込んで並べる。未完了を先、完了済みを後ろにまとめる。 */
+/** 絞り込んで並べる。カスタム以外は未完了を先、完了済みを後ろにまとめる。 */
 export function applyFilters(todos: readonly Todo[], filters: TodoFilters): Todo[] {
   const compare = compareBy(filters.sort);
   return todos
@@ -82,7 +85,7 @@ export function applyFilters(todos: readonly Todo[], filters: TodoFilters): Todo
         matchesKeyword(todo, filters.keyword) &&
         (filters.tag === null || todo.tags.includes(filters.tag)),
     )
-    .sort((a, b) => isDone(a) - isDone(b) || compare(a, b));
+    .sort((a, b) => (filters.sort === 'custom' ? 0 : isDone(a) - isDone(b)) || compare(a, b));
 }
 
 /** 状態の絞り込みごとの件数。 */

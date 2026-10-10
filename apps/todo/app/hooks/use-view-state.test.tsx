@@ -18,8 +18,13 @@ afterEach(() => {
 
 describe('readViewState / writeViewState', () => {
   it('round-trips the view state', () => {
-    writeViewState({ folder: 'f1', collapsed: ['f2'], sidebarWidth: 300 });
-    expect(readViewState()).toEqual({ folder: 'f1', collapsed: ['f2'], sidebarWidth: 300 });
+    writeViewState({ folder: 'f1', collapsed: ['f2'], sidebarWidth: 300, sort: 'custom' });
+    expect(readViewState()).toEqual({
+      folder: 'f1',
+      collapsed: ['f2'],
+      sidebarWidth: 300,
+      sort: 'custom',
+    });
   });
 
   it('returns null when nothing is saved or the value is broken', () => {
@@ -31,12 +36,13 @@ describe('readViewState / writeViewState', () => {
   it('falls back to defaults for invalid fields', () => {
     localStorage.setItem(
       VIEW_STATE_KEY,
-      JSON.stringify({ folder: 1, collapsed: ['a', 2], sidebarWidth: 'wide' }),
+      JSON.stringify({ folder: 1, collapsed: ['a', 2], sidebarWidth: 'wide', sort: 'unknown' }),
     );
     expect(readViewState()).toEqual({
       folder: 'all',
       collapsed: ['a'],
       sidebarWidth: SIDEBAR_WIDTH.default,
+      sort: 'due',
     });
   });
 
@@ -81,6 +87,7 @@ describe('useViewState', () => {
     expect([...result.current.collapsedFolders]).toEqual(['f2']);
     expect(result.current.sidebarWidth).toBe(320);
 
+    act(() => result.current.setSort('custom'));
     act(() => result.current.setSelectedFolder('unfiled'));
     act(() => result.current.setCollapsedFolders(new Set()));
     act(() => result.current.setSidebarWidth(10_000));
@@ -88,6 +95,7 @@ describe('useViewState', () => {
       folder: 'unfiled',
       collapsed: [],
       sidebarWidth: SIDEBAR_WIDTH.max,
+      sort: 'custom',
     });
   });
 

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FolderSelection } from '~/lib/folder-tree';
+import { DEFAULT_FILTERS, type SortKey } from '~/lib/todo-filters';
 
-// 表示の状態 (選んでいるフォルダ・畳んだフォルダ・フォルダ欄の幅) はこの端末だけの好みなので、TODO のデータとは分けて置く
+// 表示の状態 (フォルダ・畳んだフォルダ・欄の幅・並び順) はこの端末だけの好みなので、TODO のデータとは分けて置く
 export const VIEW_STATE_KEY = 'todo:view';
 
 /** フォルダ欄の幅 (px)。広い画面でだけ使う */
@@ -15,6 +16,7 @@ export interface ViewState {
   folder: FolderSelection;
   collapsed: string[];
   sidebarWidth: number;
+  sort?: SortKey;
 }
 
 /** 保存した表示の状態を読む。無い・壊れている・読めない (プライベートモードなど) ときは null。 */
@@ -24,7 +26,7 @@ export function readViewState(): ViewState | null {
     if (raw === null) return null;
     const data: unknown = JSON.parse(raw);
     if (typeof data !== 'object' || data === null) return null;
-    const { folder, collapsed, sidebarWidth } = data as Record<string, unknown>;
+    const { folder, collapsed, sidebarWidth, sort } = data as Record<string, unknown>;
     return {
       folder: typeof folder === 'string' && folder !== '' ? folder : 'all',
       collapsed: Array.isArray(collapsed)
@@ -34,6 +36,14 @@ export function readViewState(): ViewState | null {
         typeof sidebarWidth === 'number' && Number.isFinite(sidebarWidth)
           ? clampSidebarWidth(sidebarWidth)
           : SIDEBAR_WIDTH.default,
+      sort:
+        sort === 'due' ||
+        sort === 'priority' ||
+        sort === 'status' ||
+        sort === 'created' ||
+        sort === 'custom'
+          ? sort
+          : DEFAULT_FILTERS.sort,
     };
   } catch {
     return null;
@@ -49,13 +59,14 @@ export function writeViewState(state: ViewState): void {
 }
 
 /**
- * 選んでいるフォルダ・畳んだフォルダ・フォルダ欄の幅を、リロードしても戻るように localStorage に覚えておく。
+ * 選んでいるフォルダ・畳んだフォルダ・フォルダ欄の幅・並び順を localStorage に覚えておく。
  * 消えたフォルダを指していても、画面の側で「すべて」として扱う。
  */
 export function useViewState() {
   const [selectedFolder, setSelectedFolder] = useState<FolderSelection>('all');
   const [collapsedFolders, setCollapsedFolders] = useState<ReadonlySet<string>>(new Set());
   const [sidebarWidth, setSidebarWidthState] = useState<number>(SIDEBAR_WIDTH.default);
+  const [sort, setSort] = useState<SortKey>(DEFAULT_FILTERS.sort);
   const [restored, setRestored] = useState(false);
 
   // ビルド時に作る HTML と食い違わないよう、読み出しは表示した後に行う
@@ -65,6 +76,7 @@ export function useViewState() {
       setSelectedFolder(saved.folder);
       setCollapsedFolders(new Set(saved.collapsed));
       setSidebarWidthState(saved.sidebarWidth);
+      setSort(saved.sort ?? DEFAULT_FILTERS.sort);
     }
     setRestored(true);
   }, []);
@@ -72,9 +84,14 @@ export function useViewState() {
   // 読み出す前の初期値で上書きしない
   useEffect(() => {
     if (restored) {
-      writeViewState({ folder: selectedFolder, collapsed: [...collapsedFolders], sidebarWidth });
+      writeViewState({
+        folder: selectedFolder,
+        collapsed: [...collapsedFolders],
+        sidebarWidth,
+        sort,
+      });
     }
-  }, [restored, selectedFolder, collapsedFolders, sidebarWidth]);
+  }, [restored, selectedFolder, collapsedFolders, sidebarWidth, sort]);
 
   const setSidebarWidth = useCallback(
     (width: number) => setSidebarWidthState(clampSidebarWidth(width)),
@@ -88,5 +105,7 @@ export function useViewState() {
     setCollapsedFolders,
     sidebarWidth,
     setSidebarWidth,
+    sort,
+    setSort,
   };
 }

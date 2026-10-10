@@ -24,6 +24,47 @@ test('keeps todos after reloading', async ({ page }) => {
   await expect(item.getByRole('button', { name: '#買い物' })).toBeVisible();
 });
 
+test('customizes task order by dragging and buttons and keeps it through reload and export', async ({
+  page,
+}) => {
+  await addTodo(page, 'タスク A');
+  await addTodo(page, 'タスク B');
+  await addTodo(page, 'タスク C');
+  const sort = page.getByRole('combobox', { name: '並び順' });
+  await sort.selectOption('custom');
+  await expect(todoItems(page)).toHaveText([/タスク C/, /タスク B/, /タスク A/]);
+  const card = (title: string) => todoItems(page).filter({ hasText: title });
+  await card('タスク A')
+    .locator('[draggable="true"]')
+    .dragTo(card('タスク C'), { targetPosition: { x: 20, y: 3 } });
+  await expect(todoItems(page)).toHaveText([/タスク A/, /タスク C/, /タスク B/]);
+  await page.getByRole('button', { name: '「タスク B」を上へ移動' }).click();
+  await expect(todoItems(page)).toHaveText([/タスク A/, /タスク B/, /タスク C/]);
+  await page.getByRole('checkbox', { name: '「タスク A」を完了にする' }).check();
+  await expect(todoItems(page)).toHaveText([/タスク A/, /タスク B/, /タスク C/]);
+  await page.reload();
+  await expect(sort).toHaveValue('custom');
+  await expect(todoItems(page)).toHaveText([/タスク A/, /タスク B/, /タスク C/]);
+  await sort.selectOption('created');
+  await expect(page.getByRole('button', { name: /上へ移動/ })).toHaveCount(0);
+  await sort.selectOption('custom');
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'エクスポート' }).click();
+  const path = await (await download).path();
+  await page.getByRole('button', { name: '「タスク B」を下へ移動' }).click();
+  await page.getByLabel('インポートするファイル').setInputFiles(path);
+  await page
+    .getByRole('dialog', { name: 'インポート' })
+    .getByRole('button', { name: '置き換え' })
+    .click();
+  await expect(todoItems(page)).toHaveText([/タスク A/, /タスク B/, /タスク C/]);
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.getByRole('button', { name: '「タスク C」を上へ移動' }).click();
+  await expect(todoItems(page)).toHaveText([/タスク A/, /タスク C/, /タスク B/]);
+  await addTodo(page, 'タスク D');
+  await expect(todoItems(page)).toHaveText([/タスク A/, /タスク C/, /タスク B/, /タスク D/]);
+});
+
 test('filters from the status pane and its narrow-screen toggle', async ({ page }) => {
   await addTodo(page, '洗濯');
   await addTodo(page, '掃除');

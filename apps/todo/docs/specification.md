@@ -20,7 +20,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Delete | The trash button deletes one todo after a confirmation. 完了済みを削除 deletes all completed todos in the current view |
 | Folders | See [Folders](#folders) |
 | Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive) |
-| Sort | 期限順 (default), 優先度順, ステータス順, 新しい順. Completed todos are always listed after the others |
+| Sort | 期限順 (default), 優先度順, ステータス順, 新しい順, カスタム. Completed todos are listed after the others except in カスタム |
 | Export | Saves every todo and folder to `todo-export-YYYYMMDD.json` |
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
@@ -50,6 +50,9 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | 優先度順 | Priority (high → low), then due date, then newest first |
 | ステータス順 | 進行中 → 未着手 → 保留 → 完了, then due date, then priority, then newest first |
 | 新しい順 | Creation time, newest first |
+| カスタム | User-defined order, including completed todos |
+
+In カスタム, drag a task header onto the upper or lower half of another task to insert it before or after that task. A blue line marks the insertion point. Up/down buttons also reorder tasks on narrow screens and by keyboard. The order is shared across folders and filters; reordering a filtered list changes only the slots of its visible tasks, keeping hidden tasks in place. Before the first reorder, tasks appear newest first. New tasks are appended once a custom order has been established. The order is saved in IndexedDB and included in exports; the selected sort mode is restored from localStorage after a reload. Other sort modes retain their existing behavior.
 
 ### Due date display
 
@@ -82,6 +85,7 @@ On narrow screens the folder list moves above the list behind a toggle button, a
 
 ```ts
 interface Todo {
+  customOrder: number | null; // Saved custom position; legacy records default to null
   id: string;                 // crypto.randomUUID()
   title: string;              // required, trimmed
   memo: string;
@@ -135,5 +139,5 @@ Tags are entered as comma-separated text (ASCII `,` or Japanese `、` `，`).
 ## Data persistence
 
 - Data is lost when the user clears site data for the app, uses a private window, or switches browsers or devices. The footer reminds users to export regularly.
-- The selected folder, the collapsed folders, and the folder list width are view preferences for this browser. They are kept in `localStorage` under `todo:view`, separately from the todo data, and are not exported. The app works without them when `localStorage` is unavailable.
+- The sort mode, selected folder, collapsed folders, and folder list width are view preferences for this browser. They are kept in `localStorage` under `todo:view`, separately from the todo data, and are not exported. The app works without them when `localStorage` is unavailable.
 - On startup the app calls `navigator.storage.persist()` to ask the browser not to evict the data under storage pressure. The app works the same when the request is denied.

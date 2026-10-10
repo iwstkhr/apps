@@ -60,6 +60,7 @@ export default function Home() {
     editTodo,
     changeStatus,
     moveTodo,
+    reorderTodo,
     removeTodo,
     removeCompleted,
     addFolder,
@@ -75,6 +76,8 @@ export default function Home() {
     setCollapsedFolders,
     sidebarWidth,
     setSidebarWidth,
+    sort,
+    setSort,
   } = useViewState();
   const [showFolders, setShowFolders] = useState(false);
   const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
@@ -105,7 +108,10 @@ export default function Home() {
     () => filterByFolder(todos, folders, selection),
     [todos, folders, selection],
   );
-  const visibleTodos = useMemo(() => applyFilters(folderTodos, filters), [folderTodos, filters]);
+  const visibleTodos = useMemo(
+    () => applyFilters(folderTodos, { ...filters, sort }),
+    [folderTodos, filters, sort],
+  );
   const counts = useMemo(() => countByStatus(folderTodos), [folderTodos]);
   const doneCount = counts.done;
 
@@ -324,7 +330,14 @@ export default function Home() {
               />
             </section>
 
-            <TodoToolbar filters={filters} onChange={setFilters} tags={tags} />
+            <TodoToolbar
+              filters={{ ...filters, sort }}
+              onChange={(next) => {
+                setFilters(next);
+                setSort(next.sort);
+              }}
+              tags={tags}
+            />
 
             {isLoading ? (
               <p className="p-8 text-center text-sm text-slate-500" role="status">
@@ -338,6 +351,17 @@ export default function Home() {
                 today={today}
                 tagSuggestions={tags}
                 emptyMessage={emptyMessage}
+                onReorder={
+                  sort === 'custom'
+                    ? (id, targetId, position) =>
+                        void reorderTodo(
+                          id,
+                          targetId,
+                          position,
+                          visibleTodos.map((todo) => todo.id),
+                        )
+                    : undefined
+                }
                 onStatusChange={(id, status) => void changeStatus(id, status)}
                 onEdit={editTodo}
                 onRemove={handleRemove}

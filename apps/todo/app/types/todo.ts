@@ -30,6 +30,8 @@ export interface Todo {
   tags: string[];
   /** 入っているフォルダ。null なら未分類 */
   folderId: string | null;
+  /** カスタム表示順。未設定なら null */
+  customOrder: number | null;
   /** ISO 8601 */
   createdAt: string;
   updatedAt: string;
@@ -91,6 +93,7 @@ export function createTodo(input: TodoInput, now: Date = new Date()): Todo {
     dueDate: input.dueDate,
     tags: normalizeTags(input.tags),
     folderId: input.folderId,
+    customOrder: null,
     createdAt: timestamp,
     updatedAt: timestamp,
     completedAt: null,
@@ -157,6 +160,10 @@ export function toTodo(value: unknown): Todo | null {
       : [],
     // フォルダが存在するかはここでは見ない (sanitizeTodoFolders が見る)
     folderId: typeof v.folderId === 'string' && v.folderId !== '' ? v.folderId : null,
+    customOrder:
+      typeof v.customOrder === 'number' && Number.isSafeInteger(v.customOrder) && v.customOrder >= 0
+        ? v.customOrder
+        : null,
     createdAt: v.createdAt,
     updatedAt: v.updatedAt,
     completedAt: status === 'done' && isIsoDateTime(v.completedAt) ? v.completedAt : null,

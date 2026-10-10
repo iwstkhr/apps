@@ -6,6 +6,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'priority', label: '優先度順' },
   { value: 'status', label: 'ステータス順' },
   { value: 'created', label: '新しい順' },
+  { value: 'custom', label: 'カスタム' },
 ];
 
 interface TodoToolbarProps {
@@ -19,6 +20,11 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
 
   return (
     <div className="flex flex-col gap-2">
+      {filters.sort === 'custom' && (
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          ヘッダーをドラッグするか、上下ボタンで順序を変更できます。
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <select
           className={fieldClass}

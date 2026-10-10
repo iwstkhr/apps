@@ -95,6 +95,16 @@ describe('moveTodoToFolder', () => {
 });
 
 describe('toTodo', () => {
+  it.each([undefined, null, -1, 0.5, '1', Infinity, Number.MAX_SAFE_INTEGER + 1])(
+    'defaults invalid or missing custom order %s',
+    (customOrder) => {
+      expect(toTodo({ ...createTodoFixture(), customOrder })?.customOrder).toBeNull();
+    },
+  );
+
+  it('preserves a valid custom order', () => {
+    expect(toTodo(createTodoFixture({ customOrder: 2 }))?.customOrder).toBe(2);
+  });
   it('accepts a valid todo and drops unknown fields', () => {
     const todo = createTodoFixture({ tags: ['a'] });
     expect(toTodo({ ...todo, extra: 1 })).toEqual(todo);

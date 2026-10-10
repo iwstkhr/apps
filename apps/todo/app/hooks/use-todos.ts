@@ -10,6 +10,7 @@ import {
   replaceAll,
   type StoredData,
 } from '~/lib/todo-db';
+import { compareCustomOrder, type DropPosition, reorderTodos } from '~/lib/todo-order';
 import { createFolder, type Folder, type FolderInput, updateFolder } from '~/types/folder';
 import {
   createTodo,
@@ -36,6 +37,12 @@ export interface UseTodos {
   changeStatus: (id: string, status: TodoStatus) => Promise<void>;
   /** folderId が null なら未分類に移す */
   moveTodo: (id: string, folderId: string | null) => Promise<void>;
+  reorderTodo: (
+    id: string,
+    targetId: string,
+    position: DropPosition,
+    visibleIds: readonly string[],
+  ) => Promise<void>;
   removeTodo: (id: string) => Promise<void>;
   removeCompleted: () => Promise<void>;
   /** 作ったフォルダを返す */
@@ -113,7 +120,21 @@ export function useTodos(): UseTodos {
   const addTodo = useCallback(
     async (input: TodoInput) => {
       const todo = createTodo(input);
-      await setTodos([...dataRef.current.todos, todo], () => putTodos([todo]));
+      const current = dataRef.current.todos;
+      let normalized = current;
+      if (current.some((item) => item.customOrder !== null)) {
+        const ranks = new Map(
+          [...current].sort(compareCustomOrder).map((item, index) => [item.id, index]),
+        );
+        normalized = current.map((item) =>
+          item.customOrder === ranks.get(item.id)
+            ? item
+            : { ...item, customOrder: ranks.get(item.id) ?? 0, updatedAt: todo.createdAt },
+        );
+        todo.customOrder = current.length;
+      }
+      const changed = normalized.filter((item, index) => item !== current[index]);
+      await setTodos([...normalized, todo], () => putTodos([...changed, todo]));
     },
     [setTodos],
   );
@@ -154,6 +175,17 @@ export function useTodos(): UseTodos {
         dataRef.current.todos.filter((todo) => todo.id !== id),
         () => deleteTodos([id]),
       );
+    },
+    [setTodos],
+  );
+
+  const reorderTodo = useCallback(
+    async (id: string, targetId: string, position: DropPosition, visibleIds: readonly string[]) => {
+      const current = dataRef.current.todos;
+      const next = reorderTodos(current, visibleIds, id, targetId, position);
+      const changed = next.filter((todo, index) => todo !== current[index]);
+      if (changed.length === 0) return;
+      await setTodos(next, () => putTodos(changed));
     },
     [setTodos],
   );
@@ -238,6 +270,7 @@ export function useTodos(): UseTodos {
     editTodo,
     changeStatus,
     moveTodo,
+    reorderTodo,
     removeTodo,
     removeCompleted,
     addFolder,

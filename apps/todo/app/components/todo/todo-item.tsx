@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { FaFolder, FaGripVertical, FaPen, FaTrash } from 'react-icons/fa';
+import { FaArrowDown, FaArrowUp, FaFolder, FaGripVertical, FaPen, FaTrash } from 'react-icons/fa';
 import { TodoForm } from '~/components/todo/todo-form';
 import { cn } from '~/lib/cn';
 import { setDraggedTodo } from '~/lib/todo-drag';
+import type { DropPosition } from '~/lib/todo-order';
 import type { Folder } from '~/types/folder';
 import {
   getDueStatus,
@@ -45,6 +46,9 @@ interface TodoItemProps {
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
   onTagClick: (tag: string) => void;
+  dropPosition?: DropPosition;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 export function TodoItem({
@@ -57,6 +61,9 @@ export function TodoItem({
   onEdit,
   onRemove,
   onTagClick,
+  dropPosition,
+  onMoveUp,
+  onMoveDown,
 }: TodoItemProps) {
   const [editing, setEditing] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -84,10 +91,13 @@ export function TodoItem({
   return (
     // フォルダ欄へドラッグして別のフォルダに移せる
     <li
+      data-todo-id={todo.id}
       className={cn(
         'group/item flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
         done && 'opacity-60',
         dragging && 'border-dashed border-blue-400 opacity-40',
+        dropPosition === 'before' && 'border-t-4 border-t-blue-500',
+        dropPosition === 'after' && 'border-b-4 border-b-blue-500',
       )}
     >
       <input
@@ -181,6 +191,28 @@ export function TodoItem({
       </div>
 
       <div className="flex shrink-0">
+        {onMoveUp && (
+          <button
+            type="button"
+            className={iconButtonClass}
+            onClick={onMoveUp}
+            aria-label={`「${todo.title}」を上へ移動`}
+            title="上へ移動"
+          >
+            <FaArrowUp aria-hidden="true" />
+          </button>
+        )}
+        {onMoveDown && (
+          <button
+            type="button"
+            className={iconButtonClass}
+            onClick={onMoveDown}
+            aria-label={`「${todo.title}」を下へ移動`}
+            title="下へ移動"
+          >
+            <FaArrowDown aria-hidden="true" />
+          </button>
+        )}
         <button
           type="button"
           className={iconButtonClass}

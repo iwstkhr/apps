@@ -26,6 +26,28 @@ async function renderLoaded() {
 }
 
 describe('useTodos', () => {
+  it('persists reordered tasks and appends new tasks after the saved order', async () => {
+    const a = createTodoFixture({ customOrder: 0 });
+    const b = createTodoFixture({ customOrder: 1 });
+    await putTodos([a, b]);
+    const { result } = await renderLoaded();
+    await act(() => result.current.reorderTodo(b.id, a.id, 'before', [a.id, b.id]));
+    expect((await getAll()).todos.find((todo) => todo.id === b.id)?.customOrder).toBe(0);
+    await act(() => result.current.addTodo(input('new')));
+    expect((await getAll()).todos.find((todo) => todo.title === 'new')?.customOrder).toBe(2);
+  });
+
+  it('appends after imported unranked tasks and normalizes extreme ranks safely', async () => {
+    const ranked = createTodoFixture({ customOrder: Number.MAX_SAFE_INTEGER - 1 });
+    const legacy = createTodoFixture();
+    await putTodos([ranked, legacy]);
+    const { result } = await renderLoaded();
+    await act(() => result.current.addTodo(input('new')));
+    const stored = (await getAll()).todos;
+    expect(stored.find((todo) => todo.id === ranked.id)?.customOrder).toBe(0);
+    expect(stored.find((todo) => todo.id === legacy.id)?.customOrder).toBe(1);
+    expect(stored.find((todo) => todo.title === 'new')?.customOrder).toBe(2);
+  });
   it('loads todos and folders saved earlier', async () => {
     const folder = createFolderFixture();
     const saved = createTodoFixture({ folderId: folder.id });

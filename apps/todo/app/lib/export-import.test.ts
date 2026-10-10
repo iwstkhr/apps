@@ -33,7 +33,7 @@ describe('parseImport', () => {
     const parent = createFolderFixture();
     const child = createFolderFixture({ parentId: parent.id, color: '#2563eb' });
     const todos = [
-      createTodoFixture({ folderId: child.id }),
+      createTodoFixture({ folderId: child.id, customOrder: 2 }),
       createTodoFixture({ status: 'on_hold', tags: ['x'] }),
     ];
     const folders = [parent, child];
