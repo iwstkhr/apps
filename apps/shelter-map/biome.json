@@ -29,6 +29,13 @@
           "options": {
             "allowConstantExport": true
           }
+        },
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "requireAscii": true,
+            "filenameCases": ["kebab-case"]
+          }
         }
       }
     }
