@@ -25,6 +25,12 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
 
+### Memos
+
+Memos render as Markdown (CommonMark with GitHub-flavored Markdown), including headings, emphasis, lists, links, quotes, code blocks, tables, strikethrough, and read-only task lists. Plain text keeps its line breaks. Links open in a new tab. Raw HTML is displayed as text, and unsafe URL schemes are blocked. Image references appear as links using their alt text instead of loading remote images automatically. Code blocks and wide tables scroll horizontally within the memo on small screens.
+
+Editing shows the original Markdown source. Storage, keyword search, and JSON export/import continue to use that source without conversion.
+
 ### Folders
 
 - The left pane includes a ステータス section with すべて, 未着手, 進行中, 保留, and 完了. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. The main toolbar contains sorting, tag, and keyword controls; status selection is available only in the left pane. On narrow screens, open the pane with the menu button; selecting a status closes it.

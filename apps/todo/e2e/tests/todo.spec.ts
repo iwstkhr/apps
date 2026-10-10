@@ -160,3 +160,31 @@ test('rejects a file from another app', async ({ page }) => {
     'このアプリでエクスポートしたファイルではありません。',
   );
 });
+
+test('renders Markdown memos and preserves their source when editing and reloading', async ({
+  page,
+}) => {
+  await addTodo(page, '手順を確認');
+  const memo =
+    '## 準備\n\n**重要**\n\n- 資料を読む\n- メールを書く\n\n[資料](https://example.com/docs)\n\n```js\nconst value = 1;\n```';
+  await page.getByRole('button', { name: '「手順を確認」を編集' }).click();
+  await page.getByRole('textbox', { name: 'メモ' }).fill(memo);
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  const card = todoItems(page).filter({ hasText: '手順を確認' });
+  await expect(todoItems(page)).toHaveCount(1);
+  await expect(card.getByRole('heading', { name: '準備' })).toBeVisible();
+  await expect(card.locator('strong')).toHaveText('重要');
+  await expect(card.getByRole('listitem')).toHaveCount(2);
+  await expect(card.getByRole('link', { name: '資料' })).toHaveAttribute(
+    'href',
+    'https://example.com/docs',
+  );
+  await expect(card.locator('pre code')).toHaveText('const value = 1;\n');
+  await page.reload();
+  await expect(card.getByRole('heading', { name: '準備' })).toBeVisible();
+  await page.setViewportSize({ width: 375, height: 800 });
+  const bounds = await card.locator('.todo-memo').boundingBox();
+  expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(375);
+  await page.getByRole('button', { name: '「手順を確認」を編集' }).click();
+  await expect(page.getByRole('textbox', { name: 'メモ' })).toHaveValue(memo);
+});

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FaArrowDown, FaArrowUp, FaFolder, FaGripVertical, FaPen, FaTrash } from 'react-icons/fa';
+import { MarkdownMemo } from '~/components/todo/markdown-memo';
 import { TodoForm } from '~/components/todo/todo-form';
 import { cn } from '~/lib/cn';
 import { setDraggedTodo } from '~/lib/todo-drag';
@@ -128,11 +129,7 @@ export function TodoItem({
             {todo.title}
           </p>
         </section>
-        {todo.memo && (
-          <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-600 dark:text-slate-400">
-            {todo.memo}
-          </p>
-        )}
+        {todo.memo && <MarkdownMemo>{todo.memo}</MarkdownMemo>}
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
           <select
             className={cn(

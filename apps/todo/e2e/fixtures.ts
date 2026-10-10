@@ -17,5 +17,5 @@ export async function addTodo(page: Page, title: string): Promise<void> {
 }
 
 export function todoItems(page: Page) {
-  return page.getByRole('list', { name: 'TODO 一覧' }).getByRole('listitem');
+  return page.getByRole('list', { name: 'TODO 一覧' }).locator(':scope > li');
 }
