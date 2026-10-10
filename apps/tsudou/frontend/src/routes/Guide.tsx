@@ -2,7 +2,7 @@ import { RETENTION_MONTHS } from '@tsudou/shared/limits';
 import { type ReactNode, useEffect } from 'react';
 import { useLocation } from 'react-router';
 import sizes from '../assets/guide/sizes.json';
-import { TextLink } from '../components/TextLink';
+import { TextLink } from '../components/text-link';
 import { Alert, Card } from '../components/ui';
 import { t, useLanguage } from '../lib/i18n';
 

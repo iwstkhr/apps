@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Root } from './Root';
+import { Root } from './root';
 
 function renderRoot() {
   const router = createMemoryRouter([{ path: '/', element: <Root /> }]);

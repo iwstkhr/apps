@@ -5,10 +5,10 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Alert } from '../components/ui';
 import { LANGUAGE_KEY, setLanguage } from '../lib/i18n';
-import { createQueryClient } from '../lib/queryClient';
-import { Guide } from './Guide';
-import { Home } from './Home';
-import { Root } from './Root';
+import { createQueryClient } from '../lib/query-client';
+import { Guide } from './guide';
+import { Home } from './home';
+import { Root } from './root';
 
 beforeEach(() => {
   vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US']);

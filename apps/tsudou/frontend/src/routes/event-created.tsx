@@ -1,7 +1,7 @@
 import { RETENTION_MONTHS } from '@tsudou/shared/limits';
 import { useEffect } from 'react';
 import { useParams } from 'react-router';
-import { ManageUrlBox, ShareUrlBox } from '../components/EventUrlBoxes';
+import { ManageUrlBox, ShareUrlBox } from '../components/event-url-boxes';
 import { Alert, Card } from '../components/ui';
 import { t, useLanguage } from '../lib/i18n';
 import { useManageToken } from '../lib/keyring';

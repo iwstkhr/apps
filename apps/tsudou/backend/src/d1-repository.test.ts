@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
-import { createD1Repository, deleteExpired } from './d1Repository';
+import { createD1Repository, deleteExpired } from './d1-repository';
 import type { NewAnswer, NewEvent, Repository } from './repository';
 
 /**

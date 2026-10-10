@@ -109,7 +109,7 @@ When changing API routes or input/output, update `backend/src/schemas.ts` (Zod s
 
 After changing the UI appearance, run `pnpm run guide:capture` with `pnpm run dev` running to recapture guide screenshots for each display language (`frontend/src/assets/guide/ja/` and `frontend/src/assets/guide/en/`).
 The script creates sample data per language (a "チーム歓迎会" / "Team welcome party" event and four responses) in local D1 and captures it using the installed Google Chrome.
-It also writes image dimensions to `frontend/src/assets/guide/sizes.json`, which `frontend/src/routes/Guide.tsx` uses for `width` / `height`, so no manual updates are needed.
+It also writes image dimensions to `frontend/src/assets/guide/sizes.json`, which `frontend/src/routes/guide.tsx` uses for `width` / `height`, so no manual updates are needed.
 
 `pnpm run test:e2e` builds the frontend, applies migrations to a fresh local D1 in `e2e/.wrangler/`, and serves the UI and API from `wrangler dev --env e2e` at `http://localhost:8788`, as in production. The `e2e` environment in `backend/wrangler.jsonc` relaxes rate limiting for the tests and is never deployed.
 Every scenario runs in both Japanese and English (Playwright projects `ja` / `en`) with the installed Google Chrome; no browser download is needed.
@@ -183,8 +183,8 @@ backend/                         @tsudou/backend
    ├─ openapi.ts                 Generate OpenAPI documentation from schemas and routes
    ├─ operations.ts              Business logic (injected Repository; tested directly)
    ├─ repository.ts              Data access boundary (interface)
-   ├─ d1Repository.ts            Production implementation (D1) and expiry cleanup
-   ├─ memoryRepository.ts        In-memory implementation for tests
+   ├─ d1-repository.ts           Production implementation (D1) and expiry cleanup
+   ├─ memory-repository.ts       In-memory implementation for tests
    ├─ tokens.ts                  ID/token generation, hashing, constant-time comparison
    ├─ validate.ts                Input validation and normalization
    ├─ retention.ts               Expiry calculation and checks
@@ -208,14 +208,14 @@ frontend/                        @tsudou/frontend
 └─ src/
    ├─ sw.js                      Service Worker source (built as dist/sw.js)
    ├─ router.tsx                 Route definitions
-   ├─ routes/                    Home / Guide / EventCreated / EventPublic / EventManage / NotFound
+   ├─ routes/                    home / guide / event-created / event-public / event-manage / not-found
    ├─ assets/guide/              Guide screenshots (ja/ and en/) and their sizes (sizes.json)
-   ├─ components/                AnswerForm, AnswerGrid, CandidateEditor,
-   │                             EventEditForm, EventFormFields, EventUrlBoxes,
-   │                             ShareLinkBox, ui/
-   └─ lib/                       api, queryClient, errors, format, formValidators,
-                                 keyring, storage, serviceWorker, theme, urls, useEvent,
-                                 useAsyncAction, types
+   ├─ components/                answer-form, answer-grid, candidate-editor,
+   │                             event-edit-form, event-form-fields, event-url-boxes,
+   │                             share-link-box, ui/
+   └─ lib/                       api, query-client, errors, format, form-validators,
+                                 keyring, storage, service-worker, theme, urls, use-event,
+                                 use-async-action, types
 
 e2e/                             @tsudou/e2e (Playwright)
 ├─ playwright.config.ts          Japanese and English projects, server startup
@@ -226,14 +226,14 @@ e2e/                             @tsudou/e2e (Playwright)
 
 ### Design notes
 
-- **API business logic depends on the `Repository` interface.** Tests inject `memoryRepository.ts` to verify creation, responses, edits, and deletion without a database.
-  The D1 implementation (`d1Repository.test.ts`) is tested against local D1 through wrangler's `getPlatformProxy`.
+- **API business logic depends on the `Repository` interface.** Tests inject `memory-repository.ts` to verify creation, responses, edits, and deletion without a database.
+  The D1 implementation (`d1-repository.test.ts`) is tested against local D1 through wrangler's `getPlatformProxy`.
 - **Consistency when editing candidate dates**: Deleting a candidate removes its choices; adding a candidate fills existing responses with `MAYBE` (`reconcileChoices` in `validate.ts`). Clients send candidate IDs back, preserving links to existing responses during edits.
 - **Each name may respond only once per event.** A second submission returns `DUPLICATE_NAME`; only someone with the response edit URL can edit the response. D1's `UNIQUE (event_id, name)` constraint also prevents concurrent duplicate submissions.
 - **Server data is fetched and cached with TanStack Query (`@tanstack/react-query`).**
   Refetching on window focus lets hosts see new responses when returning to an open management tab.
 - **Forms use TanStack Form (`@tanstack/react-form`).** Each form component owns its state. Callers change its `key` to recreate it with new initial values, avoiding state synchronization through `useEffect`.
-- **Input limits have a single definition.** Both server validation (`validate.ts`) and frontend validation (`frontend/src/lib/formValidators.ts`) reference `shared/src/limits.ts`, preventing divergence. Client validation catches issues before submission; the server always performs final validation.
+- **Input limits have a single definition.** Both server validation (`validate.ts`) and frontend validation (`frontend/src/lib/form-validators.ts`) reference `shared/src/limits.ts`, preventing divergence. Client validation catches issues before submission; the server always performs final validation.
 
 ## Documentation
 

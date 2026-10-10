@@ -89,8 +89,8 @@ backend/                        Backend (@tsudou/backend)
    ├─ openapi.ts                Generate OpenAPI documentation from schemas and routes
    ├─ operations.ts             Business logic (injected Repository)
    ├─ repository.ts             Data access boundary (interface)
-   ├─ d1Repository.ts           Production implementation (D1) and expiry cleanup
-   ├─ memoryRepository.ts       In-memory implementation for tests
+   ├─ d1-repository.ts          Production implementation (D1) and expiry cleanup
+   ├─ memory-repository.ts      In-memory implementation for tests
    ├─ tokens.ts                 ID/token generation, hashing, constant-time comparison
    ├─ validate.ts               Input validation and normalization
    ├─ retention.ts              Expiry calculation and checks
@@ -113,12 +113,12 @@ frontend/                       Frontend (@tsudou/frontend)
 └─ src/
    ├─ main.tsx / router.tsx     Entry and route definitions
    ├─ sw.js                     Service Worker source (built as dist/sw.js)
-   ├─ routes/                   Screens (Root / Home / Guide / EventCreated / EventPublic /
-   │                            EventManage / NotFound)
+   ├─ routes/                   Screens (root / home / guide / event-created / event-public /
+   │                            event-manage / not-found)
    ├─ assets/guide/             Guide screenshots (ja/ and en/) and their sizes (sizes.json)
    ├─ components/               UI components and ui/ primitives
-   └─ lib/                      api, queryClient, errors, storage, urls, format,
-                                formValidators, tally, and hooks
+   └─ lib/                      api, query-client, errors, storage, urls, format,
+                                form-validators, tally, and hooks
 
 e2e/                            E2E tests (@tsudou/e2e)
 ├─ playwright.config.ts         ja / en projects and server startup
@@ -182,8 +182,8 @@ app.ts          Express app: after rate limiting, routes under /api map path
 operations.ts   Business logic: receives Repository and never accesses D1 directly.
    ↓
 repository.ts   Data access boundary (interface).
-   ├─ d1Repository.ts      Production: D1
-   └─ memoryRepository.ts  Tests: in-memory
+   ├─ d1-repository.ts     Production: D1
+   └─ memory-repository.ts Tests: in-memory
 ```
 
 ### OpenAPI documentation
@@ -202,8 +202,8 @@ Response schemas cause type errors if they differ from `shared/src/types.ts`.
 ### Data model
 
 Schemas live in `backend/migrations/` and are applied with `wrangler d1 migrations apply`.
-Columns use snake_case; `d1Repository.ts` maps them to camelCase record types.
-`d1Repository.ts` writes `created_at` / `updated_at` as ISO 8601 strings.
+Columns use snake_case; `d1-repository.ts` maps them to camelCase record types.
+`d1-repository.ts` writes `created_at` / `updated_at` as ISO 8601 strings.
 D1 is a separate resource from the Worker, so deleting the Worker preserves data.
 D1 Time Travel can restore an earlier state after accidental deletion or corruption.
 
@@ -236,7 +236,7 @@ Candidates and choices are embedded in JSON columns because they are always read
 Events are expected to have at most a few dozen responses, so sorting and aggregation run in the API server and browser.
 The composite `UNIQUE (event_id, name)` index also supports fetching an event's responses.
 
-`operations.ts` checks for duplicate names before writing and returns `DUPLICATE_NAME`. Concurrent submissions can both pass that check; the `UNIQUE` constraint rejects the later write, and `d1Repository.ts` converts the failure to `DUPLICATE_NAME`.
+`operations.ts` checks for duplicate names before writing and returns `DUPLICATE_NAME`. Concurrent submissions can both pass that check; the `UNIQUE` constraint rejects the later write, and `d1-repository.ts` converts the failure to `DUPLICATE_NAME`.
 
 ### Tokens and authorization
 
@@ -265,7 +265,7 @@ Unknown codes, such as Cloudflare errors, become `INTERNAL`.
 
 ### State management
 
-Server data lives in a single app-wide TanStack Query cache (`frontend/src/lib/queryClient.ts`). There is no other global state store; state is placed according to its purpose.
+Server data lives in a single app-wide TanStack Query cache (`frontend/src/lib/query-client.ts`). There is no other global state store; state is placed according to its purpose.
 
 | State | Location |
 | --- | --- |
@@ -278,7 +278,7 @@ Server data lives in a single app-wide TanStack Query cache (`frontend/src/lib/q
 | Theme preference | `localStorage` and `<html data-theme>` (`frontend/src/lib/theme.ts`) |
 
 Initial values are not synchronized with `useEffect`.
-`eventFormToInput` in `lib/eventForm.ts` converts validated form values into the common creation/edit payload, including whitespace normalization, optional fields, fees, and candidate IDs.
+`eventFormToInput` in `lib/event-form.ts` converts validated form values into the common creation/edit payload, including whitespace normalization, optional fields, fees, and candidate IDs.
 
 When the target changes (another event or a change in whether the current user has a response), the caller changes the form's `key` to recreate it.
 
@@ -339,7 +339,7 @@ The initial script in `index.html` uses the same saved-choice and browser-langua
 
 `public/manifest.webmanifest` enables installation; a Service Worker allows the UI to start offline.
 The Service Worker source is `src/sw.js`. At build time, the `serviceWorker` plugin in `vite.config.ts` prepends `VERSION` (a hash of HTML / JS / CSS contents) and `PRECACHE` (`/`, JS and CSS under `/assets/`, and `/favicon.svg`), producing `dist/sw.js`.
-`lib/serviceWorker.ts` registers it only in production builds, since the development server has no `sw.js` and a Service Worker would interfere with HMR.
+`lib/service-worker.ts` registers it only in production builds, since the development server has no `sw.js` and a Service Worker would interfere with HMR.
 
 | Request | Strategy |
 | --- | --- |
@@ -363,14 +363,14 @@ Both frontend and backend import three files from `shared/` (`@tsudou/shared`) b
 These files are **bundled into both browser and Worker code, so they cannot use platform-specific APIs**.
 `shared/tsconfig.json` includes neither DOM nor Node types, so `document` or `process` cause type errors (covered by `pnpm run typecheck`). The frontend does not depend on the backend package and cannot import `validate.ts` / `operations.ts`, which pull in `node:crypto`. Place shared types in `types.ts`.
 
-Client validation (`formValidators.ts`) helps users catch errors before submitting; final validation always happens on the server (`validate.ts`). Shared limits and messages prevent divergence.
+Client validation (`form-validators.ts`) helps users catch errors before submitting; final validation always happens on the server (`validate.ts`). Shared limits and messages prevent divergence.
 
 ## Data retention
 
 Events and responses are automatically deleted after `RETENTION_MONTHS` (default: three months) from creation.
 
 - The API server writes `expires_at` (epoch seconds) at record creation.
-- A daily Cron Trigger (18:00 UTC = 03:00 JST) invokes `scheduled` in `worker.ts`; `deleteExpired` in `d1Repository.ts` deletes expired events. Responses disappear through the foreign key's `ON DELETE CASCADE`.
+- A daily Cron Trigger (18:00 UTC = 03:00 JST) invokes `scheduled` in `worker.ts`; `deleteExpired` in `d1-repository.ts` deletes expired events. Responses disappear through the foreign key's `ON DELETE CASCADE`.
 - Retention starts at **event creation** and is not extended by edits or responses. Responses inherit the event's `expires_at` and disappear with it.
 - Daily cleanup may leave records in storage for up to about one day after expiry. `isExpired` in `retention.ts` also treats them as nonexistent, so users see them disappear exactly at expiry. A failed Cron run merely delays physical cleanup until the next day without changing visible behavior.
 - `retention.test.ts` pins `RETENTION_MONTHS`, catching unintended changes.
@@ -432,13 +432,13 @@ Frontend tests (`frontend/vite.config.ts`, `frontend/src/**/*.test.{ts,tsx}`) us
 | --- | --- |
 | HTTP input/output | `app.test.ts` (supertest: /api routing, statuses, token headers, invalid JSON, rate limiting) |
 | Business logic | `operations.test.ts` (injected `memoryRepository`, covering creation → response → editing → deletion) |
-| D1 implementation | `d1Repository.test.ts` (local D1 through wrangler's `getPlatformProxy`, with migrations applied) |
+| D1 implementation | `d1-repository.test.ts` (local D1 through wrangler's `getPlatformProxy`, with migrations applied) |
 | Validation and normalization | `validate.test.ts` |
 | Tokens | `tokens.test.ts` (hashing and constant-time comparison) |
 | Retention | `retention.test.ts` |
-| Frontend pure functions | `format.test.ts` / `errors.test.ts` / `formValidators.test.ts` / `answerDraft.test.ts` / `candidateDraft.test.ts` / `urls.test.ts` / `keyring.test.ts` |
-| Data-fetching hooks | `useEvent.test.tsx` / `useAsyncAction.test.tsx` / `eventActions.test.tsx` (fresh `createQueryClient()` per test, mocked `api.ts`) |
-| Components | `AnswerForm.test.tsx` / `AnswerGrid.test.tsx` / `ShareLinkBox.test.tsx` / `EventUrlBoxes.test.tsx` / `Root.test.tsx` (Testing Library) |
+| Frontend pure functions | `format.test.ts` / `errors.test.ts` / `form-validators.test.ts` / `answer-draft.test.ts` / `candidate-draft.test.ts` / `urls.test.ts` / `keyring.test.ts` |
+| Data-fetching hooks | `use-event.test.tsx` / `use-async-action.test.tsx` / `event-actions.test.tsx` (fresh `createQueryClient()` per test, mocked `api.ts`) |
+| Components | `answer-form.test.tsx` / `answer-grid.test.tsx` / `share-link-box.test.tsx` / `event-url-boxes.test.tsx` / `root.test.tsx` (Testing Library) |
 
 ### E2E tests
 
@@ -477,7 +477,7 @@ Existing Express code runs on Workers through `nodejs_compat` and `httpServerHan
 Immediately after migration, the API used a separate Worker and origin; it was then combined with the UI in one Worker.
 Sharing an origin removes CORS configuration, Variables for allowed origins and API URLs, and build-time `VITE_API_URL`, eliminating those configuration failures that could prevent API calls from the UI.
 API routes moved under `/api` to separate them from SPA paths.
-Because the `Repository` interface already separated business logic from data access, only `dynamoRepository.ts` → `d1Repository.ts` and the entry point (`server.ts` → `worker.ts`) needed replacement.
+Because the `Repository` interface already separated business logic from data access, only `dynamoRepository.ts` → `d1-repository.ts` and the entry point (`server.ts` → `worker.ts`) needed replacement.
 D1 has no TTL feature, so a Cron Trigger performs expiry cleanup.
 
 ## Atomic candidate updates

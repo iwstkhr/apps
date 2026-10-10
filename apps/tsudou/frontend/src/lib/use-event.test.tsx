@@ -4,9 +4,9 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getEvent } from './api';
 import { ApiError } from './errors';
-import { createQueryClient } from './queryClient';
+import { createQueryClient } from './query-client';
 import type { EventView } from './types';
-import { eventQueryKey, useEvent } from './useEvent';
+import { eventQueryKey, useEvent } from './use-event';
 
 vi.mock('./api', () => ({ getEvent: vi.fn() }));
 const mockedGetEvent = vi.mocked(getEvent);

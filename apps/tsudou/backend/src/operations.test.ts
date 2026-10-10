@@ -1,6 +1,6 @@
 import { RETENTION_MONTHS } from '@tsudou/shared/limits';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createMemoryRepository } from './memoryRepository';
+import { createMemoryRepository } from './memory-repository';
 import * as ops from './operations';
 import type { Repository } from './repository';
 import { expiresAtFrom } from './retention';

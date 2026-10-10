@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { EventManage } from '../routes/EventManage';
+import { EventManage } from '../routes/event-manage';
 import {
   deleteAnswer,
   deleteEvent,
@@ -16,11 +16,11 @@ import {
 import { ApiError } from './errors';
 import { LANGUAGE_KEY, setLanguage } from './i18n';
 import { forgetEventKeys, setAnswerKey, setManageToken } from './keyring';
-import { createQueryClient } from './queryClient';
+import { createQueryClient } from './query-client';
 import type { EventView } from './types';
-import { eventQueryKey } from './useEvent';
-import { useManagedEvent } from './useManagedEvent';
-import { usePublicEvent } from './usePublicEvent';
+import { eventQueryKey } from './use-event';
+import { useManagedEvent } from './use-managed-event';
+import { usePublicEvent } from './use-public-event';
 
 vi.mock('./api', () => ({
   getEvent: vi.fn(),

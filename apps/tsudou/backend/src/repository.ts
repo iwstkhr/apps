@@ -36,7 +36,7 @@ export type EventPatch = Partial<
 export type AnswerPatch = Partial<Pick<AnswerRecord, 'name' | 'message' | 'choices'>>;
 
 /**
- * データアクセスの境界。本番は D1 実装 (d1Repository.ts)、
+ * データアクセスの境界。本番は D1 実装 (d1-repository.ts)、
  * テストはインメモリ実装を差し込む。
  */
 export interface Repository {

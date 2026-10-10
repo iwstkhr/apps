@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { bestCandidateIds, summarize } from '../lib/tally';
 import type { AnswerView, Candidate } from '../lib/types';
-import { AnswerGrid } from './AnswerGrid';
+import { AnswerGrid } from './answer-grid';
 
 const candidates: Candidate[] = [
   { id: 'c1', startAt: new Date(2026, 9, 3, 19, 0).toISOString() },

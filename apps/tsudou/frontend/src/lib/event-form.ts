@@ -1,5 +1,5 @@
-import { type CandidateDraft, candidatesToInput } from './candidateDraft';
-import { parseFeeValue } from './formValidators';
+import { type CandidateDraft, candidatesToInput } from './candidate-draft';
+import { parseFeeValue } from './form-validators';
 import type { CandidateInput } from './types';
 
 /** 作成フォームと編集フォームで共通のフォーム値。 */

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { ManageUrlBox, ShareUrlBox } from './EventUrlBoxes';
+import { ManageUrlBox, ShareUrlBox } from './event-url-boxes';
 
 describe('ShareUrlBox / ManageUrlBox', () => {
   it('共有用 URL の文言と URL を出す', () => {

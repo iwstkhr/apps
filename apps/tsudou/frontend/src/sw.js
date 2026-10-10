@@ -1,6 +1,6 @@
 // Service Worker の本体。ビルド時に vite.config.ts の serviceWorker プラグインが
 // 先頭へ VERSION (ビルド内容のハッシュ) と PRECACHE (画面の起動に要るファイル) を足して
-// dist/sw.js として出力する。開発サーバでは登録しない (src/lib/serviceWorker.ts)。
+// dist/sw.js として出力する。開発サーバでは登録しない (src/lib/service-worker.ts)。
 //
 // キャッシュするのはビルド成果物 (HTML / JS / CSS / 画像) だけ。/api は一切触らず、
 // イベントや回答のデータ・トークンがブラウザのキャッシュに残らないようにする。

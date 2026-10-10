@@ -1,6 +1,6 @@
 import { t, useLanguage } from '../lib/i18n';
 import { manageUrl, shareUrl } from '../lib/urls';
-import { ShareLinkBox } from './ShareLinkBox';
+import { ShareLinkBox } from './share-link-box';
 
 /**
  * 主催者向けの画面 (作成完了・管理ページ) に出す URL 欄。

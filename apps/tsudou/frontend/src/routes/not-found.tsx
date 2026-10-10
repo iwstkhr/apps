@@ -1,4 +1,4 @@
-import { NotFoundCard } from '../components/NotFoundCard';
+import { NotFoundCard } from '../components/not-found-card';
 import { t, useLanguage } from '../lib/i18n';
 
 export function NotFound() {

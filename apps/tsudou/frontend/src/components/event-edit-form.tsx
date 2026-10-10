@@ -1,9 +1,9 @@
 import { useForm } from '@tanstack/react-form';
-import { candidatesToDrafts } from '../lib/candidateDraft';
-import { type EventFormInput, type EventFormValues, eventFormToInput } from '../lib/eventForm';
+import { candidatesToDrafts } from '../lib/candidate-draft';
+import { type EventFormInput, type EventFormValues, eventFormToInput } from '../lib/event-form';
 import { t, useLanguage } from '../lib/i18n';
 import type { EventView } from '../lib/types';
-import { EventFormFields } from './EventFormFields';
+import { EventFormFields } from './event-form-fields';
 import { Alert, Button } from './ui';
 
 /**

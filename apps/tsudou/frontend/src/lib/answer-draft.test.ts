@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { draftFromAnswer, draftToChoices, emptyDraft } from './answerDraft';
+import { draftFromAnswer, draftToChoices, emptyDraft } from './answer-draft';
 import type { Candidate } from './types';
 
 const candidates: Candidate[] = [

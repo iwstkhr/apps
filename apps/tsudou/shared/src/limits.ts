@@ -1,6 +1,6 @@
 /**
  * 入力値の上限。サーバ (backend/src/validate.ts) とフロント
- * (frontend/src/lib/formValidators.ts) の両方から参照する唯一の定義。
+ * (frontend/src/lib/form-validators.ts) の両方から参照する唯一の定義。
  *
  * ブラウザにもバンドルされるため、Node 専用の API は使えない
  * (shared/tsconfig.json が DOM と Node の型を読み込まないので型エラーになる)。

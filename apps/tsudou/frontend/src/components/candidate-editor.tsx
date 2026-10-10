@@ -1,8 +1,8 @@
 import { useId } from 'react';
-import { type CandidateDraft, defaultCandidate, nextCandidateAfter } from '../lib/candidateDraft';
+import { type CandidateDraft, defaultCandidate, nextCandidateAfter } from '../lib/candidate-draft';
 import { cx } from '../lib/cx';
+import { validateCandidateRow } from '../lib/form-validators';
 import { toDateTimeLocal } from '../lib/format';
-import { validateCandidateRow } from '../lib/formValidators';
 import { t, useLanguage } from '../lib/i18n';
 import { Button, Input } from './ui';
 

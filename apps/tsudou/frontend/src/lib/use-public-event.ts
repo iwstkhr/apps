@@ -1,11 +1,11 @@
-import { type AnswerDraft, draftFromAnswer, draftToChoices, emptyDraft } from './answerDraft';
+import { type AnswerDraft, draftFromAnswer, draftToChoices, emptyDraft } from './answer-draft';
 import { deleteAnswer, submitAnswer, updateAnswer } from './api';
 import { t } from './i18n';
 import { setAnswerKey, useManageToken } from './keyring';
-import { useAsyncAction } from './useAsyncAction';
-import { useEvent } from './useEvent';
-import { useAnswerKeyFromHash } from './useEventKeys';
-import { useFlash } from './useFlash';
+import { useAsyncAction } from './use-async-action';
+import { useEvent } from './use-event';
+import { useAnswerKeyFromHash } from './use-event-keys';
+import { useFlash } from './use-flash';
 
 /** 公開イベントの取得、本人の回答、保存・削除後の再取得をまとめる。 */
 export function usePublicEvent(eventId: string | undefined, hash: string) {

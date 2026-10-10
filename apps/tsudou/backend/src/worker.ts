@@ -1,7 +1,7 @@
 import { httpServerHandler } from 'cloudflare:node';
 import { env } from 'cloudflare:workers';
 import { createApp } from './app';
-import { createD1Repository, deleteExpired } from './d1Repository';
+import { createD1Repository, deleteExpired } from './d1-repository';
 
 /**
  * Cloudflare Workers のエントリ (wrangler.jsonc の main)。

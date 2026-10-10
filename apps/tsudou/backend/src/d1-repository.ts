@@ -150,7 +150,7 @@ function prepareReconcileAnswers(db: D1Database, eventId: string, timestamp: str
     .bind(timestamp, eventId);
 }
 
-/** 本番の Repository 実装。テストは memoryRepository.ts を使う。 */
+/** 本番の Repository 実装。テストは memory-repository.ts を使う。 */
 export function createD1Repository(db: D1Database): Repository {
   return {
     async createEvent(input: NewEvent) {

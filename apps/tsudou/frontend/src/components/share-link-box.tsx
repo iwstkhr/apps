@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { cx } from '../lib/cx';
 import { t, useLanguage } from '../lib/i18n';
-import { useFlash } from '../lib/useFlash';
-import { QrCodeDialog } from './QrCodeDialog';
+import { useFlash } from '../lib/use-flash';
+import { QrCodeDialog } from './qr-code-dialog';
 import { Button, buttonClassName } from './ui';
 
 export function ShareLinkBox({

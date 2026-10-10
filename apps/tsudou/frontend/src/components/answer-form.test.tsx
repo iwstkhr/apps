@@ -1,9 +1,9 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { emptyDraft } from '../lib/answerDraft';
+import { emptyDraft } from '../lib/answer-draft';
 import type { Candidate } from '../lib/types';
-import { AnswerForm } from './AnswerForm';
+import { AnswerForm } from './answer-form';
 
 const candidates: Candidate[] = [
   { id: 'c1', startAt: new Date(2026, 9, 3, 19, 0).toISOString() },

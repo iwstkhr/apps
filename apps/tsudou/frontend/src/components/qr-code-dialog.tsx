@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { cx } from '../lib/cx';
 import { t, useLanguage } from '../lib/i18n';
-import { QrCode } from './QrCode';
+import { QrCode } from './qr-code';
 import { Button } from './ui';
 
 /** QR コードを表示しておく時間 */

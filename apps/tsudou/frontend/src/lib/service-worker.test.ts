@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { registerServiceWorker } from './serviceWorker';
+import { registerServiceWorker } from './service-worker';
 
 describe('registerServiceWorker', () => {
   afterEach(() => {

@@ -1,11 +1,11 @@
 import { createBrowserRouter } from 'react-router';
-import { EventCreated } from './routes/EventCreated';
-import { EventManage } from './routes/EventManage';
-import { EventPublic } from './routes/EventPublic';
-import { Guide } from './routes/Guide';
-import { Home } from './routes/Home';
-import { NotFound } from './routes/NotFound';
-import { Root } from './routes/Root';
+import { EventCreated } from './routes/event-created';
+import { EventManage } from './routes/event-manage';
+import { EventPublic } from './routes/event-public';
+import { Guide } from './routes/guide';
+import { Home } from './routes/home';
+import { NotFound } from './routes/not-found';
+import { Root } from './routes/root';
 
 export const router = createBrowserRouter([
   {

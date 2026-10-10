@@ -63,7 +63,7 @@ Code comments may remain in Japanese. Preserve actual Japanese UI labels when qu
 ## Implementation conventions
 
 - Define input limits only in `shared/src/limits.ts`.
-  Both server validation (`validate.ts`) and frontend validation (`frontend/src/lib/formValidators.ts`) reference this file.
+  Both server validation (`validate.ts`) and frontend validation (`frontend/src/lib/form-validators.ts`) reference this file.
 - **Client validation improves the user experience; it is not an authorization or validation boundary.**
   Whenever you add an input field, also validate it on the server (`validate.ts`).
 - Do not add `.authorization()` to the `Event` / `Answer` models.

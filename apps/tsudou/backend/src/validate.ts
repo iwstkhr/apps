@@ -6,7 +6,7 @@ import { generateCandidateId } from './tokens';
 
 export { LIMITS };
 
-/** 検証用の集合。UI の表示順 (AnswerForm.tsx) とは別物なので統合しない。 */
+/** 検証用の集合。UI の表示順 (answer-form.tsx) とは別物なので統合しない。 */
 const STATUSES: readonly AnswerStatus[] = ['YES', 'NO', 'MAYBE'];
 
 /** 前後の空白を削る。空文字になったら null を返す (空文字は保存しない)。 */

@@ -5,7 +5,7 @@ import {
   defaultCandidate,
   emptyCandidate,
   nextCandidateAfter,
-} from './candidateDraft';
+} from './candidate-draft';
 
 describe('candidatesToInput', () => {
   it('id を保ったまま ISO 文字列に変換する', () => {

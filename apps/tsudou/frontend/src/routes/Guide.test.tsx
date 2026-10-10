@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Guide } from './Guide';
+import { Guide } from './guide';
 
 function renderGuide() {
   const router = createMemoryRouter([{ path: '/guide', element: <Guide /> }], {

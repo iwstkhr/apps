@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { QR_FADE_MS, QR_VISIBLE_MS } from './QrCodeDialog';
-import { ShareLinkBox } from './ShareLinkBox';
+import { QR_FADE_MS, QR_VISIBLE_MS } from './qr-code-dialog';
+import { ShareLinkBox } from './share-link-box';
 
 const url = 'https://example.com/e/evt-1/manage#k=token';
 

@@ -1,5 +1,5 @@
 import { t } from '../lib/i18n';
-import { TextLink } from './TextLink';
+import { TextLink } from './text-link';
 import { MessageCard } from './ui';
 
 export function NotFoundCard({ title, message }: { title: string; message: string }) {

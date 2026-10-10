@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router';
 import { deleteAnswer, deleteEvent, updateEvent } from './api';
-import type { EventFormInput } from './eventForm';
+import type { EventFormInput } from './event-form';
 import { t } from './i18n';
 import { forgetEventKeys } from './keyring';
-import { useAsyncAction } from './useAsyncAction';
-import { useEvent } from './useEvent';
-import { useManageTokenFromHash } from './useEventKeys';
-import { useFlash } from './useFlash';
+import { useAsyncAction } from './use-async-action';
+import { useEvent } from './use-event';
+import { useManageTokenFromHash } from './use-event-keys';
+import { useFlash } from './use-flash';
 
 /** 管理画面の保存・締切・削除と、キャッシュ・鍵・遷移の後処理をまとめる。 */
 export function useManagedEvent(eventId: string | undefined, hash: string) {

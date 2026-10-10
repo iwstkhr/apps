@@ -1,16 +1,16 @@
 import type { ReactFormExtendedApi } from '@tanstack/react-form';
 import { LIMITS } from '@tsudou/shared/limits';
-import type { EventFormValues } from '../lib/eventForm';
+import type { EventFormValues } from '../lib/event-form';
 
 import {
   validateCandidatesValue,
   validateFeeValue,
   validateMemoValue,
   validateTitleValue,
-} from '../lib/formValidators';
+} from '../lib/form-validators';
 import { t, useLanguage } from '../lib/i18n';
-import { CandidateEditor } from './CandidateEditor';
-import { fieldError } from './FieldError';
+import { CandidateEditor } from './candidate-editor';
+import { fieldError } from './field-error';
 import { Field, Input, Textarea } from './ui';
 
 /**

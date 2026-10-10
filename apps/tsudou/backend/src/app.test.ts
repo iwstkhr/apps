@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app';
-import { createMemoryRepository } from './memoryRepository';
+import { createMemoryRepository } from './memory-repository';
 
 const startAt = '2030-01-01T10:00:00.000Z';
 

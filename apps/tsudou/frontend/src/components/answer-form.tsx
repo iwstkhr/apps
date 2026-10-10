@@ -1,12 +1,12 @@
 import { useForm } from '@tanstack/react-form';
 import { LIMITS } from '@tsudou/shared/limits';
-import type { AnswerDraft } from '../lib/answerDraft';
+import type { AnswerDraft } from '../lib/answer-draft';
 import { cx } from '../lib/cx';
+import { validateMessageValue, validateNameValue } from '../lib/form-validators';
 import { formatDateTime } from '../lib/format';
-import { validateMessageValue, validateNameValue } from '../lib/formValidators';
 import { t, useLanguage } from '../lib/i18n';
 import { type AnswerStatus, type Candidate, STATUS_LABEL, STATUS_MARK } from '../lib/types';
-import { fieldError } from './FieldError';
+import { fieldError } from './field-error';
 import { Button, Field, Input, Textarea } from './ui';
 
 const STATUSES: readonly AnswerStatus[] = ['YES', 'MAYBE', 'NO'];

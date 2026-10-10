@@ -1,4 +1,4 @@
-// 使い方ページ (src/routes/Guide.tsx) の画面キャプチャを、サンプルデータで撮り直す。
+// 使い方ページ (src/routes/guide.tsx) の画面キャプチャを、サンプルデータで撮り直す。
 //
 // 前提: `pnpm run dev` (API と画面) を起動しておく (ローカルの D1 にサンプルの
 // イベントが言語ごとに 1 件ずつでき、最後に締め切った状態で残る)。ブラウザはインストール済みの
@@ -7,7 +7,7 @@
 //   pnpm run guide:capture
 //
 // 画像は表示言語ごとに src/assets/guide/<ja|en>/ に上書きされ、寸法は
-// src/assets/guide/sizes.json に書き出される (Guide.tsx が読む)。
+// src/assets/guide/sizes.json に書き出される (guide.tsx が読む)。
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 import { english } from '../src/lib/translations.ts';
@@ -72,7 +72,7 @@ const maskOrigin = (page) =>
 
 const card = (page, text) => page.locator('section').filter({ hasText: text }).first();
 
-/** 画像の寸法 (CSS ピクセル)。Guide.tsx の width / height に使う。 */
+/** 画像の寸法 (CSS ピクセル)。guide.tsx の width / height に使う。 */
 const sizes = {};
 
 /** 1 言語ぶんを撮る。 */

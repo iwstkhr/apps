@@ -2,12 +2,12 @@ import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { RETENTION_MONTHS } from '@tsudou/shared/limits';
 import { Link, useNavigate } from 'react-router';
-import { EventFormFields } from '../components/EventFormFields';
+import { EventFormFields } from '../components/event-form-fields';
 import { Alert, Button, Card } from '../components/ui';
 import { createEvent } from '../lib/api';
-import { defaultCandidate } from '../lib/candidateDraft';
+import { defaultCandidate } from '../lib/candidate-draft';
 import { errorMessage } from '../lib/errors';
-import { type EventFormValues, eventFormToInput } from '../lib/eventForm';
+import { type EventFormValues, eventFormToInput } from '../lib/event-form';
 import { t, useLanguage } from '../lib/i18n';
 import { setManageToken } from '../lib/keyring';
 

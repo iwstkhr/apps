@@ -1,6 +1,6 @@
 ---
 name: guide-page
-description: Create and update the Tsudou user guide (/guide, frontend/src/routes/Guide.tsx). Recapture screenshots with sample data (pnpm run guide:capture), and align image dimensions, instructions, alternative text, tests, and documentation with the actual UI. Always use this skill when asked to update the guide, retake screenshots, or add an explanation to the guide, and whenever UI text, button labels, layouts, form fields, or navigation change (Home / EventCreated / EventPublic / EventManage or their components), so the guide stays current.
+description: Create and update the Tsudou user guide (/guide, frontend/src/routes/guide.tsx). Recapture screenshots with sample data (pnpm run guide:capture), and align image dimensions, instructions, alternative text, tests, and documentation with the actual UI. Always use this skill when asked to update the guide, retake screenshots, or add an explanation to the guide, and whenever UI text, button labels, layouts, form fields, or navigation change (Home / EventCreated / EventPublic / EventManage or their components), so the guide stays current.
 ---
 
 # Creating and updating the user guide
@@ -13,10 +13,10 @@ This skill ensures that every UI change is reflected in the guide.
 
 | File | Role |
 | --- | --- |
-| `frontend/src/routes/Guide.tsx` | Page content: `Step` (numbered instructions), `Screenshot` (image, dimensions, alternative text), and FAQ |
+| `frontend/src/routes/guide.tsx` | Page content: `Step` (numbered instructions), `Screenshot` (image, dimensions, alternative text), and FAQ |
 | `frontend/scripts/capture-guide.mjs` | Captures each screen while creating sample data |
 | `frontend/src/assets/guide/*.png` | Screenshots imported into the build, with hashed filenames and long-term caching; do not put them in `public/` |
-| `frontend/src/routes/Guide.test.tsx` | Checks headings, table of contents, and alternative text and dimensions for every image |
+| `frontend/src/routes/guide.test.tsx` | Checks headings, table of contents, and alternative text and dimensions for every image |
 | `docs/specification.md` ("User guide (`/guide`)"), `README.md`, `docs/architecture.md` | Page specification, recapture instructions, and repository structure |
 
 The following table maps images to screens. After changing a screen, recapture its images and review the surrounding instructions.
@@ -35,7 +35,7 @@ The following table maps images to screens. After changing a screen, recapture i
 ### 1. Determine the affected areas
 
 Review UI changes with `git diff`, then use the table above to identify images to recapture and instructions to update.
-If a button label, heading, or message changed, search the content of `Guide.tsx` for outdated wording.
+If a button label, heading, or message changed, search the content of `guide.tsx` for outdated wording.
 The capture script also locates elements by labels and roles, so wording changes can break it.
 
 ### 2. Update the capture script (only when needed)
@@ -75,7 +75,7 @@ They reserve space before the image loads to prevent layout shifts. Always verif
 cd frontend/src/assets/guide && for f in *.png; do echo "$f $(sips -g pixelWidth -g pixelHeight "$f" | awk '/pixel/{print $2/2}' | tr '\n' ' ')"; done
 ```
 
-Update the values in `Guide.tsx` for images whose height changed; the width normally remains 736.
+Update the values in `guide.tsx` for images whose height changed; the width normally remains 736.
 
 ### 6. Update instructions and alternative text
 
@@ -83,7 +83,7 @@ Update the values in `Guide.tsx` for images whose height changed; the width norm
 - **Do not include specific dates in alternative text.** Candidate dates change on every capture; use descriptions such as "the third candidate". Describe what the image shows in one sentence for readers who cannot see it.
 - Update Japanese and English guide text and alternative text together through `frontend/src/lib/translations.ts`. Screenshots use Japanese; explain that in the English guide.
 - Match the existing Japanese guide style: polite language, UI labels enclosed in Japanese quotation marks (「」), and cautions in `Alert` with `variant="warning"`.
-- When adding an image, add its import and always pass `alt` / `width` / `height` to `Screenshot`; `Guide.test.tsx` checks these.
+- When adding an image, add its import and always pass `alt` / `width` / `height` to `Screenshot`; `guide.test.tsx` checks these.
 - Reference constants such as `RETENTION_MONTHS` for values derived from settings instead of hardcoding numbers.
 
 ### 7. Verify

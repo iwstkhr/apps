@@ -1,13 +1,13 @@
 import { useLocation, useParams } from 'react-router';
-import { AnswerGrid } from '../components/AnswerGrid';
-import { EventEditForm } from '../components/EventEditForm';
-import { ManageUrlBox, ShareUrlBox } from '../components/EventUrlBoxes';
-import { NotFoundCard } from '../components/NotFoundCard';
-import { TextLink } from '../components/TextLink';
+import { AnswerGrid } from '../components/answer-grid';
+import { EventEditForm } from '../components/event-edit-form';
+import { ManageUrlBox, ShareUrlBox } from '../components/event-url-boxes';
+import { NotFoundCard } from '../components/not-found-card';
+import { TextLink } from '../components/text-link';
 import { Alert, Button, Card, LoadingBlock, MessageCard } from '../components/ui';
 import { formatExpiry } from '../lib/format';
 import { t, useLanguage } from '../lib/i18n';
-import { useManagedEvent } from '../lib/useManagedEvent';
+import { useManagedEvent } from '../lib/use-managed-event';
 
 export function EventManage() {
   useLanguage();

@@ -1,7 +1,7 @@
 import { Link, Outlet } from 'react-router';
-import { LanguageSelect } from '../components/LanguageSelect';
-import { TextLink } from '../components/TextLink';
-import { ThemeToggle } from '../components/ThemeToggle';
+import { LanguageSelect } from '../components/language-select';
+import { TextLink } from '../components/text-link';
+import { ThemeToggle } from '../components/theme-toggle';
 import { t, useLanguage } from '../lib/i18n';
 
 export function Root() {

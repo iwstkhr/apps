@@ -1,5 +1,5 @@
 /**
- * サーバ (backend/src/validate.ts) とフロント (frontend/src/lib/formValidators.ts) が共有する
+ * サーバ (backend/src/validate.ts) とフロント (frontend/src/lib/form-validators.ts) が共有する
  * バリデーション文言。同じ検査を両側で行うため、文言が片方だけズレないよう
  * ここを唯一の定義とする。
  *

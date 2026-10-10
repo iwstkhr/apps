@@ -8,7 +8,7 @@ export function expiresAtFrom(from: Date = new Date()): number {
 }
 
 /**
- * 期限切れのレコードは 1 日 1 回の Cron Trigger (d1Repository.ts の deleteExpired) で消すので、
+ * 期限切れのレコードは 1 日 1 回の Cron Trigger (d1-repository.ts の deleteExpired) で消すので、
  * 期限から最大 1 日ほどは読み取れてしまう。アプリ側でも期限を過ぎたものは「存在しない」として扱う。
  */
 export function isExpired(expiresAt: number | null | undefined, now: number = Date.now()): boolean {

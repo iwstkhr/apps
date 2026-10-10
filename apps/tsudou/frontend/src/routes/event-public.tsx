@@ -1,14 +1,14 @@
 import { useLocation, useParams } from 'react-router';
-import { AnswerForm } from '../components/AnswerForm';
-import { AnswerGrid } from '../components/AnswerGrid';
-import { EventSummary } from '../components/EventSummary';
-import { NotFoundCard } from '../components/NotFoundCard';
-import { ShareLinkBox } from '../components/ShareLinkBox';
-import { TextLink } from '../components/TextLink';
+import { AnswerForm } from '../components/answer-form';
+import { AnswerGrid } from '../components/answer-grid';
+import { EventSummary } from '../components/event-summary';
+import { NotFoundCard } from '../components/not-found-card';
+import { ShareLinkBox } from '../components/share-link-box';
+import { TextLink } from '../components/text-link';
 import { Alert, Button, Card, LoadingBlock } from '../components/ui';
 import { t, useLanguage } from '../lib/i18n';
 import { answerEditUrl, managePath, shareUrl } from '../lib/urls';
-import { usePublicEvent } from '../lib/usePublicEvent';
+import { usePublicEvent } from '../lib/use-public-event';
 
 export function EventPublic() {
   useLanguage();

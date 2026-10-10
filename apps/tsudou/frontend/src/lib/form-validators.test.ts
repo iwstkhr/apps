@@ -1,6 +1,6 @@
 import { LIMITS } from '@tsudou/shared/limits';
 import { describe, expect, it } from 'vitest';
-import type { CandidateDraft } from './candidateDraft';
+import type { CandidateDraft } from './candidate-draft';
 import {
   parseFeeValue,
   validateCandidateRow,
@@ -9,7 +9,7 @@ import {
   validateMemoValue,
   validateNameValue,
   validateTitleValue,
-} from './formValidators';
+} from './form-validators';
 
 const row = (value: string): CandidateDraft => ({ id: null, value });
 

@@ -1,6 +1,6 @@
 import { LIMITS } from '@tsudou/shared/limits';
 import { CANDIDATE_MESSAGE, requiredMessage, tooLongMessage } from '@tsudou/shared/messages';
-import type { CandidateDraft } from './candidateDraft';
+import type { CandidateDraft } from './candidate-draft';
 import { fromDateTimeLocal } from './format';
 
 /**
