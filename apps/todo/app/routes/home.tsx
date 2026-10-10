@@ -1,5 +1,5 @@
 import { type CSSProperties, useCallback, useMemo, useState } from 'react';
-import { FaFolder } from 'react-icons/fa';
+import { FaFolder, FaTimes } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
@@ -278,11 +278,21 @@ export default function Home() {
                 role={error || notice?.kind === 'error' ? 'alert' : 'status'}
                 className={
                   error || notice?.kind === 'error'
-                    ? 'rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-300'
-                    : 'rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                    ? 'flex items-start gap-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-300'
+                    : 'flex items-start gap-2 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                 }
               >
-                {error ?? notice?.text}
+                <span className="min-w-0 flex-1 break-words">{error ?? notice?.text}</span>
+                {!error && notice && (
+                  <button
+                    type="button"
+                    aria-label="通知を閉じる"
+                    className="shrink-0 rounded p-1 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:bg-white/10"
+                    onClick={() => setNotice(null)}
+                  >
+                    <FaTimes aria-hidden="true" />
+                  </button>
+                )}
               </div>
             )}
 

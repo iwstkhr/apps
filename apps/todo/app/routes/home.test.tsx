@@ -372,7 +372,7 @@ describe('Home', () => {
       it('moves a todo into a folder and to unfiled', async () => {
         const folder = createFolderFixture({ name: '仕事' });
         await putAll({ folders: [folder], todos: [createTodoFixture({ title: '見積もり' })] });
-        await renderHome();
+        const user = await renderHome();
 
         const toFolder = dragTodoTo('見積もり', /^仕事/);
         expect(toFolder.accepted).toBe(true);
@@ -385,6 +385,10 @@ describe('Home', () => {
         ).toBeInTheDocument();
         expect(items()[0]).toHaveTextContent('フォルダ: 仕事');
         await waitFor(async () => expect((await getAll()).todos[0].folderId).toBe(folder.id));
+
+        await user.click(screen.getByRole('button', { name: '通知を閉じる' }));
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+        expect(items()[0]).toHaveTextContent('フォルダ: 仕事');
 
         dragTodoTo('見積もり', /^未分類/).drop();
         expect(

@@ -81,6 +81,9 @@ test('moves a todo to another folder by drag and drop', async ({ page }) => {
   await header.dragTo(folderNav(page).getByRole('button', { name: /^家/ }));
   await expect(page.getByRole('status')).toHaveText('「洗濯」を「家」に移動しました。');
   await expect(todoItems(page)).toHaveText([/洗濯.*フォルダ: 家/]);
+  await page.getByRole('button', { name: '通知を閉じる' }).click();
+  await expect(page.getByRole('status')).toBeHidden();
+  await expect(todoItems(page)).toHaveText([/洗濯.*フォルダ: 家/]);
 
   await page.reload();
   await folderNav(page).getByRole('button', { name: /^家/ }).click();
