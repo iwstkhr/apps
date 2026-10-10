@@ -66,8 +66,11 @@ test.describe('in an English browser', () => {
     await expect(page.getByRole('button', { name: '追加', exact: true })).toBeVisible();
     // 英語に戻すメニュー操作はキーボードでもできる
     await page.locator('header').getByRole('button', { name: 'メニュー', exact: true }).focus();
+    // ↓ で開くと最初の項目 (English) にフォーカスが移る
     await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
+    await expect(
+      page.getByRole('menu').getByRole('menuitemradio', { name: 'English' }),
+    ).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
   });

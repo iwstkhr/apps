@@ -44,15 +44,16 @@ describe('HeaderMenu', () => {
     expect(button).toHaveAttribute('aria-controls', menu.id);
     expect(screen.getByRole('group', { name: '言語' })).toBeInTheDocument();
     expect(screen.getAllByRole('menuitemradio').map((item) => item.textContent)).toEqual([
-      '日本語',
       'English',
+      '日本語',
     ]);
     expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
       'テーマ…',
       'エクスポート',
       'インポート',
     ]);
-    expect(screen.getByRole('menuitemradio', { name: '日本語' })).toHaveFocus();
+    // 最初の項目 (English) にフォーカスし、今の言語 (日本語) に印が付く
+    expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveFocus();
     expect(screen.getByRole('menuitemradio', { name: '日本語' })).toBeChecked();
   });
 
@@ -60,17 +61,17 @@ describe('HeaderMenu', () => {
     const { user, button } = renderMenu();
     button.focus();
     await user.keyboard('{ArrowDown}');
-    expect(screen.getByRole('menuitemradio', { name: '日本語' })).toHaveFocus();
-    await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveFocus();
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('menuitemradio', { name: '日本語' })).toHaveFocus();
     await user.keyboard('{End}');
     expect(screen.getByRole('menuitem', { name: 'インポート' })).toHaveFocus();
     await user.keyboard('{ArrowDown}');
-    expect(screen.getByRole('menuitemradio', { name: '日本語' })).toHaveFocus();
+    expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveFocus();
     await user.keyboard('{ArrowUp}');
     expect(screen.getByRole('menuitem', { name: 'インポート' })).toHaveFocus();
     await user.keyboard('{Home}');
-    expect(screen.getByRole('menuitemradio', { name: '日本語' })).toHaveFocus();
+    expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveFocus();
   });
 
   it('closes with Escape and returns focus to the button', async () => {

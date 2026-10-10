@@ -4,9 +4,10 @@ import { english } from '~/lib/translations';
 // tsudou と同じく、日本語の文言をそのままキーにして英語の訳を引く。
 // タスク名やフォルダ名など、利用者が入力した内容は訳さない。
 
+// メニューにはこの順に並ぶ
 export const LANGUAGES = [
-  { id: 'ja', label: '日本語' },
   { id: 'en', label: 'English' },
+  { id: 'ja', label: '日本語' },
 ] as const;
 export type Language = (typeof LANGUAGES)[number]['id'];
 export const LANGUAGE_KEY = 'todo:language';
