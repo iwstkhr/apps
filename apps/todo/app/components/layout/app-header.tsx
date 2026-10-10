@@ -16,7 +16,8 @@ export function AppHeader({ onExport, onImportFile, exportDisabled }: AppHeaderP
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-300 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-3 py-2 sm:px-4">
+      {/* フォルダ欄の高さをヘッダーの高さから決めるので、高さは h-14 に固定する */}
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-2 px-3 sm:px-4">
         <h1 className="flex min-w-0 items-center gap-2 text-lg font-bold tracking-tight sm:text-xl">
           <img
             src={publicUrl('favicon.svg')}

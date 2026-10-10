@@ -33,6 +33,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 - The folder icon next to フォルダ creates a top-level folder. Each folder row has buttons to create a folder inside it, rename or move it (choose a new parent; a folder cannot be moved into itself or its subfolders), and delete it.
 - Deleting a folder also deletes its subfolders after a confirmation, and moves the todos in them to 未分類.
 - Folders with children can be collapsed. Siblings are sorted by name.
+- On wide screens the folder list fills the window height below the header and stays in place while the todo list scrolls; a long folder list scrolls inside it. The footer sits under the todo list.
 - On wide screens the folder list can be resized by dragging its right edge (180–480 px, 240 px by default). The edge can also be focused and moved with ← / → (Shift for larger steps) and Home / End, and double-clicking it restores the default width.
 - The selected folder, the collapsed folders, and the folder list width are restored after a reload. If the restored folder no longer exists, すべて is shown.
 - On narrow screens the folder list is hidden behind a `フォルダ: <current folder>` button and closes after a folder is selected.

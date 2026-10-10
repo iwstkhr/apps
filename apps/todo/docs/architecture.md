@@ -82,7 +82,7 @@ e2e/                            Playwright tests against wrangler dev
 | `lib/todo-filters.ts` | Status, tag, and keyword filters; per-status counts; due, priority, status, and creation sorts |
 | `hooks/use-todos.ts` | CRUD API for todos and folders, optimistic updates, error handling, and tab sync |
 | `hooks/use-view-state.ts` | Restores and saves the selected and collapsed folders and the folder list width (clamped to 180–480 px); ignores broken values and storage errors |
-| `components/layout/sidebar-resizer.tsx` | A `separator` handle that resizes the folder list by pointer drag or keyboard and resets on double click. The width is applied through the `--sidebar-width` CSS variable on the layout grid. |
+| `components/layout/sidebar-resizer.tsx` | A `separator` handle that resizes the folder list by pointer drag or keyboard and resets on double click. The width is applied through the `--sidebar-width` CSS variable on the layout grid. The folder list is `sticky` with a height of the window minus the fixed-height (`h-14`) header, and the footer is in the right column so the folder list stays in place down to the end of the page |
 
 ## Testing
 
@@ -90,7 +90,7 @@ e2e/                            Playwright tests against wrangler dev
 | --- | --- | --- |
 | Unit | Vitest | Types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb) |
 | Component | Vitest, Testing Library, happy-dom | `useTodos` and the whole `Home` screen |
-| E2E | Playwright | Production build served by `wrangler dev`: persistence across reloads, editing, nested folders, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, and the folder toggle on narrow screens |
+| E2E | Playwright | Production build served by `wrangler dev`: persistence across reloads, editing, nested folders, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, and the folder toggle on narrow screens |
 
 ## CI / CD
 

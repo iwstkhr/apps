@@ -199,10 +199,15 @@ export default function Home() {
       />
 
       <div
-        className="mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-4 lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:items-start lg:gap-6"
+        className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3 py-4 sm:px-4 lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:items-start lg:gap-6"
         style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
       >
-        <aside id="folder-sidebar" className="relative mb-4 lg:sticky lg:top-16 lg:mb-0">
+        {/* 広い画面ではヘッダーの下から画面の下端までの高さにし、一覧をスクロールしても動かさない
+            (ヘッダー 3.5rem + 境界線 1px + 上下の余白 1rem ずつ) */}
+        <aside
+          id="folder-sidebar"
+          className="relative mb-4 lg:sticky lg:top-[calc(3.5rem+1px+1rem)] lg:mb-0 lg:flex lg:h-[calc(100svh-3.5rem-1px-2rem)] lg:flex-col"
+        >
           {/* 狭い画面ではフォルダ一覧を畳んでおく */}
           <button
             type="button"
@@ -224,7 +229,7 @@ export default function Home() {
           <div
             id="folder-panel"
             className={cn(
-              'mt-2 rounded-lg border border-slate-200 bg-white p-2 lg:mt-0 lg:block dark:border-slate-800 dark:bg-slate-900',
+              'mt-2 rounded-lg border border-slate-200 bg-white p-2 lg:mt-0 lg:block lg:min-h-0 lg:flex-1 lg:overflow-y-auto dark:border-slate-800 dark:bg-slate-900',
               !showFolders && 'hidden',
             )}
           >
@@ -250,84 +255,86 @@ export default function Home() {
           />
         </aside>
 
-        <main className="flex min-w-0 flex-col gap-4">
-          {(error || notice) && (
-            <div
-              role={error || notice?.kind === 'error' ? 'alert' : 'status'}
-              className={
-                error || notice?.kind === 'error'
-                  ? 'rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-300'
-                  : 'rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-              }
-            >
-              {error ?? notice?.text}
-            </div>
-          )}
-
-          <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
-            {isRealFolder && <FaFolder className="shrink-0 text-amber-500" aria-hidden="true" />}
-            <span className="truncate">{selectionLabel}</span>
-          </h2>
-
-          <section
-            aria-label="TODO を追加"
-            className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
-          >
-            <TodoForm
-              submitLabel="追加"
-              collapsible
-              tagSuggestions={tags}
-              folders={folders}
-              defaultFolderId={isRealFolder ? selection : null}
-              onSubmit={addTodo}
-            />
-          </section>
-
-          <TodoToolbar filters={filters} onChange={setFilters} tags={tags} counts={counts} />
-
-          {isLoading ? (
-            <p className="p-8 text-center text-sm text-slate-500" role="status">
-              読み込み中…
-            </p>
-          ) : (
-            <TodoList
-              todos={visibleTodos}
-              folders={folders}
-              folderSelection={selection}
-              today={today}
-              tagSuggestions={tags}
-              emptyMessage={emptyMessage}
-              onStatusChange={(id, status) => void changeStatus(id, status)}
-              onEdit={editTodo}
-              onRemove={handleRemove}
-              onTagClick={(tag) => setFilters((current) => ({ ...current, tag }))}
-            />
-          )}
-
-          {doneCount > 0 && (
-            <div className="flex justify-end">
-              <button
-                type="button"
-                className={secondaryButtonClass}
-                onClick={handleRemoveCompleted}
+        {/* フッターも右の列に入れ、フォルダ欄がページの下端まで画面に固定されるようにする */}
+        <div className="flex min-w-0 flex-1 flex-col gap-8 lg:self-stretch">
+          <main className="flex min-w-0 flex-1 flex-col gap-4">
+            {(error || notice) && (
+              <div
+                role={error || notice?.kind === 'error' ? 'alert' : 'status'}
+                className={
+                  error || notice?.kind === 'error'
+                    ? 'rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-300'
+                    : 'rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                }
               >
-                完了済みを削除 ({doneCount})
-              </button>
-            </div>
-          )}
-        </main>
-      </div>
+                {error ?? notice?.text}
+              </div>
+            )}
 
-      <footer className="mx-auto w-full max-w-5xl px-3 pb-6 text-xs text-slate-500 sm:px-4 dark:text-slate-400">
-        <p>
-          データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。
-          ブラウザのデータを削除すると TODO
-          も消えるため、定期的にエクスポートしてバックアップしてください。
-        </p>
-        <p className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-slate-800">
-          © {new Date().getFullYear()} wasabee.dev. All Rights Reserved.
-        </p>
-      </footer>
+            <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
+              {isRealFolder && <FaFolder className="shrink-0 text-amber-500" aria-hidden="true" />}
+              <span className="truncate">{selectionLabel}</span>
+            </h2>
+
+            <section
+              aria-label="TODO を追加"
+              className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <TodoForm
+                submitLabel="追加"
+                collapsible
+                tagSuggestions={tags}
+                folders={folders}
+                defaultFolderId={isRealFolder ? selection : null}
+                onSubmit={addTodo}
+              />
+            </section>
+
+            <TodoToolbar filters={filters} onChange={setFilters} tags={tags} counts={counts} />
+
+            {isLoading ? (
+              <p className="p-8 text-center text-sm text-slate-500" role="status">
+                読み込み中…
+              </p>
+            ) : (
+              <TodoList
+                todos={visibleTodos}
+                folders={folders}
+                folderSelection={selection}
+                today={today}
+                tagSuggestions={tags}
+                emptyMessage={emptyMessage}
+                onStatusChange={(id, status) => void changeStatus(id, status)}
+                onEdit={editTodo}
+                onRemove={handleRemove}
+                onTagClick={(tag) => setFilters((current) => ({ ...current, tag }))}
+              />
+            )}
+
+            {doneCount > 0 && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className={secondaryButtonClass}
+                  onClick={handleRemoveCompleted}
+                >
+                  完了済みを削除 ({doneCount})
+                </button>
+              </div>
+            )}
+          </main>
+          <footer className="text-xs text-slate-500 dark:text-slate-400">
+            <p>
+              データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。
+              ブラウザのデータを削除すると TODO
+              も消えるため、定期的にエクスポートしてバックアップしてください。
+            </p>
+            <p className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-slate-800">
+              © {new Date().getFullYear()} wasabee.dev. All Rights Reserved.
+            </p>
+          </footer>
+        </div>
+      </div>
 
       {folderDialog && (
         <FolderDialog

@@ -120,3 +120,20 @@ test('resizes the folder pane by dragging and keeps the width after reloading', 
   await handle.dblclick();
   await expect(handle).toHaveAttribute('aria-valuenow', '240');
 });
+
+test('keeps the folder pane as tall as the window while the list scrolls', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 600 });
+  for (let i = 1; i <= 12; i++) await addTodo(page, `タスク ${i}`);
+
+  const pane = page.locator('#folder-sidebar');
+  const header = (await page.locator('header').boundingBox())?.height ?? 0;
+  const atTop = await pane.boundingBox();
+  // ヘッダーの下から画面の下端まで (上下に 16px の余白)
+  expect(atTop?.y).toBeCloseTo(header + 16, 0);
+  expect((atTop?.y ?? 0) + (atTop?.height ?? 0)).toBeCloseTo(600 - 16, 0);
+
+  // ページの一番下までスクロールしても動かない
+  await page.mouse.wheel(0, 10_000);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  expect(await pane.boundingBox()).toEqual(atTop);
+});
