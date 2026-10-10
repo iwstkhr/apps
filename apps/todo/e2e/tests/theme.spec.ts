@@ -7,7 +7,7 @@ test('selects light and dark modes independently of the OS and follows it in aut
   await openApp(page);
   const root = page.locator('html');
   const button = page.getByRole('button', { name: 'テーマ', exact: true });
-  const dialog = page.getByRole('dialog', { name: '配色テーマ' });
+  const dialog = page.getByRole('dialog', { name: 'テーマ', exact: true });
   await button.click();
   await expect(dialog.getByRole('radio', { name: '自動', exact: true })).toBeChecked();
   await dialog.getByText('フォレスト', { exact: true }).click();
@@ -40,7 +40,7 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   await openApp(page);
   await addTodo(page, '配色を確認');
   const button = page.locator('header').getByRole('button', { name: 'テーマ', exact: true });
-  const dialog = page.getByRole('dialog', { name: '配色テーマ' });
+  const dialog = page.getByRole('dialog', { name: 'テーマ', exact: true });
   const bodyColor = () =>
     page.locator('body').evaluate((el) => getComputedStyle(el).backgroundColor);
   const initialBackground = await bodyColor();

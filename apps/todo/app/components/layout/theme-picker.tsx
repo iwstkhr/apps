@@ -14,7 +14,7 @@ export function ThemePicker() {
       <button
         type="button"
         aria-label="テーマ"
-        title="配色テーマを選ぶ"
+        title="テーマを選ぶ"
         className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
         onClick={() => dialogRef.current?.showModal()}
       >
@@ -27,7 +27,7 @@ export function ThemePicker() {
         className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg bg-white p-5 text-slate-900 shadow-xl backdrop:bg-slate-900/50 dark:bg-slate-900 dark:text-slate-100"
       >
         <h2 id={titleId} className="text-lg font-bold">
-          配色テーマ
+          テーマ
         </h2>
         <fieldset className="mt-4 grid grid-cols-2 gap-3">
           <legend className="sr-only">テーマを選ぶ</legend>
