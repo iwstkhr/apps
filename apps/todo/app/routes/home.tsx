@@ -1,5 +1,5 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
-import { FaFolder, FaTimes } from 'react-icons/fa';
+import { FaFolder, FaPen, FaTimes } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
@@ -106,6 +106,9 @@ export default function Home() {
         ? t('未分類')
         : formatFolderPath(folders, selection);
   const isRealFolder = selection !== 'all' && selection !== 'unfiled';
+  const selectedFolderObject = isRealFolder
+    ? folders.find((folder) => folder.id === selection)
+    : undefined;
   const selectedFolderColor =
     folders.find((folder) => folder.id === selection)?.color ?? DEFAULT_FOLDER_COLOR;
 
@@ -309,16 +312,30 @@ export default function Home() {
               </div>
             )}
 
-            <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
-              {isRealFolder && (
-                <FaFolder
-                  className="shrink-0"
-                  style={{ color: selectedFolderColor }}
-                  aria-hidden="true"
-                />
+            <div className="flex min-w-0 items-center gap-1">
+              <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
+                {isRealFolder && (
+                  <FaFolder
+                    className="shrink-0"
+                    style={{ color: selectedFolderColor }}
+                    aria-hidden="true"
+                  />
+                )}
+                <span className="truncate">{selectionLabel}</span>
+              </h2>
+              {/* 見ているフォルダをその場で編集できるようにする (フォルダ欄の編集ボタンと同じダイアログ) */}
+              {selectedFolderObject && (
+                <button
+                  type="button"
+                  className="shrink-0 cursor-pointer rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                  onClick={() => setFolderDialog({ mode: 'edit', folder: selectedFolderObject })}
+                  aria-label={t('フォルダ「{0}」を編集', [selectedFolderObject.name])}
+                  title={t('名前・色・場所を変更')}
+                >
+                  <FaPen className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
               )}
-              <span className="truncate">{selectionLabel}</span>
-            </h2>
+            </div>
 
             <section
               aria-label={t('TODO を追加')}

@@ -339,6 +339,34 @@ describe('Home', () => {
       expect(within(folderNav()).getByRole('button', { name: /^案件/ })).toBeInTheDocument();
     });
 
+    it('edits the selected folder from the button next to its heading', async () => {
+      const parent = createFolderFixture({ name: '仕事' });
+      const child = createFolderFixture({ name: '案件', parentId: parent.id });
+      await putAll({ folders: [parent, child] });
+      const user = await renderHome();
+      const main = () => within(screen.getByRole('main'));
+
+      // すべて・未分類はフォルダではないので編集ボタンは出さない
+      expect(main().queryByRole('button', { name: /を編集$/ })).not.toBeInTheDocument();
+      await user.click(within(folderNav()).getByRole('button', { name: /^未分類/ }));
+      expect(main().queryByRole('button', { name: /を編集$/ })).not.toBeInTheDocument();
+
+      await user.click(within(folderNav()).getByRole('button', { name: /^案件/ }));
+      await user.click(main().getByRole('button', { name: 'フォルダ「案件」を編集' }));
+      const dialog = screen.getByRole('dialog', { name: 'フォルダを編集' });
+      const name = within(dialog).getByRole('textbox', { name: 'フォルダ名' });
+      expect(name).toHaveValue('案件');
+      await user.clear(name);
+      await user.type(name, '案件 A');
+      await user.click(within(dialog).getByRole('button', { name: '保存' }));
+
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('仕事 / 案件 A');
+      expect(main().getByRole('button', { name: 'フォルダ「案件 A」を編集' })).toBeInTheDocument();
+      await waitFor(async () =>
+        expect((await getAll()).folders.find((f) => f.id === child.id)?.name).toBe('案件 A'),
+      );
+    });
+
     it('renames and moves a folder but not under itself', async () => {
       const parent = createFolderFixture({ name: '仕事' });
       const child = createFolderFixture({ name: '案件', parentId: parent.id });
