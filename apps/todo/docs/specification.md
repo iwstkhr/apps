@@ -31,6 +31,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 - The folder list shows すべて (all), 未分類, and the folder tree, with the number of open (not 完了) todos next to each. A folder's count includes its subfolders.
 - Selecting a folder shows the todos in that folder and all of its subfolders. Todos that are not directly in the selected folder show their folder path (for example `仕事 / 案件 A`). The status, tag, and keyword filters apply within the selected folder.
 - The folder icon next to フォルダ creates a top-level folder. Each folder row has buttons to create a folder inside it, rename or move it (choose a new parent; a folder cannot be moved into itself or its subfolders), and delete it.
+- The create/edit dialog offers eight named color presets (yellow, orange, red, pink, purple, blue, green, and gray). The selected preset is highlighted and can be chosen by keyboard. The chosen color appears on the folder icon in the tree, the heading, and the narrow-screen toggle. Each folder has its own color; colors are saved and exported with the folders. Old records and invalid colors use the default amber (`#f59e0b`).
 - On wide screens a todo can be dragged (the pointer becomes a grab hand over the card, and a grip shows on its left edge; buttons and fields in the card keep the pointing hand) and dropped on a folder or 未分類 in the folder list to move it there. While dragging, only a small label with the todo title follows below and to the right of the pointer, instead of the browser's default image of the whole card, so it does not cover the folder names. The row under the pointer is filled with a solid blue that stands out from the selected folder in both light and dark mode, and hovering over a collapsed folder for a moment opens it so its subfolders can be targeted. すべて is not a drop target. A message confirms the move. On narrow screens, use the folder field in the edit form instead.
 - Deleting a folder also deletes its subfolders after a confirmation, and moves the todos in them to 未分類.
 - Folders with children can be collapsed. Siblings are sorted by name.
@@ -95,6 +96,7 @@ interface Todo {
 
 ```ts
 interface Folder {
+  color: string;             // Icon color in #rrggbb format; defaults to #f59e0b
   id: string;                 // crypto.randomUUID()
   name: string;               // required, trimmed, up to 100 characters
   parentId: string | null;    // null means top level

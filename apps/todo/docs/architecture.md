@@ -65,6 +65,7 @@ e2e/                            Playwright tests against wrangler dev
 ## Data flow
 
 1. On mount, `useTodos` reads every record from the `todos` and `folders` object stores (key path `id`) and normalizes them with `toTodo()` and `toFolder()`. The database is at version 2; version 1 had only the `todos` store, and the upgrade adds `folders`.
+   `toFolder()` normalizes icon colors to lowercase `#rrggbb` and defaults missing or invalid colors to amber. This additive field keeps existing database and export versions readable without a migration.
 2. Each change updates React state first and then writes to IndexedDB, so the UI responds immediately. If the write fails, an error is shown and the state is reloaded from IndexedDB.
 3. After a successful write, `useTodos` posts a message on the `todo-changes` BroadcastChannel; other tabs reload from IndexedDB when they receive it.
 4. Filters and the sort order live in `routes/home.tsx` state and are not persisted. The selected and collapsed folders and the folder list width come from `useViewState`, which reads `localStorage` (`todo:view`) after the first render, so the prerendered HTML still matches, and writes it on every change. `filterByFolder()` narrows the todos to the selected folder and its subfolders, then `applyFilters()` filters and sorts them.

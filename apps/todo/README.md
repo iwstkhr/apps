@@ -7,7 +7,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 ## Features
 
 - Add, edit, and delete todos, and manage their status (未着手 / 進行中 / 保留 / 完了)
-- Organize todos in nested folders; a folder shows the todos in its subfolders too, and todos can be dragged onto a folder to move them
+- Organize todos in nested folders with eight preset icon colors; a folder shows the todos in its subfolders too, and todos can be dragged onto a folder to move them
 - Set a due date (overdue and due-today items are highlighted), a priority (high / medium / low), a multi-line memo, and tags
 - Filter by status, tag, and keyword (title, memo, tags), and sort by due date, priority, status, or creation date
 - Delete all completed todos at once
