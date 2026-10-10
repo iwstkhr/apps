@@ -2,9 +2,10 @@ import { useLocation, useParams } from 'react-router';
 import { AnswerForm } from '../components/AnswerForm';
 import { AnswerGrid } from '../components/AnswerGrid';
 import { EventSummary } from '../components/EventSummary';
+import { NotFoundCard } from '../components/NotFoundCard';
 import { ShareLinkBox } from '../components/ShareLinkBox';
 import { TextLink } from '../components/TextLink';
-import { Alert, Button, Card, LoadingBlock, MessageCard } from '../components/ui';
+import { Alert, Button, Card, LoadingBlock } from '../components/ui';
 import { t, useLanguage } from '../lib/i18n';
 import { answerEditUrl, managePath, shareUrl } from '../lib/urls';
 import { usePublicEvent } from '../lib/usePublicEvent';
@@ -36,14 +37,10 @@ export function EventPublic() {
 
   if (notFound) {
     return (
-      <MessageCard title={t('イベントが見つかりません')}>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          {t('URL が正しいか確認してください。イベントが削除された可能性もあります。')}
-        </p>
-        <TextLink to="/" className="mt-4 inline-block">
-          {t('トップへ戻る')}
-        </TextLink>
-      </MessageCard>
+      <NotFoundCard
+        title={t('イベントが見つかりません')}
+        message={t('URL が正しいか確認してください。イベントが削除された可能性もあります。')}
+      />
     );
   }
 

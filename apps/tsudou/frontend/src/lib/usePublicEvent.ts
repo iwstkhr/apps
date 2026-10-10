@@ -27,24 +27,16 @@ export function usePublicEvent(eventId: string | undefined, hash: string) {
   const save = (draft: AnswerDraft) => {
     if (!event || !eventId) return;
     return run(async () => {
-      const choices = draftToChoices(event.candidates, draft);
-      const message = draft.message.trim() === '' ? null : draft.message.trim();
+      const body = {
+        name: draft.name.trim(),
+        message: draft.message.trim() || null,
+        choices: draftToChoices(event.candidates, draft),
+      };
 
       if (myAnswer && mine) {
-        await updateAnswer({
-          answerId: myAnswer.id,
-          editToken: mine.editToken,
-          name: draft.name.trim(),
-          message,
-          choices,
-        });
+        await updateAnswer({ answerId: myAnswer.id, editToken: mine.editToken, ...body });
       } else {
-        const { answer, editToken } = await submitAnswer({
-          eventId,
-          name: draft.name.trim(),
-          message,
-          choices,
-        });
+        const { answer, editToken } = await submitAnswer({ eventId, ...body });
         // 編集キーはここでしか受け取れない。画面に回答編集 URL を出して持ち帰ってもらう
         setAnswerKey(eventId, { answerId: answer.id, editToken });
       }

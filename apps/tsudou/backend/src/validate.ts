@@ -4,7 +4,6 @@ import type { AnswerStatus, Candidate, CandidateInput, Choice } from '@tsudou/sh
 import { validationError } from './errors';
 import { generateCandidateId } from './tokens';
 
-export type { AnswerStatus, Candidate, CandidateInput, Choice } from '@tsudou/shared/types';
 export { LIMITS };
 
 /** 検証用の集合。UI の表示順 (AnswerForm.tsx) とは別物なので統合しない。 */
@@ -13,16 +12,10 @@ const STATUSES: readonly AnswerStatus[] = ['YES', 'NO', 'MAYBE'];
 /** 前後の空白を削る。空文字になったら null を返す (空文字は保存しない)。 */
 export function normalizeOptionalText(
   value: string | null | undefined,
-  max: number,
   label: string,
+  max: number,
 ): string | null {
-  if (value == null) return null;
-  const trimmed = value.trim();
-  if (trimmed === '') return null;
-  if (trimmed.length > max) {
-    throw validationError(tooLongMessage(label, max));
-  }
-  return trimmed;
+  return value?.trim() ? validateRequiredText(value, label, max) : null;
 }
 
 export function validateRequiredText(

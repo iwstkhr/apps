@@ -33,12 +33,7 @@ export function verifyToken(
   if (!token || !expectedHash) return false;
 
   const actual = Buffer.from(hashToken(token), 'hex');
-  let expected: Buffer;
-  try {
-    expected = Buffer.from(expectedHash, 'hex');
-  } catch {
-    return false;
-  }
+  const expected = Buffer.from(expectedHash, 'hex');
 
   if (actual.length !== expected.length) return false;
   return timingSafeEqual(actual, expected);

@@ -1,8 +1,6 @@
 import { ApiError, parseApiError } from './errors';
 import type { AnswerView, CandidateInput, Choice, EventView } from './types';
 
-export type { CandidateInput } from './types';
-
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 /**

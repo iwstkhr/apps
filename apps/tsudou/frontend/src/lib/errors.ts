@@ -1,15 +1,5 @@
 /** API が返す `{ error: { code, message } }` のエラーコード。 */
-export type AppErrorCode =
-  | 'VALIDATION'
-  | 'NOT_FOUND'
-  | 'FORBIDDEN'
-  | 'CLOSED'
-  | 'DUPLICATE_NAME'
-  | 'RATE_LIMITED'
-  | 'INTERNAL'
-  | 'NETWORK';
-
-const KNOWN_CODES = new Set<string>([
+const SERVER_CODES = [
   'VALIDATION',
   'NOT_FOUND',
   'FORBIDDEN',
@@ -17,7 +7,11 @@ const KNOWN_CODES = new Set<string>([
   'DUPLICATE_NAME',
   'RATE_LIMITED',
   'INTERNAL',
-]);
+] as const;
+
+export type AppErrorCode = (typeof SERVER_CODES)[number] | 'NETWORK';
+
+const KNOWN_CODES: ReadonlySet<string> = new Set(SERVER_CODES);
 
 const FALLBACK_MESSAGE = '通信に失敗しました。時間をおいて再度お試しください';
 
@@ -54,7 +48,6 @@ export function parseApiError(body: unknown): ApiError {
 }
 
 export function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
   if (error instanceof Error) return error.message;
   return '予期しないエラーが発生しました';
 }

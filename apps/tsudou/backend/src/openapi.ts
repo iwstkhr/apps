@@ -8,8 +8,7 @@ import { stringify } from 'yaml';
 import * as z from 'zod';
 import pkg from '../package.json';
 import { API_PREFIX, EDIT_TOKEN, MANAGE_TOKEN } from './app';
-import type { AppErrorCode } from './errors';
-import { STATUS_BY_CODE } from './http';
+import { type AppErrorCode, STATUS_BY_CODE } from './errors';
 import {
   AnswerBodySchema,
   AnswerViewSchema,

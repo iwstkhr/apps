@@ -2,6 +2,7 @@ import { useLocation, useParams } from 'react-router';
 import { AnswerGrid } from '../components/AnswerGrid';
 import { EventEditForm } from '../components/EventEditForm';
 import { ManageUrlBox, ShareUrlBox } from '../components/EventUrlBoxes';
+import { NotFoundCard } from '../components/NotFoundCard';
 import { TextLink } from '../components/TextLink';
 import { Alert, Button, Card, LoadingBlock, MessageCard } from '../components/ui';
 import { formatExpiry } from '../lib/format';
@@ -33,14 +34,10 @@ export function EventManage() {
 
   if (notFound) {
     return (
-      <MessageCard title={t('イベントが見つかりません')}>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          {t('URL が正しいか確認してください。すでに削除された可能性もあります。')}
-        </p>
-        <TextLink to="/" className="mt-4 inline-block">
-          {t('トップへ戻る')}
-        </TextLink>
-      </MessageCard>
+      <NotFoundCard
+        title={t('イベントが見つかりません')}
+        message={t('URL が正しいか確認してください。すでに削除された可能性もあります。')}
+      />
     );
   }
 
