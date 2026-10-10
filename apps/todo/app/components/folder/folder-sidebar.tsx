@@ -186,9 +186,17 @@ export function FolderSidebar({
                   aria-current={isSelected ? 'true' : undefined}
                 >
                   {isSelected ? (
-                    <FaFolderOpen className="shrink-0 text-amber-500" aria-hidden="true" />
+                    <FaFolderOpen
+                      className="shrink-0"
+                      style={{ color: folder.color }}
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <FaFolder className="shrink-0 text-amber-500" aria-hidden="true" />
+                    <FaFolder
+                      className="shrink-0"
+                      style={{ color: folder.color }}
+                      aria-hidden="true"
+                    />
                   )}
                   <span className="truncate">{folder.name}</span>
                   <Count value={openCounts.get(folder.id)} />
@@ -209,7 +217,7 @@ export function FolderSidebar({
                     className={actionClass}
                     onClick={() => onEdit(folder)}
                     aria-label={`フォルダ「${folder.name}」を編集`}
-                    title="名前・場所を変更"
+                    title="名前・色・場所を変更"
                   >
                     <FaPen className="h-3 w-3" aria-hidden="true" />
                   </button>

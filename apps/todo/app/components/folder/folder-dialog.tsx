@@ -1,8 +1,25 @@
 import { useState } from 'react';
+import { FaFolder } from 'react-icons/fa';
 import { FolderSelect } from '~/components/folder/folder-select';
 import { Modal } from '~/components/layout/modal';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
-import { FOLDER_NAME_MAX_LENGTH, type Folder, type FolderInput } from '~/types/folder';
+import {
+  DEFAULT_FOLDER_COLOR,
+  FOLDER_NAME_MAX_LENGTH,
+  type Folder,
+  type FolderInput,
+} from '~/types/folder';
+
+const COLOR_PRESETS = [
+  { label: '黄色', value: DEFAULT_FOLDER_COLOR },
+  { label: 'オレンジ', value: '#ea580c' },
+  { label: '赤', value: '#dc2626' },
+  { label: 'ピンク', value: '#db2777' },
+  { label: '紫', value: '#9333ea' },
+  { label: '青', value: '#2563eb' },
+  { label: '緑', value: '#16a34a' },
+  { label: 'グレー', value: '#64748b' },
+];
 
 interface FolderDialogProps {
   folders: Folder[];
@@ -22,6 +39,7 @@ export function FolderDialog({
   onCancel,
 }: FolderDialogProps) {
   const [name, setName] = useState(folder?.name ?? '');
+  const [color, setColor] = useState(folder?.color ?? DEFAULT_FOLDER_COLOR);
   const [parentId, setParentId] = useState(folder ? folder.parentId : defaultParentId);
   const canSubmit = name.trim() !== '';
 
@@ -31,7 +49,7 @@ export function FolderDialog({
         className="mt-4 flex flex-col gap-3"
         onSubmit={(event) => {
           event.preventDefault();
-          if (canSubmit) onSubmit({ name: name.trim(), parentId });
+          if (canSubmit) onSubmit({ name: name.trim(), parentId, color });
         }}
       >
         <label className="flex flex-col gap-1 text-sm">
@@ -44,6 +62,32 @@ export function FolderDialog({
             aria-label="フォルダ名"
           />
         </label>
+        <fieldset>
+          <legend className="mb-2 text-sm text-slate-600 dark:text-slate-400">色</legend>
+          <div className="grid grid-cols-4 gap-2">
+            {COLOR_PRESETS.map((preset) => (
+              <label key={preset.value} className="cursor-pointer">
+                <input
+                  type="radio"
+                  name="folder-color"
+                  value={preset.value}
+                  checked={color === preset.value}
+                  onChange={() => setColor(preset.value)}
+                  className="peer sr-only"
+                  aria-label={preset.label}
+                />
+                <span className="flex flex-col items-center gap-1 rounded-md border border-slate-300 px-2 py-2 text-xs peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:ring-1 peer-checked:ring-blue-500 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-500 dark:border-slate-700 dark:peer-checked:border-blue-400 dark:peer-checked:bg-blue-950 dark:peer-checked:ring-blue-400">
+                  <FaFolder
+                    className="h-5 w-5"
+                    style={{ color: preset.value }}
+                    aria-hidden="true"
+                  />
+                  {preset.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <div className="flex flex-col gap-1 text-sm">
           <span className="text-slate-600 dark:text-slate-400" aria-hidden="true">
             親フォルダ

@@ -27,7 +27,7 @@ import {
   DEFAULT_FILTERS,
   type TodoFilters,
 } from '~/lib/todo-filters';
-import type { Folder, FolderInput } from '~/types/folder';
+import { DEFAULT_FOLDER_COLOR, type Folder, type FolderInput } from '~/types/folder';
 import { toLocalDateString } from '~/types/todo';
 import type { Route } from './+types/home';
 
@@ -94,6 +94,8 @@ export default function Home() {
         ? '未分類'
         : formatFolderPath(folders, selection);
   const isRealFolder = selection !== 'all' && selection !== 'unfiled';
+  const selectedFolderColor =
+    folders.find((folder) => folder.id === selection)?.color ?? DEFAULT_FOLDER_COLOR;
 
   const today = toLocalDateString(new Date());
   const tags = useMemo(() => collectTags(todos), [todos]);
@@ -229,7 +231,11 @@ export default function Home() {
             onClick={() => setShowFolders((value) => !value)}
           >
             <span className="flex min-w-0 items-center gap-2">
-              <FaFolder className="shrink-0 text-amber-500" aria-hidden="true" />
+              <FaFolder
+                className="shrink-0"
+                style={{ color: selectedFolderColor }}
+                aria-hidden="true"
+              />
               <span className="truncate">フォルダ: {selectionLabel}</span>
             </span>
             {showFolders ? (
@@ -285,7 +291,13 @@ export default function Home() {
             )}
 
             <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
-              {isRealFolder && <FaFolder className="shrink-0 text-amber-500" aria-hidden="true" />}
+              {isRealFolder && (
+                <FaFolder
+                  className="shrink-0"
+                  style={{ color: selectedFolderColor }}
+                  aria-hidden="true"
+                />
+              )}
               <span className="truncate">{selectionLabel}</span>
             </h2>
 

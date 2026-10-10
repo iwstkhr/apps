@@ -108,6 +108,61 @@ test('exports and imports folders', async ({ page }) => {
   await expect(todoItems(page)).toHaveText([/掃除/]);
 });
 
+test('creates and edits folder colors and preserves them after reload and import', async ({
+  page,
+}) => {
+  await folderNav(page).getByRole('button', { name: '新しいフォルダ' }).click();
+  const create = page.getByRole('dialog', { name: '新しいフォルダ' });
+  await create.getByRole('textbox', { name: 'フォルダ名' }).fill('仕事');
+  await expect(create.locator('input[type="color"]')).toHaveCount(0);
+  await expect(create.getByRole('radio', { name: '黄色', exact: true })).toBeChecked();
+  await create.getByText('青', { exact: true }).click();
+  await expect(create.getByRole('radio', { name: '青', exact: true })).toBeChecked();
+  await create.getByRole('button', { name: '作成' }).click();
+  const icon = folderNav(page).getByRole('button', { name: /^仕事/ }).locator('svg');
+  await expect(icon).toHaveCSS('color', 'rgb(37, 99, 235)');
+  await expect(page.getByRole('heading', { level: 2 }).locator('svg')).toHaveCSS(
+    'color',
+    'rgb(37, 99, 235)',
+  );
+
+  await folderNav(page).getByRole('button', { name: 'フォルダ「仕事」を編集' }).click();
+  const edit = page.getByRole('dialog', { name: 'フォルダを編集' });
+  await expect(edit.getByRole('radio', { name: '青', exact: true })).toBeChecked();
+  await edit.getByText('赤', { exact: true }).click();
+  await expect(edit.getByRole('radio', { name: '赤', exact: true })).toBeChecked();
+  await expect(edit.getByRole('radio', { name: '青', exact: true })).not.toBeChecked();
+  await edit.getByRole('button', { name: 'キャンセル' }).click();
+  await expect(icon).toHaveCSS('color', 'rgb(37, 99, 235)');
+
+  await folderNav(page).getByRole('button', { name: 'フォルダ「仕事」を編集' }).click();
+  await edit.getByText('黄色', { exact: true }).click();
+  await expect(edit.getByRole('radio', { name: '黄色', exact: true })).toBeChecked();
+  await edit.getByRole('radio', { name: '黄色', exact: true }).focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(edit.getByRole('radio', { name: 'グレー', exact: true })).toBeChecked();
+  await edit.getByText('緑', { exact: true }).click();
+  await edit.getByRole('button', { name: '保存' }).click();
+  await page.reload();
+  await expect(icon).toHaveCSS('color', 'rgb(22, 163, 74)');
+
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'エクスポート' }).click();
+  const path = await (await download).path();
+  await folderNav(page).getByRole('button', { name: 'フォルダ「仕事」を削除' }).click();
+  await page.getByLabel('インポートするファイル').setInputFiles(path);
+  await page
+    .getByRole('dialog', { name: 'インポート' })
+    .getByRole('button', { name: '置き換え' })
+    .click();
+  await expect(icon).toHaveCSS('color', 'rgb(22, 163, 74)');
+  await folderNav(page).getByRole('button', { name: /^仕事/ }).click();
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expect(
+    page.getByRole('button', { name: 'フォルダ: 仕事' }).locator('svg').first(),
+  ).toHaveCSS('color', 'rgb(22, 163, 74)');
+});
+
 test('opens the folder list from a button on narrow screens', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await expect(folderNav(page)).toBeHidden();
