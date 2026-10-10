@@ -176,7 +176,7 @@ export function EventPublic() {
         )}
       </Card>
 
-      <ShareLinkBox label={t('このイベントの共有 URL')} url={shareUrl(event.id)} />
+      <ShareLinkBox label={t('このイベントの共有 URL')} url={shareUrl(event.id)} qrCode />
     </div>
   );
 }

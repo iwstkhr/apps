@@ -1,6 +1,8 @@
+import { useCallback, useState } from 'react';
 import { cx } from '../lib/cx';
 import { t, useLanguage } from '../lib/i18n';
 import { useFlash } from '../lib/useFlash';
+import { QrCodeDialog } from './QrCodeDialog';
 import { Button, buttonClassName } from './ui';
 
 export function ShareLinkBox({
@@ -9,6 +11,7 @@ export function ShareLinkBox({
   description,
   tone = 'default',
   openable = false,
+  qrCode = false,
 }: {
   label: string;
   url: string;
@@ -19,9 +22,17 @@ export function ShareLinkBox({
    * トークンは URL のフラグメントに載っているため、新しいタブでもそのまま使える。
    */
   openable?: boolean;
+  /**
+   * 「QR コード」ボタンを出す。PC の画面からスマートフォンで開くときに使う。
+   * QR コードはモーダルで出し、一定時間で自動で閉じる (QrCodeDialog)。
+   */
+  qrCode?: boolean;
 }) {
   useLanguage();
   const [copied, flashCopied] = useFlash(2000);
+  const [qrOpen, setQrOpen] = useState(false);
+  // QrCodeDialog のタイマーが再描画のたびに作り直されないよう、同じ関数を渡す
+  const closeQr = useCallback(() => setQrOpen(false), []);
 
   const copy = async () => {
     try {
@@ -67,6 +78,17 @@ export function ShareLinkBox({
               {t('開く')}
             </a>
           )}
+          {qrCode && (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              aria-haspopup="dialog"
+              onClick={() => setQrOpen(true)}
+            >
+              {t('QR コード')}
+            </Button>
+          )}
           {typeof navigator !== 'undefined' && 'share' in navigator && (
             <Button
               type="button"
@@ -79,6 +101,8 @@ export function ShareLinkBox({
           )}
         </div>
       </div>
+
+      {qrCode && qrOpen && <QrCodeDialog label={label} url={url} onClose={closeQr} />}
     </div>
   );
 }

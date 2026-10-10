@@ -72,7 +72,8 @@ Explains host and participant workflows with screenshots captured using sample d
 
 ### Creation confirmation (`/e/<eventId>/created`)
 
-Displays shared and management URLs with copy and "開く" (open) buttons.
+Displays shared and management URLs with copy, "開く" (open), and "QR コード" (QR code) buttons.
+The QR code button opens a modal with a QR code of the URL, for opening it on a phone. The modal closes with its "閉じる" (close) button, Esc, or a click on the backdrop, and closes automatically after 10 seconds so people nearby cannot read the management URL; helper text in the modal explains this. The modal fades in and out (200 ms), without the fade when the OS reduces motion. QR codes are generated in the browser so URLs, including the management token, are never sent to an external service.
 Opening a URL uses a new tab, leaving the confirmation screen available. Management URLs include the token in a fragment, allowing management in the new tab.
 Because management tokens are not persisted in the browser, this is the only screen where the management URL can be displayed at creation.
 A sentence below the heading asks users to bookmark the URL or send it to themselves before closing the page.
@@ -88,7 +89,7 @@ The screen shared with participants displays:
 - A list of responses with messages.
 - A response form, in edit mode when the response edit key is available.
 - A field for copying the response edit URL, immediately after submission or when opened through that URL.
-- A field for copying the shared URL.
+- A field for copying the shared URL, with a QR code button.
 
 If a management token is in memory (after creation or navigation from the management page), a management page link also appears.
 It points to the management URL with `#k=...`, so it also works in a new tab.
@@ -104,7 +105,7 @@ Responses expire with the event, so expiry makes the event itself appear not fou
 
 Operations require a management token. Without one, the page displays "管理用 URL が必要です" (a management URL is required) and a link to the event page.
 
-- Fields for copying the shared and management URLs.
+- Fields for copying the shared and management URLs, with QR code buttons as on the creation confirmation screen.
 - An edit form (title / candidates / fee / memo).
 - The response grid, with a delete button for each response.
 - Controls to close or reopen responses.

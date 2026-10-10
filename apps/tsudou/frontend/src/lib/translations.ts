@@ -91,17 +91,17 @@ export const english: Record<string, string> = {
   '管理用 URL': 'Management URL',
   ': イベントの編集・締切・削除に使う、主催者だけの URL です。他の人には共有しないでください。':
     ': a private URL for the host to edit, close, or delete the event. Do not share it with others.',
-  '作成完了画面。共有用 URL と管理用 URL が、それぞれコピー・開く・共有ボタン付きで表示されている':
-    'Creation confirmation with shared and management URLs and copy, open, and share buttons',
+  '作成完了画面。共有用 URL と管理用 URL が、それぞれコピー・開く・QR コード・共有ボタン付きで表示されている':
+    'Creation confirmation with shared and management URLs and copy, open, QR code, and share buttons',
   '管理用 URL は再表示できません': 'Keep your management URL',
   'ログインが無いため、管理用 URL を表示できるのはこの画面だけです。ページを閉じる前に「コピー」してメモに貼るか、ブックマークしてください。':
     'Without sign-in, the management URL is shown only here at creation. Select “Copy” and save it in a note, or bookmark it before closing the page.',
   '共有用 URL を参加者に送る': 'Send the shared URL to participants',
-  '「コピー」した共有用 URL を、チャットやメールで参加者に送ります。スマートフォンでは「共有」ボタンから直接アプリに送れます。 参加者はログインせずに回答できます。':
-    'Copy the shared URL and send it by chat or email. On smartphones, “Share” sends it directly to another app. Participants do not need to sign in.',
+  '「コピー」した共有用 URL を、チャットやメールで参加者に送ります。スマートフォンでは「共有」ボタンから直接アプリに送れます。 その場にいる人には、「QR コード」を押して 10 秒間表示される QR コードを、スマートフォンのカメラで読み取ってもらうこともできます。 参加者はログインせずに回答できます。':
+    'Copy the shared URL and send it by chat or email. On smartphones, “Share” sends it directly to another app. People nearby can also scan the QR code, shown for 10 seconds after selecting “QR code”, with their smartphone camera. Participants do not need to sign in.',
   管理ページで回答状況を確認する: 'Review responses on the management page',
-  '管理用 URL を開くと管理ページが表示されます。上部には共有用 URL と管理用 URL がいつでも表示されるので、送り忘れた場合もここからコピーできます。 「参加者から見た画面」で、参加者と同じイベントページを確認できます。':
-    'Open the management URL to manage the event. Shared and management URLs remain available at the top for copying. Select “Participant view” to see the event as participants do.',
+  '管理用 URL を開くと管理ページが表示されます。上部には共有用 URL と管理用 URL がいつでも表示されるので、送り忘れた場合もここからコピーできます。 管理用 URL の「QR コード」を押して読み取れば、自分のスマートフォンでも管理ページを開けます。 「参加者から見た画面」で、参加者と同じイベントページを確認できます。':
+    'Open the management URL to manage the event. Shared and management URLs remain available at the top for copying. Select “QR code” on the management URL and scan it to open the management page on your own smartphone. Select “Participant view” to see the event as participants do.',
   '管理ページの上部。イベント名「チーム歓迎会」と、共有用 URL・管理用 URL のコピー欄':
     'Top of the management page with the team welcome party title and fields for copying shared and management URLs',
   '「回答状況」には回答者ごとの ○△× が一覧で表示されます。各候補の見出しに ○△× の人数が出て、○ がいちばん多い候補は緑色で「最多」と示されます。 いたずらや重複の回答は、行の右の「削除」で消せます。':
@@ -238,6 +238,11 @@ export const english: Record<string, string> = {
   コピー: 'Copy',
   開く: 'Open',
   共有: 'Share',
+  'QR コード': 'QR code',
+  '{0} の QR コード': 'QR code for {0}',
+  '周りの人に読み取られないよう、{0} 秒後に自動で閉じます。':
+    'Closes automatically after {0} seconds so people nearby cannot scan it.',
+  閉じる: 'Close',
   システム設定に合わせる: 'Follow system settings',
   ライトテーマ: 'Light theme',
   ダークテーマ: 'Dark theme',

@@ -16,6 +16,7 @@ export function ShareUrlBox({ eventId, openable }: { eventId: string; openable?:
       description={t('参加予定者に送る URL です。')}
       url={shareUrl(eventId)}
       openable={openable}
+      qrCode
     />
   );
 }
@@ -37,6 +38,7 @@ export function ManageUrlBox({
       url={manageUrl(eventId, manageToken)}
       tone="warning"
       openable={openable}
+      qrCode
     />
   );
 }
