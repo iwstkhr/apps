@@ -256,8 +256,9 @@ test('uses a modal slide-out menu without shifting tasks on narrow screens', asy
   expect(box?.x).toBe(0);
   expect(box?.width).toBeLessThanOrEqual(375 * 0.85);
 
+  // 最初の要素から Shift+Tab でメニューの最後 (ゴミ箱) に回り、外へは出ない
   await page.keyboard.press('Shift+Tab');
-  await expect(menu.getByRole('button', { name: '新しいフォルダ' })).toBeFocused();
+  await expect(menu.getByRole('button', { name: /^ゴミ箱/ })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(close).toBeFocused();
   await page.keyboard.press('Escape');

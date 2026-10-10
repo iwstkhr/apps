@@ -151,7 +151,7 @@ describe('Home', () => {
 
     await user.click(screen.getByRole('checkbox', { name: '「洗濯」を完了にする' }));
     expect(status).toHaveValue('done');
-    expect(screen.getByRole('button', { name: '完了済みを削除 (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '完了済みをゴミ箱に移動 (1)' })).toBeInTheDocument();
     await user.click(screen.getByRole('checkbox', { name: '「洗濯」を未着手に戻す' }));
     expect(status).toHaveValue('todo');
     await user.click(screen.getByRole('checkbox', { name: '「洗濯」を完了にする' }));
@@ -163,7 +163,9 @@ describe('Home', () => {
     await user.click(screen.getByRole('button', { name: '保存' }));
     expect(screen.getByText('洗濯物をたたむ')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '「洗濯物をたたむ」を削除' }));
+    await user.click(screen.getByRole('button', { name: '「洗濯物をたたむ」をゴミ箱に移動' }));
+    // ゴミ箱へは確認なしで移す
+    expect(window.confirm).not.toHaveBeenCalled();
     expect(screen.queryByRole('list', { name: 'TODO 一覧' })).not.toBeInTheDocument();
   });
 
@@ -270,6 +272,111 @@ describe('Home', () => {
       new File(['not json'], 'x.json', { type: 'application/json' }),
     );
     expect(await screen.findByRole('alert')).toHaveTextContent('JSON として読み込めませんでした。');
+  });
+
+  describe('trash', () => {
+    const nav = () => screen.getByRole('navigation', { name: 'フォルダ' });
+    const trashRow = () => within(nav()).getByRole('button', { name: /^ゴミ箱/ });
+
+    it('moves a todo to the trash without asking and can undo it from the notice', async () => {
+      await putTodos([createTodoFixture({ title: '洗濯' }), createTodoFixture({ title: '掃除' })]);
+      const user = await renderHome();
+
+      await user.click(screen.getByRole('button', { name: '「洗濯」をゴミ箱に移動' }));
+      expect(window.confirm).not.toHaveBeenCalled();
+      expect(screen.getByRole('status')).toHaveTextContent('「洗濯」をゴミ箱に移動しました。');
+      expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('掃除')]);
+      expect(trashRow()).toHaveTextContent('ゴミ箱1');
+
+      await user.click(screen.getByRole('button', { name: '元に戻す' }));
+      expect(await screen.findByText('「洗濯」を元に戻しました。')).toBeInTheDocument();
+      expect(items()).toHaveLength(2);
+      expect(trashRow()).toHaveTextContent(/^ゴミ箱$/);
+    });
+
+    it('moves completed todos to the trash and can undo them together', async () => {
+      await putTodos([
+        createTodoFixture({ title: '完了1', status: 'done' }),
+        createTodoFixture({ title: '完了2', status: 'done' }),
+        createTodoFixture({ title: '途中' }),
+      ]);
+      const user = await renderHome();
+
+      await user.click(screen.getByRole('button', { name: '完了済みをゴミ箱に移動 (2)' }));
+      expect(screen.getByRole('status')).toHaveTextContent(
+        '完了済みの 2 件をゴミ箱に移動しました。',
+      );
+      expect(items()).toHaveLength(1);
+      await user.click(screen.getByRole('button', { name: '元に戻す' }));
+      expect(await screen.findByText('2 件を元に戻しました。')).toBeInTheDocument();
+      expect(items()).toHaveLength(3);
+    });
+
+    it('shows the trash with restore, delete forever, and empty actions', async () => {
+      const folder = createFolderFixture({ name: '家' });
+      const now = Date.now();
+      await putAll({
+        folders: [folder],
+        todos: [
+          createTodoFixture({
+            title: '洗濯',
+            folderId: folder.id,
+            deletedAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          }),
+          createTodoFixture({ title: '掃除', deletedAt: new Date(now).toISOString() }),
+          createTodoFixture({ title: '買い物', deletedAt: new Date(now).toISOString() }),
+          createTodoFixture({ title: '残す' }),
+        ],
+      });
+      const user = await renderHome();
+      await user.click(trashRow());
+
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('ゴミ箱');
+      expect(screen.queryByRole('region', { name: 'TODO を追加' })).not.toBeInTheDocument();
+      const trashItems = () =>
+        within(screen.getByRole('list', { name: 'ゴミ箱の TODO' })).getAllByRole('listitem');
+      expect(trashItems()).toHaveLength(3);
+      const laundry = trashItems().find((li) => li.textContent?.includes('洗濯'));
+      expect(laundry).toHaveTextContent('元の場所: 家');
+      expect(laundry).toHaveTextContent('あと 28 日で自動で削除');
+
+      // 元に戻すと元のフォルダに戻る
+      await user.click(screen.getByRole('button', { name: '「洗濯」を元に戻す' }));
+      expect(trashItems()).toHaveLength(2);
+      await user.click(within(nav()).getByRole('button', { name: /^家/ }));
+      expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('洗濯')]);
+
+      await user.click(trashRow());
+      await user.click(screen.getByRole('button', { name: '「掃除」を完全に削除' }));
+      expect(window.confirm).toHaveBeenCalledWith(
+        '「掃除」を完全に削除しますか？この操作は元に戻せません。',
+      );
+      expect(trashItems()).toHaveLength(1);
+
+      await user.click(screen.getByRole('button', { name: 'ゴミ箱を空にする' }));
+      expect(window.confirm).toHaveBeenLastCalledWith(
+        'ゴミ箱の 1 件を完全に削除しますか？この操作は元に戻せません。',
+      );
+      expect(screen.getByText('ゴミ箱は空です。')).toBeInTheDocument();
+      await waitFor(async () =>
+        expect((await getAll()).todos.map((t) => t.title).sort()).toEqual(['残す', '洗濯']),
+      );
+    });
+
+    it('moves a todo to the trash by dropping it on the trash row', async () => {
+      await putTodos([createTodoFixture({ title: '洗濯' })]);
+      await renderHome();
+      const dataTransfer = createDataTransfer();
+      const header = items()[0].querySelector('[draggable="true"]') as HTMLElement;
+      const row = trashRow().closest('li') as HTMLElement;
+
+      fireEvent.dragStart(header, { dataTransfer });
+      expect(fireEvent.dragOver(row, { dataTransfer })).toBe(false);
+      fireEvent.drop(row, { dataTransfer });
+
+      expect(await screen.findByText('「洗濯」をゴミ箱に移動しました。')).toBeInTheDocument();
+      await waitFor(async () => expect((await getAll()).todos[0].deletedAt).not.toBeNull());
+    });
   });
 
   describe('folders', () => {

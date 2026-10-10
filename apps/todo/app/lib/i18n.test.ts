@@ -106,12 +106,12 @@ describe('choosing a language', () => {
 describe('t', () => {
   it('translates and fills in values without translating them', () => {
     setLanguage('en');
-    expect(t('「{0}」を削除しますか？', ['会議'])).toBe('Delete "会議"?');
+    expect(t('「{0}」をゴミ箱に移動しました。', ['会議'])).toBe('Moved "会議" to the trash.');
     expect(t('TODO {0} 件とフォルダ {1} 件をインポートしました。', [3, 1])).toBe(
       'Imported 3 todos and 1 folders.',
     );
     setLanguage('ja');
-    expect(t('「{0}」を削除しますか？', ['会議'])).toBe('「会議」を削除しますか？');
+    expect(t('「{0}」をゴミ箱に移動しました。', ['会議'])).toBe('「会議」をゴミ箱に移動しました。');
   });
 
   it('shows only the Japanese part of a key with context', () => {

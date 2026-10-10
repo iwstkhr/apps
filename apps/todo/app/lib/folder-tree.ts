@@ -1,8 +1,11 @@
 import type { Folder } from '~/types/folder';
 import type { Todo } from '~/types/todo';
 
-/** 一覧で選んでいるフォルダ。'all' はすべて、'unfiled' はどのフォルダにも入っていない TODO。 */
-export type FolderSelection = 'all' | 'unfiled' | string;
+/**
+ * 一覧で選んでいるフォルダ。'all' はすべて、'unfiled' はどのフォルダにも入っていない TODO、
+ * 'trash' はゴミ箱 (ゴミ箱の中身は filterByFolder ではなく画面側で出す)。
+ */
+export type FolderSelection = 'all' | 'unfiled' | 'trash' | string;
 
 export interface FolderTreeEntry {
   folder: Folder;
@@ -128,6 +131,7 @@ export function filterByFolder(
   selection: FolderSelection,
 ): Todo[] {
   if (selection === 'all') return [...todos];
+  if (selection === 'trash') return [];
   if (selection === 'unfiled') return todos.filter((todo) => todo.folderId === null);
   const ids = getSubtreeIds(folders, selection);
   return todos.filter((todo) => todo.folderId !== null && ids.has(todo.folderId));

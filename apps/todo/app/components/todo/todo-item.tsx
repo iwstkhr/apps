@@ -259,7 +259,8 @@ export function TodoItem({
           type="button"
           className={cn(iconButtonClass, 'hover:text-red-600 dark:hover:text-red-400')}
           onClick={() => onRemove(todo.id)}
-          aria-label={t('「{0}」を削除', [todo.title])}
+          aria-label={t('「{0}」をゴミ箱に移動', [todo.title])}
+          title={t('ゴミ箱に移動')}
         >
           <FaTrash aria-hidden="true" />
         </button>

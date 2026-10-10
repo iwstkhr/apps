@@ -17,7 +17,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Add | Enter a title and press Enter or 追加. 詳細 opens the memo, tags, due date, priority, and folder fields. New todos go into the folder selected in the folder list |
 | Edit | The pencil button turns an item into an edit form, where the todo can also be moved to another folder. Escape or キャンセル discards the changes |
 | Status | Each todo has one of 未着手 (not started), 進行中 (in progress), 保留 (on hold), or 完了 (done). Change it with the status selector on the item. The checkbox is a shortcut: checking it sets 完了 and unchecking it returns to 未着手. New todos start as 未着手 |
-| Delete | The trash button deletes one todo after a confirmation. 完了済みを削除 deletes all completed todos in the current view |
+| Delete | The trash button moves one todo to the trash without asking, and 完了済みをゴミ箱に移動 moves all completed todos in the current view there. A notice with 元に戻す (undo) appears; see [Trash](#trash) |
 | Folders | See [Folders](#folders) |
 | Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive). In the sidebar each status has an icon with its own shape and color: すべて a stack in the text color, 未着手 an empty gray circle, 進行中 a blue play icon, 保留 a purple pause icon, and 完了 a green check. The colors stay the same in every theme and keep at least 3:1 contrast against white, dark mode, and the dark sidebars |
 | Sort | 期限順 (default), 優先度順, ステータス順, 新しい順, カスタム. Completed todos are listed after the others except in カスタム |
@@ -59,6 +59,15 @@ Content entered by the user (todo titles, memos, tags, and folder names) is neve
 Memos render as Markdown (CommonMark with GitHub-flavored Markdown), including headings, emphasis, lists, links, quotes, code blocks, tables, strikethrough, and read-only task lists. Plain text keeps its line breaks. Links open in a new tab. Raw HTML is displayed as text, and unsafe URL schemes are blocked. Image references appear as links using their alt text instead of loading remote images automatically. Code blocks and wide tables scroll horizontally within the memo on small screens.
 
 Editing shows the original Markdown source. Storage, keyword search, and JSON export/import continue to use that source without conversion.
+
+### Trash
+
+- Deleting a todo moves it to the trash instead of removing it. No confirmation is shown; instead the notice that confirms the move has a 元に戻す button that restores the todo (or all the completed todos moved together). The notice sticks below the header so the button stays visible after deleting a todo further down the list.
+- A todo can also be dragged onto ゴミ箱 in the folder list.
+- ゴミ箱 is shown below the folders in the left pane with the number of todos in it. Selecting it shows the trashed todos, newest first, with their original folder (or 未分類) and how many days remain before they are deleted automatically. The add form, toolbar, and status filter do not apply there; choosing a status returns to すべて.
+- Each trashed todo has 元に戻す, which returns it to its original folder with its status and other fields unchanged, and 完全に削除, which deletes it forever after a confirmation. ゴミ箱を空にする deletes all trashed todos forever after a confirmation.
+- Todos that have been in the trash for 30 days are deleted forever the next time the app is opened.
+- Trashed todos are excluded from the other views, counts, and tag lists. They are included in exports with `deletedAt`, so importing restores them to the trash. Deleting a folder moves its trashed todos to 未分類 as well, so restoring them later does not point to a missing folder.
 
 ### Folders
 
@@ -133,6 +142,7 @@ interface Todo {
   createdAt: string;          // ISO 8601
   updatedAt: string;          // ISO 8601
   completedAt: string | null; // ISO 8601, set only while status is 'done'
+  deletedAt: string | null;   // ISO 8601 when moved to the trash; null otherwise (missing in older data)
 }
 ```
 

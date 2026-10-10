@@ -15,7 +15,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Filter by status, tag, and keyword (title, memo, tags), and sort by due date, priority, status, or creation date
 - Select a status in the left pane to filter the current folder, with counts for each status
 - Choose カスタム to reorder todos by dragging their headers or using up/down buttons; the order is saved and included in exports
-- Delete all completed todos at once
+- Move deleted todos to a trash where they can be restored for 30 days, with undo right after deleting; move all completed todos there at once
 - Export all todos and folders to a JSON file, and import a file by merging it with or replacing the current data
 - Find language, theme, export, and import in the メニュー (⋯) at the right of the header
 - Sync changes across tabs of the same browser

@@ -1,5 +1,5 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
-import { FaFolder, FaPen, FaTimes } from 'react-icons/fa';
+import { FaFolder, FaPen, FaTimes, FaTrash } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
@@ -10,8 +10,10 @@ import { StatusSidebar } from '~/components/todo/status-sidebar';
 import { TodoForm } from '~/components/todo/todo-form';
 import { TodoList } from '~/components/todo/todo-list';
 import { TodoToolbar } from '~/components/todo/todo-toolbar';
+import { TrashList } from '~/components/todo/trash-list';
 import { type ImportMode, useTodos } from '~/hooks/use-todos';
 import { SIDEBAR_WIDTH, useViewState } from '~/hooks/use-view-state';
+import { cn } from '~/lib/cn';
 import { downloadExport, ImportError, type ParsedImport, parseImport } from '~/lib/export-import';
 import {
   countOpenByFolder,
@@ -30,7 +32,7 @@ import {
   type TodoFilters,
 } from '~/lib/todo-filters';
 import { DEFAULT_FOLDER_COLOR, type Folder, type FolderInput } from '~/types/folder';
-import { toLocalDateString } from '~/types/todo';
+import { type Todo, toLocalDateString } from '~/types/todo';
 import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
@@ -58,6 +60,8 @@ export default function Home() {
   useEffect(() => applyLanguage(language), [language]);
   const {
     todos,
+    trash,
+    allTodos,
     folders,
     isLoading,
     error,
@@ -70,6 +74,9 @@ export default function Home() {
     reorderTodo,
     removeTodo,
     removeCompleted,
+    restoreTodos,
+    deleteTodosForever,
+    emptyTrash,
     addFolder,
     editFolder,
     removeFolder,
@@ -90,12 +97,18 @@ export default function Home() {
   const closeMenu = useCallback(() => setShowFolders(false), []);
   const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
-  const [notice, setNotice] = useState<{ kind: 'info' | 'error'; text: string } | null>(null);
+  // undo があれば通知に「元に戻す」を出す (ゴミ箱に移した直後など)
+  const [notice, setNotice] = useState<{
+    kind: 'info' | 'error';
+    text: string;
+    undo?: () => void;
+  } | null>(null);
 
   // 選んでいたフォルダが消えたら (別タブで消した場合も) すべてに戻す
   const selection: FolderSelection =
     selectedFolder === 'all' ||
     selectedFolder === 'unfiled' ||
+    selectedFolder === 'trash' ||
     folders.some((folder) => folder.id === selectedFolder)
       ? selectedFolder
       : 'all';
@@ -104,8 +117,11 @@ export default function Home() {
       ? t('すべて')
       : selection === 'unfiled'
         ? t('未分類')
-        : formatFolderPath(folders, selection);
-  const isRealFolder = selection !== 'all' && selection !== 'unfiled';
+        : selection === 'trash'
+          ? t('ゴミ箱')
+          : formatFolderPath(folders, selection);
+  const isTrash = selection === 'trash';
+  const isRealFolder = selection !== 'all' && selection !== 'unfiled' && !isTrash;
   const selectedFolderObject = isRealFolder
     ? folders.find((folder) => folder.id === selection)
     : undefined;
@@ -211,13 +227,59 @@ export default function Home() {
   const cancelImport = useCallback(() => setPendingImport(null), []);
   const cancelFolderDialog = useCallback(() => setFolderDialog(null), []);
 
-  const handleRemove = (id: string) => {
+  // ゴミ箱へは確認なしで移し、通知の「元に戻す」で取り消せるようにする
+  const handleRemove = async (id: string) => {
     const todo = todos.find((t) => t.id === id);
-    if (todo && window.confirm(t('「{0}」を削除しますか？', [todo.title]))) void removeTodo(id);
+    if (!todo) return;
+    await removeTodo(id);
+    setNotice({
+      kind: 'info',
+      text: t('「{0}」をゴミ箱に移動しました。', [todo.title]),
+      undo: () => void handleRestore([todo]),
+    });
   };
 
-  const handleRemoveCompleted = () => {
-    if (window.confirm(t('完了済みの {0} 件を削除しますか？', [doneCount]))) void removeCompleted();
+  const handleRemoveCompleted = async () => {
+    const ids = await removeCompleted();
+    if (ids.length === 0) return;
+    setNotice({
+      kind: 'info',
+      text: t('完了済みの {0} 件をゴミ箱に移動しました。', [ids.length]),
+      undo: () => {
+        void restoreTodos(ids);
+        setNotice({ kind: 'info', text: t('{0} 件を元に戻しました。', [ids.length]) });
+      },
+    });
+  };
+
+  const handleRestore = async (restored: Todo[]) => {
+    await restoreTodos(restored.map((todo) => todo.id));
+    setNotice({
+      kind: 'info',
+      text:
+        restored.length === 1
+          ? t('「{0}」を元に戻しました。', [restored[0].title])
+          : t('{0} 件を元に戻しました。', [restored.length]),
+    });
+  };
+
+  // 完全に削除すると戻せないので、こちらは確認する
+  const handleDeleteForever = (todo: Todo) => {
+    if (
+      window.confirm(t('「{0}」を完全に削除しますか？この操作は元に戻せません。', [todo.title]))
+    ) {
+      void deleteTodosForever([todo.id]);
+    }
+  };
+
+  const handleEmptyTrash = () => {
+    if (
+      window.confirm(
+        t('ゴミ箱の {0} 件を完全に削除しますか？この操作は元に戻せません。', [trash.length]),
+      )
+    ) {
+      void emptyTrash();
+    }
   };
 
   const isFiltered =
@@ -233,9 +295,10 @@ export default function Home() {
       <AppHeader
         menuOpen={showFolders}
         onOpenMenu={() => setShowFolders(true)}
-        onExport={() => downloadExport({ todos, folders })}
+        // ゴミ箱のタスクもエクスポートする (deletedAt ごと戻せるように)
+        onExport={() => downloadExport({ todos: allTodos, folders })}
         onImportFile={(file) => void handleImportFile(file)}
-        exportDisabled={todos.length === 0 && folders.length === 0}
+        exportDisabled={allTodos.length === 0 && folders.length === 0}
       />
 
       <div
@@ -254,6 +317,8 @@ export default function Home() {
               counts={counts}
               onChange={(status) => {
                 setFilters((current) => ({ ...current, status }));
+                // ゴミ箱ではステータスで絞り込まないので、選んだらすべてのタスクに戻る
+                if (isTrash) setSelectedFolder('all');
                 setShowFolders(false);
               }}
             />
@@ -274,6 +339,8 @@ export default function Home() {
               }}
               onRemove={handleRemoveFolder}
               onDropTodo={(todoId, folderId) => void handleDropTodo(todoId, folderId)}
+              trashCount={trash.length}
+              onDropTodoToTrash={(todoId) => void handleRemove(todoId)}
             />
           </SidebarPanel>
           <SidebarResizer
@@ -292,13 +359,24 @@ export default function Home() {
             {(error || notice) && (
               <div
                 role={error || notice?.kind === 'error' ? 'alert' : 'status'}
-                className={
+                // 一覧の下の方で削除しても「元に戻す」が見えるよう、ヘッダーのすぐ下に貼り付ける
+                className={cn(
+                  'sticky top-[calc(3.5rem+1px+0.5rem)] z-10 flex items-start gap-2 rounded-md px-3 py-2 text-sm shadow-sm',
                   error || notice?.kind === 'error'
-                    ? 'flex items-start gap-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-300'
-                    : 'flex items-start gap-2 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                }
+                    ? 'bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-300'
+                    : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+                )}
               >
                 <span className="min-w-0 flex-1 break-words">{error ?? notice?.text}</span>
+                {!error && notice?.undo && (
+                  <button
+                    type="button"
+                    className="shrink-0 rounded px-2 py-0.5 font-semibold underline underline-offset-2 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:bg-white/10"
+                    onClick={notice.undo}
+                  >
+                    {t('元に戻す')}
+                  </button>
+                )}
                 {!error && notice && (
                   <button
                     type="button"
@@ -314,6 +392,12 @@ export default function Home() {
 
             <div className="flex min-w-0 items-center gap-1">
               <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
+                {isTrash && (
+                  <FaTrash
+                    className="shrink-0 text-slate-500 dark:text-slate-400"
+                    aria-hidden="true"
+                  />
+                )}
                 {isRealFolder && (
                   <FaFolder
                     className="shrink-0"
@@ -337,71 +421,84 @@ export default function Home() {
               )}
             </div>
 
-            <section
-              aria-label={t('TODO を追加')}
-              className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <TodoForm
-                submitLabel={t('追加')}
-                collapsible
-                tagSuggestions={tags}
+            {isTrash ? (
+              <TrashList
+                todos={trash}
                 folders={folders}
-                defaultFolderId={isRealFolder ? selection : null}
-                onSubmit={addTodo}
+                now={new Date()}
+                onRestore={(todo) => void handleRestore([todo])}
+                onDeleteForever={handleDeleteForever}
+                onEmpty={handleEmptyTrash}
               />
-            </section>
-
-            <TodoToolbar
-              filters={{ ...filters, sort }}
-              onChange={(next) => {
-                setFilters(next);
-                setSort(next.sort);
-              }}
-              tags={tags}
-            />
-
-            {isLoading ? (
-              <p className="p-8 text-center text-sm text-slate-500" role="status">
-                {t('読み込み中…')}
-              </p>
             ) : (
-              <TodoList
-                todos={visibleTodos}
-                folders={folders}
-                folderSelection={selection}
-                today={today}
-                tagSuggestions={tags}
-                emptyMessage={emptyMessage}
-                onReorder={
-                  sort === 'custom'
-                    ? (id, targetId, position) =>
-                        void reorderTodo(
-                          id,
-                          targetId,
-                          position,
-                          visibleTodos.map((todo) => todo.id),
-                        )
-                    : undefined
-                }
-                onPriorityChange={(id, priority) => void changePriority(id, priority)}
-                onStatusChange={(id, status) => void changeStatus(id, status)}
-                onEdit={editTodo}
-                onRemove={handleRemove}
-                onRemoveTag={(id, tag) => void removeTag(id, tag)}
-                onTagClick={(tag) => setFilters((current) => ({ ...current, tag }))}
-              />
-            )}
-
-            {doneCount > 0 && (
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  className={secondaryButtonClass}
-                  onClick={handleRemoveCompleted}
+              <>
+                <section
+                  aria-label={t('TODO を追加')}
+                  className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
                 >
-                  {t('完了済みを削除 ({0})', [doneCount])}
-                </button>
-              </div>
+                  <TodoForm
+                    submitLabel={t('追加')}
+                    collapsible
+                    tagSuggestions={tags}
+                    folders={folders}
+                    defaultFolderId={isRealFolder ? selection : null}
+                    onSubmit={addTodo}
+                  />
+                </section>
+
+                <TodoToolbar
+                  filters={{ ...filters, sort }}
+                  onChange={(next) => {
+                    setFilters(next);
+                    setSort(next.sort);
+                  }}
+                  tags={tags}
+                />
+
+                {isLoading ? (
+                  <p className="p-8 text-center text-sm text-slate-500" role="status">
+                    {t('読み込み中…')}
+                  </p>
+                ) : (
+                  <TodoList
+                    todos={visibleTodos}
+                    folders={folders}
+                    folderSelection={selection}
+                    today={today}
+                    tagSuggestions={tags}
+                    emptyMessage={emptyMessage}
+                    onReorder={
+                      sort === 'custom'
+                        ? (id, targetId, position) =>
+                            void reorderTodo(
+                              id,
+                              targetId,
+                              position,
+                              visibleTodos.map((todo) => todo.id),
+                            )
+                        : undefined
+                    }
+                    onPriorityChange={(id, priority) => void changePriority(id, priority)}
+                    onStatusChange={(id, status) => void changeStatus(id, status)}
+                    onEdit={editTodo}
+                    onRemove={(id) => void handleRemove(id)}
+                    onRemoveTag={(id, tag) => void removeTag(id, tag)}
+                    onTagClick={(tag) => setFilters((current) => ({ ...current, tag }))}
+                  />
+                )}
+
+                {doneCount > 0 && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className={secondaryButtonClass}
+                      onClick={() => void handleRemoveCompleted()}
+                    >
+                      {t('完了済みをゴミ箱に移動 ({0})', [doneCount])}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </main>
           <footer className="text-xs text-slate-500 dark:text-slate-400">
@@ -436,7 +533,7 @@ export default function Home() {
           todoCount={pendingImport.todos.length}
           folderCount={pendingImport.folders.length}
           skipped={pendingImport.skipped}
-          currentTodoCount={todos.length}
+          currentTodoCount={allTodos.length}
           currentFolderCount={folders.length}
           onConfirm={(mode) => void handleImportConfirm(mode)}
           onCancel={cancelImport}

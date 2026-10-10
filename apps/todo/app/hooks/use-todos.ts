@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { mergeData } from '~/lib/export-import';
 import { getSubtreeIds, wouldCreateCycle } from '~/lib/folder-tree';
 import { t } from '~/lib/i18n';
@@ -15,9 +15,13 @@ import { compareCustomOrder, type DropPosition, reorderTodos } from '~/lib/todo-
 import { createFolder, type Folder, type FolderInput, updateFolder } from '~/types/folder';
 import {
   createTodo,
+  isTrashed,
   moveTodoToFolder,
+  moveTodoToTrash,
   type Priority,
+  restoreTodoFromTrash,
   setTodoStatus,
+  shouldPurge,
   type Todo,
   type TodoInput,
   type TodoStatus,
@@ -30,7 +34,12 @@ const CHANNEL_NAME = 'todo-changes';
 export type ImportMode = 'replace' | 'merge';
 
 export interface UseTodos {
+  /** ゴミ箱に入っていないタスク */
   todos: Todo[];
+  /** ゴミ箱のタスク */
+  trash: Todo[];
+  /** ゴミ箱を含むすべてのタスク (エクスポート用) */
+  allTodos: Todo[];
   folders: Folder[];
   isLoading: boolean;
   error: string | null;
@@ -47,8 +56,14 @@ export interface UseTodos {
     position: DropPosition,
     visibleIds: readonly string[],
   ) => Promise<void>;
+  /** ゴミ箱に移す */
   removeTodo: (id: string) => Promise<void>;
-  removeCompleted: () => Promise<void>;
+  /** 完了済みをゴミ箱に移し、移した id を返す (元に戻すため) */
+  removeCompleted: () => Promise<string[]>;
+  restoreTodos: (ids: readonly string[]) => Promise<void>;
+  /** ゴミ箱から完全に削除する */
+  deleteTodosForever: (ids: readonly string[]) => Promise<void>;
+  emptyTrash: () => Promise<void>;
   /** 作ったフォルダを返す */
   addFolder: (input: FolderInput) => Promise<Folder>;
   editFolder: (id: string, input: FolderInput) => Promise<void>;
@@ -74,7 +89,15 @@ export function useTodos(): UseTodos {
 
   const reload = useCallback(async () => {
     try {
-      apply(await getAll());
+      const loaded = await getAll();
+      // ゴミ箱に入れてから期限を過ぎたものは、開いたときに完全に削除する
+      const expired = loaded.todos.filter((todo) => shouldPurge(todo)).map((todo) => todo.id);
+      if (expired.length > 0) {
+        await deleteTodos(expired);
+        const ids = new Set(expired);
+        loaded.todos = loaded.todos.filter((todo) => !ids.has(todo.id));
+      }
+      apply(loaded);
       setError(null);
     } catch {
       setError(
@@ -197,14 +220,53 @@ export function useTodos(): UseTodos {
     [replaceOne],
   );
 
+  /** 指定したタスクをまとめて書き換えて保存する。変わらなかったものは保存しない。 */
+  const replaceMany = useCallback(
+    async (ids: readonly string[], change: (todo: Todo) => Todo) => {
+      const targets = new Set(ids);
+      const changed: Todo[] = [];
+      const next = dataRef.current.todos.map((todo) => {
+        if (!targets.has(todo.id)) return todo;
+        const updated = change(todo);
+        if (updated !== todo) changed.push(updated);
+        return updated;
+      });
+      if (changed.length === 0) return;
+      await setTodos(next, () => putTodos(changed));
+    },
+    [setTodos],
+  );
+
   const removeTodo = useCallback(
-    async (id: string) => {
+    (id: string) => replaceMany([id], (todo) => moveTodoToTrash(todo)),
+    [replaceMany],
+  );
+
+  const restoreTodos = useCallback(
+    (ids: readonly string[]) => replaceMany(ids, (todo) => restoreTodoFromTrash(todo)),
+    [replaceMany],
+  );
+
+  const deleteTodosForever = useCallback(
+    async (ids: readonly string[]) => {
+      // 誤ってゴミ箱の外のタスクを消さないよう、ゴミ箱にあるものだけを対象にする
+      const targets = new Set(
+        dataRef.current.todos
+          .filter((todo) => isTrashed(todo) && ids.includes(todo.id))
+          .map((todo) => todo.id),
+      );
+      if (targets.size === 0) return;
       await setTodos(
-        dataRef.current.todos.filter((todo) => todo.id !== id),
-        () => deleteTodos([id]),
+        dataRef.current.todos.filter((todo) => !targets.has(todo.id)),
+        () => deleteTodos([...targets]),
       );
     },
     [setTodos],
+  );
+
+  const emptyTrash = useCallback(
+    () => deleteTodosForever(dataRef.current.todos.filter(isTrashed).map((todo) => todo.id)),
+    [deleteTodosForever],
   );
 
   const reorderTodo = useCallback(
@@ -219,14 +281,12 @@ export function useTodos(): UseTodos {
   );
 
   const removeCompleted = useCallback(async () => {
-    const { todos } = dataRef.current;
-    const ids = todos.filter((todo) => todo.status === 'done').map((todo) => todo.id);
-    if (ids.length === 0) return;
-    await setTodos(
-      todos.filter((todo) => todo.status !== 'done'),
-      () => deleteTodos(ids),
-    );
-  }, [setTodos]);
+    const ids = dataRef.current.todos
+      .filter((todo) => todo.status === 'done' && !isTrashed(todo))
+      .map((todo) => todo.id);
+    await replaceMany(ids, (todo) => moveTodoToTrash(todo));
+    return ids;
+  }, [replaceMany]);
 
   const addFolder = useCallback(
     async (input: FolderInput) => {
@@ -289,8 +349,13 @@ export function useTodos(): UseTodos {
     [commit],
   );
 
+  const todos = useMemo(() => data.todos.filter((todo) => !isTrashed(todo)), [data.todos]);
+  const trash = useMemo(() => data.todos.filter(isTrashed), [data.todos]);
+
   return {
-    todos: data.todos,
+    todos,
+    trash,
+    allTodos: data.todos,
     folders: data.folders,
     isLoading,
     error,
@@ -303,6 +368,9 @@ export function useTodos(): UseTodos {
     reorderTodo,
     removeTodo,
     removeCompleted,
+    restoreTodos,
+    deleteTodosForever,
+    emptyTrash,
     addFolder,
     editFolder,
     removeFolder,

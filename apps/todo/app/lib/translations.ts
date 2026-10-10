@@ -117,7 +117,6 @@ export const english: Record<string, string> = {
   'TODO はまだありません。上のフォームから追加してください。':
     'No todos yet. Add one with the form above.',
   'ここに TODO はありません。': 'No todos here.',
-  '完了済みを削除 ({0})': 'Delete completed ({0})',
   通知を閉じる: 'Dismiss notification',
 
   // タスクのカード
@@ -139,11 +138,8 @@ export const english: Record<string, string> = {
   '「{0}」を下へ移動': 'Move "{0}" down',
   下へ移動: 'Move down',
   '「{0}」を編集': 'Edit "{0}"',
-  '「{0}」を削除': 'Delete "{0}"',
 
   // 確認・通知
-  '「{0}」を削除しますか？': 'Delete "{0}"?',
-  '完了済みの {0} 件を削除しますか？': 'Delete {0} completed todos?',
   'フォルダ「{0}」を削除しますか？': 'Delete folder "{0}"?',
   '中のフォルダ {0} 件も削除されます。': 'Its {0} subfolders will also be deleted.',
   '中の TODO {0} 件は未分類に移ります。': 'Its {0} todos will be moved to Unfiled.',
@@ -157,6 +153,32 @@ export const english: Record<string, string> = {
     'Your data is stored only in this browser (IndexedDB) and is never sent to a server.',
   'ブラウザのデータを削除すると TODO も消えるため、定期的にエクスポートしてバックアップしてください。':
     'Clearing browser data also deletes your todos, so export a backup regularly.',
+
+  // ゴミ箱
+  ゴミ箱: 'Trash',
+  'ゴミ箱の TODO': 'Todos in the trash',
+  ゴミ箱に移動: 'Move to trash',
+  '「{0}」をゴミ箱に移動': 'Move "{0}" to trash',
+  '「{0}」をゴミ箱に移動しました。': 'Moved "{0}" to the trash.',
+  '完了済みの {0} 件をゴミ箱に移動しました。': 'Moved {0} completed todos to the trash.',
+  '完了済みをゴミ箱に移動 ({0})': 'Move completed to trash ({0})',
+  元に戻す: 'Undo',
+  '「{0}」を元に戻す': 'Restore "{0}"',
+  '「{0}」を元に戻しました。': 'Restored "{0}".',
+  '{0} 件を元に戻しました。': 'Restored {0} todos.',
+  完全に削除: 'Delete forever',
+  '「{0}」を完全に削除': 'Delete "{0}" forever',
+  '「{0}」を完全に削除しますか？この操作は元に戻せません。':
+    'Delete "{0}" forever? This cannot be undone.',
+  ゴミ箱を空にする: 'Empty trash',
+  'ゴミ箱の {0} 件を完全に削除しますか？この操作は元に戻せません。':
+    'Delete all {0} todos in the trash forever? This cannot be undone.',
+  'ゴミ箱は空です。': 'The trash is empty.',
+  'ゴミ箱のタスクは {0} 日たつと自動で完全に削除されます。':
+    'Todos in the trash are deleted forever after {0} days.',
+  'あと {0} 日で自動で削除': 'Deleted in {0} days',
+  明日までに自動で削除: 'Deleted within a day',
+  '元の場所: ': 'Original location: ',
 
   // インポート
   'JSON として読み込めませんでした。': 'The file is not valid JSON.',

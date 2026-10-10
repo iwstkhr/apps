@@ -37,7 +37,13 @@ export interface Todo {
   updatedAt: string;
   /** status が 'done' になった日時。ほかのステータスに戻すと null */
   completedAt: string | null;
+  /** ゴミ箱に移した日時 (ISO 8601)。ゴミ箱に無ければ null */
+  deletedAt: string | null;
 }
+
+/** ゴミ箱に入れてからこの日数がたったタスクは、アプリを開いたときに完全に削除する */
+export const TRASH_RETENTION_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** 追加・編集フォームで入力する項目。 */
 export interface TodoInput {
@@ -97,6 +103,7 @@ export function createTodo(input: TodoInput, now: Date = new Date()): Todo {
     createdAt: timestamp,
     updatedAt: timestamp,
     completedAt: null,
+    deletedAt: null,
   };
 }
 
@@ -134,6 +141,33 @@ export function moveTodoToFolder(
   return { ...todo, folderId, updatedAt: now.toISOString() };
 }
 
+export function isTrashed(todo: Todo): boolean {
+  return todo.deletedAt !== null;
+}
+
+/** ゴミ箱に移す。フォルダやステータスはそのまま残し、元に戻したときに同じ場所へ戻す。 */
+export function moveTodoToTrash(todo: Todo, now: Date = new Date()): Todo {
+  if (isTrashed(todo)) return todo;
+  const timestamp = now.toISOString();
+  return { ...todo, deletedAt: timestamp, updatedAt: timestamp };
+}
+
+export function restoreTodoFromTrash(todo: Todo, now: Date = new Date()): Todo {
+  if (!isTrashed(todo)) return todo;
+  return { ...todo, deletedAt: null, updatedAt: now.toISOString() };
+}
+
+/** ゴミ箱のタスクが自動で削除されるまでの日数 (切り上げ)。0 なら削除の対象。 */
+export function daysUntilPurge(todo: Todo, now: Date = new Date()): number {
+  if (todo.deletedAt === null) return Number.POSITIVE_INFINITY;
+  const purgeAt = Date.parse(todo.deletedAt) + TRASH_RETENTION_DAYS * DAY_MS;
+  return Math.max(0, Math.ceil((purgeAt - now.getTime()) / DAY_MS));
+}
+
+export function shouldPurge(todo: Todo, now: Date = new Date()): boolean {
+  return isTrashed(todo) && daysUntilPurge(todo, now) === 0;
+}
+
 /**
  * 外部から来た値 (インポートしたファイル) を Todo に直す。
  * 必須項目 (id / title / createdAt / updatedAt) が欠けていれば null を返し、
@@ -167,6 +201,8 @@ export function toTodo(value: unknown): Todo | null {
     createdAt: v.createdAt,
     updatedAt: v.updatedAt,
     completedAt: status === 'done' && isIsoDateTime(v.completedAt) ? v.completedAt : null,
+    // 以前のデータには無いので、無ければゴミ箱に入っていないものとして読む
+    deletedAt: isIsoDateTime(v.deletedAt) ? v.deletedAt : null,
   };
 }
 

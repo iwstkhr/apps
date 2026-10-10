@@ -131,10 +131,10 @@ test('completes, edits and deletes todos', async ({ page }) => {
   await page.getByRole('button', { name: '保存' }).click();
   await expect(todoItems(page).filter({ hasText: '部屋の掃除' })).toHaveCount(1);
 
-  await page.getByRole('button', { name: '完了済みを削除 (1)' }).click();
+  await page.getByRole('button', { name: '完了済みをゴミ箱に移動 (1)' }).click();
   await expect(todoItems(page)).toHaveCount(1);
 
-  await page.getByRole('button', { name: '「部屋の掃除」を削除' }).click();
+  await page.getByRole('button', { name: '「部屋の掃除」をゴミ箱に移動' }).click();
   await expect(page.getByText(/TODO はまだありません/)).toBeVisible();
 
   await page.reload();
@@ -151,7 +151,7 @@ test('exports and imports todos', async ({ page }) => {
   const path = await download.path();
 
   // 一度消してから読み込み直す
-  await page.getByRole('button', { name: '「バックアップ対象」を削除' }).click();
+  await page.getByRole('button', { name: '「バックアップ対象」をゴミ箱に移動' }).click();
   await expect(page.getByText(/TODO はまだありません/)).toBeVisible();
 
   await page.getByLabel('インポートするファイル').setInputFiles(path);

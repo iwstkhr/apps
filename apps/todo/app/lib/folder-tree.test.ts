@@ -102,6 +102,8 @@ describe('filterByFolder / countOpenByFolder', () => {
     expect(titles(filterByFolder(todos, folders, 'work'))).toEqual(['docs', 'work']);
     expect(titles(filterByFolder(todos, folders, 'a'))).toEqual(['docs']);
     expect(titles(filterByFolder(todos, folders, 'unfiled'))).toEqual(['unfiled']);
+    // ゴミ箱の中身は画面側で出すので、ここでは何も返さない
+    expect(filterByFolder(todos, folders, 'trash')).toEqual([]);
   });
 
   it('counts open todos per folder including subfolders', () => {

@@ -68,9 +68,13 @@ describe('useTodos', () => {
     expect(result.current.todos[0]).toMatchObject({ title: 'b', status: 'in_progress' });
     expect((await getAll()).todos).toEqual(result.current.todos);
 
+    // 削除するとゴミ箱に移り、データは残る
     await act(() => result.current.removeTodo(id));
     expect(result.current.todos).toEqual([]);
-    expect((await getAll()).todos).toEqual([]);
+    expect(result.current.trash.map((todo) => todo.id)).toEqual([id]);
+    const stored = (await getAll()).todos;
+    expect(stored).toHaveLength(1);
+    expect(stored[0].deletedAt).not.toBeNull();
   });
 
   it('changes priority and preserves completion and other task fields', async () => {
@@ -109,9 +113,51 @@ describe('useTodos', () => {
   it('removes only completed todos', async () => {
     await putTodos([createTodoFixture({ status: 'done' }), createTodoFixture({ title: 'open' })]);
     const { result } = await renderLoaded();
-    await act(() => result.current.removeCompleted());
+    const ids = await act(() => result.current.removeCompleted());
     expect(result.current.todos.map((t) => t.title)).toEqual(['open']);
-    expect((await getAll()).todos).toHaveLength(1);
+    expect(result.current.trash.map((t) => t.id)).toEqual(ids);
+    expect((await getAll()).todos.filter((t) => t.deletedAt !== null)).toHaveLength(1);
+  });
+
+  it('restores, deletes forever, and empties the trash', async () => {
+    const a = createTodoFixture({ title: 'a' });
+    const b = createTodoFixture({ title: 'b' });
+    const c = createTodoFixture({ title: 'c' });
+    await putTodos([a, b, c]);
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.removeTodo(a.id));
+    await act(() => result.current.removeTodo(b.id));
+    await act(() => result.current.restoreTodos([a.id]));
+    expect(result.current.todos.map((t) => t.title).sort()).toEqual(['a', 'c']);
+    expect(result.current.trash.map((t) => t.title)).toEqual(['b']);
+
+    // ゴミ箱の外のタスクは完全に削除しない
+    await act(() => result.current.deleteTodosForever([c.id]));
+    expect(result.current.todos.map((t) => t.title).sort()).toEqual(['a', 'c']);
+
+    await act(() => result.current.deleteTodosForever([b.id]));
+    expect(result.current.trash).toEqual([]);
+    expect((await getAll()).todos.map((t) => t.title).sort()).toEqual(['a', 'c']);
+
+    await act(() => result.current.removeTodo(c.id));
+    await act(() => result.current.emptyTrash());
+    expect((await getAll()).todos.map((t) => t.title)).toEqual(['a']);
+    expect(result.current.allTodos.map((t) => t.title)).toEqual(['a']);
+  });
+
+  it('deletes todos that have been in the trash for 30 days when loading', async () => {
+    const daysAgo = (days: number) =>
+      new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const expired = createTodoFixture({ title: 'expired', deletedAt: daysAgo(31) });
+    const recent = createTodoFixture({ title: 'recent', deletedAt: daysAgo(29) });
+    const active = createTodoFixture({ title: 'active' });
+    await putTodos([expired, recent, active]);
+
+    const { result } = await renderLoaded();
+    expect(result.current.trash.map((t) => t.title)).toEqual(['recent']);
+    expect(result.current.todos.map((t) => t.title)).toEqual(['active']);
+    expect((await getAll()).todos.map((t) => t.title).sort()).toEqual(['active', 'recent']);
   });
 
   it('adds, renames and moves folders', async () => {

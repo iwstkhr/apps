@@ -2,11 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { createTodoFixture } from '~/test/fixtures';
 import {
   createTodo,
+  daysUntilPurge,
   getDueStatus,
   moveTodoToFolder,
+  moveTodoToTrash,
   normalizeTags,
   parseTagText,
+  restoreTodoFromTrash,
   setTodoStatus,
+  shouldPurge,
+  TRASH_RETENTION_DAYS,
   toLocalDateString,
   toTodo,
   updateTodo,
@@ -156,5 +161,43 @@ describe('dates', () => {
     expect(getDueStatus(createTodoFixture({ dueDate: '2026-10-09', status: 'done' }), today)).toBe(
       'none',
     );
+  });
+});
+
+describe('trash', () => {
+  const day = 24 * 60 * 60 * 1000;
+
+  it('moves a todo to the trash and back without losing its folder or status', () => {
+    const todo = createTodoFixture({ folderId: 'f1', status: 'in_progress' });
+    const trashed = moveTodoToTrash(todo, NOW);
+    expect(trashed).toMatchObject({
+      folderId: 'f1',
+      status: 'in_progress',
+      deletedAt: NOW.toISOString(),
+      updatedAt: NOW.toISOString(),
+    });
+    expect(moveTodoToTrash(trashed, NOW)).toBe(trashed);
+    const restored = restoreTodoFromTrash(trashed, NOW);
+    expect(restored).toMatchObject({ folderId: 'f1', status: 'in_progress', deletedAt: null });
+    expect(restoreTodoFromTrash(restored, NOW)).toBe(restored);
+  });
+
+  it(`counts the days until the todo is deleted after ${TRASH_RETENTION_DAYS} days`, () => {
+    const trashedAt = (daysAgo: number) =>
+      createTodoFixture({ deletedAt: new Date(NOW.getTime() - daysAgo * day).toISOString() });
+    expect(daysUntilPurge(trashedAt(0), NOW)).toBe(30);
+    expect(daysUntilPurge(trashedAt(29.5), NOW)).toBe(1);
+    expect(daysUntilPurge(trashedAt(30), NOW)).toBe(0);
+    expect(shouldPurge(trashedAt(29.9), NOW)).toBe(false);
+    expect(shouldPurge(trashedAt(31), NOW)).toBe(true);
+    expect(shouldPurge(createTodoFixture(), NOW)).toBe(false);
+  });
+
+  it('reads deletedAt from stored data and treats it as missing in older data', () => {
+    const deletedAt = NOW.toISOString();
+    expect(toTodo({ ...createTodoFixture(), deletedAt })?.deletedAt).toBe(deletedAt);
+    const { deletedAt: _omitted, ...older } = createTodoFixture();
+    expect(toTodo(older)?.deletedAt).toBeNull();
+    expect(toTodo({ ...createTodoFixture(), deletedAt: 'nope' })?.deletedAt).toBeNull();
   });
 });

@@ -29,10 +29,14 @@ interface FolderSidebarProps {
   onRemove: (folder: Folder) => void;
   /** タスクをフォルダ (null は未分類) にドロップした */
   onDropTodo: (todoId: string, folderId: string | null) => void;
+  /** ゴミ箱の件数 */
+  trashCount: number;
+  /** タスクをゴミ箱にドロップした */
+  onDropTodoToTrash: (todoId: string) => void;
 }
 
 /** ドロップ先。'all' には落とせない */
-type DropTarget = 'unfiled' | string;
+type DropTarget = 'unfiled' | 'trash' | string;
 
 // 畳んだフォルダの上でこの時間待つと開いて、中のフォルダにも落とせるようにする
 const EXPAND_ON_HOVER_MS = 700;
@@ -68,12 +72,14 @@ export function FolderSidebar({
   onEdit,
   onRemove,
   onDropTodo,
+  trashCount,
+  onDropTodoToTrash,
 }: FolderSidebarProps) {
   const entries = useMemo(() => flattenFolderTree(folders, collapsed), [folders, collapsed]);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
 
   useEffect(() => {
-    if (dropTarget === null || dropTarget === 'unfiled' || !collapsed.has(dropTarget)) return;
+    if (dropTarget === null || !collapsed.has(dropTarget)) return;
     const timer = setTimeout(() => onToggleCollapsed(dropTarget), EXPAND_ON_HOVER_MS);
     return () => clearTimeout(timer);
   }, [dropTarget, collapsed, onToggleCollapsed]);
@@ -96,18 +102,24 @@ export function FolderSidebar({
       setDropTarget(null);
       if (!todoId) return;
       event.preventDefault();
-      onDropTodo(todoId, target === 'unfiled' ? null : target);
+      if (target === 'trash') onDropTodoToTrash(todoId);
+      else onDropTodo(todoId, target === 'unfiled' ? null : target);
     },
   });
 
-  const fixedItem = (value: FolderSelection, label: string, Icon: typeof FaInbox) => (
+  const fixedItem = (
+    value: FolderSelection,
+    label: string,
+    Icon: typeof FaInbox,
+    count = openCounts.get(value),
+  ) => (
     <li
       className={cn(
         rowClass,
         // ドロップ先の色を優先する (両方付けると CSS の並び順次第でどちらかが勝つ)
         dropTarget === value ? dropTargetRowClass : selection === value && selectedRowClass,
       )}
-      {...(value === 'unfiled' ? dropHandlers('unfiled') : {})}
+      {...(value === 'unfiled' || value === 'trash' ? dropHandlers(value) : {})}
     >
       <button
         type="button"
@@ -117,7 +129,7 @@ export function FolderSidebar({
       >
         <Icon className="shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
         <span className="truncate">{t(label)}</span>
-        <Count value={openCounts.get(value)} />
+        <Count value={count} />
       </button>
     </li>
   );
@@ -240,6 +252,11 @@ export function FolderSidebar({
           })}
         </ul>
       )}
+
+      {/* ゴミ箱はフォルダの一覧の下に分けて置く。タスクをドロップしてもゴミ箱に移せる */}
+      <ul className="flex flex-col gap-0.5 border-t border-slate-200 pt-2 dark:border-slate-800">
+        {fixedItem('trash', 'ゴミ箱', FaTrash, trashCount)}
+      </ul>
     </nav>
   );
 }
