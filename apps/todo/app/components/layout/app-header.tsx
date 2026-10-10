@@ -1,11 +1,7 @@
 import { useRef } from 'react';
-import { FaBars, FaCheckSquare, FaFileExport, FaFileImport } from 'react-icons/fa';
-import { LanguageSelect } from '~/components/layout/language-select';
-import { ThemePicker } from '~/components/layout/theme-picker';
+import { FaBars, FaCheckSquare } from 'react-icons/fa';
+import { HeaderMenu } from '~/components/layout/header-menu';
 import { t } from '~/lib/i18n';
-
-const actionClass =
-  'inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700';
 
 interface AppHeaderProps {
   menuOpen: boolean;
@@ -49,28 +45,12 @@ export function AppHeader({
           </h1>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <LanguageSelect />
-          <ThemePicker />
-          <button
-            type="button"
-            className={actionClass}
-            onClick={onExport}
-            disabled={exportDisabled}
-            title={t('すべての TODO を JSON ファイルに保存します')}
-          >
-            <FaFileExport aria-hidden="true" />
-            <span className="sr-only sm:not-sr-only">{t('エクスポート')}</span>
-          </button>
-          <button
-            type="button"
-            className={actionClass}
-            onClick={() => fileInputRef.current?.click()}
-            title={t('エクスポートした JSON ファイルを読み込みます')}
-          >
-            <FaFileImport aria-hidden="true" />
-            <span className="sr-only sm:not-sr-only">{t('インポート')}</span>
-          </button>
+        <div className="flex shrink-0 items-center">
+          <HeaderMenu
+            onExport={onExport}
+            exportDisabled={exportDisabled}
+            onImport={() => fileInputRef.current?.click()}
+          />
           <input
             ref={fileInputRef}
             type="file"

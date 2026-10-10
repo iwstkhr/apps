@@ -1,4 +1,4 @@
-import { addTodo, expect, openApp, test, todoItems } from '../fixtures';
+import { addTodo, chooseFromHeaderMenu, expect, openApp, test, todoItems } from '../fixtures';
 
 test('selects light and dark modes independently of the OS and follows it in automatic mode', async ({
   page,
@@ -6,9 +6,9 @@ test('selects light and dark modes independently of the OS and follows it in aut
   await page.emulateMedia({ colorScheme: 'light' });
   await openApp(page);
   const root = page.locator('html');
-  const button = page.getByRole('button', { name: 'テーマ', exact: true });
   const dialog = page.getByRole('dialog', { name: 'テーマ', exact: true });
-  await button.click();
+  const openTheme = () => chooseFromHeaderMenu(page, 'テーマ…');
+  await openTheme();
   await expect(dialog.getByRole('radio', { name: '自動', exact: true })).toBeChecked();
   await dialog.getByText('オーシャン', { exact: true }).click();
   await dialog.getByText('ダーク', { exact: true }).click();
@@ -19,7 +19,7 @@ test('selects light and dark modes independently of the OS and follows it in aut
   await expect(root).toHaveAttribute('data-mode', 'dark');
   await expect(root).toHaveAttribute('data-theme', 'ocean');
   await expect(page.locator('body')).toHaveCSS('background-color', dark);
-  await button.click();
+  await openTheme();
   await expect(dialog.getByRole('radio', { name: 'ダーク', exact: true })).toBeChecked();
   await dialog.getByText('ライト', { exact: true }).click();
   await page.emulateMedia({ colorScheme: 'dark' });
@@ -39,8 +39,9 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   await page.emulateMedia({ colorScheme: 'light' });
   await openApp(page);
   await addTodo(page, '配色を確認');
-  const button = page.locator('header').getByRole('button', { name: 'テーマ', exact: true });
+  const button = page.locator('header').getByRole('button', { name: 'その他の操作' });
   const dialog = page.getByRole('dialog', { name: 'テーマ', exact: true });
+  const openTheme = () => chooseFromHeaderMenu(page, 'テーマ…');
   const bodyColor = () =>
     page.locator('body').evaluate((el) => getComputedStyle(el).backgroundColor);
   const initialBackground = await bodyColor();
@@ -61,7 +62,7 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   );
   await expect(sidebar).not.toHaveCSS('background-color', 'rgb(31, 35, 40)');
 
-  await button.click();
+  await openTheme();
   await expect(dialog.getByRole('radio', { name: 'インディゴ' })).toBeChecked();
   for (const name of ['オーベルジーヌ', 'オーシャン', 'ミント', 'サンセット', 'グラファイト']) {
     await dialog.getByText(name, { exact: true }).click();
@@ -132,7 +133,7 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   await expect.poll(bodyColor).not.toBe(graphiteBackground);
   await page.screenshot({ path: testInfo.outputPath('dark-theme.png') });
   await page.setViewportSize({ width: 320, height: 800 });
-  await button.click();
+  await openTheme();
   await expect(dialog).toBeVisible();
   await dialog.getByRole('radio', { name: 'グラファイト' }).focus();
   await page.keyboard.press('ArrowLeft');

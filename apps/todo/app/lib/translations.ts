@@ -30,6 +30,10 @@ export const english: Record<string, string> = {
   'エクスポートした JSON ファイルを読み込みます': 'Load an exported JSON file',
   インポートするファイル: 'File to import',
 
+  // ヘッダーのメニュー
+  その他の操作: 'More actions',
+  'テーマ…': 'Theme…',
+
   // テーマ
   テーマ: 'Theme',
   テーマを選ぶ: 'Choose theme',

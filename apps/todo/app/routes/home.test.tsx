@@ -78,7 +78,8 @@ describe('Home', () => {
       await putTodos([createTodoFixture({ title: '牛乳を買う', status: 'in_progress' })]);
       const user = await renderHome();
 
-      await user.selectOptions(screen.getByRole('combobox', { name: '言語' }), 'en');
+      await user.click(screen.getByRole('button', { name: 'その他の操作' }));
+      await user.click(screen.getByRole('menuitemradio', { name: 'English' }));
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
       expect(screen.getByRole('navigation', { name: 'Folders' })).toBeInTheDocument();
       expect(
@@ -95,9 +96,9 @@ describe('Home', () => {
       await renderHome();
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
 
-      await userEvent
-        .setup()
-        .selectOptions(screen.getByRole('combobox', { name: 'Language' }), 'ja');
+      const again = userEvent.setup();
+      await again.click(screen.getByRole('button', { name: 'More actions' }));
+      await again.click(screen.getByRole('menuitemradio', { name: '日本語' }));
       expect(screen.getByRole('button', { name: '追加' })).toBeInTheDocument();
       expect(document.documentElement.lang).toBe('ja');
     });
@@ -105,16 +106,21 @@ describe('Home', () => {
     it('follows the browser language until a language is chosen', async () => {
       localStorage.removeItem(LANGUAGE_KEY);
       vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US', 'ja-JP']);
-      await renderHome();
+      const user = await renderHome();
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
-      expect(screen.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
+      await user.click(screen.getByRole('button', { name: 'More actions' }));
+      expect(screen.getByRole('menuitemradio', { name: 'English' })).toBeChecked();
     });
   });
 
   it('shows the empty state', async () => {
-    await renderHome();
+    const user = await renderHome();
     expect(screen.getByText(/TODO はまだありません/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'エクスポート' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'その他の操作' }));
+    expect(screen.getByRole('menuitem', { name: 'エクスポート' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   });
 
   it('adds a todo with details', async () => {

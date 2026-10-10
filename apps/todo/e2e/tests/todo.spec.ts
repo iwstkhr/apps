@@ -1,4 +1,4 @@
-import { addTodo, expect, openApp, test, todoItems } from '../fixtures';
+import { addTodo, chooseFromHeaderMenu, expect, openApp, test, todoItems } from '../fixtures';
 
 test('removes a tag using its close button without filtering and saves the change', async ({
   page,
@@ -66,7 +66,7 @@ test('customizes task order by dragging and buttons and keeps it through reload 
   await expect(page.getByRole('button', { name: /上へ移動/ })).toHaveCount(0);
   await sort.selectOption('custom');
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'エクスポート' }).click();
+  await chooseFromHeaderMenu(page, 'エクスポート');
   const path = await (await download).path();
   await page.getByRole('button', { name: '「タスク B」を下へ移動' }).click();
   await page.getByLabel('インポートするファイル').setInputFiles(path);
@@ -145,7 +145,7 @@ test('exports and imports todos', async ({ page }) => {
   await addTodo(page, 'バックアップ対象');
 
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'エクスポート' }).click();
+  await chooseFromHeaderMenu(page, 'エクスポート');
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^todo-export-\d{8}\.json$/);
   const path = await download.path();

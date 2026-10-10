@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { addTodo, expect, openApp, test, todoItems } from '../fixtures';
+import { addTodo, chooseFromHeaderMenu, expect, openApp, test, todoItems } from '../fixtures';
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (dialog) => dialog.accept());
@@ -111,7 +111,7 @@ test('exports and imports folders', async ({ page }) => {
   await addTodo(page, '掃除');
 
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'エクスポート' }).click();
+  await chooseFromHeaderMenu(page, 'エクスポート');
   const path = await (await downloadPromise).path();
 
   await folderNav(page).getByRole('button', { name: 'フォルダ「家」を削除' }).click();
@@ -163,7 +163,7 @@ test('creates and edits folder colors and preserves them after reload and import
   await expect(icon).toHaveCSS('color', 'rgb(22, 163, 74)');
 
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'エクスポート' }).click();
+  await chooseFromHeaderMenu(page, 'エクスポート');
   const path = await (await download).path();
   await folderNav(page).getByRole('button', { name: 'フォルダ「仕事」を削除' }).click();
   await page.getByLabel('インポートするファイル').setInputFiles(path);

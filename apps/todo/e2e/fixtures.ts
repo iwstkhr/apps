@@ -16,6 +16,12 @@ export async function addTodo(page: Page, title: string): Promise<void> {
   await expect(todoItems(page).filter({ hasText: title })).toHaveCount(1);
 }
 
+/** ヘッダーの「その他の操作」メニューを開いて項目を選ぶ。 */
+export async function chooseFromHeaderMenu(page: Page, item: string): Promise<void> {
+  await page.locator('header').getByRole('button', { name: 'その他の操作' }).click();
+  await page.getByRole('menu').getByRole('menuitem', { name: item, exact: true }).click();
+}
+
 export function todoItems(page: Page) {
   return page.getByRole('list', { name: 'TODO 一覧' }).locator(':scope > li');
 }

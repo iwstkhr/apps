@@ -1,4 +1,9 @@
+import type { Page } from '@playwright/test';
 import { expect, openApp, test } from '../fixtures';
+
+function languageItem(page: Page, name: string) {
+  return page.getByRole('menu').getByRole('menuitemradio', { name });
+}
 
 test.describe('in a Japanese browser', () => {
   test.use({ locale: 'ja-JP' });
@@ -8,7 +13,8 @@ test.describe('in a Japanese browser', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
     await expect(page.getByRole('button', { name: '追加', exact: true })).toBeVisible();
 
-    await page.getByRole('combobox', { name: '言語' }).selectOption('en');
+    await page.locator('header').getByRole('button', { name: 'その他の操作' }).click();
+    await languageItem(page, 'English').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
@@ -25,8 +31,9 @@ test.describe('in a Japanese browser', () => {
 
     await page.reload();
     await expect(page.getByRole('heading', { name: 'TODO' })).toBeVisible();
-    await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
     await expect(page.getByRole('navigation', { name: 'Folders' })).toBeVisible();
+    await page.locator('header').getByRole('button', { name: 'More actions' }).click();
+    await expect(languageItem(page, 'English')).toHaveAttribute('aria-checked', 'true');
   });
 });
 
@@ -38,10 +45,11 @@ test.describe('in an English browser', () => {
     await expect(page.getByRole('heading', { name: 'TODO' })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
-    await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
+    await page.locator('header').getByRole('button', { name: 'More actions' }).click();
+    await expect(languageItem(page, 'English')).toHaveAttribute('aria-checked', 'true');
   });
 
-  test('fits the header on a narrow screen and opens the language list from the icon', async ({
+  test('fits the header on a narrow screen and switches the language from the menu', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 800 });
@@ -49,8 +57,18 @@ test.describe('in an English browser', () => {
     await expect(page.getByRole('heading', { name: 'TODO' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 
-    const select = page.getByRole('combobox', { name: 'Language' });
-    await select.selectOption('ja');
+    await page.locator('header').getByRole('button', { name: 'More actions' }).click();
+    // メニューも画面の幅に収まる
+    const menu = await page.getByRole('menu').boundingBox();
+    expect(menu?.x).toBeGreaterThanOrEqual(0);
+    expect((menu?.x ?? 0) + (menu?.width ?? 0)).toBeLessThanOrEqual(320);
+    await languageItem(page, '日本語').click();
     await expect(page.getByRole('button', { name: '追加', exact: true })).toBeVisible();
+    // 英語に戻すメニュー操作はキーボードでもできる
+    await page.locator('header').getByRole('button', { name: 'その他の操作' }).focus();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
   });
 });

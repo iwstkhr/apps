@@ -21,6 +21,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Folders | See [Folders](#folders) |
 | Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive) |
 | Sort | 期限順 (default), 優先度順, ステータス順, 新しい順, カスタム. Completed todos are listed after the others except in カスタム |
+| Header menu | See [Header menu](#header-menu) |
 | Export | Saves every todo and folder to `todo-export-YYYYMMDD.json` |
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
@@ -35,13 +36,19 @@ Change priority (高 / 中 / 低) directly with the selector on each task in the
 
 ### Color themes
 
-The header's テーマ button opens a dialog titled テーマ with six presets: インディゴ, オーベルジーヌ, オーシャン, ミント, サンセット, and グラファイト. インディゴ is the default; it keeps the header and sidebar white and uses an indigo accent, and it also applies before the saved theme is restored so the accent does not flash a different color on load. Inspired by Slack, the other presets use a shared dark color for the header and sidebar, with bright text and a distinct selected row, while the main content retains neutral backgrounds, text, and borders for readability. Buttons, links, focus indicators, and selected rows use shades of the same subdued accent hue, including Markdown links. The header logo follows the theme. The 表示モード controls offer ライト, ダーク, and 自動. Light and dark override the OS preference; 自動 (the default) follows OS changes immediately. Folder icon colors and semantic warning, priority, and completed-status colors remain distinct.
+テーマ… in the header menu opens a dialog titled テーマ with six presets: インディゴ, オーベルジーヌ, オーシャン, ミント, サンセット, and グラファイト. インディゴ is the default; it keeps the header and sidebar white and uses an indigo accent, and it also applies before the saved theme is restored so the accent does not flash a different color on load. Inspired by Slack, the other presets use a shared dark color for the header and sidebar, with bright text and a distinct selected row, while the main content retains neutral backgrounds, text, and borders for readability. Buttons, links, focus indicators, and selected rows use shades of the same subdued accent hue, including Markdown links. The header logo follows the theme. The 表示モード controls offer ライト, ダーク, and 自動. Light and dark override the OS preference; 自動 (the default) follows OS changes immediately. Folder icon colors and semantic warning, priority, and completed-status colors remain distinct.
 
 The selection is stored separately in localStorage (`todo:theme`) and restored after a reload. Missing, invalid, or inaccessible preferences, including presets that no longer exist, use インディゴ; if storage is unavailable, themes can still be selected for the current session. Display mode is saved separately as `todo:appearance`; missing or invalid values fall back to 自動. Theme and mode settings are not included in task exports. The dialog supports radio-button keyboard navigation, Escape, and a close button, and returns focus to the header button when closed.
 
+### Header menu
+
+The ⋯ button (その他の操作) at the right of the header opens a menu with, from top to bottom: 言語 (日本語 and English, with a check mark on the current language), テーマ…, エクスポート, and インポート. These are occasional actions, so they share one button and keep the header uncluttered on narrow screens; the ☰ button on the left stays reserved for the folder and status navigation. Choosing an item closes the menu and runs it: a language applies immediately, テーマ… opens the theme dialog, エクスポート downloads the file, and インポート opens the file picker. エクスポート is shown but unavailable while there are no todos and no folders.
+
+The menu follows the WAI-ARIA menu pattern: the button announces the popup and its state, opening it (by click, Enter, Space, ↓, or ↑) focuses the first item, ↑ / ↓ move between items and wrap around, Home and End jump to the first and last item, and Escape closes the menu and returns focus to the button. Tab or a click outside closes it as well. The menu fits within narrow screens.
+
 ### Language
 
-The UI is available in English and Japanese. A language selector in the header (a globe icon with 日本語 / English; only the icon on narrow screens) switches the whole screen immediately, including button labels, accessible names, confirmations, notifications, and import errors. Language names are always shown in their own language.
+The UI is available in English and Japanese. Choosing 日本語 or English in the header menu switches the whole screen immediately, including button labels, accessible names, confirmations, notifications, and import errors. Language names are always shown in their own language.
 
 Until a language is chosen, the app uses the first of Japanese or English found in the browser's preferred languages (`navigator.languages`, falling back to `navigator.language`); browsers that prefer neither use English. The choice is stored in localStorage (`todo:language`) and wins over the browser language after a reload; if storage is unavailable, the choice lasts for the current page. Changing the language in another tab is applied here too. The `lang` attribute of the page and its description follow the selected language.
 
@@ -90,7 +97,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ Header: TODO                          [エクスポート] [インポート] │
+│ Header: TODO                                              [⋯] │
 ├────────────────┬─────────────────────────────────────────────┤
 │ すべて       5 │ 仕事 / 案件 A                               │
 │ 未分類       2 │ Add form: [やること      ] [詳細] [追加]    │
@@ -107,7 +114,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 └──────────────────────────────────────────────────────────────┘
 ```
 
-On narrow screens, the menu button appears on the left side of the header and opens the sidebar as a drawer without moving the tasks. The header buttons show icons only. Folder rows show their buttons only on hover or focus on wide screens.
+On narrow screens, the menu button appears on the left side of the header and opens the sidebar as a drawer without moving the tasks. Folder rows show their buttons only on hover or focus on wide screens.
 
 ## Data model
 
