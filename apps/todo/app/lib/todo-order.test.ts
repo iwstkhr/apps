@@ -58,4 +58,39 @@ describe('custom order', () => {
     expect(ids(next)).toEqual(['c', 'a', 'b']);
     expect(legacy.every((todo) => todo.customOrder === null)).toBe(true);
   });
+
+  it('leaves hidden and trashed todos untouched once orders are set', () => {
+    const now = new Date('2026-10-11T00:00:00.000Z');
+    // ゴミ箱から完全に削除した後のように、番号に隙間がある
+    const first = createTodoFixture({ id: 'first', customOrder: 0 });
+    const other = createTodoFixture({ id: 'other', customOrder: 3 });
+    const trashed = createTodoFixture({
+      id: 'trashed',
+      customOrder: 5,
+      deletedAt: '2026-10-01T00:00:00.000Z',
+    });
+    const last = createTodoFixture({ id: 'last', customOrder: 8 });
+    const todos = [first, other, trashed, last];
+
+    const next = reorderTodos(todos, ['first', 'last'], 'last', 'first', 'before', now);
+    // 表示中の 2 件が番号を入れ替え、ほかは同じオブジェクトのまま (更新日時も変わらない)
+    expect(next.find((todo) => todo.id === 'last')).toMatchObject({
+      customOrder: 0,
+      updatedAt: now.toISOString(),
+    });
+    expect(next.find((todo) => todo.id === 'first')?.customOrder).toBe(8);
+    expect(next[1]).toBe(other);
+    expect(next[2]).toBe(trashed);
+  });
+
+  it('renumbers everything once when orders are duplicated', () => {
+    const x = createTodoFixture({ id: 'x', customOrder: 1 });
+    const y = createTodoFixture({ id: 'y', customOrder: 1, createdAt: '2026-09-01T00:00:00.000Z' });
+    const z = createTodoFixture({ id: 'z', customOrder: 2 });
+    const next = reorderTodos([x, y, z], ['x', 'y', 'z'], 'z', 'x', 'before');
+    expect(
+      [...next].sort((a, b) => (a.customOrder ?? 0) - (b.customOrder ?? 0)).map((t) => t.id),
+    ).toEqual(['z', 'x', 'y']);
+    expect(new Set(next.map((todo) => todo.customOrder)).size).toBe(3);
+  });
 });

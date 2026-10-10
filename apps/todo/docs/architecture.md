@@ -50,7 +50,7 @@ app/
   lib/todo-db.ts                IndexedDB access (open, read, put, delete, replace)
   lib/folder-tree.ts            Folder tree helpers: ordering, paths, subtrees, repair, counts
   lib/todo-drag.ts              Drag data for moving a todo onto a folder
-  lib/todo-order.ts             Custom comparator and reordering visible slots without moving hidden tasks
+  lib/todo-order.ts             Custom comparator and reordering visible slots without moving hidden tasks; once every todo has a unique order, only the moved todos get new orders, so hidden and trashed todos keep their `updatedAt` for merge imports
   lib/export-import.ts          Export file creation, import parsing, and merging
   lib/todo-filters.ts           Filtering and sorting (pure functions)
   lib/styles.ts                 Shared Tailwind class strings

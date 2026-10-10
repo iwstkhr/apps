@@ -27,11 +27,25 @@ export function reorderTodos(
   const targetIndex = next.findIndex((todo) => todo.id === targetId);
   next.splice(targetIndex + Number(position === 'after'), 0, moved);
   if (next.every((todo, index) => todo === shown[index])) return [...todos];
-  let shownIndex = 0;
-  const ranked = ordered.map((todo) => (visible.has(todo.id) ? next[shownIndex++] : todo));
-  const byId = new Map(ranked.map((todo, index) => [todo.id, index]));
+  // すでに全タスクに重ならない順番があれば、表示中のタスクが持っていた番号を入れ替えるだけにする。
+  // 非表示 (別フォルダ・ゴミ箱) のタスクを書き換えないので、その更新日時も変わらず、
+  // マージのインポートで「並べ替えただけ」のタスクが新しい扱いになることもない
+  const slots = shown.map((todo) => todo.customOrder);
+  const orders = ordered.map((todo) => todo.customOrder);
+  const isStrictlyIncreasing = orders.every(
+    (order, index) => order !== null && (index === 0 || order > (orders[index - 1] ?? -1)),
+  );
+  let byId: Map<string, number>;
+  if (isStrictlyIncreasing) {
+    byId = new Map(next.map((todo, index) => [todo.id, slots[index] as number]));
+  } else {
+    // 番号が無い・重なっている (以前のデータやインポート) ときだけ、全体を 0 から振り直す
+    let shownIndex = 0;
+    const ranked = ordered.map((todo) => (visible.has(todo.id) ? next[shownIndex++] : todo));
+    byId = new Map(ranked.map((todo, index) => [todo.id, index]));
+  }
   return todos.map((todo) => {
-    const customOrder = byId.get(todo.id) ?? 0;
+    const customOrder = byId.get(todo.id) ?? todo.customOrder ?? 0;
     return todo.customOrder === customOrder
       ? todo
       : { ...todo, customOrder, updatedAt: now.toISOString() };
