@@ -42,7 +42,7 @@ describe('readViewState / writeViewState', () => {
       folder: 'all',
       collapsed: ['a'],
       sidebarWidth: SIDEBAR_WIDTH.default,
-      sort: 'due',
+      sort: 'created',
     });
   });
 

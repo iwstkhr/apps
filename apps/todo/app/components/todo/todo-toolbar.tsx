@@ -5,11 +5,12 @@ import { t } from '~/lib/i18n';
 import { fieldClass, inputClass } from '~/lib/styles';
 import type { SortKey, TodoFilters } from '~/lib/todo-filters';
 
+// 既定の「新しい順」を先頭に置き、手で並べ替えるカスタムは最後にする
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'created', label: '新しい順' },
   { value: 'due', label: '期限順' },
   { value: 'priority', label: '優先度順' },
   { value: 'status', label: 'ステータス順' },
-  { value: 'created', label: '新しい順' },
   { value: 'custom', label: 'カスタム' },
 ];
 

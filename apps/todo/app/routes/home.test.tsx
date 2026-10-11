@@ -74,7 +74,14 @@ describe('Home', () => {
       ],
     });
     const user = await renderHome();
-    expect(screen.getByRole('combobox', { name: '並び順' })).toHaveValue('due');
+    const sortSelect = screen.getByRole('combobox', { name: '並び順' });
+    expect(sortSelect).toHaveValue('created');
+    // 既定の並び順を候補の先頭に置く
+    expect(
+      within(sortSelect)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['新しい順', '期限順', '優先度順', 'ステータス順', 'カスタム']);
     const tagFilter = screen.getByRole('combobox', { name: 'タグで絞り込み' });
     expect(screen.getByText('タグ', { selector: 'label' })).toHaveAttribute('for', tagFilter.id);
     expect(screen.queryByRole('button', { name: 'タグの絞り込みを解除' })).not.toBeInTheDocument();

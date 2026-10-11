@@ -20,7 +20,7 @@ export const DEFAULT_FILTERS: TodoFilters = {
   keyword: '',
   status: 'all',
   tag: null,
-  sort: 'due',
+  sort: 'created',
 };
 
 function matchesKeyword(todo: Todo, keyword: string): boolean {

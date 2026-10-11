@@ -21,7 +21,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Delete | The trash button moves one todo to the trash without asking, and 完了済みをゴミ箱に移動 moves all completed todos in the current view there. A notice with 元に戻す (undo) appears; see [Trash](#trash) |
 | Folders | See [Folders](#folders) |
 | Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive). The keyword field, 並び順, and タグ sit on one row and wrap on narrow screens; 並び順 and タグ show visible captions. While a tag is selected its selector is highlighted and an × button next to it clears the tag filter. The タグ selector is hidden while no todo has tags. In the status control each status has an icon with its own shape and color: すべて a stack in the text color, 未着手 an empty gray circle, 進行中 a blue play icon, 保留 a purple pause icon, and 完了 a green check. The colors stay the same in every theme and keep at least 3:1 contrast against white and dark mode |
-| Sort | 期限順 (default), 優先度順, ステータス順, 新しい順, カスタム. Chosen from the 並び順 selector. Completed todos are listed after the others except in カスタム |
+| Sort | 新しい順 (default), 期限順, 優先度順, ステータス順, カスタム. Chosen from the 並び順 selector. Completed todos are listed after the others except in カスタム |
 | Header menu | See [Header menu](#header-menu) |
 | Export | Saves every todo and folder to `todo-export-YYYYMMDD.json` |
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
@@ -101,10 +101,10 @@ Editing shows the original Markdown source. Storage, keyword search, and JSON ex
 
 | Sort | Order |
 | --- | --- |
+| 新しい順 | Creation time, newest first |
 | 期限順 | Due date ascending (todos without a due date last), then priority, then newest first |
 | 優先度順 | Priority (high → low), then due date, then newest first |
 | ステータス順 | 未着手 → 進行中 → 保留 → 完了 (logical ascending order), then due date, then priority, then newest first |
-| 新しい順 | Creation time, newest first |
 | カスタム | User-defined order, including completed todos |
 
 In カスタム, drag a task header onto the upper or lower half of another task to insert it before or after that task. A blue line marks the insertion point. Up/down buttons also reorder tasks on narrow screens and by keyboard. The order is shared across folders and filters; reordering a filtered list changes only the slots of its visible tasks, keeping hidden tasks in place. Before the first reorder, tasks appear newest first. New tasks are appended once a custom order has been established. The order is saved in IndexedDB and included in exports; the selected sort mode is restored from localStorage after a reload. Other sort modes retain their existing behavior.
@@ -121,7 +121,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 ├────────────────┬─────────────────────────────────────────────┤
 │ フォルダ   [+] │ 仕事 / 案件 A                               │
 │   すべて     5 │ Add form: [+ 新しいタスク ] [詳細] [+ 追加] │
-│   未分類     2 │ [🔍 キーワード ] 並び順[期限順▾] タグ[#家▾]×│
+│   未分類     2 │ [🔍 キーワード]並び順[新しい順▾] タグ[#家▾]×│
 │ ▾ 仕事       2 │ すべて 5 | 未着手 2 | 進行中 1 | 保留 1 | … │
 │   ▾ 案件 A   1 │ ┌─────────────────────────────────────────┐ │
 │       資料   1 │ │ ☐ Title                        ✎  🗑    │ │

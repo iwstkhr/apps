@@ -30,7 +30,7 @@ const titles = (todos: { title: string }[]) => todos.map((todo) => todo.title);
 
 describe('applyFilters', () => {
   it('sorts by due date with no-due last and done items at the end', () => {
-    expect(titles(applyFilters(all, DEFAULT_FILTERS))).toEqual([
+    expect(titles(applyFilters(all, { ...DEFAULT_FILTERS, sort: 'due' }))).toEqual([
       '会議資料',
       '請求書を送る',
       '牛乳',
