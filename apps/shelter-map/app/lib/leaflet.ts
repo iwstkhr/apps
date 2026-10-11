@@ -40,4 +40,14 @@ export function bindModifierScrollWheelZoom(map: L.Map): () => void {
   return () => container.removeEventListener('wheel', handleWheel);
 }
 
+// Leaflet's own credit link in the attribution prefix opens in the same tab, which would leave
+// the app; open it in a new tab like the other attribution links.
+export function openAttributionPrefixInNewTab(map: L.Map): void {
+  const { attributionControl } = map;
+  const prefix = attributionControl?.options.prefix;
+  if (attributionControl && typeof prefix === 'string') {
+    attributionControl.setPrefix(prefix.replaceAll('<a ', '<a target="_blank" rel="noreferrer" '));
+  }
+}
+
 export { L };

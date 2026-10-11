@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { ShelterFilterBar } from '~/components/filter/shelter-filter-bar';
 import { type MobileView, ViewTabs } from '~/components/layout/view-tabs';
 import { CurrentLocationButton } from '~/components/map/current-location-button';
@@ -10,6 +10,7 @@ import { MapTileLayerControl } from '~/components/map/map-tile-layer-control';
 import { ShelterDataLoadingOverlay } from '~/components/map/shelter-data-loading-overlay';
 import { MapTable } from '~/components/table/map-table';
 import { useDebouncedValue } from '~/hooks/use-debounced-value';
+import { useMapControlContainer } from '~/hooks/use-map-control-container';
 import { LG_MEDIA_QUERY, SM_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query';
 import { useShelterMap } from '~/hooks/use-shelter-map';
 import { cn } from '~/lib/cn';
@@ -44,7 +45,11 @@ export default function Home() {
     isLocating,
     locationError,
     dismissLocationError,
+    mapRef,
+    mapReady,
   } = useShelterMap(mapContainerRef, appliedFilters);
+  // A Leaflet control, so the button stacks above the attribution even when it wraps on phones.
+  const locationControl = useMapControlContainer(mapRef, mapReady, 'bottomright');
   const [mobileView, setMobileView] = useState<MobileView>('map');
   const [listCollapsed, setListCollapsed] = useState(false);
   const listPanelId = useId();
@@ -91,7 +96,11 @@ export default function Home() {
             controls={listPanelId}
             onToggle={() => setListCollapsed((collapsed) => !collapsed)}
           />
-          <CurrentLocationButton isLocating={isLocating} onClick={locate} />
+          {locationControl &&
+            createPortal(
+              <CurrentLocationButton isLocating={isLocating} onClick={locate} />,
+              locationControl,
+            )}
           {locationError && <MapAlert message={locationError} onDismiss={dismissLocationError} />}
         </div>
 

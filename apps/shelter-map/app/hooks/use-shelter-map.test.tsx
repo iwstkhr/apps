@@ -271,6 +271,9 @@ describe('useShelterMap', () => {
     expect(addedLayers).toHaveLength(2);
     expect(addedLayers.every((layer: unknown) => layer instanceof L.LayerGroup)).toBe(true);
     const shelterGroup = addedLayers.find((layer: unknown) => layer instanceof L.FeatureGroup);
+    expect((shelterGroup as L.FeatureGroup).getAttribution?.()).toContain(
+      'href="https://www.gsi.go.jp/bousaichiri/hinanbasho.html"',
+    );
     expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
       shelterGroup,
       expect.any(Map),

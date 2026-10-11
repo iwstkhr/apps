@@ -142,6 +142,7 @@ On `moveend` / `zoomlevelschange`, the app:
 | `useCurrentLocation` | Read the Geolocation API, draw the current location, and report errors |
 | `useDebouncedValue` | Delay keyword updates |
 | `useMediaQuery` | Switch layouts at the `sm` and `lg` breakpoints |
+| `useMapControlContainer` | Add an empty Leaflet control for React to portal into (the current location button) |
 
 ### Data / Types
 
@@ -153,6 +154,7 @@ On `moveend` / `zoomlevelschange`, the app:
 | `types/shelter-filters` | Define the filter state, keyword and disaster type matching |
 | `types/tile-layer` | Define tile layers and defaults |
 | `generated/dataset-meta` | Provide the data update date displayed in the UI |
+| `lib/dataset` | The source URL and the dataset attribution shown on the map |
 
 ### Map helpers (`app/lib/map/`)
 

@@ -37,7 +37,7 @@ Specifications for a web application that displays designated emergency evacuati
 │ Map (tile switch / help / current location /      │  flex 5
 │      loading indicator)                           │
 ├──────────────────────────────────────────────────┤
-│ Data source / viewport toggle / result count      │
+│ Viewport toggle / result count                    │
 │ Table (virtual scrolling)                         │  flex 4
 └──────────────────────────────────────────────────┘
 ```
@@ -74,6 +74,10 @@ The help panel at the lower left can be collapsed to a "?" button. It is open by
 
 The tile switch at the upper right is a segmented control (地図 / 写真).
 
+#### Attribution
+
+The attribution control at the lower right credits the tiles and the dataset: "避難場所: 国土地理院 (`DATASET_UPDATED_AT` 時点)", linking to the GSI source page. It stays visible with the map on every layout, is at most 16rem wide (two lines) to stay clear of the map help, and the current location button is a Leaflet control stacked above it.
+
 #### Current location
 
 The button at the lower right reads the position with the Geolocation API (high accuracy, 10-second timeout), draws the position with its accuracy circle, and flies the map there (zoom 15 or more). Denied permission, timeouts, other failures, and browsers without the API show a dismissible message at the top of the map.
@@ -104,6 +108,7 @@ Clicking or tapping shows:
 - Address
 - Designation status for each disaster type in two columns, styled to distinguish designated and undesignated sites
 - A link that opens directions in Google Maps (`https://www.google.com/maps/dir/?api=1&destination={lat},{lng}`); the starting point is left to Google Maps
+- A note to check the latest designations with the municipality (the data is updated monthly)
 
 Strings from the data are HTML-escaped before insertion. The site whose popup is open keeps its layer even when the popup's auto-pan moves it out of the viewport.
 
@@ -116,7 +121,6 @@ Strings from the data are HTML-escaped before insertion. The site whose popup is
 | Disaster type × 8 | Designated (dot in the type's color) / Not designated (gray dot) |
 
 - Display the result count at the upper right; with "地図の表示範囲のみ" on, show only sites inside the map viewport and the count as "N 件 / 該当 M 件"
-- Display the source link and data update date (`DATASET_UPDATED_AT`)
 - Use TanStack Virtual for virtual scrolling
 - Between `sm` and `lg`, use a minimum width of approximately 58rem with horizontal scrolling
 - Selecting a row (click, Enter, or Space) flies the map to the site (zoom 16 or more) and opens its popup; on phones it also switches to the map tab

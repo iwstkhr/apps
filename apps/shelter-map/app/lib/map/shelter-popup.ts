@@ -32,7 +32,7 @@ export function getPopupContent(shelter: Shelter): string {
     .join('');
   popup += `<div class="shelter-popup-types">${types}</div>`;
 
-  popup += `<hr class="shelter-popup-divider"/><a class="shelter-popup-directions" href="${escapeHtml(getDirectionsUrl(shelter))}" target="_blank" rel="noreferrer">経路を開く (Google マップ)</a>`;
+  popup += `<hr class="shelter-popup-divider"/><a class="shelter-popup-directions" href="${escapeHtml(getDirectionsUrl(shelter))}" target="_blank" rel="noreferrer">経路を開く (Google マップ)</a><p class="shelter-popup-note">最新の指定状況は各市町村の情報をご確認ください。</p>`;
 
   return popup;
 }

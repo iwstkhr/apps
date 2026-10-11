@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCurrentLocation } from '~/hooks/use-current-location';
 import { useLeafletMap } from '~/hooks/use-leaflet-map';
 import { useShelterData } from '~/hooks/use-shelter-data';
+import { DATASET_ATTRIBUTION } from '~/lib/dataset';
 import { L } from '~/lib/leaflet';
 import { SHELTER_FOCUS_MIN_ZOOM } from '~/lib/map/constants';
 import {
@@ -21,9 +22,10 @@ export function useShelterMap(
   const { shelters, isLoading, loadError } = useShelterData();
   const currentLocation = useCurrentLocation(mapRef, mapReady);
 
-  // A feature group so popup events from each shelter layer bubble up to one listener.
+  // A feature group so popup events from each shelter layer bubble up to one listener. Its
+  // attribution credits the dataset in the map's attribution control while it is on the map.
   const [shelterLayers] = useState(() => ({
-    group: L.featureGroup(),
+    group: L.featureGroup([], { attribution: DATASET_ATTRIBUTION }),
     registry: createShelterLayerRegistry(),
   }));
   const displayedShelters = useMemo(() => filterShelters(shelters, filters), [shelters, filters]);
@@ -149,5 +151,7 @@ export function useShelterMap(
     loadError,
     changeTileLayer,
     ...currentLocation,
+    mapRef,
+    mapReady,
   };
 }

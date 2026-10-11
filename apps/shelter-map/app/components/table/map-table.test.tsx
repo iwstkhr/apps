@@ -6,7 +6,7 @@ import { MapTable } from '~/components/table/map-table';
 import { createShelter } from '~/test/fixtures';
 
 describe('MapTable', () => {
-  it('shows the displayed shelter count and dataset source', () => {
+  it('shows the displayed shelter count without the dataset source', () => {
     const shelters = [
       createShelter({ id: 'yokohama', name: '横浜避難所' }),
       createShelter({ id: 'kawasaki', name: '川崎避難所', address: '神奈川県川崎市' }),
@@ -19,9 +19,7 @@ describe('MapTable', () => {
     );
 
     expect(screen.getByText('2 件')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '国土地理院 指定緊急避難場所データ' })).toHaveAttribute(
-      'href',
-      'https://www.gsi.go.jp/bousaichiri/hinanbasho.html',
-    );
+    // The source is credited in the map's attribution instead
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 });

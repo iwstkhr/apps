@@ -34,4 +34,10 @@ describe('getPopupContent', () => {
       'href="https://www.google.com/maps/dir/?api=1&amp;destination=35.4,139.6" target="_blank" rel="noreferrer"',
     );
   });
+
+  it('reminds users to check the latest designations with the municipality', () => {
+    expect(getPopupContent(createShelter())).toContain(
+      '<p class="shelter-popup-note">最新の指定状況は各市町村の情報をご確認ください。</p>',
+    );
+  });
 });

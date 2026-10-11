@@ -20,6 +20,7 @@ const unbindModifierScrollWheelZoom = vi.fn();
 
 vi.mock('~/lib/leaflet', () => ({
   bindModifierScrollWheelZoom: vi.fn(() => unbindModifierScrollWheelZoom),
+  openAttributionPrefixInNewTab: vi.fn(),
   L: {
     map: vi.fn(() => mockMap),
     tileLayer: vi.fn((url: string) =>
