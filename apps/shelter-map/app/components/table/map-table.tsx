@@ -2,7 +2,10 @@ import { useRef } from 'react';
 import { ShelterTableHeader } from '~/components/table/shelter-table-header';
 import { ShelterTableRows } from '~/components/table/shelter-table-rows';
 import { DATASET_UPDATED_AT } from '~/generated/dataset-meta';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query';
+import { cn } from '~/lib/cn';
 import type { Shelter } from '~/types/shelter';
+import type { ShelterTypeKey } from '~/types/shelter-type';
 
 const DATASET_SOURCE_URL = 'https://www.gsi.go.jp/bousaichiri/hinanbasho.html';
 const DATASET_SOURCE_LABEL = '国土地理院 指定緊急避難場所データ';
@@ -16,6 +19,7 @@ interface MapTableProps {
   onWithinMapOnlyChange?: (withinMapOnly: boolean) => void;
   selectedShelterId?: Shelter['id'] | null;
   onSelect?: (shelter: Shelter) => void;
+  highlightTypes?: readonly ShelterTypeKey[];
 }
 
 export function MapTable({
@@ -25,9 +29,12 @@ export function MapTable({
   onWithinMapOnlyChange,
   selectedShelterId,
   onSelect,
+  highlightTypes,
 }: MapTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const rows = withinMapOnly ? visibleShelters : shelters;
+  // Phones show each shelter as a card instead of a wide table that needs horizontal scrolling.
+  const layout = useMediaQuery(DESKTOP_MEDIA_QUERY, true) ? 'table' : 'card';
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
@@ -64,13 +71,22 @@ export function MapTable({
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">
         <div ref={tableContainerRef} className="min-h-0 flex-1 overflow-auto">
-          <div className="min-w-[58rem] text-left text-sm text-slate-800" role="table">
-            <ShelterTableHeader />
+          <div
+            className={cn(
+              'text-left text-sm text-slate-800',
+              layout === 'table' && 'min-w-[58rem]',
+            )}
+            role="table"
+            aria-label="避難場所の一覧"
+          >
+            {layout === 'table' && <ShelterTableHeader />}
             <ShelterTableRows
               shelters={rows}
               scrollContainerRef={tableContainerRef}
               selectedShelterId={selectedShelterId}
               onSelect={onSelect}
+              layout={layout}
+              highlightTypes={highlightTypes}
             />
           </div>
         </div>

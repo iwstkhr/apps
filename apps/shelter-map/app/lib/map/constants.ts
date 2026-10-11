@@ -23,6 +23,21 @@ export const SHELTER_CIRCLE_STYLES = {
   dim: { radius: 4, color: '#64748b', fillColor: '#cbd5e1', fillOpacity: 0.7, weight: 1 },
 } as const satisfies Record<ShelterLayerStyle, CircleMarkerOptions>;
 
+// Circles shrink when zoomed out so thousands of them do not cover the map.
+export function getShelterCircleRadiusScale(zoom: number): number {
+  if (zoom < 10) {
+    return 0.5;
+  }
+  return zoom < 13 ? 0.75 : 1;
+}
+
+// Drawing order from bottom to top, so matching shelters stay visible where they overlap.
+export const SHELTER_LAYER_STYLE_ORDER: Record<ShelterLayerStyle, number> = {
+  dim: 0,
+  default: 1,
+  match: 2,
+};
+
 // Matching pins are drawn above dimmed ones where they overlap.
 export const SHELTER_MARKER_Z_INDEX_OFFSETS: Record<ShelterLayerStyle, number> = {
   default: 0,

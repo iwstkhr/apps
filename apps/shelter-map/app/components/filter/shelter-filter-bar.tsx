@@ -51,7 +51,7 @@ export function ShelterFilterBar({
       <div className="flex min-w-0 items-center gap-2">
         <fieldset className="m-0 min-w-0 flex-1 border-0 p-0">
           <legend className="sr-only">災害種別（選択した種別すべてに対応する避難場所）</legend>
-          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 sm:flex-wrap sm:overflow-visible">
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible">
             {shelterTypeKeys.map((key) => {
               const selected = filters.types.includes(key);
               return (

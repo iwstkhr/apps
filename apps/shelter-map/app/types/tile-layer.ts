@@ -1,5 +1,6 @@
 interface TileLayerDefinition {
   label: string;
+  shortLabel: string;
   url: string;
   attribution: string;
 }
@@ -7,11 +8,13 @@ interface TileLayerDefinition {
 export const TILE_LAYERS = {
   osm: {
     label: 'OpenStreetMap',
+    shortLabel: '地図',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '© OpenStreetMap',
   },
   gia_photo: {
     label: '国土地理院 (写真)',
+    shortLabel: '写真',
     url: 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',
     attribution: '© 国土地理院',
   },

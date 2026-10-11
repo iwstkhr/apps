@@ -68,10 +68,12 @@ test.describe('地図', () => {
 
   test('地図タイルを国土地理院の写真に切り替えられる', async ({ page }) => {
     await openApp(page);
-    await expect(page.getByRole('radio', { name: 'OpenStreetMap' })).toBeChecked();
+    await expect(page.getByRole('radio', { name: '地図' })).toBeChecked();
 
     const photoTile = page.waitForRequest(/cyberjapandata\.gsi\.go\.jp\/xyz\/seamlessphoto\//);
-    await page.getByRole('radio', { name: '国土地理院 (写真)' }).check();
+    // The radio is visually hidden inside its segment button, so click the label
+    await page.getByRole('group', { name: '地図タイル' }).getByText('写真').click();
+    await expect(page.getByRole('radio', { name: '写真' })).toBeChecked();
     await photoTile;
     await expect(page.locator('.leaflet-tile[src*="cyberjapandata"]').first()).toBeAttached();
     await expect(page.locator('.leaflet-tile[src*="openstreetmap"]')).toHaveCount(0);
@@ -128,19 +130,42 @@ test.describe('位置情報が許可されていないとき', () => {
 test.describe('スマートフォン', () => {
   test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
 
-  test('操作方法の案内がタッチ向けになり、表は横にスクロールできる', async ({ page }) => {
+  test('操作方法の案内は折りたたまれていて、開くとタッチ向けの説明になる', async ({ page }) => {
     await openApp(page);
 
     const hint = page.getByRole('region', { name: '地図の操作方法' });
+    await expect(hint).toBeHidden();
+    await page.getByRole('button', { name: '地図の操作方法を表示' }).click();
     await expect(hint.getByText('ピンチ')).toBeVisible();
     await expect(hint.getByText('タップ')).toBeVisible();
     await expect(hint.getByText('クリック')).toBeHidden();
+  });
 
-    const scroller = page.getByRole('table').locator('xpath=..');
+  test('地図と一覧をタブで切り替え、一覧はカード表示で、選ぶと地図に戻って表示する', async ({
+    page,
+  }) => {
+    await openApp(page);
+
+    const mapTab = page.getByRole('tab', { name: '地図' });
+    const listTab = page.getByRole('tab', { name: /一覧/ });
+    await expect(mapTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('table')).toBeHidden();
+    await expect(listTab).toContainText('(4)');
+
+    await listTab.click();
+    await expect(page.locator('.leaflet-container')).toBeHidden();
+    const table = page.getByRole('table');
+    await expect(table.getByRole('columnheader')).toHaveCount(0);
+    const scroller = table.locator('xpath=..');
     const { scrollWidth, clientWidth } = await scroller.evaluate((el) => ({
       scrollWidth: el.scrollWidth,
       clientWidth: el.clientWidth,
     }));
-    expect(scrollWidth).toBeGreaterThan(clientWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+
+    await tableRows(page).filter({ hasText: '川崎テスト公園' }).click();
+    await expect(mapTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.shelter-popup strong')).toHaveText('川崎テスト公園');
+    await expect.poll(() => currentZoom(page)).toBe(16);
   });
 });

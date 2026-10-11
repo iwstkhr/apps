@@ -27,6 +27,7 @@ const mockMap = {
   getZoom: vi.fn(() => 15),
   getSize: vi.fn(() => ({ x: 800, y: 600 })),
   flyTo: vi.fn(),
+  invalidateSize: vi.fn(),
 } as unknown as LeafletMap & {
   on: ReturnType<typeof vi.fn>;
   off: ReturnType<typeof vi.fn>;
@@ -215,6 +216,42 @@ describe('useShelterMap', () => {
       getMoveEndHandler()();
     });
     expect(openPopup).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the shelter with an open popup on the map after it leaves the viewport', async () => {
+    const kawasakiLayer = {} as L.Layer;
+    vi.mocked(shelterRenderer.syncShelterLayers).mockImplementation((_group, registry) => {
+      registry.set(kawasaki.id, { kind: 'marker', style: 'default', layer: kawasakiLayer });
+    });
+
+    const mapContainerRef = createRef<HTMLDivElement>();
+    const { result } = renderHook(() => useShelterMap(mapContainerRef, emptyShelterFilters));
+
+    await waitFor(() => {
+      expect(result.current.visibleShelters).toEqual(shelters);
+    });
+
+    const shelterGroup = mockMap.addLayer.mock.calls
+      .map((call: unknown[]) => call[0])
+      .find((layer: unknown) => layer instanceof L.FeatureGroup) as L.FeatureGroup;
+    act(() => {
+      shelterGroup.fire('popupopen', { layer: kawasakiLayer, popup: {} });
+    });
+    expect(result.current.selectedShelterId).toBe('kawasaki');
+
+    vi.spyOn(viewportFilter, 'filterSheltersWithinMap').mockReturnValue([yokohama]);
+    act(() => {
+      getMoveEndHandler()();
+    });
+
+    expect(result.current.visibleShelters).toEqual([yokohama]);
+    expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.any(Map),
+      [yokohama, kawasaki],
+      15,
+      [],
+    );
   });
 
   it('adds shelter layer groups to the map and removes them on unmount', async () => {

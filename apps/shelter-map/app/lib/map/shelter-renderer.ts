@@ -1,6 +1,8 @@
 import { L } from '~/lib/leaflet';
 import {
+  getShelterCircleRadiusScale,
   SHELTER_CIRCLE_STYLES,
+  SHELTER_LAYER_STYLE_ORDER,
   SHELTER_MARKER_LIMIT_BELOW_MIN_ZOOM,
   SHELTER_MARKER_MIN_ZOOM,
   SHELTER_MARKER_Z_INDEX_OFFSETS,
@@ -18,6 +20,8 @@ interface ShelterLayerEntry {
   kind: ShelterLayerKind;
   style: ShelterLayerStyle;
   layer: L.Layer;
+  /** Circles only: the zoom-dependent scale their radius was last set with. */
+  radiusScale?: number;
 }
 
 export type ShelterLayerRegistry = Map<Shelter['id'], ShelterLayerEntry>;
@@ -60,10 +64,15 @@ function getShelterPinIcon(style: ShelterLayerStyle): L.DivIcon {
   return icon;
 }
 
+function getCircleRadius(style: ShelterLayerStyle, radiusScale: number): number {
+  return SHELTER_CIRCLE_STYLES[style].radius * radiusScale;
+}
+
 function createShelterLayer(
   shelter: Shelter,
   kind: ShelterLayerKind,
   style: ShelterLayerStyle,
+  radiusScale: number,
 ): L.Layer {
   const latLng: L.LatLngTuple = [shelter.latitude, shelter.longitude];
   const layer =
@@ -73,7 +82,10 @@ function createShelterLayer(
           zIndexOffset: SHELTER_MARKER_Z_INDEX_OFFSETS[style],
           title: shelter.name,
         })
-      : L.circleMarker(latLng, SHELTER_CIRCLE_STYLES[style]);
+      : L.circleMarker(latLng, {
+          ...SHELTER_CIRCLE_STYLES[style],
+          radius: getCircleRadius(style, radiusScale),
+        });
 
   return layer.bindPopup(getPopupContent(shelter), SHELTER_POPUP_OPTIONS);
 }
@@ -88,28 +100,36 @@ export function syncShelterLayers(
   const kind: ShelterLayerKind = shouldRenderShelterMarkers(zoom, shelters.length)
     ? 'marker'
     : 'circle';
+  const radiusScale = getShelterCircleRadiusScale(zoom);
   const nextStyles = new Map(
     shelters.map((shelter) => [shelter.id, getShelterLayerStyle(shelter, selectedTypes)]),
   );
 
   for (const [shelterId, entry] of registry) {
-    if (entry.kind === kind && entry.style === nextStyles.get(shelterId)) {
-      continue;
+    if (entry.kind !== kind || entry.style !== nextStyles.get(shelterId)) {
+      group.removeLayer(entry.layer);
+      registry.delete(shelterId);
+    } else if (entry.kind === 'circle' && entry.radiusScale !== radiusScale) {
+      (entry.layer as L.CircleMarker).setRadius(getCircleRadius(entry.style, radiusScale));
+      entry.radiusScale = radiusScale;
     }
-
-    group.removeLayer(entry.layer);
-    registry.delete(shelterId);
   }
 
-  for (const shelter of shelters) {
-    if (registry.has(shelter.id)) {
-      continue;
-    }
+  // Canvas draws in insertion order, so add dimmed shelters first and matching ones last.
+  const added = shelters
+    .filter((shelter) => !registry.has(shelter.id))
+    .map((shelter) => ({ shelter, style: nextStyles.get(shelter.id) ?? 'default' }))
+    .sort((a, b) => SHELTER_LAYER_STYLE_ORDER[a.style] - SHELTER_LAYER_STYLE_ORDER[b.style]);
 
-    const style = nextStyles.get(shelter.id) ?? 'default';
-    const layer = createShelterLayer(shelter, kind, style);
+  for (const { shelter, style } of added) {
+    const layer = createShelterLayer(shelter, kind, style, radiusScale);
     layer.addTo(group);
-    registry.set(shelter.id, { kind, style, layer });
+    registry.set(shelter.id, {
+      kind,
+      style,
+      layer,
+      radiusScale: kind === 'circle' ? radiusScale : undefined,
+    });
   }
 }
 

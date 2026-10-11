@@ -150,4 +150,36 @@ describe('syncShelterLayers', () => {
     expect(group.removeLayer).toHaveBeenCalledWith(oldLayer);
     expect(registry.get(shelter.id)?.style).toBe('match');
   });
+
+  it('resizes existing circles when the zoom changes their scale', () => {
+    const group = createGroup();
+    const registry = createShelterLayerRegistry();
+    const setRadius = vi.fn();
+    const shelter = createShelter();
+    registry.set(shelter.id, {
+      kind: 'circle',
+      style: 'default',
+      layer: { setRadius } as unknown as Layer,
+      radiusScale: 0.5,
+    });
+
+    syncShelterLayers(group, registry, shelters.slice(0, 101).concat(shelter), 13);
+
+    expect(setRadius).toHaveBeenCalledWith(6);
+    expect(registry.get(shelter.id)?.radiusScale).toBe(1);
+  });
+
+  it('adds dimmed shelters before matching ones so matches are drawn on top', () => {
+    const group = createGroup();
+    const registry = createShelterLayerRegistry();
+    const matching = createShelter({
+      id: 'matching',
+      type: { ...createShelter().type, tsunami: true },
+    });
+    const dimmed = createShelter({ id: 'dimmed' });
+
+    syncShelterLayers(group, registry, [matching, dimmed], 15, ['tsunami']);
+
+    expect([...registry.keys()]).toEqual(['dimmed', 'matching']);
+  });
 });

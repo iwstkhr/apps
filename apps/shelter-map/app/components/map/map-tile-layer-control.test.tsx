@@ -10,8 +10,8 @@ describe('MapTileLayerControl', () => {
     const { container } = render(<MapTileLayerControl onChange={vi.fn()} />);
     const fieldset = within(container).getByRole('group', { name: '地図タイル' });
 
-    expect(within(fieldset).getByRole('radio', { name: /OpenStreetMap/i })).toBeChecked();
-    expect(within(fieldset).getByRole('radio', { name: /国土地理院 \(写真\)/i })).not.toBeChecked();
+    expect(within(fieldset).getByRole('radio', { name: '地図' })).toBeChecked();
+    expect(within(fieldset).getByRole('radio', { name: '写真' })).not.toBeChecked();
   });
 
   it('renders one radio per tile layer definition', () => {
@@ -20,7 +20,9 @@ describe('MapTileLayerControl', () => {
 
     expect(radios.map((radio) => (radio as HTMLInputElement).value)).toEqual(tileLayerKeys);
     for (const key of tileLayerKeys) {
-      expect(within(container).getByRole('radio', { name: TILE_LAYERS[key].label })).toBeTruthy();
+      expect(
+        within(container).getByRole('radio', { name: TILE_LAYERS[key].shortLabel }),
+      ).toBeTruthy();
     }
   });
 
@@ -29,7 +31,7 @@ describe('MapTileLayerControl', () => {
     const { container } = render(<MapTileLayerControl onChange={onChange} />);
     const fieldset = within(container).getByRole('group', { name: '地図タイル' });
 
-    fireEvent.click(within(fieldset).getByRole('radio', { name: /国土地理院 \(写真\)/i }));
+    fireEvent.click(within(fieldset).getByRole('radio', { name: '写真' }));
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(onChange).toHaveBeenCalledWith('gia_photo');

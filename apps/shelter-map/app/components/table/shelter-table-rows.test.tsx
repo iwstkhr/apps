@@ -60,4 +60,18 @@ describe('ShelterTableRows', () => {
     );
     expect(screen.getByRole('row')).toHaveAttribute('aria-current', 'true');
   });
+
+  it('renders a card with the designated disaster types in the card layout', () => {
+    render(
+      <ShelterTableRows
+        shelters={[createShelter()]}
+        scrollContainerRef={createRef<HTMLDivElement>()}
+        layout="card"
+      />,
+    );
+
+    const cells = within(screen.getByRole('row')).getAllByRole('cell');
+    expect(cells).toHaveLength(3);
+    expect(cells[2]).toHaveTextContent('洪水地震');
+  });
 });

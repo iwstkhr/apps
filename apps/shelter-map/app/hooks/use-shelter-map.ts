@@ -31,6 +31,9 @@ export function useShelterMap(
   const [selectedShelterId, setSelectedShelterId] = useState<Shelter['id'] | null>(null);
   // The shelter whose popup opens once the map finishes moving to it.
   const pendingFocusIdRef = useRef<Shelter['id'] | null>(null);
+  // The shelter whose popup is open. Its layer is kept even when the popup's auto-pan moves the
+  // shelter itself out of view, because removing the layer would close the popup.
+  const openPopupShelterIdRef = useRef<Shelter['id'] | null>(null);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -46,6 +49,7 @@ export function useShelterMap(
       const shelterId = layer && findShelterIdByLayer(shelterLayers.registry, layer);
       if (shelterId) {
         openPopup = { popup, shelterId };
+        openPopupShelterIdRef.current = shelterId;
         setSelectedShelterId(shelterId);
       }
     };
@@ -56,6 +60,7 @@ export function useShelterMap(
       }
       const { shelterId } = openPopup;
       openPopup = null;
+      openPopupShelterIdRef.current = null;
       setSelectedShelterId((current) => (current === shelterId ? null : current));
     };
 
@@ -84,10 +89,16 @@ export function useShelterMap(
 
       const visible = filterSheltersWithinMap(map, displayedShelters);
       setVisibleShelters(visible);
+
+      const openPopupShelterId = openPopupShelterIdRef.current;
+      const openPopupShelter =
+        openPopupShelterId && !visible.some((shelter) => shelter.id === openPopupShelterId)
+          ? displayedShelters.find((shelter) => shelter.id === openPopupShelterId)
+          : undefined;
       syncShelterLayers(
         shelterLayers.group,
         shelterLayers.registry,
-        visible,
+        openPopupShelter ? [...visible, openPopupShelter] : visible,
         map.getZoom(),
         filters.types,
       );
@@ -116,6 +127,9 @@ export function useShelterMap(
         return;
       }
 
+      // The map may have just been shown; measure it before the pending focus is set,
+      // because a size change fires moveend.
+      map.invalidateSize();
       pendingFocusIdRef.current = shelter.id;
       setSelectedShelterId(shelter.id);
       map.flyTo(

@@ -58,6 +58,12 @@ a:link {
   margin: 0.5rem 0;
 }
 
+.shelter-popup .shelter-popup-types {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 0.125rem 1rem;
+}
+
 .shelter-popup .shelter-type-ready {
   color: #047857;
   font-weight: 500;
