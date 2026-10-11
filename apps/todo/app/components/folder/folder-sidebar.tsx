@@ -10,6 +10,7 @@ import {
   FaPen,
   FaTrash,
 } from 'react-icons/fa';
+import { MdDeleteForever } from 'react-icons/md';
 import { cn } from '~/lib/cn';
 import { type FolderSelection, flattenFolderTree } from '~/lib/folder-tree';
 import { t } from '~/lib/i18n';
@@ -33,6 +34,8 @@ interface FolderSidebarProps {
   trashCount: number;
   /** A task was dropped on the trash */
   onDropTodoToTrash: (todoId: string) => void;
+  /** Empty the trash (asks for confirmation) */
+  onEmptyTrash: () => void;
 }
 
 /** Drop target. Nothing can be dropped on 'all' */
@@ -74,6 +77,7 @@ export function FolderSidebar({
   onDropTodo,
   trashCount,
   onDropTodoToTrash,
+  onEmptyTrash,
 }: FolderSidebarProps) {
   const entries = useMemo(() => flattenFolderTree(folders, collapsed), [folders, collapsed]);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -136,6 +140,20 @@ export function FolderSidebar({
         <span className="truncate">{t(label)}</span>
         <Count value={count} />
       </button>
+      {/* Lets the trash be emptied without opening it. On wide screens, show it only on hover or focus */}
+      {value === 'trash' && trashCount > 0 && (
+        <div className="flex shrink-0 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
+          <button
+            type="button"
+            className={cn(actionClass, 'hover:text-red-600 dark:hover:text-red-400')}
+            onClick={onEmptyTrash}
+            aria-label={t('ゴミ箱を空にする')}
+            title={t('ゴミ箱を空にする')}
+          >
+            <MdDeleteForever className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
     </li>
   );
 

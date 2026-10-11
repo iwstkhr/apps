@@ -408,7 +408,7 @@ describe('Home', () => {
 
   describe('trash', () => {
     const nav = () => screen.getByRole('navigation', { name: 'フォルダ' });
-    const trashRow = () => within(nav()).getByRole('button', { name: /^ゴミ箱/ });
+    const trashRow = () => within(nav()).getByRole('button', { name: /^ゴミ箱(\s*\d+)?$/ });
 
     it('moves a todo to the trash without asking and can undo it from the notice', async () => {
       await putTodos([createTodoFixture({ title: '洗濯' }), createTodoFixture({ title: '掃除' })]);
@@ -538,13 +538,33 @@ describe('Home', () => {
       await answerConfirmation(user, '「掃除」を完全に削除しますか？', '完全に削除');
       expect(trashItems()).toHaveLength(1);
 
-      await user.click(screen.getByRole('button', { name: 'ゴミ箱を空にする' }));
+      await user.click(
+        within(screen.getByRole('main')).getByRole('button', { name: 'ゴミ箱を空にする' }),
+      );
       await answerConfirmation(user, 'ゴミ箱の 1 件を完全に削除しますか？', '空にする');
       expect(window.confirm).not.toHaveBeenCalled();
       expect(screen.getByText('ゴミ箱は空です。')).toBeInTheDocument();
       await waitFor(async () =>
         expect((await getAll()).todos.map((t) => t.title).sort()).toEqual(['残す', '洗濯']),
       );
+    });
+
+    it('empties the trash from the sidebar without opening it', async () => {
+      await putTodos([
+        createTodoFixture({ title: '洗濯', deletedAt: new Date().toISOString() }),
+        createTodoFixture({ title: '残す' }),
+      ]);
+      const user = await renderHome();
+
+      await user.click(within(nav()).getByRole('button', { name: 'ゴミ箱を空にする' }));
+      await answerConfirmation(user, 'ゴミ箱の 1 件を完全に削除しますか？', '空にする');
+      await waitFor(() => expect(trashRow()).toHaveTextContent(/^ゴミ箱$/));
+      // The button disappears once the trash is empty, and the current view stays as it was
+      expect(
+        within(nav()).queryByRole('button', { name: 'ゴミ箱を空にする' }),
+      ).not.toBeInTheDocument();
+      expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('残す')]);
+      expect((await getAll()).todos.map((t) => t.title)).toEqual(['残す']);
     });
 
     it('moves a todo to the trash by dropping it on the trash row', async () => {

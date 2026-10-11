@@ -4,7 +4,7 @@ import { addTodo, answerConfirmation, expect, openApp, test, todoItems } from '.
 function trashRow(page: Page) {
   return page
     .getByRole('navigation', { name: 'フォルダ' })
-    .getByRole('button', { name: /^ゴミ箱/ });
+    .getByRole('button', { name: /^ゴミ箱(\s*\d+)?$/ });
 }
 
 function trashItems(page: Page) {
@@ -95,9 +95,23 @@ test('empties the trash after confirming in the app dialog', async ({ page }) =>
   await page.getByRole('button', { name: '「掃除」をゴミ箱に移動' }).click();
 
   await trashRow(page).click();
-  await page.getByRole('button', { name: 'ゴミ箱を空にする' }).click();
+  await page.getByRole('main').getByRole('button', { name: 'ゴミ箱を空にする' }).click();
   await answerConfirmation(page, 'ゴミ箱の 2 件を完全に削除しますか？', '空にする');
   await expect(page.getByText('ゴミ箱は空です。')).toBeVisible();
   // The browser's native confirmation dialog is not shown
   expect(dialogs).toBe(0);
+});
+
+test('empties the trash from the sidebar without opening it', async ({ page }) => {
+  await addTodo(page, '洗濯');
+  await addTodo(page, '掃除');
+  await page.getByRole('button', { name: '「洗濯」をゴミ箱に移動' }).click();
+
+  const nav = page.getByRole('navigation', { name: 'フォルダ' });
+  await trashRow(page).hover();
+  await nav.getByRole('button', { name: 'ゴミ箱を空にする' }).click();
+  await answerConfirmation(page, 'ゴミ箱の 1 件を完全に削除しますか？', '空にする');
+  await expect(trashRow(page)).toHaveText(/^ゴミ箱$/);
+  await expect(nav.getByRole('button', { name: 'ゴミ箱を空にする' })).toHaveCount(0);
+  await expect(todoItems(page)).toHaveText([/掃除/]);
 });

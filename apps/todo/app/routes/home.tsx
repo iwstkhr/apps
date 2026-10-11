@@ -365,6 +365,10 @@ export default function Home() {
               onDropTodo={(todoId, folderId) => void handleDropTodo(todoId, folderId)}
               trashCount={trash.length}
               onDropTodoToTrash={(todoId) => void handleRemove(todoId)}
+              onEmptyTrash={() => {
+                closeMenu();
+                handleEmptyTrash();
+              }}
             />
           </SidebarPanel>
           <SidebarResizer

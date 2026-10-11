@@ -268,7 +268,7 @@ test('uses a modal slide-out menu without shifting tasks on narrow screens', asy
 
   // Shift+Tab from the first element wraps to the last menu item (the trash) and does not leave
   await page.keyboard.press('Shift+Tab');
-  await expect(menu.getByRole('button', { name: /^ゴミ箱/ })).toBeFocused();
+  await expect(menu.getByRole('button', { name: /^ゴミ箱(\s*\d+)?$/ })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(close).toBeFocused();
   await page.keyboard.press('Escape');
