@@ -18,6 +18,8 @@ export const english: Record<string, string> = {
   すべて: 'All',
   未分類: 'Unfiled',
   画像: 'Image',
+  続きを読む: 'Read more',
+  折りたたむ: 'Show less',
 
   // Header and menu
   メニュー: 'Menu',

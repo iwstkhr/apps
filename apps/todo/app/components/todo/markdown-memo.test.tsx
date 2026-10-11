@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MarkdownMemo } from './markdown-memo';
 
 describe('MarkdownMemo', () => {
@@ -63,5 +64,51 @@ const value = 1;
       'https://example.com/image.png',
     );
     expect(container.querySelector('img')).toBeNull();
+  });
+
+  describe('long memos', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    /** Pretend the rendered memo is this tall, against a clipped box of 128px. */
+    function mockHeight(contentHeight: number) {
+      vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(contentHeight);
+      vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(128);
+    }
+
+    it('shows a short memo in full without a read more button', () => {
+      mockHeight(100);
+      render(<MarkdownMemo>短いメモ</MarkdownMemo>);
+      expect(screen.getByText('短いメモ')).toBeInTheDocument();
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+
+    it('cuts a long memo and expands and collapses it in place', async () => {
+      mockHeight(400);
+      render(<MarkdownMemo>長いメモ</MarkdownMemo>);
+      const user = userEvent.setup();
+      const button = screen.getByRole('button', { name: '続きを読む' });
+      const clip = document.getElementById(button.getAttribute('aria-controls') ?? '');
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(clip).toHaveClass('max-h-32', 'overflow-hidden');
+
+      await user.click(button);
+      expect(button).toHaveAccessibleName('折りたたむ');
+      expect(button).toHaveAttribute('aria-expanded', 'true');
+      expect(clip).not.toHaveClass('max-h-32');
+
+      await user.click(button);
+      expect(button).toHaveAccessibleName('続きを読む');
+      expect(clip).toHaveClass('max-h-32');
+    });
+
+    it('expands when focus moves into the cut-off part', () => {
+      mockHeight(400);
+      render(<MarkdownMemo>{'[資料](https://example.com/docs)'}</MarkdownMemo>);
+      act(() => screen.getByRole('link', { name: '資料' }).focus());
+      expect(screen.getByRole('button', { name: '折りたたむ' })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+    });
   });
 });
