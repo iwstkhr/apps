@@ -123,6 +123,18 @@ export function TodoItem({
         dropPosition === 'after' && 'border-b-4 border-b-blue-500',
       )}
     >
+      {/* The folder comes first, like a breadcrumb, so the status row below has room to fit on one line.
+          It is placed after the checkbox's column, so the checkbox and buttons line up with the title */}
+      {folderPath && (
+        <p
+          className="col-span-2 col-start-2 mb-0.5 flex min-w-0 items-center gap-1 text-xs text-slate-500 dark:text-slate-400"
+          title={folderPath}
+        >
+          <FaFolder className="shrink-0 text-amber-500 dark:text-amber-400" aria-hidden="true" />
+          <span className="sr-only">{t('フォルダ: ')}</span>
+          <span className="truncate">{folderPath}</span>
+        </p>
+      )}
       <input
         type="checkbox"
         className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-blue-600"
@@ -193,7 +205,8 @@ export function TodoItem({
         </button>
       </div>
 
-      {/* The status and other fields come first so they stay in the same place whatever the memo's length */}
+      {/* The status, priority, due date, and repeat come before the tags and memo, so they stay in the same place
+          whatever the memo's length */}
       <div className="col-span-2 col-start-2 mt-1.5 flex min-w-0 flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <select
@@ -283,17 +296,6 @@ export function TodoItem({
               <FaRedo className="h-2.5 w-2.5" aria-hidden="true" />
               <span className="sr-only">{t('繰り返し: ')}</span>
               {t(REPEAT_LABELS[todo.repeat.frequency])}
-            </span>
-          )}
-          {folderPath && (
-            // Wraps only when less than about 4rem is left; otherwise it stays on the line and cuts the path to fit
-            <span
-              className="inline-flex min-w-0 max-w-fit grow basis-16 items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-              title={folderPath}
-            >
-              <FaFolder className="shrink-0" aria-hidden="true" />
-              <span className="sr-only">{t('フォルダ: ')}</span>
-              <span className="truncate">{folderPath}</span>
             </span>
           )}
         </div>

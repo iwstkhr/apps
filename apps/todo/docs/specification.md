@@ -31,7 +31,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 ### Tags
 
-In the task list, a task's card shows its title, then a row with the status, priority, due date, repeat, and folder, then its tags on their own row, then the memo. Tasks without tags have no tag row. The status row stays in the same place whatever the memo's length, and it uses the full card width under the edit and delete buttons. To keep it on one line on narrow screens, the priority shows a flag and only its level (高 / 中 / 低), the due date shows a calendar icon instead of 期限:, and a long folder path is cut with … (the full path appears on hover). The folder wraps to the next line only when less than about 4rem is left.
+In the task list, a task's card shows its folder path (as a small breadcrumb above the title), then its title, then a row with the status, priority, due date, and repeat, then its tags on their own row, then the memo. The folder row appears only for todos outside the folder being viewed, as before, and long paths are cut with … (the full path appears on hover). The checkbox and action buttons line up with the title. Tasks without tags have no tag row. The status row stays in the same place whatever the memo's length, and it uses the full card width under the edit and delete buttons. To keep it on one line on narrow screens, the priority shows a flag and only its level (高 / 中 / 低) and the due date shows a calendar icon instead of 期限:.
 
 Click a tag name in the task list to filter by it. The タグ selector in the toolbar then shows the tag highlighted, with an × button to clear the filter. The adjacent × button removes only that tag from that task and saves immediately; it does not activate the tag filter. Other tasks with the same tag are unchanged. If a removed tag no longer matches the current filter, the task leaves the filtered list.
 
@@ -142,9 +142,11 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 │   未分類     2 │ [🔍 キーワード]並び順[新しい順▾] タグ[#家▾]×│
 │ ▾ 仕事       2 │ すべて 5 | 未着手 2 | 進行中 1 | 保留 1 | … │
 │   ▾ 案件 A   1 │ ┌─────────────────────────────────────────┐ │
-│       資料   1 │ │ ☐ Title                        ✎  🗑    │ │
-│     会議       │ │   [進行中▾] [⚑ 高▾]     📁 仕事 / 案件 A │ │
-│   家         1 │ └─────────────────────────────────────────┘ │
+│       資料   1 │ │   📁 資料                               │ │
+│     会議       │ │ ☐ Title                        ✎  🗑    │ │
+│   家         1 │ │   [進行中▾] [⚑ 高▾] [📅 10/20]          │ │
+│                │ │   #タグ                                 │ │
+│                │ └─────────────────────────────────────────┘ │
 │                │                                             │
 │ ゴミ箱         │                       [完了済みを削除 (n)]  │
 ├────────────────┴─────────────────────────────────────────────┤
