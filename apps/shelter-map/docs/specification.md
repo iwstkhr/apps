@@ -124,6 +124,7 @@ Strings from the data are HTML-escaped before insertion. The site whose popup is
 - Use TanStack Virtual for virtual scrolling
 - Between `sm` and `lg`, use a minimum width of approximately 58rem with horizontal scrolling
 - Selecting a row (click, Enter, or Space) flies the map to the site (zoom 16 or more) and opens its popup; on phones it also switches to the map tab
+- Map flights (to a selected site or the current location) take a fixed 0.8 seconds regardless of distance, and jump without animation when the OS asks for reduced motion (`prefers-reduced-motion`)
 - The row of the site whose popup is open is highlighted and scrolled into view below the sticky header (on phones, when the list tab is opened)
 - On phones and beside the map from `lg`, each site is shown as a card (name, address, and designated disaster types) without horizontal scrolling
 

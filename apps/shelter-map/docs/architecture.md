@@ -164,6 +164,7 @@ On `moveend` / `zoomlevelschange`, the app:
 | `viewport-filter` | Filter by bounds |
 | `shelter-renderer` | Layer registry and incremental synchronization |
 | `shelter-popup` | Popup HTML (including escaping) and the directions link |
+| `fly-options` | Map flight options: a fixed short duration, or no animation for reduced motion |
 
 ### UI Components
 

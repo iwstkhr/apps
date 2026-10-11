@@ -39,7 +39,11 @@ describe('useCurrentLocation', () => {
 
     act(() => result.current.locate());
 
-    expect(mockMap.flyTo).toHaveBeenCalledWith([35.5, 139.7], 15);
+    expect(mockMap.flyTo).toHaveBeenCalledWith(
+      [35.5, 139.7],
+      15,
+      expect.objectContaining({ duration: 0.8 }),
+    );
     expect(result.current.isLocating).toBe(false);
     expect(result.current.locationError).toBeNull();
   });

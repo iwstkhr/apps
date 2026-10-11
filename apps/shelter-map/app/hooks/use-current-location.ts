@@ -5,6 +5,7 @@ import {
   CURRENT_LOCATION_MARKER_STYLE,
   CURRENT_LOCATION_ZOOM,
 } from '~/lib/map/constants';
+import { getMapFlyOptions } from '~/lib/map/fly-options';
 
 const GEOLOCATION_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
@@ -64,7 +65,7 @@ export function useCurrentLocation(mapRef: React.RefObject<L.Map | null>, mapRea
         L.circleMarker(latLng, CURRENT_LOCATION_MARKER_STYLE)
           .bindTooltip('現在地', { direction: 'top', offset: [0, -8] })
           .addTo(layer);
-        map.flyTo(latLng, Math.max(map.getZoom(), CURRENT_LOCATION_ZOOM));
+        map.flyTo(latLng, Math.max(map.getZoom(), CURRENT_LOCATION_ZOOM), getMapFlyOptions());
       },
       (error) => {
         setIsLocating(false);

@@ -5,6 +5,7 @@ import { useShelterData } from '~/hooks/use-shelter-data';
 import { DATASET_ATTRIBUTION } from '~/lib/dataset';
 import { L } from '~/lib/leaflet';
 import { SHELTER_FOCUS_MIN_ZOOM } from '~/lib/map/constants';
+import { getMapFlyOptions } from '~/lib/map/fly-options';
 import {
   createShelterLayerRegistry,
   findShelterIdByLayer,
@@ -137,6 +138,7 @@ export function useShelterMap(
       map.flyTo(
         [shelter.latitude, shelter.longitude],
         Math.max(map.getZoom(), SHELTER_FOCUS_MIN_ZOOM),
+        getMapFlyOptions(),
       );
     },
     [mapRef],

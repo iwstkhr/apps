@@ -203,7 +203,11 @@ describe('useShelterMap', () => {
     });
 
     expect(result.current.selectedShelterId).toBe('kawasaki');
-    expect(mockMap.flyTo).toHaveBeenCalledWith([kawasaki.latitude, kawasaki.longitude], 16);
+    expect(mockMap.flyTo).toHaveBeenCalledWith(
+      [kawasaki.latitude, kawasaki.longitude],
+      16,
+      expect.objectContaining({ duration: 0.8 }),
+    );
     expect(openPopup).not.toHaveBeenCalled();
 
     act(() => {
