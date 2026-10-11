@@ -9,6 +9,9 @@ import {
   PRIORITY_LABELS,
   type Priority,
   parseTagText,
+  REPEAT_FREQUENCIES,
+  REPEAT_LABELS,
+  type RepeatFrequency,
   type TodoInput,
 } from '~/types/todo';
 
@@ -19,6 +22,7 @@ const EMPTY_INPUT: TodoInput = {
   dueDate: null,
   tags: [],
   folderId: null,
+  repeat: null,
 };
 
 interface TodoFormProps {
@@ -50,6 +54,7 @@ export function TodoForm({
   const [memo, setMemo] = useState(initial.memo);
   const [priority, setPriority] = useState<Priority>(initial.priority);
   const [dueDate, setDueDate] = useState(initial.dueDate ?? '');
+  const [repeat, setRepeat] = useState<RepeatFrequency | null>(initial.repeat ?? null);
   const [tagText, setTagText] = useState(initial.tags.join(', '));
   const [folderId, setFolderId] = useState(initial.title ? initial.folderId : defaultFolderId);
   const [expanded, setExpanded] = useState(!collapsible);
@@ -70,6 +75,7 @@ export function TodoForm({
     setMemo(EMPTY_INPUT.memo);
     setPriority(EMPTY_INPUT.priority);
     setDueDate('');
+    setRepeat(null);
     setTagText('');
   };
 
@@ -90,6 +96,7 @@ export function TodoForm({
           dueDate: dueDate || null,
           tags: parseTagText(tagText),
           folderId,
+          repeat,
         };
         // 保存を待たずに空にして、続けて入力した文字が消えたり前の入力に混ざったりしないようにする
         if (!isEditing) reset();
@@ -140,9 +147,9 @@ export function TodoForm({
       </div>
 
       {expanded && (
-        <div id={`${id}-details`} className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+        <div id={`${id}-details`} className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
           <textarea
-            className={`${inputClass} sm:col-span-3`}
+            className={`${inputClass} sm:col-span-4`}
             value={memo}
             onChange={(event) => setMemo(event.target.value)}
             placeholder={t('メモ')}
@@ -173,6 +180,24 @@ export function TodoForm({
             />
           </label>
           <label className="flex items-center gap-1.5 text-sm">
+            <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('繰り返し')}</span>
+            <select
+              className={inputClass}
+              value={repeat ?? ''}
+              onChange={(event) =>
+                setRepeat((event.target.value || null) as RepeatFrequency | null)
+              }
+              aria-label={t('繰り返し')}
+            >
+              <option value="">{t('なし')}</option>
+              {REPEAT_FREQUENCIES.map((value) => (
+                <option key={value} value={value}>
+                  {t(REPEAT_LABELS[value])}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-1.5 text-sm">
             <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('優先度')}</span>
             <select
               className={inputClass}
@@ -187,7 +212,13 @@ export function TodoForm({
               ))}
             </select>
           </label>
-          <div className="flex items-center gap-1.5 text-sm sm:col-span-3">
+          {/* 繰り返しは期限から次の回を数えるので、期限が無ければ今日から始めることを伝える */}
+          {repeat !== null && dueDate === '' && (
+            <p className="text-xs text-slate-500 sm:col-span-4 dark:text-slate-400">
+              {t('期限が無いときは今日から始めます。')}
+            </p>
+          )}
+          <div className="flex items-center gap-1.5 text-sm sm:col-span-4">
             <span className="shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true">
               {t('フォルダ|項目')}
             </span>

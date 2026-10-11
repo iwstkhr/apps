@@ -5,6 +5,7 @@ import {
   FaFolder,
   FaGripVertical,
   FaPen,
+  FaRedo,
   FaTimes,
   FaTrash,
 } from 'react-icons/fa';
@@ -20,6 +21,7 @@ import {
   PRIORITIES,
   PRIORITY_LABELS,
   type Priority,
+  REPEAT_LABELS,
   STATUS_LABELS,
   STATUSES,
   type Todo,
@@ -89,7 +91,7 @@ export function TodoItem({
     return (
       <li className="rounded-lg border border-blue-300 bg-white p-3 dark:border-blue-800 dark:bg-slate-900">
         <TodoForm
-          initial={todo}
+          initial={{ ...todo, repeat: todo.repeat?.frequency ?? null }}
           submitLabel={t('保存')}
           tagSuggestions={tagSuggestions}
           folders={folders}
@@ -188,6 +190,13 @@ export function TodoItem({
               {t('期限: {0}', [todo.dueDate.replaceAll('-', '/')])}
               {dueStatus === 'overdue' && t(' (期限切れ)')}
               {dueStatus === 'today' && t(' (今日)')}
+            </span>
+          )}
+          {todo.repeat && (
+            <span className="inline-flex items-center gap-1 rounded bg-teal-50 px-1.5 py-0.5 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+              <FaRedo className="h-2.5 w-2.5" aria-hidden="true" />
+              <span className="sr-only">{t('繰り返し: ')}</span>
+              {t(REPEAT_LABELS[todo.repeat.frequency])}
             </span>
           )}
           {folderPath && (

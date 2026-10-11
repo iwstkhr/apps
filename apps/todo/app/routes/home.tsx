@@ -33,7 +33,7 @@ import {
   type TodoFilters,
 } from '~/lib/todo-filters';
 import { DEFAULT_FOLDER_COLOR, type Folder, type FolderInput } from '~/types/folder';
-import { type Todo, toLocalDateString } from '~/types/todo';
+import { type Todo, type TodoStatus, toLocalDateString } from '~/types/todo';
 import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
@@ -69,6 +69,7 @@ export default function Home() {
     addTodo,
     editTodo,
     changeStatus,
+    undoRepeat,
     changePriority,
     removeTag,
     moveTodo,
@@ -235,6 +236,24 @@ export default function Home() {
 
   const cancelImport = useCallback(() => setPendingImport(null), []);
   const cancelFolderDialog = useCallback(() => setFolderDialog(null), []);
+
+  // 繰り返すタスクを完了にしたら次の回を作り、通知の「元に戻す」で取り消せるようにする
+  const handleStatusChange = async (id: string, status: TodoStatus) => {
+    const previous = todos.find((todo) => todo.id === id);
+    const created = await changeStatus(id, status);
+    if (!previous || !created?.dueDate) return;
+    setNotice({
+      kind: 'info',
+      text: t('「{0}」の次の回を {1} に追加しました。', [
+        created.title,
+        created.dueDate.replaceAll('-', '/'),
+      ]),
+      undo: () => {
+        void undoRepeat(previous, created.id);
+        setNotice({ kind: 'info', text: t('「{0}」を元に戻しました。', [previous.title]) });
+      },
+    });
+  };
 
   // ゴミ箱へは確認なしで移し、通知の「元に戻す」で取り消せるようにする
   const handleRemove = async (id: string) => {
@@ -491,7 +510,7 @@ export default function Home() {
                         : undefined
                     }
                     onPriorityChange={(id, priority) => void changePriority(id, priority)}
-                    onStatusChange={(id, status) => void changeStatus(id, status)}
+                    onStatusChange={(id, status) => void handleStatusChange(id, status)}
                     onEdit={editTodo}
                     onRemove={(id) => void handleRemove(id)}
                     onRemoveTag={(id, tag) => void removeTag(id, tag)}

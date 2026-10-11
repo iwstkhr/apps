@@ -218,3 +218,24 @@ test('changes task priority from the list and persists it after reloading', asyn
   await page.reload();
   await expect(priority).toHaveValue('low');
 });
+
+test('adds the next occurrence of a weekly todo when it is completed', async ({ page }) => {
+  await page.getByRole('textbox', { name: 'タイトル' }).fill('ゴミ出し');
+  await page.getByRole('button', { name: '詳細' }).click();
+  await page.getByLabel('期限').fill('2026-10-09');
+  await page.getByRole('combobox', { name: '繰り返し' }).selectOption({ label: '毎週' });
+  await page.getByRole('button', { name: '追加', exact: true }).click();
+  await expect(todoItems(page)).toHaveText([/繰り返し: 毎週/]);
+
+  await page.getByRole('checkbox', { name: '「ゴミ出し」を完了にする' }).check();
+  // 元の期限から数え、過去になる回は飛ばして今日以降にする
+  const status = page.getByRole('status');
+  await expect(status).toHaveText(/「ゴミ出し」の次の回を \d{4}\/\d{2}\/\d{2} に追加しました。/);
+  await expect(todoItems(page)).toHaveCount(2);
+
+  await page.reload();
+  await expect(page.getByText('読み込み中…')).toBeHidden();
+  await expect(todoItems(page)).toHaveCount(2);
+  await expect(todoItems(page).filter({ hasText: '繰り返し: 毎週' })).toHaveCount(1);
+  await expect(page.getByRole('checkbox', { name: '「ゴミ出し」を完了にする' })).toHaveCount(1);
+});

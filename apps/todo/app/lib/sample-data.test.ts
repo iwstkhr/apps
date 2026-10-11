@@ -32,6 +32,14 @@ describe('createSampleData', () => {
     expect(dueStatuses).toEqual(expect.arrayContaining(['overdue', 'today', 'upcoming']));
   });
 
+  it('includes a repeating todo', () => {
+    const { todos } = createSampleData('ja', NOW);
+    expect(todos.find((todo) => todo.repeat !== null)).toMatchObject({
+      title: '週次レポートを提出する',
+      repeat: { frequency: 'weekly', anchorDay: 10 },
+    });
+  });
+
   it('lists the welcome todo first when sorted by newest', () => {
     const { todos } = createSampleData('ja', NOW);
     const newest = [...todos].sort((a, b) => b.createdAt.localeCompare(a.createdAt));

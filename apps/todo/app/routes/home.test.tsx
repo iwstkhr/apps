@@ -9,6 +9,7 @@ import { closeDbForTesting, getAll, putAll, putTodos } from '~/lib/todo-db';
 import Home from '~/routes/home';
 import { createDataTransfer } from '~/test/drag';
 import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
+import { toLocalDateString } from '~/types/todo';
 
 beforeEach(() => {
   // 確認はアプリ内のダイアログで行う。ブラウザ標準の確認が出ていないことを確かめるために置き換える
@@ -198,6 +199,39 @@ describe('Home', () => {
     expect(screen.getByRole('combobox', { name: '「牛乳を買う」の優先度' })).toHaveValue('high');
     expect(screen.getByRole('button', { name: '#買い物' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'タイトル' })).toHaveValue('');
+    await waitFor(async () => expect((await getAll()).todos).toHaveLength(1));
+  });
+
+  it('repeats a todo: adds the next one on completion and undoes it from the notice', async () => {
+    const user = await renderHome();
+    await user.type(screen.getByRole('textbox', { name: 'タイトル' }), 'ゴミ出し');
+    await user.click(screen.getByRole('button', { name: '詳細' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: '繰り返し' }), '毎週');
+    // 期限が空なら今日から始めることを伝える
+    expect(screen.getByText('期限が無いときは今日から始めます。')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '追加' }));
+
+    const today = new Date();
+    const format = (date: Date) => toLocalDateString(date).replaceAll('-', '/');
+    expect(items()[0]).toHaveTextContent(`期限: ${format(today)} (今日)`);
+    expect(items()[0]).toHaveTextContent('繰り返し: 毎週');
+
+    await user.click(screen.getByRole('checkbox', { name: '「ゴミ出し」を完了にする' }));
+    const nextDue = format(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7));
+    expect(screen.getByRole('status')).toHaveTextContent(
+      `「ゴミ出し」の次の回を ${nextDue} に追加しました。`,
+    );
+    expect(items()).toHaveLength(2);
+    const open = items().find((li) => li.textContent?.includes(nextDue));
+    expect(open).toHaveTextContent('繰り返し: 毎週');
+    // 完了した方は繰り返しを次の回に渡したので、バッジを出さない
+    const done = items().find((li) => !li.textContent?.includes(nextDue));
+    expect(done).not.toHaveTextContent('繰り返し');
+
+    await user.click(within(screen.getByRole('status')).getByRole('button', { name: '元に戻す' }));
+    await waitFor(() => expect(items()).toHaveLength(1));
+    expect(screen.getByRole('checkbox', { name: '「ゴミ出し」を完了にする' })).not.toBeChecked();
+    expect(items()[0]).toHaveTextContent('繰り返し: 毎週');
     await waitFor(async () => expect((await getAll()).todos).toHaveLength(1));
   });
 

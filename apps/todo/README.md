@@ -11,6 +11,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Remove a tag from a task directly using its × button
 - Change task priority directly in the list without opening the edit form
 - Set a due date (overdue and due-today items are highlighted), a priority (high / medium / low), a multi-line memo, and tags
+- Repeat a todo daily, on weekdays, weekly, monthly, or yearly; completing it adds the next one
 - Display memos as Markdown, including headings, lists, links, code blocks, tables, and task lists
 - Filter by status, tag, and keyword (title, memo, tags), and sort by due date, priority, status, or creation date
 - Select a status from the segmented control above the list to filter the current folder, with counts for each status

@@ -195,4 +195,15 @@ export const english: Record<string, string> = {
   '{0}に追加します。同じものは更新日時が新しい方を残します。':
     'Adds to {0}. When an item exists in both, the more recently updated one is kept.',
   '{0}をすべて削除してから読み込みます。': 'Deletes {0}, then imports.',
+  // 繰り返し
+  繰り返し: 'Repeat',
+  '繰り返し: ': 'Repeats: ',
+  なし: 'None',
+  毎日: 'Daily',
+  平日: 'Weekdays',
+  毎週: 'Weekly',
+  毎月: 'Monthly',
+  毎年: 'Yearly',
+  '期限が無いときは今日から始めます。': 'Without a due date, it starts today.',
+  '「{0}」の次の回を {1} に追加しました。': 'Added the next "{0}" for {1}.',
 };

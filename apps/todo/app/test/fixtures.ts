@@ -19,6 +19,7 @@ export function createTodoFixture(overrides: Partial<Todo> = {}): Todo {
     updatedAt: '2026-10-01T00:00:00.000Z',
     completedAt: null,
     deletedAt: null,
+    repeat: null,
     ...overrides,
   };
 }

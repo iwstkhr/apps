@@ -35,6 +35,7 @@ describe('parseImport', () => {
     const todos = [
       createTodoFixture({ folderId: child.id, customOrder: 2 }),
       createTodoFixture({ status: 'on_hold', tags: ['x'] }),
+      createTodoFixture({ dueDate: '2026-01-31', repeat: { frequency: 'monthly', anchorDay: 31 } }),
     ];
     const folders = [parent, child];
     expect(parseImport(JSON.stringify(createExport({ todos, folders })))).toEqual({

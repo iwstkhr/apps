@@ -1,7 +1,7 @@
 import type { Language } from '~/lib/i18n';
 import type { StoredData } from '~/lib/todo-db';
 import type { Folder } from '~/types/folder';
-import { type Todo, toLocalDateString } from '~/types/todo';
+import { type RepeatFrequency, type Todo, toLocalDateString } from '~/types/todo';
 
 // 初めて開いたときに入れるサンプル。何ができるか一目で分かるよう、入れ子のフォルダ・タグ・
 // 期限切れ / 今日 / 先の期限・各ステータス・Markdown のメモを一通り含める。
@@ -24,6 +24,7 @@ interface SampleTodo {
   priority: Todo['priority'];
   /** 今日から何日後が期限か。null なら期限なし */
   dueInDays: number | null;
+  repeat?: RepeatFrequency;
   tags: Text[];
 }
 
@@ -69,6 +70,7 @@ const TODOS: SampleTodo[] = [
     status: 'todo',
     priority: 'high',
     dueInDays: -1,
+    repeat: 'weekly',
     tags: [{ ja: '定例', en: 'routine' }],
   },
   {
@@ -138,13 +140,15 @@ export function createSampleData(language: Language, now: Date = new Date()): St
   // 「新しい順」でも上の並びになるよう、作成日時を 1 秒ずつずらす
   const todos: Todo[] = TODOS.map((todo, index) => {
     const createdAt = new Date(now.getTime() - index * 1000).toISOString();
+    const dueDate =
+      todo.dueInDays === null ? null : toLocalDateString(addDays(now, todo.dueInDays));
     return {
       id: crypto.randomUUID(),
       title: todo.title[language],
       memo: todo.memo?.[language] ?? '',
       status: todo.status,
       priority: todo.priority,
-      dueDate: todo.dueInDays === null ? null : toLocalDateString(addDays(now, todo.dueInDays)),
+      dueDate,
       tags: todo.tags.map((tag) => tag[language]),
       folderId: folderId(todo.folder),
       customOrder: null,
@@ -152,6 +156,10 @@ export function createSampleData(language: Language, now: Date = new Date()): St
       updatedAt: createdAt,
       completedAt: todo.status === 'done' ? createdAt : null,
       deletedAt: null,
+      repeat:
+        todo.repeat && dueDate
+          ? { frequency: todo.repeat, anchorDay: Number(dueDate.slice(8, 10)) }
+          : null,
     };
   });
 

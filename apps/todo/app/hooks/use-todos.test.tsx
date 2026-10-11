@@ -6,7 +6,7 @@ import { useTodos } from '~/hooks/use-todos';
 import { getAll, putAll, putTodos } from '~/lib/todo-db';
 import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
 import { resetDb } from '~/test/indexed-db';
-import type { TodoInput } from '~/types/todo';
+import type { Todo, TodoInput } from '~/types/todo';
 
 const input = (title: string, folderId: string | null = null): TodoInput => ({
   title,
@@ -241,5 +241,82 @@ describe('useTodos', () => {
     await act(() => result.current.importData(incoming, 'replace'));
     expect(result.current.todos).toEqual(incoming.todos);
     expect(await getAll()).toEqual(incoming);
+  });
+
+  describe('repeat', () => {
+    const weekly = () =>
+      createTodoFixture({
+        title: '週次レポート',
+        dueDate: '2999-01-01',
+        repeat: { frequency: 'weekly', anchorDay: 1 },
+      });
+
+    it('creates and saves the next occurrence when a repeating todo is completed', async () => {
+      const todo = weekly();
+      await putTodos([todo]);
+      const { result } = await renderLoaded();
+
+      let created: Todo | null = null;
+      await act(async () => {
+        created = await result.current.changeStatus(todo.id, 'done');
+      });
+      expect(created).toMatchObject({
+        title: '週次レポート',
+        status: 'todo',
+        dueDate: '2999-01-08',
+      });
+      const stored = (await getAll()).todos;
+      expect(stored).toHaveLength(2);
+      // 繰り返しは次の回に移る
+      expect(stored.find((item) => item.id === todo.id)).toMatchObject({
+        status: 'done',
+        repeat: null,
+      });
+      expect(stored.find((item) => item.id !== todo.id)?.repeat).toEqual(todo.repeat);
+    });
+
+    it('does not create another one when the todo is reopened and completed again', async () => {
+      const todo = weekly();
+      await putTodos([todo]);
+      const { result } = await renderLoaded();
+      await act(() => result.current.changeStatus(todo.id, 'done'));
+      await act(() => result.current.changeStatus(todo.id, 'todo'));
+      let again: Todo | null = null;
+      await act(async () => {
+        again = await result.current.changeStatus(todo.id, 'done');
+      });
+      expect(again).toBeNull();
+      expect((await getAll()).todos).toHaveLength(2);
+    });
+
+    it('does not create one for todos that do not repeat', async () => {
+      const todo = createTodoFixture({ dueDate: '2999-01-01' });
+      await putTodos([todo]);
+      const { result } = await renderLoaded();
+      await act(() => result.current.changeStatus(todo.id, 'done'));
+      expect((await getAll()).todos).toHaveLength(1);
+    });
+
+    it('undoes completing: removes the next occurrence and restores the todo', async () => {
+      const todo = weekly();
+      await putTodos([todo]);
+      const { result } = await renderLoaded();
+      let created: Todo | null = null;
+      await act(async () => {
+        created = await result.current.changeStatus(todo.id, 'done');
+      });
+      const nextId = (created as Todo | null)?.id ?? '';
+      await act(() => result.current.undoRepeat(todo, nextId));
+
+      expect(result.current.todos).toHaveLength(1);
+      const stored = (await getAll()).todos;
+      expect(stored).toHaveLength(1);
+      expect(stored[0]).toMatchObject({
+        id: todo.id,
+        status: 'todo',
+        completedAt: null,
+        repeat: todo.repeat,
+      });
+    });
   });
 });

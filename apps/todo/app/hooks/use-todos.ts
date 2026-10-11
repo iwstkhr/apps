@@ -7,6 +7,7 @@ import {
   deleteTodos,
   getAll,
   putAll,
+  putAndDeleteTodos,
   putTodos,
   replaceAll,
   type StoredData,
@@ -14,6 +15,7 @@ import {
 import { compareCustomOrder, type DropPosition, reorderTodos } from '~/lib/todo-order';
 import { createFolder, type Folder, type FolderInput, updateFolder } from '~/types/folder';
 import {
+  createNextOccurrence,
   createTodo,
   isTrashed,
   moveTodoToFolder,
@@ -45,7 +47,10 @@ export interface UseTodos {
   error: string | null;
   addTodo: (input: TodoInput) => Promise<void>;
   editTodo: (id: string, input: TodoInput) => Promise<void>;
-  changeStatus: (id: string, status: TodoStatus) => Promise<void>;
+  /** 繰り返すタスクを完了にしたら次の回を作って返す。作らなければ null */
+  changeStatus: (id: string, status: TodoStatus) => Promise<Todo | null>;
+  /** 繰り返すタスクの完了を取り消す。previous は完了にする前のタスク、nextId は作った次の回 */
+  undoRepeat: (previous: Todo, nextId: string) => Promise<void>;
   changePriority: (id: string, priority: Priority) => Promise<void>;
   removeTag: (id: string, tag: string) => Promise<void>;
   /** folderId が null なら未分類に移す */
@@ -77,6 +82,28 @@ export interface UseTodos {
 }
 
 const EMPTY: StoredData = { todos: [], folders: [] };
+
+/**
+ * 新しいタスクを一覧の末尾に足す。カスタム順を使い始めていれば、今の並びを 0 からの連番に
+ * 詰め直してから末尾の番号を付ける。保存し直す必要があるタスク (新しいものを含む) も返す。
+ */
+function appendTodo(current: readonly Todo[], todo: Todo): { next: Todo[]; changed: Todo[] } {
+  let normalized: readonly Todo[] = current;
+  let added = todo;
+  if (current.some((item) => item.customOrder !== null)) {
+    const ranks = new Map(
+      [...current].sort(compareCustomOrder).map((item, index) => [item.id, index]),
+    );
+    normalized = current.map((item) =>
+      item.customOrder === ranks.get(item.id)
+        ? item
+        : { ...item, customOrder: ranks.get(item.id) ?? 0, updatedAt: todo.createdAt },
+    );
+    added = { ...todo, customOrder: current.length };
+  }
+  const changed = normalized.filter((item, index) => item !== current[index]);
+  return { next: [...normalized, added], changed: [...changed, added] };
+}
 
 export function useTodos(): UseTodos {
   const [data, setData] = useState<StoredData>(EMPTY);
@@ -151,22 +178,8 @@ export function useTodos(): UseTodos {
 
   const addTodo = useCallback(
     async (input: TodoInput) => {
-      const todo = createTodo(input);
-      const current = dataRef.current.todos;
-      let normalized = current;
-      if (current.some((item) => item.customOrder !== null)) {
-        const ranks = new Map(
-          [...current].sort(compareCustomOrder).map((item, index) => [item.id, index]),
-        );
-        normalized = current.map((item) =>
-          item.customOrder === ranks.get(item.id)
-            ? item
-            : { ...item, customOrder: ranks.get(item.id) ?? 0, updatedAt: todo.createdAt },
-        );
-        todo.customOrder = current.length;
-      }
-      const changed = normalized.filter((item, index) => item !== current[index]);
-      await setTodos([...normalized, todo], () => putTodos([...changed, todo]));
+      const { next, changed } = appendTodo(dataRef.current.todos, createTodo(input));
+      await setTodos(next, () => putTodos(changed));
     },
     [setTodos],
   );
@@ -191,8 +204,54 @@ export function useTodos(): UseTodos {
   );
 
   const changeStatus = useCallback(
-    (id: string, status: TodoStatus) => replaceOne(id, (todo) => setTodoStatus(todo, status)),
-    [replaceOne],
+    async (id: string, status: TodoStatus) => {
+      const current = dataRef.current.todos.find((todo) => todo.id === id);
+      const nextOccurrence =
+        current && status === 'done' && current.status !== 'done'
+          ? createNextOccurrence(current)
+          : null;
+      if (!current || !nextOccurrence) {
+        await replaceOne(id, (todo) => setTodoStatus(todo, status));
+        return null;
+      }
+      // 繰り返しは次の回に引き継ぐ。完了した方から外すので、完了を外して付け直しても二重に作らない
+      const completed: Todo = { ...setTodoStatus(current, status), repeat: null };
+      const { next, changed } = appendTodo(
+        dataRef.current.todos.map((todo) => (todo.id === id ? completed : todo)),
+        nextOccurrence,
+      );
+      const saved = changed.some((todo) => todo.id === id) ? changed : [completed, ...changed];
+      await setTodos(next, () => putTodos(saved));
+      return next.at(-1) ?? null;
+    },
+    [replaceOne, setTodos],
+  );
+
+  const undoRepeat = useCallback(
+    async (previous: Todo, nextId: string) => {
+      const current = dataRef.current.todos.find((todo) => todo.id === previous.id);
+      const restored: Todo[] = current
+        ? [
+            {
+              ...current,
+              status: previous.status,
+              completedAt: previous.completedAt,
+              repeat: previous.repeat,
+              updatedAt: new Date().toISOString(),
+            },
+          ]
+        : [];
+      const hasNext = dataRef.current.todos.some((todo) => todo.id === nextId);
+      if (restored.length === 0 && !hasNext) return;
+      const restoredById = new Map(restored.map((todo) => [todo.id, todo]));
+      await setTodos(
+        dataRef.current.todos
+          .filter((todo) => todo.id !== nextId)
+          .map((todo) => restoredById.get(todo.id) ?? todo),
+        () => putAndDeleteTodos(restored, hasNext ? [nextId] : []),
+      );
+    },
+    [setTodos],
   );
 
   const changePriority = useCallback(
@@ -376,6 +435,7 @@ export function useTodos(): UseTodos {
     addTodo,
     editTodo,
     changeStatus,
+    undoRepeat,
     changePriority,
     removeTag,
     moveTodo,

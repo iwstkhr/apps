@@ -98,6 +98,14 @@ export function putTodos(todos: readonly Todo[]): Promise<void> {
   return putAll({ todos: [...todos] });
 }
 
+/** TODO の書き込みと削除を 1 つのトランザクションで行う。 */
+export function putAndDeleteTodos(put: readonly Todo[], remove: readonly string[]): Promise<void> {
+  return write((stores) => {
+    for (const todo of put) stores.todos.put(todo);
+    for (const id of remove) stores.todos.delete(id);
+  });
+}
+
 export function deleteTodos(ids: readonly string[]): Promise<void> {
   return write((stores) => {
     for (const id of ids) stores.todos.delete(id);

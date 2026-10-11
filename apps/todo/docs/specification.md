@@ -15,10 +15,11 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 | Feature | Description |
 | --- | --- |
-| Add | Enter a title and press Enter or + 追加. 詳細 opens the memo, tags, due date, priority, and folder fields. New todos go into the folder selected in the folder list. So that the add form is not mistaken for search, its title field has a + mark and the placeholder 新しいタスクを入力…, while the keyword search below has a magnifier. 追加 always shows as the primary button; pressing it with an empty title adds nothing and moves focus to the title field |
+| Add | Enter a title and press Enter or + 追加. 詳細 opens the memo, tags, due date, repeat, priority, and folder fields. New todos go into the folder selected in the folder list. So that the add form is not mistaken for search, its title field has a + mark and the placeholder 新しいタスクを入力…, while the keyword search below has a magnifier. 追加 always shows as the primary button; pressing it with an empty title adds nothing and moves focus to the title field |
 | Edit | The pencil button turns an item into an edit form, where the todo can also be moved to another folder. Escape or キャンセル discards the changes |
 | Status | Each todo has one of 未着手 (not started), 進行中 (in progress), 保留 (on hold), or 完了 (done). Change it with the status selector on the item. The checkbox is a shortcut: checking it sets 完了 and unchecking it returns to 未着手. New todos start as 未着手 |
 | Delete | The trash button moves one todo to the trash without asking, and 完了済みをゴミ箱に移動 moves all completed todos in the current view there. A notice with 元に戻す (undo) appears; see [Trash](#trash) |
+| Repeat | See [Repeat](#repeat) |
 | Folders | See [Folders](#folders) |
 | Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive). The keyword field, 並び順, and タグ sit on one row and wrap on narrow screens; 並び順 and タグ show visible captions. While a tag is selected its selector is highlighted and an × button next to it clears the tag filter. The タグ selector is hidden while no todo has tags. In the status control each status has an icon with its own shape and color: すべて a stack in the text color, 未着手 an empty gray circle, 進行中 a blue play icon, 保留 a purple pause icon, and 完了 a green check. The colors stay the same in every theme and keep at least 3:1 contrast against white and dark mode |
 | Sort | 新しい順 (default), 期限順, 優先度順, ステータス順, カスタム. Chosen from the 並び順 selector. Completed todos are listed after the others except in カスタム |
@@ -79,6 +80,16 @@ Editing shows the original Markdown source. Storage, keyword search, and JSON ex
 - Confirmations use a dialog inside the app instead of the browser's `confirm()`, so they follow the theme and dark mode. The question is the dialog heading, with details such as この操作は元に戻せません。 below it. キャンセル comes first and has the focus when the dialog opens, so pressing Enter by accident cancels; the red button on the right (削除, 完全に削除, or 空にする) carries out the action. Escape also cancels, and focus returns to the button that opened the dialog.
 - Todos that have been in the trash for 30 days are deleted forever the next time the app is opened.
 - Trashed todos are excluded from the other views, counts, and tag lists. They are included in exports with `deletedAt`, so importing restores them to the trash. Deleting a folder moves its trashed todos to 未分類 as well, so restoring them later does not point to a missing folder.
+
+### Repeat
+
+A todo can repeat 毎日 (daily), 平日 (weekdays, Monday to Friday), 毎週 (weekly), 毎月 (monthly), or 毎年 (yearly), chosen from 繰り返し in the add and edit forms. Repeating todos show a badge with a circular arrow and the repeat, such as 毎週.
+
+- A repeat counts from the due date. If none is set, the due date becomes today, and the form says so while the due date is empty.
+- Completing a repeating todo, with its checkbox or its status selector, keeps it as 完了 and adds the next one as a new 未着手 todo with the same title, memo, priority, tags, and folder. The repeat moves to the new todo, so reopening and completing the old one again does not add another. A notice shows the new due date, and its 元に戻す removes the new todo and restores the old one.
+- The next due date is counted from the previous due date, not from the day it was completed: 毎日 adds a day, 平日 moves to the next weekday, 毎週 adds seven days, and 毎月 and 毎年 keep the day of the month. A day that does not exist in a month, such as the 31st or February 29, falls on the last day of that month, and later months return to the original day. When the next date is still before today, it keeps advancing until it is today or later, so the new todo does not start overdue.
+- Editing the due date of a repeating todo also changes the day that 毎月 and 毎年 keep.
+- Importing data never adds next occurrences.
 
 ### Folders
 
@@ -155,6 +166,10 @@ interface Todo {
   updatedAt: string;          // ISO 8601
   completedAt: string | null; // ISO 8601, set only while status is 'done'
   deletedAt: string | null;   // ISO 8601 when moved to the trash; null otherwise (missing in older data)
+  repeat: {                   // null when the todo does not repeat (missing in older data)
+    frequency: 'daily' | 'weekdays' | 'weekly' | 'monthly' | 'yearly';
+    anchorDay: number;        // 1-31, the day of the month that monthly and yearly repeats keep
+  } | null;
 }
 ```
 
@@ -196,7 +211,7 @@ Tags are entered as comma-separated text (ASCII `,` or Japanese `、` `，`).
 
 ## Sample data
 
-When the app creates its IndexedDB database for the first time, it adds a few samples: the folders 仕事 (with the subfolder 資料作成) and 暮らし (Work, Slide deck, and Home in English), and six todos. Together they cover every status, overdue, due-today, and upcoming due dates, tags, and Markdown memos (a numbered list and a task list). The todo TODO へようこそ explains in its memo that data stays in this browser, how to back it up with export, and how to move a todo by dragging it. Due dates are counted from the day of the first visit, so the samples never all appear overdue.
+When the app creates its IndexedDB database for the first time, it adds a few samples: the folders 仕事 (with the subfolder 資料作成) and 暮らし (Work, Slide deck, and Home in English), and six todos. Together they cover every status, overdue, due-today, and upcoming due dates, a weekly repeat, tags, and Markdown memos (a numbered list and a task list). The todo TODO へようこそ explains in its memo that data stays in this browser, how to back it up with export, and how to move a todo by dragging it. Due dates are counted from the day of the first visit, so the samples never all appear overdue.
 
 - The samples are written in the language in use on the first visit. Like other user content, they are not translated when the language changes later.
 - The samples are ordinary todos and folders: they can be edited, deleted, and exported like any others.
