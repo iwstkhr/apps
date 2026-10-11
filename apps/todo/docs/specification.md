@@ -31,7 +31,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 ### Tags
 
-In the task list, a task's tags appear on their own row right under its title, above the memo and the status, priority, and due date row. Tasks without tags have no tag row.
+In the task list, a task's card shows its title, then a row with the status, priority, due date, repeat, and folder, then its tags on their own row, then the memo. Tasks without tags have no tag row. The status row stays in the same place whatever the memo's length, and it uses the full card width under the edit and delete buttons. To keep it on one line on narrow screens, the priority shows a flag and only its level (高 / 中 / 低), the due date shows a calendar icon instead of 期限:, and a long folder path is cut with … (the full path appears on hover).
 
 Click a tag name in the task list to filter by it. The タグ selector in the toolbar then shows the tag highlighted, with an × button to clear the filter. The adjacent × button removes only that tag from that task and saves immediately; it does not activate the tag filter. Other tasks with the same tag are unchanged. If a removed tag no longer matches the current filter, the task leaves the filtered list.
 
@@ -141,7 +141,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 │ ▾ 仕事       2 │ すべて 5 | 未着手 2 | 進行中 1 | 保留 1 | … │
 │   ▾ 案件 A   1 │ ┌─────────────────────────────────────────┐ │
 │       資料   1 │ │ ☐ Title                        ✎  🗑    │ │
-│     会議       │ │   [進行中▾] 優先度: 高  📁 仕事 / 案件 A │ │
+│     会議       │ │   [進行中▾] [⚑ 高▾]     📁 仕事 / 案件 A │ │
 │   家         1 │ └─────────────────────────────────────────┘ │
 │                │                                             │
 │ ゴミ箱         │                       [完了済みを削除 (n)]  │

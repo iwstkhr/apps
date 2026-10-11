@@ -2,6 +2,8 @@ import { useState } from 'react';
 import {
   FaArrowDown,
   FaArrowUp,
+  FaCalendarAlt,
+  FaFlag,
   FaFolder,
   FaGripVertical,
   FaPen,
@@ -106,11 +108,12 @@ export function TodoItem({
   }
 
   return (
-    // Can be dragged onto the folder pane to move it to another folder
+    // Can be dragged onto the folder pane to move it to another folder.
+    // A grid so that the rows under the title also use the width under the action buttons
     <li
       data-todo-id={todo.id}
       className={cn(
-        'group/item flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
+        'group/item grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900',
         done && 'opacity-60',
         dragging && 'border-dashed border-blue-400 opacity-40',
         dropPosition === 'before' && 'border-t-4 border-t-blue-500',
@@ -126,117 +129,24 @@ export function TodoItem({
         aria-label={t(done ? '「{0}」を未着手に戻す' : '「{0}」を完了にする', [todo.title])}
       />
 
-      <div className="min-w-0 flex-1">
-        <section
-          aria-label={t('「{0}」のヘッダー', [todo.title])}
-          draggable
-          onDragStart={(event) => {
-            setDraggedTodo(event.dataTransfer, todo.id, todo.title);
-            setDragging(true);
-          }}
-          onDragEnd={() => setDragging(false)}
-          className="flex items-start gap-2 lg:cursor-grab lg:active:cursor-grabbing"
-        >
-          <FaGripVertical
-            className="mt-1 hidden shrink-0 text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
-            aria-hidden="true"
-          />
-          <p className={cn('min-w-0 break-words font-medium', done && 'line-through')}>
-            {todo.title}
-          </p>
-        </section>
-        {/* Tags classify the task, so they sit right under the title where they are read together with it */}
-        {todo.tags.length > 0 && (
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-            {todo.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center overflow-hidden rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-              >
-                <button
-                  type="button"
-                  className="cursor-pointer py-0.5 pl-2 pr-1 hover:bg-blue-100 dark:hover:bg-blue-900"
-                  onClick={() => onTagClick(tag)}
-                  title={t('タグ「{0}」で絞り込む', [tag])}
-                >
-                  #{tag}
-                </button>
-                <button
-                  type="button"
-                  className="cursor-pointer py-1 pl-1 pr-2 hover:bg-blue-100 dark:hover:bg-blue-900"
-                  onClick={() => onRemoveTag(todo.id, tag)}
-                  aria-label={t('「{0}」からタグ「{1}」を削除', [todo.title, tag])}
-                  title={t('タグ「{0}」を削除', [tag])}
-                >
-                  <FaTimes className="h-2.5 w-2.5" aria-hidden="true" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-        {todo.memo && <MarkdownMemo>{todo.memo}</MarkdownMemo>}
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
-          <select
-            className={cn(
-              'cursor-pointer rounded border px-1 py-0.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40',
-              STATUS_CLASSES[todo.status],
-            )}
-            value={todo.status}
-            onChange={(event) => onStatusChange(todo.id, event.target.value as TodoStatus)}
-            aria-label={t('「{0}」のステータス', [todo.title])}
-          >
-            {STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {t(STATUS_LABELS[status])}
-              </option>
-            ))}
-          </select>
-          <select
-            className={cn(
-              'cursor-pointer rounded border border-transparent px-1 py-0.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40',
-              PRIORITY_CLASSES[todo.priority],
-            )}
-            value={todo.priority}
-            onChange={(event) => onPriorityChange(todo.id, event.target.value as Priority)}
-            aria-label={t('「{0}」の優先度', [todo.title])}
-          >
-            {PRIORITIES.map((priority) => (
-              <option key={priority} value={priority}>
-                {t('優先度: {0}', [t(PRIORITY_LABELS[priority])])}
-              </option>
-            ))}
-          </select>
-          {todo.dueDate && (
-            <span
-              className={cn(
-                'rounded px-1.5 py-0.5',
-                dueStatus === 'overdue' && 'bg-red-600 font-semibold text-white',
-                dueStatus === 'today' && 'bg-orange-500 font-semibold text-white',
-                (dueStatus === 'upcoming' || dueStatus === 'none') &&
-                  'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-              )}
-            >
-              {t('期限: {0}', [todo.dueDate.replaceAll('-', '/')])}
-              {dueStatus === 'overdue' && t(' (期限切れ)')}
-              {dueStatus === 'today' && t(' (今日)')}
-            </span>
-          )}
-          {todo.repeat && (
-            <span className="inline-flex items-center gap-1 rounded bg-teal-50 px-1.5 py-0.5 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
-              <FaRedo className="h-2.5 w-2.5" aria-hidden="true" />
-              <span className="sr-only">{t('繰り返し: ')}</span>
-              {t(REPEAT_LABELS[todo.repeat.frequency])}
-            </span>
-          )}
-          {folderPath && (
-            <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-              <FaFolder aria-hidden="true" />
-              <span className="sr-only">{t('フォルダ: ')}</span>
-              {folderPath}
-            </span>
-          )}
-        </div>
-      </div>
+      <section
+        aria-label={t('「{0}」のヘッダー', [todo.title])}
+        draggable
+        onDragStart={(event) => {
+          setDraggedTodo(event.dataTransfer, todo.id, todo.title);
+          setDragging(true);
+        }}
+        onDragEnd={() => setDragging(false)}
+        className="flex min-w-0 items-start gap-2 lg:cursor-grab lg:active:cursor-grabbing"
+      >
+        <FaGripVertical
+          className="mt-1 hidden shrink-0 text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
+          aria-hidden="true"
+        />
+        <p className={cn('min-w-0 break-words font-medium', done && 'line-through')}>
+          {todo.title}
+        </p>
+      </section>
 
       <div className="flex shrink-0">
         {onMoveUp && (
@@ -278,6 +188,113 @@ export function TodoItem({
         >
           <FaTrash aria-hidden="true" />
         </button>
+      </div>
+
+      {/* The status and other fields come first so they stay in the same place whatever the memo's length */}
+      <div className="col-span-2 col-start-2 mt-1.5 flex min-w-0 flex-col gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <select
+            className={cn(
+              'cursor-pointer rounded border px-1 py-0.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40',
+              STATUS_CLASSES[todo.status],
+            )}
+            value={todo.status}
+            onChange={(event) => onStatusChange(todo.id, event.target.value as TodoStatus)}
+            aria-label={t('「{0}」のステータス', [todo.title])}
+          >
+            {STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {t(STATUS_LABELS[status])}
+              </option>
+            ))}
+          </select>
+          {/* Only the icon and the level, so the row fits on one line on narrow screens. The select's name says 優先度 */}
+          <span
+            className={cn(
+              'inline-flex items-center rounded pl-1.5 focus-within:ring-2 focus-within:ring-blue-500/40',
+              PRIORITY_CLASSES[todo.priority],
+            )}
+            title={t('優先度')}
+          >
+            <FaFlag className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+            <select
+              className="cursor-pointer bg-transparent py-0.5 pr-1 pl-1 font-medium focus:outline-none"
+              value={todo.priority}
+              onChange={(event) => onPriorityChange(todo.id, event.target.value as Priority)}
+              aria-label={t('「{0}」の優先度', [todo.title])}
+            >
+              {PRIORITIES.map((priority) => (
+                <option key={priority} value={priority}>
+                  {t(PRIORITY_LABELS[priority])}
+                </option>
+              ))}
+            </select>
+          </span>
+          {todo.dueDate && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 whitespace-nowrap rounded px-1.5 py-0.5',
+                dueStatus === 'overdue' && 'bg-red-600 font-semibold text-white',
+                dueStatus === 'today' && 'bg-orange-500 font-semibold text-white',
+                (dueStatus === 'upcoming' || dueStatus === 'none') &&
+                  'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+              )}
+            >
+              <FaCalendarAlt className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+              <span className="sr-only">{t('期限: ')}</span>
+              {todo.dueDate.replaceAll('-', '/')}
+              {dueStatus === 'overdue' && t(' (期限切れ)')}
+              {dueStatus === 'today' && t(' (今日)')}
+            </span>
+          )}
+          {todo.repeat && (
+            <span className="inline-flex items-center gap-1 rounded bg-teal-50 px-1.5 py-0.5 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+              <FaRedo className="h-2.5 w-2.5" aria-hidden="true" />
+              <span className="sr-only">{t('繰り返し: ')}</span>
+              {t(REPEAT_LABELS[todo.repeat.frequency])}
+            </span>
+          )}
+          {folderPath && (
+            // Wraps only when less than about 5rem is left; otherwise it stays on the line and cuts the path to fit
+            <span
+              className="inline-flex min-w-0 max-w-fit grow basis-20 items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+              title={folderPath}
+            >
+              <FaFolder className="shrink-0" aria-hidden="true" />
+              <span className="sr-only">{t('フォルダ: ')}</span>
+              <span className="truncate">{folderPath}</span>
+            </span>
+          )}
+        </div>
+        {todo.tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            {todo.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center overflow-hidden rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+              >
+                <button
+                  type="button"
+                  className="cursor-pointer py-0.5 pl-2 pr-1 hover:bg-blue-100 dark:hover:bg-blue-900"
+                  onClick={() => onTagClick(tag)}
+                  title={t('タグ「{0}」で絞り込む', [tag])}
+                >
+                  #{tag}
+                </button>
+                <button
+                  type="button"
+                  className="cursor-pointer py-1 pl-1 pr-2 hover:bg-blue-100 dark:hover:bg-blue-900"
+                  onClick={() => onRemoveTag(todo.id, tag)}
+                  aria-label={t('「{0}」からタグ「{1}」を削除', [todo.title, tag])}
+                  title={t('タグ「{0}」を削除', [tag])}
+                >
+                  <FaTimes className="h-2.5 w-2.5" aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        {todo.memo && <MarkdownMemo>{todo.memo}</MarkdownMemo>}
       </div>
     </li>
   );
