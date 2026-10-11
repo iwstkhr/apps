@@ -101,11 +101,15 @@ export function TodoItem({
       <li className="rounded-lg border border-blue-300 bg-white p-3 dark:border-blue-800 dark:bg-slate-900">
         <TodoForm
           initial={{ ...todo, repeat: todo.repeat?.frequency ?? null }}
+          initialStatus={todo.status}
           submitLabel={t('保存')}
           tagSuggestions={tagSuggestions}
           folders={folders}
-          onSubmit={async (input) => {
+          onSubmit={async (input, status) => {
             await onEdit(todo.id, input);
+            // Goes through the status change after the edit, so completing a repeating task creates the next
+            // occurrence from the edited due date and offers undo, the same as changing it from the list
+            if (status && status !== todo.status) onStatusChange(todo.id, status);
             setEditing(false);
           }}
           onCancel={() => setEditing(false)}

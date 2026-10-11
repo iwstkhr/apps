@@ -14,7 +14,10 @@ import {
   REPEAT_FREQUENCIES,
   REPEAT_LABELS,
   type RepeatFrequency,
+  STATUS_LABELS,
+  STATUSES,
   type TodoInput,
+  type TodoStatus,
 } from '~/types/todo';
 
 const EMPTY_INPUT: TodoInput = {
@@ -29,8 +32,11 @@ const EMPTY_INPUT: TodoInput = {
 
 interface TodoFormProps {
   initial?: TodoInput;
+  /** Shows the status field. Only the edit form passes it, because new tasks always start as 未着手 */
+  initialStatus?: TodoStatus;
   submitLabel: string;
-  onSubmit: (input: TodoInput) => void | Promise<void>;
+  /** status is passed only when initialStatus is given */
+  onSubmit: (input: TodoInput, status?: TodoStatus) => void | Promise<void>;
   onCancel?: () => void;
   /** The add form keeps the detail fields collapsed */
   collapsible?: boolean;
@@ -43,6 +49,7 @@ interface TodoFormProps {
 
 export function TodoForm({
   initial = EMPTY_INPUT,
+  initialStatus,
   submitLabel,
   onSubmit,
   onCancel,
@@ -54,6 +61,7 @@ export function TodoForm({
   const id = useId();
   const [title, setTitle] = useState(initial.title);
   const [memo, setMemo] = useState(initial.memo);
+  const [status, setStatus] = useState(initialStatus);
   const [priority, setPriority] = useState<Priority>(initial.priority);
   const [dueDate, setDueDate] = useState(initial.dueDate ?? '');
   const [repeat, setRepeat] = useState<RepeatFrequency | null>(initial.repeat ?? null);
@@ -104,7 +112,7 @@ export function TodoForm({
         };
         // Clear without waiting for the save so text typed next is not lost or mixed with the previous input
         if (!isEditing) reset();
-        await onSubmit(input);
+        await onSubmit(input, status);
       }}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && onCancel) onCancel();
@@ -151,83 +159,107 @@ export function TodoForm({
       </div>
 
       {expanded && (
-        <div id={`${id}-details`} className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+        <div id={`${id}-details`} className="flex flex-col gap-2">
           <textarea
-            className={`${inputClass} sm:col-span-4`}
+            className={inputClass}
             value={memo}
             onChange={(event) => setMemo(event.target.value)}
             placeholder={t('メモ')}
             aria-label={t('メモ')}
             rows={3}
           />
-          <TagInput
-            tags={tags}
-            onTagsChange={setTags}
-            draft={tagDraft}
-            onDraftChange={setTagDraft}
-            suggestions={tagSuggestions}
-          />
-          <label className="flex items-center gap-1.5 text-sm">
-            <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('期限')}</span>
-            <input
-              type="date"
-              className={inputClass}
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-              aria-label={t('期限')}
-            />
-          </label>
-          <label className="flex items-center gap-1.5 text-sm">
-            <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('繰り返し')}</span>
-            <select
-              className={inputClass}
-              value={repeat ?? ''}
-              onChange={(event) =>
-                setRepeat((event.target.value || null) as RepeatFrequency | null)
-              }
-              aria-label={t('繰り返し')}
-            >
-              <option value="">{t('なし')}</option>
-              {REPEAT_FREQUENCIES.map((value) => (
-                <option key={value} value={value}>
-                  {t(REPEAT_LABELS[value])}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-1.5 text-sm">
-            <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('優先度')}</span>
-            <select
-              className={inputClass}
-              value={priority}
-              onChange={(event) => setPriority(event.target.value as Priority)}
-              aria-label={t('優先度')}
-            >
-              {PRIORITIES.map((value) => (
-                <option key={value} value={value}>
-                  {t(PRIORITY_LABELS[value])}
-                </option>
-              ))}
-            </select>
-          </label>
+          {/* 2×2 on narrow screens, where the four fields do not fit on one line */}
+          <div className={`grid grid-cols-2 gap-2 ${status ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
+            {status && (
+              <label className="flex min-w-0 items-center gap-1.5 text-sm">
+                <span className="shrink-0 text-slate-600 dark:text-slate-400">
+                  {t('ステータス')}
+                </span>
+                <select
+                  className={inputClass}
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value as TodoStatus)}
+                  aria-label={t('ステータス')}
+                >
+                  {STATUSES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(STATUS_LABELS[value])}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className="flex min-w-0 items-center gap-1.5 text-sm">
+              <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('優先度')}</span>
+              <select
+                className={inputClass}
+                value={priority}
+                onChange={(event) => setPriority(event.target.value as Priority)}
+                aria-label={t('優先度')}
+              >
+                {PRIORITIES.map((value) => (
+                  <option key={value} value={value}>
+                    {t(PRIORITY_LABELS[value])}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex min-w-0 items-center gap-1.5 text-sm">
+              <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('期限')}</span>
+              <input
+                type="date"
+                className={inputClass}
+                value={dueDate}
+                onChange={(event) => setDueDate(event.target.value)}
+                aria-label={t('期限')}
+              />
+            </label>
+            <label className="flex min-w-0 items-center gap-1.5 text-sm">
+              <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('繰り返し')}</span>
+              <select
+                className={inputClass}
+                value={repeat ?? ''}
+                onChange={(event) =>
+                  setRepeat((event.target.value || null) as RepeatFrequency | null)
+                }
+                aria-label={t('繰り返し')}
+              >
+                <option value="">{t('なし')}</option>
+                {REPEAT_FREQUENCIES.map((value) => (
+                  <option key={value} value={value}>
+                    {t(REPEAT_LABELS[value])}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           {/* Repeats count the next occurrence from the due date, so explain that it starts today when there is no due date */}
           {repeat !== null && dueDate === '' && (
-            <p className="text-xs text-slate-500 sm:col-span-4 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {t('期限が無いときは今日から始めます。')}
             </p>
           )}
-          <div className="flex items-center gap-1.5 text-sm sm:col-span-4">
-            <span className="shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true">
-              {t('フォルダ|項目')}
-            </span>
-            <FolderSelect
-              className={inputClass}
-              folders={folders}
-              value={folderId}
-              onChange={setFolderId}
-              noneLabel={t('未分類')}
-              aria-label={t('フォルダ|項目')}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <TagInput
+              tags={tags}
+              onTagsChange={setTags}
+              draft={tagDraft}
+              onDraftChange={setTagDraft}
+              suggestions={tagSuggestions}
             />
+            <div className="flex min-w-0 items-center gap-1.5 text-sm">
+              <span className="shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true">
+                {t('フォルダ|項目')}
+              </span>
+              <FolderSelect
+                className={inputClass}
+                folders={folders}
+                value={folderId}
+                onChange={setFolderId}
+                noneLabel={t('未分類')}
+                aria-label={t('フォルダ|項目')}
+              />
+            </div>
           </div>
         </div>
       )}

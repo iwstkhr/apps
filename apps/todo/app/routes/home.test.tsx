@@ -316,6 +316,34 @@ describe('Home', () => {
     await waitFor(async () => expect((await getAll()).todos).toHaveLength(1));
   });
 
+  it('completes a repeating todo from the edit form, counting from the edited due date', async () => {
+    await putTodos([
+      createTodoFixture({
+        title: 'ゴミ出し',
+        dueDate: '2030-01-01',
+        repeat: { frequency: 'weekly', anchorDay: 1 },
+      }),
+    ]);
+    const user = await renderHome();
+    // New todos always start as 未着手, so only the edit form has the status field
+    await user.click(screen.getByRole('button', { name: '詳細' }));
+    expect(screen.queryByRole('combobox', { name: 'ステータス' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '「ゴミ出し」を編集' }));
+    const form = within(items()[0]);
+    expect(form.getByRole('combobox', { name: 'ステータス' })).toHaveValue('todo');
+    await user.selectOptions(form.getByRole('combobox', { name: 'ステータス' }), '完了');
+    await user.clear(form.getByLabelText('期限'));
+    await user.type(form.getByLabelText('期限'), '2030-01-10');
+    await user.click(screen.getByRole('button', { name: '保存' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      '「ゴミ出し」の次の回を 2030/01/17 に追加しました。',
+    );
+    expect(items()).toHaveLength(2);
+    expect(screen.getByRole('checkbox', { name: '「ゴミ出し」を未着手に戻す' })).toBeChecked();
+  });
+
   it('labels the add form apart from search and guides an empty add to the title', async () => {
     const user = await renderHome();
     const title = screen.getByRole('textbox', { name: 'タイトル' });
