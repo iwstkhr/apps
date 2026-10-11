@@ -76,7 +76,9 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
       .poll(() =>
         page.evaluate(() => {
           const primary = document.querySelector('main button[type="submit"]');
-          const selected = document.querySelector('#folder-panel [aria-pressed="true"]');
+          const selected = document.querySelector(
+            '#folder-panel li:has(> button[aria-current="true"])',
+          );
           if (!primary || !selected) throw new Error('theme controls unavailable');
           return (
             getComputedStyle(primary).backgroundColor === getComputedStyle(selected).backgroundColor
@@ -107,8 +109,8 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
           const b = luminance(background);
           return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
         };
-        const selected = el.querySelector('[aria-pressed="true"]');
-        if (!selected) throw new Error('selected status unavailable');
+        const selected = el.querySelector('li:has(> button[aria-current="true"])');
+        if (!selected) throw new Error('selected folder unavailable');
         const style = getComputedStyle(el);
         const selectedStyle = getComputedStyle(selected);
         return [
@@ -150,10 +152,13 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });
 
-test('keeps the status icon colors on dark sidebars', async ({ page }) => {
+test('keeps the status icon colors in every theme', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await openApp(page);
-  const icon = (status: string) => page.locator(`#folder-panel svg[data-status="${status}"]`);
+  const icon = (status: string) =>
+    page
+      .getByRole('group', { name: 'ステータス', exact: true })
+      .locator(`svg[data-status="${status}"]`);
   const expected = {
     todo: 'rgb(122, 136, 156)',
     in_progress: 'rgb(59, 130, 246)',

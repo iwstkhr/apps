@@ -181,13 +181,13 @@ describe('Home', () => {
     const user = await renderHome();
     expect(items()).toHaveLength(3);
 
-    const statusSidebar = within(screen.getByRole('navigation', { name: 'ステータス' }));
+    const statusTabs = within(screen.getByRole('group', { name: 'ステータス' }));
     expect(
       screen.queryByRole('combobox', { name: 'ステータスで絞り込み' }),
     ).not.toBeInTheDocument();
-    await user.click(statusSidebar.getByRole('button', { name: '保留 1' }));
+    await user.click(statusTabs.getByRole('button', { name: '保留 1' }));
     expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('返事待ち')]);
-    await user.click(statusSidebar.getByRole('button', { name: 'すべて 3' }));
+    await user.click(statusTabs.getByRole('button', { name: 'すべて 3' }));
 
     await user.click(screen.getByRole('button', { name: '#家' }));
     expect(screen.getByRole('combobox', { name: 'タグで絞り込み' })).toHaveValue('家');
@@ -198,7 +198,7 @@ describe('Home', () => {
     expect(screen.getByText('条件に合う TODO はありません。')).toBeInTheDocument();
   });
 
-  it('filters from the status sidebar within a folder', async () => {
+  it('filters by status within a folder', async () => {
     const folder = createFolderFixture({ name: '仕事' });
     const child = createFolderFixture({ name: '案件', parentId: folder.id });
     await putAll({
@@ -216,31 +216,34 @@ describe('Home', () => {
       ],
     });
     const user = await renderHome();
-    const sidebar = within(screen.getByRole('navigation', { name: 'ステータス' }));
-    expect(sidebar.getByRole('button', { name: '完了 2' })).toBeInTheDocument();
+    const statusTabs = within(screen.getByRole('group', { name: 'ステータス' }));
+    expect(statusTabs.getByRole('button', { name: '完了 2' })).toBeInTheDocument();
     await user.click(
       within(screen.getByRole('navigation', { name: 'フォルダ' })).getByRole('button', {
         name: /^仕事/,
       }),
     );
-    expect(sidebar.getByRole('button', { name: '完了 1' })).toBeInTheDocument();
-    await user.click(sidebar.getByRole('button', { name: '保留 1' }));
-    expect(sidebar.getByRole('button', { name: '保留 1' })).toHaveAttribute('aria-pressed', 'true');
+    expect(statusTabs.getByRole('button', { name: '完了 1' })).toBeInTheDocument();
+    await user.click(statusTabs.getByRole('button', { name: '保留 1' }));
+    expect(statusTabs.getByRole('button', { name: '保留 1' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     expect(items()).toHaveLength(1);
     expect(items()[0]).toHaveTextContent('返事待ち');
-    expect(sidebar.queryByRole('button', { name: /未完了/ })).not.toBeInTheDocument();
-    await user.click(sidebar.getByRole('button', { name: 'すべて 3' }));
-    expect(sidebar.getByRole('button', { name: 'すべて 3' })).toHaveAttribute(
+    expect(statusTabs.queryByRole('button', { name: /未完了/ })).not.toBeInTheDocument();
+    await user.click(statusTabs.getByRole('button', { name: 'すべて 3' }));
+    expect(statusTabs.getByRole('button', { name: 'すべて 3' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(items()).toHaveLength(3);
     await user.selectOptions(screen.getByRole('combobox', { name: 'タグで絞り込み' }), '仕事');
     await user.type(screen.getByRole('searchbox', { name: 'キーワードで検索' }), '会議');
-    await user.click(sidebar.getByRole('button', { name: '未着手 1' }));
+    await user.click(statusTabs.getByRole('button', { name: '未着手 1' }));
     expect(items()).toHaveLength(1);
     expect(items()[0]).toHaveTextContent('会議');
-    await user.click(sidebar.getByRole('button', { name: '進行中 0' }));
+    await user.click(statusTabs.getByRole('button', { name: '進行中 0' }));
     expect(screen.getByText('条件に合う TODO はありません。')).toBeInTheDocument();
   });
 
@@ -335,6 +338,14 @@ describe('Home', () => {
       );
       await user.click(within(nav()).getByRole('button', { name: /^家/ }));
       expect(items()).toHaveLength(2);
+    });
+
+    it('hides the status filters in the trash view', async () => {
+      await putTodos([createTodoFixture({ title: '洗濯' })]);
+      const user = await renderHome();
+      expect(screen.getByRole('group', { name: 'ステータス' })).toBeInTheDocument();
+      await user.click(trashRow());
+      expect(screen.queryByRole('group', { name: 'ステータス' })).not.toBeInTheDocument();
     });
 
     it('does not claim to restore a todo that was deleted forever', async () => {

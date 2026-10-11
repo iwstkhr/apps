@@ -42,7 +42,7 @@ The selection is stored separately in localStorage (`todo:theme`) and restored a
 
 ### Header menu
 
-The メニュー button at the right of the header (⋯ followed by the text メニュー at widths of 1024px and above; only ⋯ on narrower screens, where its accessible name is still メニュー) opens a menu with, from top to bottom: 言語 (English and 日本語, in that order, with a check mark on the current language), テーマ…, エクスポート, and インポート. These are occasional actions, so they share one button and keep the header uncluttered on narrow screens; the ☰ button on the left stays reserved for the folder and status navigation and is named for it (フォルダとステータスを開く), so the two buttons are never both called メニュー. Choosing an item closes the menu and runs it: a language applies immediately, テーマ… opens the theme dialog, エクスポート downloads the file, and インポート opens the file picker. エクスポート is shown but unavailable while there are no todos and no folders.
+The メニュー button at the right of the header (⋯ followed by the text メニュー at widths of 1024px and above; only ⋯ on narrower screens, where its accessible name is still メニュー) opens a menu with, from top to bottom: 言語 (English and 日本語, in that order, with a check mark on the current language), テーマ…, エクスポート, and インポート. These are occasional actions, so they share one button and keep the header uncluttered on narrow screens; the ☰ button on the left stays reserved for the folder navigation and is named for it (フォルダを開く), so the two buttons are never both called メニュー. Choosing an item closes the menu and runs it: a language applies immediately, テーマ… opens the theme dialog, エクスポート downloads the file, and インポート opens the file picker. エクスポート is shown but unavailable while there are no todos and no folders.
 
 The menu follows the WAI-ARIA menu pattern: the button announces the popup and its state, opening it (by click, Enter, Space, ↓, or ↑) focuses the first item, ↑ / ↓ move between items and wrap around, Home and End jump to the first and last item, and Escape closes the menu and returns focus to the button. Tab or a click outside closes it as well. The menu fits within narrow screens.
 
@@ -64,14 +64,14 @@ Editing shows the original Markdown source. Storage, keyword search, and JSON ex
 
 - Deleting a todo moves it to the trash instead of removing it. No confirmation is shown; instead the notice that confirms the move has a 元に戻す button that restores the todo (or all the completed todos moved together). The notice sticks below the header so the button stays visible after deleting a todo further down the list.
 - A todo can also be dragged onto ゴミ箱 in the folder list.
-- ゴミ箱 is shown below the folders in the left pane with the number of todos in it. Selecting it shows the trashed todos, newest first, with their original folder (or 未分類) and how many days remain before they are deleted automatically. The add form, toolbar, and status filter do not apply there; choosing a status returns to すべて.
+- ゴミ箱 is shown below the folders in the left pane with the number of todos in it. Selecting it shows the trashed todos, newest first, with their original folder (or 未分類) and how many days remain before they are deleted automatically. The add form, status tabs, and toolbar are not shown there.
 - Each trashed todo has 元に戻す, which returns it to its original folder with its status and other fields unchanged, and 完全に削除, which deletes it forever after a confirmation. ゴミ箱を空にする deletes all trashed todos forever after a confirmation.
 - Todos that have been in the trash for 30 days are deleted forever the next time the app is opened.
 - Trashed todos are excluded from the other views, counts, and tag lists. They are included in exports with `deletedAt`, so importing restores them to the trash. Deleting a folder moves its trashed todos to 未分類 as well, so restoring them later does not point to a missing folder.
 
 ### Folders
 
-- The left pane includes a ステータス section with すべて, 未着手, 進行中, 保留, and 完了. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. The main toolbar contains sorting, tag, and keyword controls; status selection is available only in the left pane. On narrow screens, open the pane with the menu button; selecting a status closes it.
+- A ステータス segmented control directly above the task list, below the toolbar, offers すべて, 未着手, 進行中, 保留, and 完了, each with its icon and a count badge. The options sit in a bordered gray track and the selected one is raised in white with an accent outline, so the control stands out from plain text. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. Status is a filter on the current list rather than a place, so it sits in the main area right above the list it switches, apart from the add form, instead of in the left pane, and on narrow screens it can be chosen without opening the drawer. When the tabs do not fit, the row scrolls sideways instead of wrapping.
 
 - Folders can be nested to any depth. Each todo belongs to at most one folder; todos without a folder are 未分類 (unfiled).
 - The folder list shows, under the フォルダ heading, すべて (all), 未分類, and then the folder tree, with the number of open (not 完了) todos next to each. すべて and 未分類 are not folders, but they sit at the top of the same list because they also choose which folder to show, so the status list's own すべて is not confused with them; their icons line up with the top-level folder icons. A folder's count includes its subfolders.
@@ -85,7 +85,7 @@ Editing shows the original Markdown source. Storage, keyword search, and JSON ex
 - On wide screens the folder list fills the window height below the header and stays in place while the todo list scrolls; a long folder list scrolls inside it. The footer sits under the todo list.
 - On wide screens the folder list can be resized by dragging its right edge (180–480 px, 240 px by default). The edge can also be focused and moved with ← / → (Shift for larger steps) and Home / End, and double-clicking it restores the default width.
 - The selected folder, the collapsed folders, and the folder list width are restored after a reload. If the restored folder no longer exists, すべて is shown.
-- On narrow screens, the ☰ button (フォルダとステータスを開く) on the left side of the header opens a panel titled フォルダとステータス that slides in from the left over the task list. The panel contains status and folder navigation and closes when a status or folder is selected, the close button or backdrop is tapped, or Escape is pressed. While open, it keeps keyboard focus inside and prevents background interaction and scrolling.
+- On narrow screens, the ☰ button (フォルダを開く) on the left side of the header opens a panel titled フォルダ that slides in from the left over the task list. The panel contains the folder navigation and the trash, and closes when one of them is selected, the close button or backdrop is tapped, or Escape is pressed. While open, it keeps keyboard focus inside and prevents background interaction and scrolling.
 
 ### Sort order
 
@@ -111,12 +111,13 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 ├────────────────┬─────────────────────────────────────────────┤
 │ フォルダ   [+] │ 仕事 / 案件 A                               │
 │   すべて     5 │ Add form: [やること      ] [詳細] [追加]    │
-│   未分類     2 │ Filters: [並び順] [タグ]        │
+│   未分類     2 │ Filters: [並び順] [タグ]                    │
 │ ▾ 仕事       2 │ [キーワードで検索                         ] │
-│   ▾ 案件 A   1 │ ┌─────────────────────────────────────────┐ │
-│       資料   1 │ │ ☐ Title                        ✎  🗑    │ │
-│     会議       │ │   [進行中▾] 優先度: 高  📁 仕事 / 案件 A │ │
-│   家         1 │ └─────────────────────────────────────────┘ │
+│   ▾ 案件 A   1 │ すべて 5 | 未着手 2 | 進行中 1 | 保留 1 | … │
+│       資料   1 │ ┌─────────────────────────────────────────┐ │
+│     会議       │ │ ☐ Title                        ✎  🗑    │ │
+│   家         1 │ │   [進行中▾] 優先度: 高  📁 仕事 / 案件 A │ │
+│                │ └─────────────────────────────────────────┘ │
 │ ゴミ箱         │                       [完了済みを削除 (n)]  │
 ├────────────────┴─────────────────────────────────────────────┤
 │ Footer: note on local storage and backups                    │

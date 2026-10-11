@@ -82,31 +82,30 @@ test('customizes task order by dragging and buttons and keeps it through reload 
   await expect(todoItems(page)).toHaveText([/タスク A/, /タスク C/, /タスク B/, /タスク D/]);
 });
 
-test('filters from the status pane and its narrow-screen toggle', async ({ page }) => {
+test('filters by status above the list, also on narrow screens', async ({ page }) => {
   await addTodo(page, '洗濯');
   await addTodo(page, '掃除');
   await page.getByRole('combobox', { name: '「掃除」のステータス' }).selectOption('done');
-  const sidebar = page.getByRole('navigation', { name: 'ステータス', exact: true });
+  const statusTabs = page.getByRole('group', { name: 'ステータス', exact: true });
   await expect(page.getByRole('combobox', { name: 'ステータスで絞り込み' })).toHaveCount(0);
-  await sidebar.getByRole('button', { name: '完了 1', exact: true }).click();
-  await expect(sidebar.getByRole('button', { name: '完了 1', exact: true })).toHaveAttribute(
+  await statusTabs.getByRole('button', { name: '完了 1', exact: true }).click();
+  await expect(statusTabs.getByRole('button', { name: '完了 1', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
   await expect(todoItems(page)).toHaveText([/掃除/]);
-  await expect(sidebar.getByRole('button', { name: /未完了/ })).toHaveCount(0);
-  await sidebar.getByRole('button', { name: '未着手 1' }).click();
-  await expect(sidebar.getByRole('button', { name: '未着手 1' })).toHaveAttribute(
+  await expect(statusTabs.getByRole('button', { name: /未完了/ })).toHaveCount(0);
+  await statusTabs.getByRole('button', { name: '未着手 1' }).click();
+  await expect(statusTabs.getByRole('button', { name: '未着手 1' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
   await expect(todoItems(page)).toHaveText([/洗濯/]);
-  await page.setViewportSize({ width: 375, height: 800 });
-  await expect(sidebar).toBeHidden();
-  await page.getByRole('button', { name: 'フォルダとステータスを開く' }).click();
-  await sidebar.getByRole('button', { name: '完了 1', exact: true }).click();
-  await expect(sidebar).toBeHidden();
+  // 狭い画面でもドロワーを開かずに選べ、はみ出した分は横にスクロールする
+  await page.setViewportSize({ width: 320, height: 800 });
+  await statusTabs.getByRole('button', { name: '完了 1', exact: true }).click();
   await expect(todoItems(page)).toHaveText([/掃除/]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });
 
 test('completes, edits and deletes todos', async ({ page }) => {
@@ -115,10 +114,10 @@ test('completes, edits and deletes todos', async ({ page }) => {
 
   await page.getByRole('combobox', { name: '「掃除」のステータス' }).selectOption('進行中');
   await page.getByRole('checkbox', { name: '「洗濯」を完了にする' }).check();
-  const sidebar = page.getByRole('navigation', { name: 'ステータス', exact: true });
-  await sidebar.getByRole('button', { name: '進行中 1' }).click();
+  const statusTabs = page.getByRole('group', { name: 'ステータス', exact: true });
+  await statusTabs.getByRole('button', { name: '進行中 1' }).click();
   await expect(todoItems(page)).toHaveText([/掃除/]);
-  await sidebar.getByRole('button', { name: 'すべて 2' }).click();
+  await statusTabs.getByRole('button', { name: 'すべて 2' }).click();
 
   // ステータスもリロード後に残る
   await page.reload();

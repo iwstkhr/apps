@@ -3,13 +3,13 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { StatusSidebar } from '~/components/todo/status-sidebar';
+import { StatusTabs } from '~/components/todo/status-tabs';
 
 const counts = { all: 5, todo: 2, in_progress: 1, on_hold: 1, done: 1 };
 
-describe('StatusSidebar', () => {
+describe('StatusTabs', () => {
   it('shows a colored icon with a distinct shape before each status', () => {
-    render(<StatusSidebar value="all" counts={counts} onChange={() => {}} />);
+    render(<StatusTabs value="all" counts={counts} onChange={() => {}} />);
     const icon = (name: RegExp) =>
       screen.getByRole('button', { name }).querySelector('svg[data-status]');
 
@@ -28,7 +28,7 @@ describe('StatusSidebar', () => {
 
   it('keeps the icons out of the accessible name', async () => {
     const onChange = vi.fn();
-    render(<StatusSidebar value="all" counts={counts} onChange={onChange} />);
+    render(<StatusTabs value="all" counts={counts} onChange={onChange} />);
     for (const svg of document.querySelectorAll('svg[data-status]')) {
       expect(svg).toHaveAttribute('aria-hidden', 'true');
     }

@@ -21,10 +21,9 @@ export const english: Record<string, string> = {
 
   // ヘッダー・メニュー
   メニュー: 'Menu',
-  フォルダとステータス: 'Folders and statuses',
-  フォルダとステータスを開く: 'Open folders and statuses',
-  フォルダとステータスを閉じる: 'Close folders and statuses',
-  フォルダとステータスの背景を閉じる: 'Close the folders and statuses backdrop',
+  フォルダを開く: 'Open folders',
+  フォルダを閉じる: 'Close folders',
+  フォルダの背景を閉じる: 'Close the folders backdrop',
   エクスポート: 'Export',
   インポート: 'Import',
   'すべての TODO を JSON ファイルに保存します': 'Save all todos to a JSON file',

@@ -13,7 +13,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Set a due date (overdue and due-today items are highlighted), a priority (high / medium / low), a multi-line memo, and tags
 - Display memos as Markdown, including headings, lists, links, code blocks, tables, and task lists
 - Filter by status, tag, and keyword (title, memo, tags), and sort by due date, priority, status, or creation date
-- Select a status in the left pane to filter the current folder, with counts for each status
+- Select a status from the segmented control above the list to filter the current folder, with counts for each status
 - Choose カスタム to reorder todos by dragging their headers or using up/down buttons; the order is saved and included in exports
 - Move deleted todos to a trash where they can be restored for 30 days, with undo right after deleting; move all completed todos there at once
 - Export all todos and folders to a JSON file, and import a file by merging it with or replacing the current data

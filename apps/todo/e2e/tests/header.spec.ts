@@ -13,19 +13,17 @@ test('labels the header menu button メニュー and shows the text only on wide
   const labelWidth = async () => (await label.boundingBox())?.width ?? 0;
   expect(await labelWidth()).toBeGreaterThan(20);
   // 広い画面では左の ☰ は出ないので、「メニュー」はひとつだけ
-  await expect(header.getByRole('button', { name: 'フォルダとステータスを開く' })).toBeHidden();
+  await expect(header.getByRole('button', { name: 'フォルダを開く' })).toBeHidden();
 
   await page.setViewportSize({ width: 375, height: 800 });
   // 狭い画面では ⋯ だけにし、読み上げの名前は「メニュー」のまま
   await expect(menuButton).toBeVisible();
   await expect.poll(labelWidth).toBeLessThanOrEqual(1);
-  const navButton = header.getByRole('button', { name: 'フォルダとステータスを開く' });
+  const navButton = header.getByRole('button', { name: 'フォルダを開く' });
   await expect(navButton).toBeVisible();
 
   await navButton.click();
-  await expect(
-    page.getByRole('dialog', { name: 'フォルダとステータス', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'フォルダ', exact: true })).toBeVisible();
 });
 
 test('keeps both header buttons readable on dark headers', async ({ page }) => {
@@ -36,7 +34,7 @@ test('keeps both header buttons readable on dark headers', async ({ page }) => {
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'mint');
   const header = page.locator('header');
-  for (const name of ['フォルダとステータスを開く', 'メニュー']) {
+  for (const name of ['フォルダを開く', 'メニュー']) {
     await expect(header.getByRole('button', { name, exact: true })).toHaveCSS(
       'color',
       'rgb(248, 250, 252)',

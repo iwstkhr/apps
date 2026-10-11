@@ -6,7 +6,7 @@ import { FolderSidebar } from '~/components/folder/folder-sidebar';
 import { AppHeader } from '~/components/layout/app-header';
 import { SidebarPanel } from '~/components/layout/sidebar-panel';
 import { SidebarResizer } from '~/components/layout/sidebar-resizer';
-import { StatusSidebar } from '~/components/todo/status-sidebar';
+import { StatusTabs } from '~/components/todo/status-tabs';
 import { TodoForm } from '~/components/todo/todo-form';
 import { TodoList } from '~/components/todo/todo-list';
 import { TodoToolbar } from '~/components/todo/todo-toolbar';
@@ -317,16 +317,6 @@ export default function Home() {
           className="relative lg:sticky lg:top-[calc(3.5rem+1px+1rem)] lg:mb-0 lg:flex lg:h-[calc(100svh-3.5rem-1px-2rem)] lg:flex-col"
         >
           <SidebarPanel open={showFolders} onClose={closeMenu}>
-            <StatusSidebar
-              value={filters.status}
-              counts={counts}
-              onChange={(status) => {
-                setFilters((current) => ({ ...current, status }));
-                // ゴミ箱ではステータスで絞り込まないので、選んだらすべてのタスクに戻る
-                if (isTrash) setSelectedFolder('all');
-                setShowFolders(false);
-              }}
-            />
             <FolderSidebar
               folders={folders}
               openCounts={openCounts}
@@ -458,6 +448,13 @@ export default function Home() {
                     setSort(next.sort);
                   }}
                   tags={tags}
+                />
+
+                {/* 一覧の表示を切り替えるものなので、追加フォームから離して一覧のすぐ上に置く */}
+                <StatusTabs
+                  value={filters.status}
+                  counts={counts}
+                  onChange={(status) => setFilters((current) => ({ ...current, status }))}
                 />
 
                 {isLoading ? (

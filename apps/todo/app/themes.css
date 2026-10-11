@@ -123,7 +123,6 @@
   background: #ffffff18;
 }
 
-:root[data-theme]:not([data-theme="indigo"]) .theme-sidebar [aria-pressed="true"],
 :root[data-theme]:not([data-theme="indigo"])
   .theme-sidebar
   li:has(> button[aria-current="true"]):not(.ring-2) {
@@ -153,7 +152,7 @@
   background: #ffffff18;
 }
 
-/* 左の ☰ (フォルダとステータスを開く) も濃いヘッダーの上で読めるようにする */
+/* 左の ☰ (フォルダを開く) も濃いヘッダーの上で読めるようにする */
 :root[data-theme]:not([data-theme="indigo"]) .theme-header .header-nav-button {
   color: #f8fafc;
 }
