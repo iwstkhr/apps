@@ -3,7 +3,7 @@ import { ShelterTableHeader } from '~/components/table/shelter-table-header';
 import { ShelterTableRows } from '~/components/table/shelter-table-rows';
 import { DATASET_UPDATED_AT } from '~/generated/dataset-meta';
 import { useElementHeight } from '~/hooks/use-element-height';
-import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query';
+import { LG_MEDIA_QUERY, SM_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query';
 import { cn } from '~/lib/cn';
 import type { Shelter } from '~/types/shelter';
 import type { ShelterTypeKey } from '~/types/shelter-type';
@@ -21,7 +21,7 @@ interface MapTableProps {
   selectedShelterId?: Shelter['id'] | null;
   onSelect?: (shelter: Shelter) => void;
   highlightTypes?: readonly ShelterTypeKey[];
-  /** False while the list is hidden behind the map tab on phones. */
+  /** False while the list is hidden (the map tab on phones, or collapsed beside the map). */
   visible?: boolean;
 }
 
@@ -37,8 +37,11 @@ export function MapTable({
 }: MapTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const rows = withinMapOnly ? visibleShelters : shelters;
-  // Phones show each shelter as a card instead of a wide table that needs horizontal scrolling.
-  const layout = useMediaQuery(DESKTOP_MEDIA_QUERY, true) ? 'table' : 'card';
+  // The wide table fits only between the breakpoints. Phones and the narrow sidebar beside the
+  // map on wide screens show each shelter as a card instead.
+  const isSm = useMediaQuery(SM_MEDIA_QUERY, true);
+  const isLg = useMediaQuery(LG_MEDIA_QUERY);
+  const layout = isSm && !isLg ? 'table' : 'card';
   const headerRef = useRef<HTMLDivElement>(null);
   const headerHeight = useElementHeight(headerRef, layout === 'table');
 
@@ -94,7 +97,7 @@ export function MapTable({
               layout={layout}
               // Ignore a height measured just before the header was removed (card layout).
               stickyHeaderHeight={layout === 'table' ? headerHeight : 0}
-              visible={visible || layout === 'table'}
+              visible={visible}
               highlightTypes={highlightTypes}
             />
           </div>

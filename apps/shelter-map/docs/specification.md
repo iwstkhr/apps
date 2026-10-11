@@ -23,7 +23,7 @@ Specifications for a web application that displays designated emergency evacuati
 | Tile switching | OpenStreetMap / GSI aerial imagery |
 | Data loading | Fetch, decompress, and validate gzip-compressed GeoJSON |
 | Loading indicator | Show a spinner over the map while loading and an error message on failure |
-| Responsive layout | On phones, switch between the map and a card list with tabs |
+| Responsive layout | Wide screens show a card list beside the map, tablets stack the map over the table, and phones switch between them with tabs |
 
 ## Screen layout
 
@@ -43,8 +43,10 @@ Specifications for a web application that displays designated emergency evacuati
 ```
 
 - There is a single page route (`/`)
-- The overall layout is vertical with `h-svh`, fitting the map and table within the screen
-- Below the `sm` breakpoint (40rem), tabs show either the map or the list; the map stays mounted while hidden
+- The overall layout fits within the screen with `h-svh`
+- The layout above applies between the `sm` (40rem) and `lg` (64rem) breakpoints
+- From `lg`, the list (cards, 24rem wide) sits left of a full-height map; a handle on the map's left edge collapses and expands the list
+- Below `sm`, tabs show either the map or the list; the map stays mounted while hidden
 - Loading errors appear in red at the top of the map
 
 ### Header
@@ -118,11 +120,11 @@ Strings from the data are HTML-escaped before insertion. The site whose popup is
 - Display the result count at the upper right; with "地図の表示範囲のみ" on, show only sites inside the map viewport and the count as "N 件 / 該当 M 件"
 - Display the source link and data update date (`DATASET_UPDATED_AT`)
 - Use TanStack Virtual for virtual scrolling
-- Use a minimum width of approximately 58rem with horizontal scrolling
+- Between `sm` and `lg`, use a minimum width of approximately 58rem with horizontal scrolling
 - Selecting a row (click, Enter, or Space) flies the map to the site (zoom 16 or more) and opens its popup; on phones it also switches to the map tab
 - The row of the site whose popup is open is highlighted and scrolled into view below the sticky header (on phones, when the list tab is opened)
 - With "非該当も表示" on, rows that miss a selected disaster type are grayed out
-- On phones, each site is shown as a card (name, address, and designated disaster types) without horizontal scrolling
+- On phones and beside the map from `lg`, each site is shown as a card (name, address, and designated disaster types) without horizontal scrolling
 
 ## Filter behavior
 

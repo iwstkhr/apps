@@ -141,7 +141,7 @@ On `moveend` / `zoomlevelschange`, the app:
 | `useLeafletMap` | Initialize Leaflet, switch tiles, and handle resizing |
 | `useCurrentLocation` | Read the Geolocation API, draw the current location, and report errors |
 | `useDebouncedValue` | Delay keyword updates |
-| `useMediaQuery` | Switch layouts at the `sm` breakpoint |
+| `useMediaQuery` | Switch layouts at the `sm` and `lg` breakpoints |
 
 ### Data / Types
 
@@ -169,10 +169,10 @@ On `moveend` / `zoomlevelschange`, the app:
 | --- | --- |
 | filter | `ShelterFilterBar` |
 | layout | `AppShell`, `AppHeader`, `ViewTabs` |
-| map | `MapTileLayerControl`, `MapHelpHint`, `CurrentLocationButton`, `MapAlert`, loading overlay |
+| map | `MapTileLayerControl`, `MapHelpHint`, `CurrentLocationButton`, `ListPanelToggle`, `MapAlert`, loading overlay |
 | table | `MapTable`, header, rows |
 
-`routes/home.tsx` owns the map container ref, the filter state, and the mobile view tab, calls `useShelterMap`, and passes its state to the map and table as props.
+`routes/home.tsx` owns the map container ref, the filter state, the mobile view tab, and whether the list beside the map is collapsed, calls `useShelterMap`, and passes its state to the map and table as props.
 
 ## Routing and build
 
@@ -222,7 +222,7 @@ push to main (only for changes under apps/shelter-map/) / manual run
        └─ pnpm run deploy (wrangler deploy publishes build/client to Workers)
 ```
 
-The E2E job builds the app and serves `build/client/` with `wrangler dev`, then runs Playwright with the runner's preinstalled Google Chrome. Map tiles are stubbed so tests never reach OpenStreetMap or GSI, and most scenarios replace the GeoJSON with a small fixture so assertions do not depend on the monthly data update. They cover what unit tests cannot: gzip delivery and decoding through Workers, SPA fallback for unknown paths, filters reflected in both the table and the map, marker colors, selection between the table and the map, the current location (with a mocked position and with permission denied), popups (including HTML escaping and the directions link), tile switching, modifier-key zoom, and the mobile tabs and card list.
+The E2E job builds the app and serves `build/client/` with `wrangler dev`, then runs Playwright with the runner's preinstalled Google Chrome. Map tiles are stubbed so tests never reach OpenStreetMap or GSI, and most scenarios replace the GeoJSON with a small fixture so assertions do not depend on the monthly data update. They cover what unit tests cannot: gzip delivery and decoding through Workers, SPA fallback for unknown paths, filters reflected in both the table and the map, marker colors, selection between the table and the map, the current location (with a mocked position and with permission denied), popups (including HTML escaping and the directions link), tile switching, modifier-key zoom, and the side-by-side layout and its collapsible list, the sticky table header at tablet width, and the mobile tabs and card list.
 
 Test and Deploy run independently, as in tsudou. Deploy runs only on pushes to `main` and manual runs, so pull requests (including those from forks) never reach it. The Cloudflare secrets are passed only to the deploy step, not to dependency installation or the build. Navigation to unknown paths returns `index.html` (`not_found_handling: single-page-application`).
 

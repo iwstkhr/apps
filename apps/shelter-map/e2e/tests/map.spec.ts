@@ -68,6 +68,65 @@ test.describe('地図', () => {
     await expect(tableRows(page).first()).toHaveAttribute('aria-current', 'true');
   });
 
+  test('地図タイルを国土地理院の写真に切り替えられる', async ({ page }) => {
+    await openApp(page);
+    await expect(page.getByRole('radio', { name: '地図' })).toBeChecked();
+
+    const photoTile = page.waitForRequest(/cyberjapandata\.gsi\.go\.jp\/xyz\/seamlessphoto\//);
+    // The radio is visually hidden inside its segment button, so click the label
+    await page.getByRole('group', { name: '地図タイル' }).getByText('写真').click();
+    await expect(page.getByRole('radio', { name: '写真' })).toBeChecked();
+    await photoTile;
+    await expect(page.locator('.leaflet-tile[src*="cyberjapandata"]').first()).toBeAttached();
+    await expect(page.locator('.leaflet-tile[src*="openstreetmap"]')).toHaveCount(0);
+  });
+
+  test('Ctrl を押しながらスクロールしたときだけズームする', async ({ page }) => {
+    await openApp(page);
+    await expect.poll(() => currentZoom(page)).toBe(8);
+    const box = await page.locator('.leaflet-container').boundingBox();
+    if (!box) throw new Error('地図が表示されていません');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+
+    // The wheel alone scrolls the page and does not zoom
+    await page.mouse.wheel(0, -100);
+    await page.waitForTimeout(500);
+    expect(await currentZoom(page)).toBe(8);
+
+    await page.keyboard.down('Control');
+    await page.mouse.wheel(0, -100);
+    await page.keyboard.up('Control');
+    await expect.poll(() => currentZoom(page)).toBe(9);
+  });
+});
+
+test.describe('PC (横並び)', () => {
+  test('一覧が地図の左に並び、折りたたむと地図が広がる', async ({ page }) => {
+    await openApp(page);
+
+    const list = page.getByRole('table', { name: '避難場所の一覧' });
+    const map = page.locator('.leaflet-container');
+    const [listBox, mapBox] = await Promise.all([list.boundingBox(), map.boundingBox()]);
+    if (!listBox || !mapBox) throw new Error('一覧または地図が表示されていません');
+    expect(listBox.x + listBox.width).toBeLessThanOrEqual(mapBox.x);
+    // The narrow list shows cards instead of the wide table
+    await expect(list.getByRole('columnheader')).toHaveCount(0);
+    await expect(page.getByRole('tab')).toHaveCount(0);
+
+    await page.getByRole('button', { name: '一覧を隠す' }).click();
+    await expect(list).toBeHidden();
+    await expect
+      .poll(async () => (await map.boundingBox())?.width)
+      .toBeGreaterThan(mapBox.width + listBox.width);
+
+    await page.getByRole('button', { name: '一覧を表示' }).click();
+    await expect(list).toBeVisible();
+  });
+});
+
+test.describe('タブレット幅 (上下に並べた表)', () => {
+  test.use({ viewport: { width: 900, height: 720 } });
+
   test('ピンを選ぶと、一覧の上下どちらにあっても行が見出しに隠れず表示される', async ({ page }) => {
     // Enough shelters that the table scrolls, spread out so each pin can be clicked
     const shelters = Array.from({ length: 60 }, (_, i) =>
@@ -116,37 +175,6 @@ test.describe('地図', () => {
     await scroller.evaluate((el) => el.scrollTo(0, el.scrollHeight));
     await page.getByTitle('グリッド避難所30', { exact: true }).click();
     await expectSelectedRowVisible('グリッド避難所30');
-  });
-
-  test('地図タイルを国土地理院の写真に切り替えられる', async ({ page }) => {
-    await openApp(page);
-    await expect(page.getByRole('radio', { name: '地図' })).toBeChecked();
-
-    const photoTile = page.waitForRequest(/cyberjapandata\.gsi\.go\.jp\/xyz\/seamlessphoto\//);
-    // The radio is visually hidden inside its segment button, so click the label
-    await page.getByRole('group', { name: '地図タイル' }).getByText('写真').click();
-    await expect(page.getByRole('radio', { name: '写真' })).toBeChecked();
-    await photoTile;
-    await expect(page.locator('.leaflet-tile[src*="cyberjapandata"]').first()).toBeAttached();
-    await expect(page.locator('.leaflet-tile[src*="openstreetmap"]')).toHaveCount(0);
-  });
-
-  test('Ctrl を押しながらスクロールしたときだけズームする', async ({ page }) => {
-    await openApp(page);
-    await expect.poll(() => currentZoom(page)).toBe(8);
-    const box = await page.locator('.leaflet-container').boundingBox();
-    if (!box) throw new Error('地図が表示されていません');
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-
-    // The wheel alone scrolls the page and does not zoom
-    await page.mouse.wheel(0, -100);
-    await page.waitForTimeout(500);
-    expect(await currentZoom(page)).toBe(8);
-
-    await page.keyboard.down('Control');
-    await page.mouse.wheel(0, -100);
-    await page.keyboard.up('Control');
-    await expect.poll(() => currentZoom(page)).toBe(9);
   });
 });
 

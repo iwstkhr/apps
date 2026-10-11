@@ -14,7 +14,7 @@ A web application for browsing designated emergency evacuation site data from th
 - Switch between OpenStreetMap and GSI aerial imagery
 - Load data efficiently using gzip-compressed GeoJSON
 - Show a spinner over the map while evacuation site data is loading
-- Switch between the map and a card list with tabs on mobile screens
+- Show the list beside a full-height map on wide screens (collapsible), and switch between the map and a card list with tabs on mobile screens
 
 ## Technology stack
 

@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { FaQuestion, FaXmark } from 'react-icons/fa6';
-import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query';
+import { SM_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query';
 
 const OPEN_STORAGE_KEY = 'shelter-map:map-help-open';
 
@@ -32,7 +32,7 @@ function storeOpen(open: boolean): void {
 export function MapHelpHint() {
   const modifierKey = getModifierKeyLabel();
   const panelId = useId();
-  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const isDesktop = useMediaQuery(SM_MEDIA_QUERY);
   // Until the user toggles it, the help is open on desktops and closed on phones.
   const [storedOpen, setStoredOpen] = useState<boolean | null>(null);
   const open = storedOpen ?? isDesktop;
