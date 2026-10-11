@@ -8,11 +8,13 @@ A web application for browsing designated emergency evacuation site data from th
 
 - Render evacuation sites within the current viewport on an interactive map
 - Display all evacuation sites in a table with virtual scrolling
-- Filter the map and table by name, address, and disaster type (flood, earthquake, tsunami, etc.)
+- Filter the map and table with a keyword (name or address) and disaster type chips (flood, earthquake, tsunami, etc.), with markers colored by the selected types
+- Select a table row to fly the map to the site and open its popup, or limit the table to the map viewport
+- Fly to your current location and open directions to a site in Google Maps
 - Switch between OpenStreetMap and GSI aerial imagery
 - Load data efficiently using gzip-compressed GeoJSON
 - Show a spinner over the map while evacuation site data is loading
-- Use the map and table on mobile screens with a responsive layout
+- Switch between the map and a card list with tabs on mobile screens
 
 ## Technology stack
 

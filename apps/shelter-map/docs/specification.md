@@ -14,13 +14,16 @@ Specifications for a web application that displays designated emergency evacuati
 
 | Feature | Description |
 | --- | --- |
-| Map | Render evacuation sites within the viewport using Leaflet |
-| Table | Display all filtered results with virtual scrolling |
-| Filtering | Filter the map and table together by name, address, and disaster type |
+| Map | Render evacuation sites within the viewport using Leaflet, colored by the selected disaster types |
+| Table | Display all filtered results (or only those in the viewport) with virtual scrolling |
+| Filtering | Filter the map and table together with a keyword (name or address) and disaster type chips |
+| Map and table link | Selecting a row flies the map to the site and opens its popup; opening a popup highlights its row |
+| Current location | Fly the map to the user's location using the Geolocation API |
+| Directions | Open directions to a site in Google Maps from its popup |
 | Tile switching | OpenStreetMap / GSI aerial imagery |
 | Data loading | Fetch, decompress, and validate gzip-compressed GeoJSON |
 | Loading indicator | Show a spinner over the map while loading and an error message on failure |
-| Responsive layout | Keep the map and table usable on mobile screens |
+| Responsive layout | On phones, switch between the map and a card list with tabs |
 
 ## Screen layout
 
@@ -28,15 +31,20 @@ Specifications for a web application that displays designated emergency evacuati
 ┌──────────────────────────────────────────────────┐
 │ Header (title / GitHub link)                      │
 ├──────────────────────────────────────────────────┤
-│ Map (tile switch / hints / loading indicator)     │  flex 5
+│ Filter bar (keyword / disaster type chips)        │
+│ [Map | List] tabs (phones only)                   │
 ├──────────────────────────────────────────────────┤
-│ Data source / result count                       │
-│ Table (column filters / virtual scrolling)       │  flex 4
+│ Map (tile switch / help / current location /      │  flex 5
+│      loading indicator)                           │
+├──────────────────────────────────────────────────┤
+│ Data source / viewport toggle / result count      │
+│ Table (virtual scrolling)                         │  flex 4
 └──────────────────────────────────────────────────┘
 ```
 
 - There is a single page route (`/`)
 - The overall layout is vertical with `h-svh`, fitting the map and table within the screen
+- Below the `sm` breakpoint (40rem), tabs show either the map or the list; the map stays mounted while hidden
 - Loading errors appear in red at the top of the map
 
 ### Header
@@ -61,6 +69,14 @@ Specifications for a web application that displays designated emergency evacuati
 
 The mouse wheel alone does not zoom, preventing interference with page scrolling.
 
+The help panel at the lower left can be collapsed to a "?" button. It is open by default on desktops and closed on phones, and the choice is remembered in `localStorage`.
+
+The tile switch at the upper right is a segmented control (地図 / 写真).
+
+#### Current location
+
+The button at the lower right reads the position with the Geolocation API (high accuracy, 10-second timeout), draws the position with its accuracy circle, and flies the map there (zoom 15 or more). Denied permission, timeouts, other failures, and browsers without the API show a dismissible message at the top of the map.
+
 #### Marker rendering
 
 Only evacuation sites within the viewport are rendered.
@@ -68,7 +84,15 @@ Only evacuation sites within the viewport are rendered.
 | Condition | Rendering |
 | --- | --- |
 | Zoom ≥ 15, or 100 or fewer visible results | Pins (markers) |
-| Otherwise | Small circles |
+| Otherwise | Circle markers (half size below zoom 10, three-quarter size below zoom 13) |
+
+Colors follow the selected disaster types:
+
+| Style | Condition | Color |
+| --- | --- | --- |
+| default | No disaster type is selected | Blue |
+| match | Designated for every selected type | Green, drawn on top |
+| dim | Misses a selected type (shown only with "非該当も表示") | Gray, smaller |
 
 Layers are synchronized incrementally after panning or zooming ends to avoid unnecessary recreation.
 
@@ -78,9 +102,10 @@ Clicking or tapping shows:
 
 - Facility or site name
 - Address
-- Designation status for each disaster type, styled to distinguish designated and undesignated sites
+- Designation status for each disaster type in two columns, styled to distinguish designated and undesignated sites
+- A link that opens directions in Google Maps (`https://www.google.com/maps/dir/?api=1&destination={lat},{lng}`); the starting point is left to Google Maps
 
-Strings from the data are HTML-escaped before insertion.
+Strings from the data are HTML-escaped before insertion. The site whose popup is open keeps its layer even when the popup's auto-pan moves it out of the viewport.
 
 ### Table
 
@@ -88,34 +113,36 @@ Strings from the data are HTML-escaped before insertion.
 | --- | --- |
 | Name | Facility or site name |
 | Address | Address |
-| Disaster type × 8 | Designated ✅ / Not designated ❌ |
+| Disaster type × 8 | Designated (green dot) / Not designated (gray dot) |
 
-- Display the filtered result count at the upper right
+- Display the result count at the upper right; with "地図の表示範囲のみ" on, show only sites inside the map viewport and the count as "N 件 / 該当 M 件"
 - Display the source link and data update date (`DATASET_UPDATED_AT`)
 - Use TanStack Virtual for virtual scrolling
 - Use a minimum width of approximately 58rem with horizontal scrolling
+- Selecting a row (click, Enter, or Space) flies the map to the site (zoom 16 or more) and opens its popup; on phones it also switches to the map tab
+- The row of the site whose popup is open is highlighted and scrolled into view
+- With "非該当も表示" on, rows that miss a selected disaster type are grayed out
+- On phones, each site is shown as a card (name, address, and designated disaster types) without horizontal scrolling
 
 ## Filter behavior
 
-The map and table share column filters. Input is applied after a 200ms debounce.
+The map and table share the filters in the filter bar above the map.
 
-### Text columns (name and address)
+### Keyword
 
-- Substring matching (`includes`)
-- Trim leading and trailing whitespace before comparison
-- Empty strings do not filter that column
+- Matches the name or the address by substring (`includes`)
+- Split by whitespace after trimming; every term must match (AND)
+- Applied after a 200ms debounce
+- An empty keyword does not filter
 
-### Disaster type columns
+### Disaster type chips
 
-Each disaster type accepts one of the following:
+- Each chip toggles one disaster type (`aria-pressed`)
+- A site matches when it is designated for every selected type (AND)
+- Chip changes apply immediately
+- With "非該当も表示" (shown while a type is selected), non-matching sites are kept and shown dimmed instead of hidden
 
-| Value | Meaning |
-| --- | --- |
-| `all` | No filtering (default) |
-| `yes` | Only sites designated for this disaster type |
-| `no` | Only sites not designated for this disaster type |
-
-Multiple disaster type filters are combined with AND.
+"条件をクリア" (shown while a keyword or a type is set) clears the keyword, the types, and "非該当も表示", and keeps "地図の表示範囲のみ".
 
 ## Data model
 
@@ -168,8 +195,8 @@ In GeoJSON, the string `"1"` indicates designation; all other values indicate no
 
 | Key | Display name | Provider |
 | --- | --- | --- |
-| `osm` | OpenStreetMap | OpenStreetMap |
-| `gia_photo` | 国土地理院 (写真) (GSI imagery) | GSI seamlessphoto |
+| `osm` | 地図 (OpenStreetMap) | OpenStreetMap |
+| `gia_photo` | 写真 (国土地理院, GSI imagery) | GSI seamlessphoto |
 
 Tile URLs:
 
@@ -192,5 +219,5 @@ The following are currently out of scope:
 - User authentication and storage of personal data
 - Server-side API / database
 - Offline support (Service Workers, etc.)
-- Route guidance and distance calculations from the user's current location
+- Route guidance and distance calculations in the app (directions are delegated to Google Maps)
 - Integrated display of shelter data other than designated emergency evacuation sites

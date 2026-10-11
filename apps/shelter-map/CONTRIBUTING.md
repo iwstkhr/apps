@@ -29,7 +29,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ### Scope (optional)
 
-Include a scope when the affected area is clear. Examples: `map` (Leaflet map and layers), `table` (table and column filters), `data` (GeoJSON data and its validation), and `deploy` (Cloudflare Workers delivery settings).
+Include a scope when the affected area is clear. Examples: `map` (Leaflet map and layers), `table` (table and filters), `data` (GeoJSON data and its validation), and `deploy` (Cloudflare Workers delivery settings).
 
 ```text
 feat(table): add spreadsheet-style column filters
