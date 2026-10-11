@@ -129,7 +129,7 @@ In カスタム, drag a task header onto the upper or lower half of another task
 
 Change the due date directly from the task list: tapping the date on a task opens the browser's date picker, and clearing the date there removes it. Tasks without a due date show a calendar icon and 期限なし in a dashed outline in its place; tapping it sets a due date. Changes are saved immediately and reflected in due-date sorting, without altering other fields.
 
-Open todos whose due date is before today are marked 期限切れ in red, and todos due today are marked 今日 in orange. Dates are compared in the browser's local time zone.
+Open todos whose due date is before today are shown in red with a ! icon, and todos due today in orange with a clock icon, instead of the calendar icon. The words 期限切れ and 今日 are not shown, to keep the row short; they appear on hover and are read out by screen readers, so the state does not rely on color alone. Dates are compared in the browser's local time zone.
 
 ## Screen layout
 

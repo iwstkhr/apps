@@ -134,6 +134,8 @@ export const english: Record<string, string> = {
   '期限: ': 'Due: ',
   ' (期限切れ)': ' (overdue)',
   ' (今日)': ' (today)',
+  期限切れ: 'Overdue',
+  今日が期限: 'Due today',
   'フォルダ: ': 'Folder: ',
   'タグ「{0}」で絞り込む': 'Filter by tag "{0}"',
   '「{0}」からタグ「{1}」を削除': 'Remove tag "{1}" from "{0}"',

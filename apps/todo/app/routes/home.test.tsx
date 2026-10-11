@@ -129,6 +129,9 @@ describe('Home', () => {
 
     fireEvent.change(dueInput(), { target: { value: '2000-01-01' } });
     await waitFor(() => expect(items()[0]).toHaveTextContent('期限: 2000/01/01 (期限切れ)'));
+    // Overdue is shown by color and icon; the words are only for screen readers and the tooltip
+    expect(dueInput().closest('span')).toHaveAttribute('title', '期限切れ');
+    expect(within(items()[0]).getByText('(期限切れ)')).toHaveClass('sr-only');
     await waitFor(async () => expect((await getAll()).todos[0].dueDate).toBe('2000-01-01'));
 
     // Clearing the date in the picker removes the due date

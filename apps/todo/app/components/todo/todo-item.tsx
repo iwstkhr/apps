@@ -3,6 +3,8 @@ import {
   FaArrowDown,
   FaArrowUp,
   FaCalendarAlt,
+  FaClock,
+  FaExclamationCircle,
   FaFlag,
   FaFolder,
   FaGripVertical,
@@ -91,6 +93,8 @@ export function TodoItem({
   const [dragging, setDragging] = useState(false);
   const dueStatus = getDueStatus(todo, today);
   const done = todo.status === 'done';
+  const DueIcon =
+    dueStatus === 'overdue' ? FaExclamationCircle : dueStatus === 'today' ? FaClock : FaCalendarAlt;
 
   if (editing) {
     return (
@@ -262,15 +266,25 @@ export function TodoItem({
               !todo.dueDate &&
                 'border border-dashed border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
             )}
-            title={todo.dueDate ? t('期限') : t('期限を設定')}
+            title={
+              dueStatus === 'overdue'
+                ? t('期限切れ')
+                : dueStatus === 'today'
+                  ? t('今日が期限')
+                  : todo.dueDate
+                    ? t('期限')
+                    : t('期限を設定')
+            }
           >
-            <FaCalendarAlt className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+            {/* Overdue and due today differ by icon as well as color, so they do not rely on color alone */}
+            <DueIcon className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
             {todo.dueDate ? (
               <span>
                 <span className="sr-only">{t('期限: ')}</span>
                 {todo.dueDate.replaceAll('-', '/')}
-                {dueStatus === 'overdue' && t(' (期限切れ)')}
-                {dueStatus === 'today' && t(' (今日)')}
+                {/* Only for screen readers; on screen the color and icon show it, keeping the row short */}
+                {dueStatus === 'overdue' && <span className="sr-only">{t(' (期限切れ)')}</span>}
+                {dueStatus === 'today' && <span className="sr-only">{t(' (今日)')}</span>}
               </span>
             ) : (
               <span>{t('期限なし')}</span>
