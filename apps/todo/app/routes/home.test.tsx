@@ -202,6 +202,26 @@ describe('Home', () => {
     await waitFor(async () => expect((await getAll()).todos).toHaveLength(1));
   });
 
+  it('edits tags as chips and keeps suggesting the remaining tags after picking one', async () => {
+    const todo = createTodoFixture({ title: '資料を作る', tags: ['仕事'] });
+    const other = createTodoFixture({ title: '買い出し', tags: ['家', '買い物'] });
+    await putAll({ folders: [], todos: [todo, other] });
+    const user = await renderHome();
+    await user.click(screen.getByRole('button', { name: '「資料を作る」を編集' }));
+
+    const editor = within(screen.getByDisplayValue('資料を作る').closest('form') as HTMLElement);
+    await user.click(editor.getByRole('combobox', { name: 'タグ' }));
+    await user.click(editor.getByRole('option', { name: '#家' }));
+    await user.click(editor.getByRole('option', { name: '#買い物' }));
+    await user.click(editor.getByRole('button', { name: 'タグ「仕事」を削除' }));
+    await user.click(editor.getByRole('button', { name: '保存' }));
+
+    await waitFor(async () => {
+      const saved = (await getAll()).todos.find(({ id }) => id === todo.id);
+      expect(saved?.tags).toEqual(['家', '買い物']);
+    });
+  });
+
   it('repeats a todo: adds the next one on completion and undoes it from the notice', async () => {
     const user = await renderHome();
     await user.type(screen.getByRole('textbox', { name: 'タイトル' }), 'ゴミ出し');

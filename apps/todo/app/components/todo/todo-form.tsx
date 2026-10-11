@@ -1,10 +1,12 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { FolderSelect } from '~/components/folder/folder-select';
+import { TagInput } from '~/components/todo/tag-input';
 import { t } from '~/lib/i18n';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
 import type { Folder } from '~/types/folder';
 import {
+  normalizeTags,
   PRIORITIES,
   PRIORITY_LABELS,
   type Priority,
@@ -55,7 +57,8 @@ export function TodoForm({
   const [priority, setPriority] = useState<Priority>(initial.priority);
   const [dueDate, setDueDate] = useState(initial.dueDate ?? '');
   const [repeat, setRepeat] = useState<RepeatFrequency | null>(initial.repeat ?? null);
-  const [tagText, setTagText] = useState(initial.tags.join(', '));
+  const [tags, setTags] = useState(initial.tags);
+  const [tagDraft, setTagDraft] = useState('');
   const [folderId, setFolderId] = useState(initial.title ? initial.folderId : defaultFolderId);
   const [expanded, setExpanded] = useState(!collapsible);
   const isEditing = Boolean(initial.title);
@@ -76,7 +79,8 @@ export function TodoForm({
     setPriority(EMPTY_INPUT.priority);
     setDueDate('');
     setRepeat(null);
-    setTagText('');
+    setTags([]);
+    setTagDraft('');
   };
 
   return (
@@ -94,7 +98,7 @@ export function TodoForm({
           memo,
           priority,
           dueDate: dueDate || null,
-          tags: parseTagText(tagText),
+          tags: normalizeTags([...tags, ...parseTagText(tagDraft)]),
           folderId,
           repeat,
         };
@@ -156,19 +160,13 @@ export function TodoForm({
             aria-label={t('メモ')}
             rows={3}
           />
-          <input
-            className={inputClass}
-            value={tagText}
-            onChange={(event) => setTagText(event.target.value)}
-            placeholder={t('タグ (カンマ区切り)')}
-            aria-label={t('タグ')}
-            list={`${id}-tags`}
+          <TagInput
+            tags={tags}
+            onTagsChange={setTags}
+            draft={tagDraft}
+            onDraftChange={setTagDraft}
+            suggestions={tagSuggestions}
           />
-          <datalist id={`${id}-tags`}>
-            {tagSuggestions.map((tag) => (
-              <option key={tag} value={tag} />
-            ))}
-          </datalist>
           <label className="flex items-center gap-1.5 text-sm">
             <span className="shrink-0 text-slate-600 dark:text-slate-400">{t('期限')}</span>
             <input

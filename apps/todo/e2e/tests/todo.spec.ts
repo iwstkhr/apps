@@ -17,6 +17,36 @@ test('removes a tag using its close button without filtering and saves the chang
   await expect(page.getByRole('button', { name: '#家', exact: true })).toBeVisible();
 });
 
+test('picks several existing tags in a row from the suggestions', async ({ page }) => {
+  await addTodo(page, '買い出し');
+  await page.getByRole('button', { name: '「買い出し」を編集' }).click();
+  await page.getByRole('combobox', { name: 'タグ', exact: true }).fill('家, 買い物, 週末');
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  await expect(page.getByRole('button', { name: '保存', exact: true })).toBeHidden();
+
+  await addTodo(page, '日用品');
+  await page.getByRole('button', { name: '「日用品」を編集' }).click();
+  const tags = page.getByRole('combobox', { name: 'タグ', exact: true });
+  await tags.click();
+  const suggestions = page.getByRole('listbox', { name: 'タグの候補' });
+  await suggestions.getByRole('option', { name: '#家' }).click();
+  // 1 つ選んでも候補は閉じず、残りのタグを続けて選べる
+  const options = suggestions.getByRole('option');
+  await expect(options).toHaveCount(2);
+  await expect(suggestions).not.toContainText('#家');
+  await tags.press('ArrowDown');
+  const picked = (await options.first().textContent()) ?? '';
+  await tags.press('Enter');
+  await expect(options).toHaveCount(1);
+  await expect(options).not.toHaveText(picked);
+  await tags.press('Escape');
+  await expect(suggestions).toBeHidden();
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+
+  const item = todoItems(page).filter({ hasText: '日用品' });
+  await expect(item.getByRole('button', { name: /^#/ })).toHaveText(['#家', picked]);
+});
+
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (dialog) => dialog.accept());
   await openApp(page);

@@ -33,6 +33,8 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 Click a tag name in the task list to filter by it. The タグ selector in the toolbar then shows the tag highlighted, with an × button to clear the filter. The adjacent × button removes only that tag from that task and saves immediately; it does not activate the tag filter. Other tasks with the same tag are unchanged. If a removed tag no longer matches the current filter, the task leaves the filtered list.
 
+In the add and edit forms, the タグ field shows the selected tags as chips, each with an × button to remove it. Focusing or typing in the field lists the existing tags that are not selected yet, narrowed by the typed text; picking one adds it and keeps the list open so more tags can be picked in a row. ↑ and ↓ move through the list, Enter picks the highlighted tag, Escape closes the list (a second Escape cancels editing), and Backspace in the empty field removes the last chip. Text that is not an existing tag becomes a new tag with Enter or a comma (`,`, `、`, or `，`); text left in the field is also saved as a tag.
+
 ### Priority
 
 Change priority (高 / 中 / 低) directly with the selector on each task in the list, or in the edit form. Changes are saved immediately and reflected in priority-based sorting, without altering the task status or other fields.
