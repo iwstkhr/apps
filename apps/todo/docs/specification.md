@@ -9,6 +9,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 - Client-only SPA with no server API and no server-side storage
 - Todos and folders are stored in the browser's IndexedDB and stay on the device
 - JSON export and import are the only way to back up or move data between browsers and devices
+- On the first visit, sample todos and folders are added so the features can be seen right away (see [Sample data](#sample-data))
 
 ## Features
 
@@ -191,6 +192,14 @@ Tags are entered as comma-separated text (ASCII `,` or Japanese `、` `，`).
 - The confirmation dialog shows how many todos and folders will be imported and how many items were skipped.
 - **Merge** adds the imported todos and folders to the current ones. When both have the same `id`, the one with the newer `updatedAt` wins.
 - **Replace** deletes all current todos and folders and stores the imported ones in a single transaction.
+
+## Sample data
+
+When the app creates its IndexedDB database for the first time, it adds a few samples: the folders 仕事 (with the subfolder 資料作成) and 暮らし (Work, Slide deck, and Home in English), and six todos. Together they cover every status, overdue, due-today, and upcoming due dates, tags, and Markdown memos (a numbered list and a task list). The todo TODO へようこそ explains in its memo that data stays in this browser, how to back it up with export, and how to move a todo by dragging it. Due dates are counted from the day of the first visit, so the samples never all appear overdue.
+
+- The samples are written in the language in use on the first visit. Like other user content, they are not translated when the language changes later.
+- The samples are ordinary todos and folders: they can be edited, deleted, and exported like any others.
+- They are added only when the database is created, so they do not come back after they are deleted, and browsers that already have data never get them. Clearing the site data starts over with the samples.
 
 ## Data persistence
 

@@ -48,6 +48,7 @@ app/
   hooks/use-todos.ts            Todo state, persistence, and cross-tab sync
   hooks/use-view-state.ts       Sort mode, selected and collapsed folders, and the folder list width, kept in localStorage
   lib/todo-db.ts                IndexedDB access (open, read, put, delete, replace)
+  lib/sample-data.ts            Sample todos and folders added when the database is created
   lib/folder-tree.ts            Folder tree helpers: ordering, paths, subtrees, repair, counts
   lib/todo-drag.ts              Drag data for moving a todo onto a folder
   lib/todo-order.ts             Custom comparator and reordering visible slots without moving hidden tasks; once every todo has a unique order, only the moved todos get new orders, so hidden and trashed todos keep their `updatedAt` for merge imports
@@ -75,7 +76,7 @@ e2e/                            Playwright tests against wrangler dev
 
 ## Data flow
 
-1. On mount, `useTodos` reads every record from the `todos` and `folders` object stores (key path `id`) and normalizes them with `toTodo()` and `toFolder()`. The database is at version 2; version 1 had only the `todos` store, and the upgrade adds `folders`.
+1. On mount, `useTodos` reads every record from the `todos` and `folders` object stores (key path `id`) and normalizes them with `toTodo()` and `toFolder()`. The database is at version 2; version 1 had only the `todos` store, and the upgrade adds `folders`. When the upgrade starts from version 0 (the database did not exist), the same upgrade transaction also writes the sample data from `createSampleData()` in the current language.
    `toFolder()` normalizes icon colors to lowercase `#rrggbb` and defaults missing or invalid colors to amber. This additive field keeps existing database and export versions readable without a migration.
 2. Each change updates React state first and then writes to IndexedDB, so the UI responds immediately. If the write fails, an error is shown and the state is reloaded from IndexedDB.
 3. After a successful write, `useTodos` posts a message on the `todo-changes` BroadcastChannel; other tabs reload from IndexedDB when they receive it.
@@ -117,9 +118,9 @@ e2e/                            Playwright tests against wrangler dev
 
 | Level | Tool | Scope |
 | --- | --- | --- |
-| Unit | Vitest | The precache list and version written into `sw.js`, types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb), language selection, and a check that every `t()` string and label literal has an English translation with the same placeholders. `app/test/setup.ts` selects Japanese before each test, because most tests assert Japanese UI text |
+| Unit | Vitest | The precache list and version written into `sw.js`, types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb), language selection, and a check that every `t()` string and label literal has an English translation with the same placeholders. `app/test/setup.ts` selects Japanese before each test, because most tests assert Japanese UI text, and creates an empty version 1 database so the app's upgrade adds no samples; the sample tests delete it first |
 | Component | Vitest, Testing Library, happy-dom | `useTodos`, the header menu (items, keyboard navigation, closing, and disabled export), and the whole `Home` screen |
-| E2E | Playwright | Production build served by `wrangler dev`: the default language in Japanese and English browsers, switching the language and keeping it after a reload, persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, the mobile drawer, including focus trapping, close controls, background scroll locking, and switching back to the desktop sidebar, the PWA manifest and icons, and reopening the app with its todos while offline |
+| E2E | Playwright | Production build served by `wrangler dev`: the default language in Japanese and English browsers, switching the language and keeping it after a reload, persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, the mobile drawer, including focus trapping, close controls, background scroll locking, and switching back to the desktop sidebar, the PWA manifest and icons, reopening the app with its todos while offline, and the sample data on the first visit only, in Japanese and English. The `page` fixture in `e2e/fixtures.ts` creates an empty database before the app loads, unless a test sets `sampleData: true` |
 
 ## CI / CD
 

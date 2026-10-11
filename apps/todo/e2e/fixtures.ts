@@ -1,6 +1,25 @@
-import { expect, type Page, test } from '@playwright/test';
+import { test as base, expect, type Page } from '@playwright/test';
 
-export { expect, test };
+export { expect };
+
+/**
+ * アプリは IndexedDB を初めて作るときにサンプルを入れる。既存のテストは空の状態を前提に
+ * しているので、アプリより先に空のデータベースを作っておく。サンプルを確かめるテストでは
+ * `test.use({ sampleData: true })` にする。
+ */
+export const test = base.extend<{ sampleData: boolean }>({
+  sampleData: [false, { option: true }],
+  page: async ({ page, sampleData }, use) => {
+    if (!sampleData) {
+      await page.addInitScript(() => {
+        // バージョンを付けずに開くと store の無いバージョン 1 ができ、アプリは store だけを作る
+        const request = indexedDB.open('todo');
+        request.onsuccess = () => request.result.close();
+      });
+    }
+    await use(page);
+  },
+});
 
 /** トップページを開き、IndexedDB の読み込みが終わるまで待つ。 */
 export async function openApp(page: Page): Promise<void> {

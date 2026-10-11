@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { deleteFolders, deleteTodos, getAll, putAll, putTodos, replaceAll } from '~/lib/todo-db';
+import { setLanguage } from '~/lib/i18n';
+import {
+  closeDbForTesting,
+  deleteFolders,
+  deleteTodos,
+  getAll,
+  putAll,
+  putTodos,
+  replaceAll,
+} from '~/lib/todo-db';
 import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
 import { resetDb } from '~/test/indexed-db';
 import type { Folder } from '~/types/folder';
@@ -54,6 +63,38 @@ describe('todo-db', () => {
     expect(await getAll()).toEqual({
       todos: [{ ...valid, tags: ['a'] }],
       folders: [{ ...folder, name: '仕事' }],
+    });
+  });
+
+  describe('sample data', () => {
+    // setup.ts が作った空のデータベースを消して、初めて開く状態にする
+    async function deleteDb() {
+      await closeDbForTesting();
+      await new Promise<void>((resolve) => {
+        const request = indexedDB.deleteDatabase('todo');
+        request.onsuccess = () => resolve();
+      });
+    }
+
+    it('adds samples when the database is created for the first time', async () => {
+      await deleteDb();
+      setLanguage('en');
+      const { todos, folders } = await getAll();
+      expect(todos.length).toBeGreaterThan(0);
+      expect(folders.map((folder) => folder.name)).toContain('Work');
+    });
+
+    it('does not add samples again after they are deleted', async () => {
+      await deleteDb();
+      const { todos, folders } = await getAll();
+      await replaceAll({ todos: [], folders: [] });
+      await closeDbForTesting();
+      expect(await getAll()).toEqual({ todos: [], folders: [] });
+      expect(todos.length + folders.length).toBeGreaterThan(0);
+    });
+
+    it('does not add samples to an existing database', async () => {
+      expect(await getAll()).toEqual({ todos: [], folders: [] });
     });
   });
 });

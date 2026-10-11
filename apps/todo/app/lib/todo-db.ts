@@ -1,3 +1,5 @@
+import { getLanguage } from '~/lib/i18n';
+import { createSampleData } from '~/lib/sample-data';
 import { type Folder, toFolder } from '~/types/folder';
 import { type Todo, toTodo } from '~/types/todo';
 
@@ -28,10 +30,17 @@ function openDb(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
+    request.onupgradeneeded = (event) => {
       const db = request.result;
       for (const name of STORES) {
         if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: 'id' });
+      }
+      // データベースを初めて作ったときだけサンプルを入れる。全部消した人や、すでに使っている人には入れない
+      if (event.oldVersion === 0) {
+        const tx = request.transaction as IDBTransaction;
+        const { todos, folders } = createSampleData(getLanguage());
+        for (const todo of todos) tx.objectStore(TODOS).put(todo);
+        for (const folder of folders) tx.objectStore(FOLDERS).put(folder);
       }
     };
     request.onsuccess = () => {
