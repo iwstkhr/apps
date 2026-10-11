@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCurrentLocation } from '~/hooks/use-current-location';
 import { useLeafletMap } from '~/hooks/use-leaflet-map';
 import { useShelterData } from '~/hooks/use-shelter-data';
 import { L } from '~/lib/leaflet';
@@ -18,6 +19,7 @@ export function useShelterMap(
 ) {
   const { mapRef, mapReady, changeTileLayer } = useLeafletMap(mapContainerRef);
   const { shelters, isLoading, loadError } = useShelterData();
+  const currentLocation = useCurrentLocation(mapRef, mapReady);
 
   // A feature group so popup events from each shelter layer bubble up to one listener.
   const [shelterLayers] = useState(() => ({
@@ -132,5 +134,6 @@ export function useShelterMap(
     isLoading,
     loadError,
     changeTileLayer,
+    ...currentLocation,
   };
 }

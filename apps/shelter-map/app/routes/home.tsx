@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { ShelterFilterBar } from '~/components/filter/shelter-filter-bar';
+import { CurrentLocationButton } from '~/components/map/current-location-button';
+import { MapAlert } from '~/components/map/map-alert';
 import { MapHelpHint } from '~/components/map/map-help-hint';
 import { MapTileLayerControl } from '~/components/map/map-tile-layer-control';
 import { ShelterDataLoadingOverlay } from '~/components/map/shelter-data-loading-overlay';
@@ -32,6 +34,10 @@ export default function Home() {
     isLoading,
     loadError,
     changeTileLayer,
+    locate,
+    isLocating,
+    locationError,
+    dismissLocationError,
   } = useShelterMap(mapContainerRef, appliedFilters);
 
   return (
@@ -51,6 +57,8 @@ export default function Home() {
           </div>
         </div>
         <MapHelpHint />
+        <CurrentLocationButton isLocating={isLocating} onClick={locate} />
+        {locationError && <MapAlert message={locationError} onDismiss={dismissLocationError} />}
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-[4] flex-col">

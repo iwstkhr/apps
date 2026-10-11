@@ -229,11 +229,13 @@ describe('useShelterMap', () => {
       expect(result.current.displayedShelters).toEqual(shelters);
     });
 
+    // The shelter layers and the current location layer
     const addedLayers = mockMap.addLayer.mock.calls.map((call: unknown[]) => call[0]);
-    expect(addedLayers).toHaveLength(1);
+    expect(addedLayers).toHaveLength(2);
     expect(addedLayers.every((layer: unknown) => layer instanceof L.LayerGroup)).toBe(true);
+    const shelterGroup = addedLayers.find((layer: unknown) => layer instanceof L.FeatureGroup);
     expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
-      addedLayers[0],
+      shelterGroup,
       expect.any(Map),
       shelters,
       15,
@@ -243,7 +245,7 @@ describe('useShelterMap', () => {
     removeSpy.mockClear();
     unmount();
 
-    expect(removeSpy).toHaveBeenCalledOnce();
+    expect(removeSpy).toHaveBeenCalledTimes(2);
     removeSpy.mockRestore();
   });
 

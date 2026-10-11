@@ -14,6 +14,11 @@ function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char] ?? char);
 }
 
+// Opens directions in Google Maps; the starting point is left to Google Maps itself.
+export function getDirectionsUrl(shelter: Shelter): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${shelter.latitude},${shelter.longitude}`;
+}
+
 export function getPopupContent(shelter: Shelter): string {
   let popup = `<strong>${escapeHtml(shelter.name)}</strong><br/>${escapeHtml(shelter.address)}<hr class="shelter-popup-divider"/>`;
 
@@ -24,6 +29,8 @@ export function getPopupContent(shelter: Shelter): string {
       return `<span class="app-content-${status} shelter-type-${status}">${name}</span>`;
     })
     .join('<br/>');
+
+  popup += `<hr class="shelter-popup-divider"/><a class="shelter-popup-directions" href="${escapeHtml(getDirectionsUrl(shelter))}" target="_blank" rel="noreferrer">経路を開く (Google マップ)</a>`;
 
   return popup;
 }

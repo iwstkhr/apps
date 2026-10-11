@@ -22,6 +22,10 @@ test.describe('地図', () => {
     await expect(popup).toContainText('神奈川県横浜市中区1-1');
     await expect(popup.locator('.shelter-type-ready')).toHaveText(['洪水', '地震']);
     await expect(popup.locator('.shelter-type-not-ready')).toHaveCount(6);
+    await expect(popup.getByRole('link', { name: '経路を開く (Google マップ)' })).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/dir/?api=1&destination=35.444,139.638',
+    );
   });
 
   test('データ中の HTML はタグとして解釈せず、文字のまま表示する', async ({ page }) => {
@@ -89,6 +93,35 @@ test.describe('地図', () => {
     await page.mouse.wheel(0, -100);
     await page.keyboard.up('Control');
     await expect.poll(() => currentZoom(page)).toBe(9);
+  });
+});
+
+test.describe('現在地', () => {
+  test.use({
+    geolocation: { latitude: 35.531, longitude: 139.703 },
+    permissions: ['geolocation'],
+  });
+
+  test('現在地ボタンで現在地へ移動し、近くの避難場所だけが表示範囲に入る', async ({ page }) => {
+    await openApp(page);
+    await page.getByRole('button', { name: '現在地を表示' }).click();
+
+    await expect.poll(() => currentZoom(page)).toBe(15);
+    await page.getByRole('checkbox', { name: '地図の表示範囲のみ' }).check();
+    await expect(resultCount(page)).toHaveText('1 件');
+    await expect(tableRows(page).first()).toContainText('川崎テスト公園');
+  });
+});
+
+test.describe('位置情報が許可されていないとき', () => {
+  test('現在地ボタンを押すと理由を表示し、閉じられる', async ({ page }) => {
+    await openApp(page);
+    await page.getByRole('button', { name: '現在地を表示' }).click();
+
+    const alert = page.getByRole('alert');
+    await expect(alert).toContainText('位置情報の利用が許可されていません');
+    await alert.getByRole('button', { name: '閉じる' }).click();
+    await expect(alert).toBeHidden();
   });
 });
 

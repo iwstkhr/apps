@@ -67,6 +67,15 @@ a:link {
   color: #94a3b8;
 }
 
+.shelter-popup a.shelter-popup-directions {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.shelter-popup a.shelter-popup-directions:hover {
+  text-decoration: underline;
+}
+
 .shelter-pin-icon {
   background: transparent;
   border: 0;

@@ -36,3 +36,21 @@ export const SHELTER_MARKER_LIMIT_BELOW_MIN_ZOOM = 100;
 
 // Selecting a shelter in the table zooms in at least this far, where it is drawn as a pin.
 export const SHELTER_FOCUS_MIN_ZOOM = 16;
+
+export const CURRENT_LOCATION_ZOOM = 15;
+
+export const CURRENT_LOCATION_MARKER_STYLE = {
+  radius: 8,
+  color: '#ffffff',
+  fillColor: '#2563eb',
+  fillOpacity: 1,
+  weight: 3,
+} as const satisfies CircleMarkerOptions;
+
+export const CURRENT_LOCATION_ACCURACY_STYLE = {
+  color: '#2563eb',
+  fillColor: '#60a5fa',
+  fillOpacity: 0.15,
+  weight: 1,
+  interactive: false,
+} as const satisfies CircleMarkerOptions;
