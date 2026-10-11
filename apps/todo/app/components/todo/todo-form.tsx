@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { FaPlus } from 'react-icons/fa';
 import { FolderSelect } from '~/components/folder/folder-select';
 import { t } from '~/lib/i18n';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
@@ -53,6 +54,9 @@ export function TodoForm({
   const [folderId, setFolderId] = useState(initial.title ? initial.folderId : defaultFolderId);
   const [expanded, setExpanded] = useState(!collapsible);
   const isEditing = Boolean(initial.title);
+  // 追加フォーム (キャンセルがない) は検索欄と見分けられるよう、＋の印と「追加」と分かる文言を付ける
+  const isAdding = !onCancel;
+  const titleRef = useRef<HTMLInputElement>(null);
 
   // 追加フォームは一覧で別のフォルダを選んだらそのフォルダに入れる
   useEffect(() => {
@@ -74,7 +78,11 @@ export function TodoForm({
       className="flex flex-col gap-2"
       onSubmit={async (event) => {
         event.preventDefault();
-        if (!canSubmit) return;
+        if (!canSubmit) {
+          // 追加ボタンは空でも押せる見た目にしているので、押されたらタイトル欄へ案内する
+          titleRef.current?.focus();
+          return;
+        }
         const input: TodoInput = {
           title: title.trim(),
           memo,
@@ -92,16 +100,25 @@ export function TodoForm({
       }}
     >
       <div className="flex gap-2">
-        <input
-          className={inputClass}
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder={t('やること')}
-          aria-label={t('タイトル')}
-          maxLength={200}
-          // biome-ignore lint/a11y/noAutofocus: 編集を始めたらすぐ入力できるようにする
-          autoFocus={Boolean(onCancel)}
-        />
+        <div className="relative min-w-0 flex-1">
+          {isAdding && (
+            <FaPlus
+              className="pointer-events-none absolute top-1/2 left-2.5 h-3 w-3 -translate-y-1/2 text-blue-600 dark:text-blue-400"
+              aria-hidden="true"
+            />
+          )}
+          <input
+            ref={titleRef}
+            className={`${inputClass} ${isAdding ? 'pl-7' : ''}`}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder={t(isAdding ? '新しいタスクを入力…' : 'やること')}
+            aria-label={t('タイトル')}
+            maxLength={200}
+            // biome-ignore lint/a11y/noAutofocus: 編集を始めたらすぐ入力できるようにする
+            autoFocus={Boolean(onCancel)}
+          />
+        </div>
         {collapsible && (
           <button
             type="button"
@@ -114,8 +131,9 @@ export function TodoForm({
           </button>
         )}
         {/* 編集フォームでは保存をキャンセルと並べて下に置く */}
-        {!onCancel && (
-          <button type="submit" className={`${primaryButtonClass} shrink-0`} disabled={!canSubmit}>
+        {isAdding && (
+          <button type="submit" className={`${primaryButtonClass} shrink-0`}>
+            <FaPlus className="h-3 w-3" aria-hidden="true" />
             {submitLabel}
           </button>
         )}

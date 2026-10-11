@@ -93,6 +93,7 @@ export const english: Record<string, string> = {
   'TODO を追加': 'Add a todo',
   'TODO 一覧': 'Todo list',
   やること: 'What to do',
+  '新しいタスクを入力…': 'Enter a new task…',
   タイトル: 'Title',
   詳細: 'Details',
   メモ: 'Memo',

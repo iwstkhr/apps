@@ -14,7 +14,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 | Feature | Description |
 | --- | --- |
-| Add | Enter a title and press Enter or 追加. 詳細 opens the memo, tags, due date, priority, and folder fields. New todos go into the folder selected in the folder list |
+| Add | Enter a title and press Enter or + 追加. 詳細 opens the memo, tags, due date, priority, and folder fields. New todos go into the folder selected in the folder list. So that the add form is not mistaken for search, its title field has a + mark and the placeholder 新しいタスクを入力…, while the keyword search below has a magnifier. 追加 always shows as the primary button; pressing it with an empty title adds nothing and moves focus to the title field |
 | Edit | The pencil button turns an item into an edit form, where the todo can also be moved to another folder. Escape or キャンセル discards the changes |
 | Status | Each todo has one of 未着手 (not started), 進行中 (in progress), 保留 (on hold), or 完了 (done). Change it with the status selector on the item. The checkbox is a shortcut: checking it sets 完了 and unchecking it returns to 未着手. New todos start as 未着手 |
 | Delete | The trash button moves one todo to the trash without asking, and 完了済みをゴミ箱に移動 moves all completed todos in the current view there. A notice with 元に戻す (undo) appears; see [Trash](#trash) |
@@ -110,7 +110,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 │ Header: TODO                                     [⋯ メニュー] │
 ├────────────────┬─────────────────────────────────────────────┤
 │ フォルダ   [+] │ 仕事 / 案件 A                               │
-│   すべて     5 │ Add form: [やること      ] [詳細] [追加]    │
+│   すべて     5 │ Add form: [+ 新しいタスク ] [詳細] [+ 追加] │
 │   未分類     2 │ Filters: [並び順] [タグ]                    │
 │ ▾ 仕事       2 │ [キーワードで検索                         ] │
 │   ▾ 案件 A   1 │ すべて 5 | 未着手 2 | 進行中 1 | 保留 1 | … │

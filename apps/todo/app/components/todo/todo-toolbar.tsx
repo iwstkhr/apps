@@ -1,3 +1,4 @@
+import { FaSearch } from 'react-icons/fa';
 import { t } from '~/lib/i18n';
 import { fieldClass, inputClass } from '~/lib/styles';
 import type { SortKey, TodoFilters } from '~/lib/todo-filters';
@@ -56,14 +57,21 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
         </select>
       </div>
 
-      <input
-        type="search"
-        className={inputClass}
-        value={filters.keyword}
-        onChange={(event) => update({ keyword: event.target.value })}
-        placeholder={t('キーワードで検索 (タイトル・メモ・タグ)')}
-        aria-label={t('キーワードで検索')}
-      />
+      {/* 虫眼鏡を付けて、上の追加フォーム (＋) と見分けられるようにする */}
+      <div className="relative">
+        <FaSearch
+          className="pointer-events-none absolute top-1/2 left-2.5 h-3 w-3 -translate-y-1/2 text-slate-400"
+          aria-hidden="true"
+        />
+        <input
+          type="search"
+          className={`${inputClass} pl-7`}
+          value={filters.keyword}
+          onChange={(event) => update({ keyword: event.target.value })}
+          placeholder={t('キーワードで検索 (タイトル・メモ・タグ)')}
+          aria-label={t('キーワードで検索')}
+        />
+      </div>
     </div>
   );
 }

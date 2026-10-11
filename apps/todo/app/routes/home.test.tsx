@@ -143,6 +143,20 @@ describe('Home', () => {
     await waitFor(async () => expect((await getAll()).todos).toHaveLength(1));
   });
 
+  it('labels the add form apart from search and guides an empty add to the title', async () => {
+    const user = await renderHome();
+    const title = screen.getByRole('textbox', { name: 'タイトル' });
+    expect(title).toHaveAttribute('placeholder', '新しいタスクを入力…');
+    const add = screen.getByRole('button', { name: '追加' });
+    expect(add).toBeEnabled();
+
+    // 空のまま押しても追加せず、タイトル欄へ案内する
+    await user.click(add);
+    expect(title).toHaveFocus();
+    expect(screen.queryByRole('list', { name: 'TODO 一覧' })).not.toBeInTheDocument();
+    expect((await getAll()).todos).toHaveLength(0);
+  });
+
   it('changes the status, edits and deletes a todo', async () => {
     await putTodos([createTodoFixture({ title: '洗濯' })]);
     const user = await renderHome();
