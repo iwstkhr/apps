@@ -1,0 +1,4 @@
+# Cloudflare Workers Static Assets headers
+# Always revalidate the service worker so that new deployments reach clients right away
+/sw.js
+  Cache-Control: no-cache

@@ -25,6 +25,8 @@ export default defineConfig({
     timezoneId: 'Asia/Tokyo',
     viewport: { width: 1280, height: 800 },
     trace: 'retain-on-failure',
+    // Requests from a service worker bypass page.route stubs, so only pwa.spec.ts allows it
+    serviceWorkers: 'block',
   },
   webServer: {
     command: 'node scripts/serve.mjs',

@@ -7,7 +7,7 @@
     "node": "24.21.0"
   },
   "scripts": {
-    "build": "react-router build",
+    "build": "react-router build && node scripts/generate-sw.mjs",
     "dev": "react-router dev",
     "lint": "biome lint .",
     "format": "biome format --write .",
@@ -50,6 +50,7 @@
     "typescript": "7.0.2",
     "vite": "8.3.2",
     "vitest": "5.0.3",
+    "workbox-build": "7.4.0",
     "wrangler": "4.147.0"
   }
 }

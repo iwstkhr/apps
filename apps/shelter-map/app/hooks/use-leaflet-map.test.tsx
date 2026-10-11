@@ -83,7 +83,12 @@ describe('useLeafletMap', () => {
     const { L } = await import('~/lib/leaflet');
 
     for (const { url, attribution } of Object.values(TILE_LAYERS)) {
-      expect(L.tileLayer).toHaveBeenCalledWith(url, { minZoom: 5, maxZoom: 18, attribution });
+      expect(L.tileLayer).toHaveBeenCalledWith(url, {
+        minZoom: 5,
+        maxZoom: 18,
+        attribution,
+        crossOrigin: 'anonymous',
+      });
     }
   });
 

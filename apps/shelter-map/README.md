@@ -15,6 +15,7 @@ A web application for browsing designated emergency evacuation site data from th
 - Load data efficiently using gzip-compressed GeoJSON
 - Show a spinner over the map while evacuation site data is loading
 - Show the list beside a full-height map on wide screens (collapsible), and switch between the map and a card list with tabs on mobile screens
+- Install to the home screen as a PWA and open offline after the first visit, including the map tiles already viewed
 
 ## Technology stack
 
@@ -24,6 +25,7 @@ A web application for browsing designated emergency evacuation site data from th
 - [Leaflet](https://leafletjs.com/) — map rendering
 - [TanStack Virtual](https://tanstack.com/virtual) — virtual scrolling for the table
 - [Tailwind CSS](https://tailwindcss.com/) 4
+- [Workbox](https://developer.chrome.com/docs/workbox) — Service Worker generation for offline support
 - [Biome](https://biomejs.dev/) — linting and formatting
 - [Vitest](https://vitest.dev/) and [Testing Library](https://testing-library.com/docs/react-testing-library/intro/) — testing
 - [Playwright](https://playwright.dev/) — E2E testing
@@ -55,7 +57,7 @@ The development server starts at <http://localhost:5173>.
 | Command | Description |
 | --- | --- |
 | `pnpm run dev` | Start the development server |
-| `pnpm run build` | Create a production build |
+| `pnpm run build` | Create a production build (including the Service Worker) |
 | `pnpm run start` | Serve the production build locally |
 | `pnpm run preview` | Create a production build and serve it locally with `wrangler dev` using the Workers configuration |
 | `pnpm run deploy` | Deploy `build/client` to Cloudflare Workers (run `pnpm run build` first) |

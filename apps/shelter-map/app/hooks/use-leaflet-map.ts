@@ -13,7 +13,11 @@ function createTileLayers(): Record<TileLayerKey, L.TileLayer> {
   return Object.fromEntries(
     tileLayerKeys.map((key) => {
       const { url, attribution } = TILE_LAYERS[key];
-      return [key, L.tileLayer(url, { ...TILE_LAYER_ZOOM_OPTIONS, attribution })];
+      // Fetch with CORS so the service worker can cache tiles without opaque responses (OSM and GSI allow any origin)
+      return [
+        key,
+        L.tileLayer(url, { ...TILE_LAYER_ZOOM_OPTIONS, attribution, crossOrigin: 'anonymous' }),
+      ];
     }),
   ) as Record<TileLayerKey, L.TileLayer>;
 }

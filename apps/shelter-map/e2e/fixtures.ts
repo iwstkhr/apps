@@ -90,7 +90,12 @@ export const test = base.extend<Options>({
   page: async ({ page, dataset }, use) => {
     // Never fetch from the external tile servers (OpenStreetMap / GSI)
     await page.route(/tile\.openstreetmap\.org|cyberjapandata\.gsi\.go\.jp/, (route) =>
-      route.fulfill({ contentType: 'image/png', body: EMPTY_TILE }),
+      // Tile layers request with CORS (crossOrigin)
+      route.fulfill({
+        contentType: 'image/png',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: EMPTY_TILE,
+      }),
     );
     if (dataset === 'fixture') {
       await page.route('**/assets/mergeFromCity_2.geojson.gz', (route) =>

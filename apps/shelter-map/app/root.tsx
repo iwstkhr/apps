@@ -1,11 +1,15 @@
+import { useEffect } from 'react';
 import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration } from 'react-router';
 import { AppShell } from '~/components/layout/app-shell';
 import { publicUrl } from '~/lib/public-url';
+import { registerServiceWorker } from '~/lib/register-service-worker';
 import type { Route } from './+types/root';
 import './app.css';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', href: publicUrl('favicon.svg'), type: 'image/svg+xml' },
+  { rel: 'apple-touch-icon', href: publicUrl('icons/apple-touch-icon.png') },
+  { rel: 'manifest', href: publicUrl('manifest.webmanifest') },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -14,6 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#ffffff" />
         <Meta />
         <Links />
       </head>
@@ -27,6 +32,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    void registerServiceWorker();
+  }, []);
+
   return <AppShell />;
 }
 

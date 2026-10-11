@@ -24,6 +24,7 @@ Specifications for a web application that displays designated emergency evacuati
 | Data loading | Fetch, decompress, and validate gzip-compressed GeoJSON |
 | Loading indicator | Show a spinner over the map while loading and an error message on failure |
 | Responsive layout | Wide screens show a card list beside the map, tablets stack the map over the table, and phones switch between them with tabs |
+| PWA | Install to the home screen (web app manifest) and open offline after the first visit (Service Worker) |
 
 ## Screen layout
 
@@ -208,11 +209,25 @@ Tile URLs:
 - `osm`: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
 - `gia_photo`: `https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg`
 
+Tiles are requested with CORS (`crossOrigin: 'anonymous'`) so that the Service Worker can cache them (see [Offline support](#offline-support)).
+
+## Offline support
+
+The app is a PWA. Production builds register a Workbox Service Worker (`sw.js`); the development server does not.
+
+| Resource | Strategy |
+| --- | --- |
+| App shell (HTML, JS, CSS, icons, manifest) | Precached at install; navigation falls back to `index.html` |
+| Evacuation site GeoJSON (about 5 MB) | Precached at install; the content hash revision replaces it after the monthly update |
+| Map tiles (OSM / GSI) | Cache first for tiles the user has viewed, up to 1,000 tiles per layer for 30 days; no prefetching |
+
+A new deployment activates on the next load without a prompt (`skipWaiting` / `clientsClaim`). The current location and Google Maps directions still need a network connection.
+
 ## Nonfunctional requirements
 
 | Item | Details |
 | --- | --- |
-| Runtime | Modern browsers (uses `DecompressionStream`) |
+| Runtime | Modern browsers (uses `DecompressionStream` and Service Workers) |
 | Delivery | Cloudflare Workers static assets (served at the root of `https://shelter-map.wasabee.dev/`) |
 | Data updates | Actions creates a PR on the first day of each month |
 | Quality gates | pre-commit, Biome, TypeScript, Vitest, Playwright |
@@ -223,6 +238,6 @@ The following are currently out of scope:
 
 - User authentication and storage of personal data
 - Server-side API / database
-- Offline support (Service Workers, etc.)
+- Bulk downloading map tiles for offline use (only tiles already viewed are cached)
 - Route guidance and distance calculations in the app (directions are delegated to Google Maps)
 - Integrated display of shelter data other than designated emergency evacuation sites
