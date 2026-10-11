@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 
-// jsdom は <dialog> の showModal() / close() を実装していないため、開閉だけ再現する
+// jsdom does not implement <dialog>'s showModal() / close(), so reproduce only opening and closing
 HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
   this.open = true;
 };

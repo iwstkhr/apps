@@ -8,17 +8,17 @@ interface SidebarResizerProps {
   max: number;
   defaultWidth: number;
   onChange: (width: number) => void;
-  /** 動かす対象 (aria-controls) */
+  /** The element being resized (aria-controls) */
   controls: string;
 }
 
-// 矢印キー 1 回で動かす幅 (px)。Shift を押すと大きく動かす
+// Width (px) moved per arrow key press. Holding Shift moves further
 const STEP = 16;
 const LARGE_STEP = 64;
 
 /**
- * フォルダ欄の右端に置く、幅を変えるためのつまみ。
- * ドラッグ、または フォーカスして ← / → (Home / End で最小 / 最大) で動かし、ダブルクリックで元の幅に戻す。
+ * A handle at the right edge of the folder pane for changing its width.
+ * Drag it, or focus it and use ← / → (Home / End for minimum / maximum); double-click restores the default width.
  */
 export function SidebarResizer({
   width,
@@ -40,7 +40,7 @@ export function SidebarResizer({
   };
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: 幅を変えられる区切りは hr では表せないので separator ロールを使う
+    // biome-ignore lint/a11y/useSemanticElements: hr cannot represent a resizable divider, so the separator role is used
     <div
       role="separator"
       aria-orientation="vertical"
@@ -58,7 +58,7 @@ export function SidebarResizer({
         dragRef.current = { startX: event.clientX, startWidth: width };
         setDragging(true);
         event.currentTarget.setPointerCapture(event.pointerId);
-        // ドラッグ中に文字が選択されたり、カーソルが元に戻ったりしないようにする
+        // Prevent text selection and cursor changes while dragging
         document.body.classList.add('select-none', 'cursor-col-resize');
       }}
       onPointerMove={(event) => {

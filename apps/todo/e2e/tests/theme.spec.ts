@@ -52,9 +52,9 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   const sidebarColor = () => sidebar.evaluate((el) => getComputedStyle(el).backgroundColor);
   const backgrounds = new Set<string>([await sidebarColor()]);
 
-  // 既定のインディゴは白いサイドバーのまま、主ボタンをインディゴ (#4f46e5) にする
+  // The default indigo keeps the white sidebar and makes the primary button indigo (#4f46e5)
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'indigo');
-  // 追加した直後はポインタが追加ボタンの上にあり、ホバーの色になるので外す
+  // Right after adding, the pointer is over the add button and shows the hover color, so move it away
   await page.mouse.move(0, 0);
   await expect(page.locator('main button[type="submit"]')).toHaveCSS(
     'background-color',
@@ -143,7 +143,7 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(button).toBeFocused();
-  // 背景をクリックしても閉じる
+  // Clicking the backdrop also closes it
   await openTheme();
   await dialog.getByRole('heading', { name: 'テーマ' }).click();
   await expect(dialog).toBeVisible();

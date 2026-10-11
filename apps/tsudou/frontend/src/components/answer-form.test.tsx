@@ -52,7 +52,7 @@ describe('AnswerForm', () => {
     const { user } = setup();
     const submit = screen.getByRole('button', { name: '回答する' });
 
-    // 未操作のうちは押せる (押すと検証が走る)
+    // While untouched, it can be pressed (pressing runs validation)
     expect(submit).toBeEnabled();
     await user.click(submit);
     await screen.findByText('お名前を入力してください');

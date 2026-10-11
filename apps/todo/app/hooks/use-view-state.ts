@@ -2,17 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FolderSelection } from '~/lib/folder-tree';
 import { DEFAULT_FILTERS, type SortKey } from '~/lib/todo-filters';
 
-// 表示の状態 (フォルダ・畳んだフォルダ・欄の幅・並び順) はこの端末だけの好みなので、TODO のデータとは分けて置く
+// View state (folder, collapsed folders, pane width, sort order) is a per-device preference, so it is stored apart from the todo data
 export const VIEW_STATE_KEY = 'todo:view';
 
-/** フォルダ欄の幅 (px)。広い画面でだけ使う */
+/** Width of the folder pane (px). Used only on wide screens */
 export const SIDEBAR_WIDTH = { min: 180, max: 480, default: 240 } as const;
 
 export function clampSidebarWidth(width: number): number {
   return Math.round(Math.min(SIDEBAR_WIDTH.max, Math.max(SIDEBAR_WIDTH.min, width)));
 }
 
-/** 表示の状態を保存するまで待つ時間 (ms) */
+/** Delay before saving the view state (ms) */
 const SAVE_DELAY_MS = 200;
 
 export interface ViewState {
@@ -22,7 +22,7 @@ export interface ViewState {
   sort?: SortKey;
 }
 
-/** 保存した表示の状態を読む。無い・壊れている・読めない (プライベートモードなど) ときは null。 */
+/** Read the saved view state. null when missing, corrupted, or unreadable (e.g. private mode). */
 export function readViewState(): ViewState | null {
   try {
     const raw = localStorage.getItem(VIEW_STATE_KEY);
@@ -57,13 +57,13 @@ export function writeViewState(state: ViewState): void {
   try {
     localStorage.setItem(VIEW_STATE_KEY, JSON.stringify(state));
   } catch {
-    // 保存できなくても画面はそのまま使える
+    // The UI keeps working even when saving fails
   }
 }
 
 /**
- * 選んでいるフォルダ・畳んだフォルダ・フォルダ欄の幅・並び順を localStorage に覚えておく。
- * 消えたフォルダを指していても、画面の側で「すべて」として扱う。
+ * Remember the selected folder, collapsed folders, folder pane width, and sort order in localStorage.
+ * If it points to a deleted folder, the UI treats it as 「すべて」.
  */
 export function useViewState() {
   const [selectedFolder, setSelectedFolder] = useState<FolderSelection>('all');
@@ -72,7 +72,7 @@ export function useViewState() {
   const [sort, setSort] = useState<SortKey>(DEFAULT_FILTERS.sort);
   const [restored, setRestored] = useState(false);
 
-  // ビルド時に作る HTML と食い違わないよう、読み出しは表示した後に行う
+  // Read after rendering so the result does not conflict with the HTML generated at build time
   useEffect(() => {
     const saved = readViewState();
     if (saved) {
@@ -84,8 +84,8 @@ export function useViewState() {
     setRestored(true);
   }, []);
 
-  // 幅のドラッグ中は値が何度も変わるので、変化が落ち着いてからまとめて保存する。
-  // 読み出す前の初期値では上書きしない
+  // The value changes many times while dragging the width, so save in one go after changes settle.
+  // Do not overwrite with the initial value before reading
   const pending = useRef<ViewState | null>(null);
   const flushPending = useCallback(() => {
     if (!pending.current) return;
@@ -104,7 +104,7 @@ export function useViewState() {
     return () => clearTimeout(timer);
   }, [restored, selectedFolder, collapsedFolders, sidebarWidth, sort, flushPending]);
 
-  // 画面を離れる・閉じるときは待たずに保存する
+  // Save without waiting when leaving or closing the page
   useEffect(() => {
     window.addEventListener('pagehide', flushPending);
     return () => {

@@ -8,7 +8,7 @@ export function compareCustomOrder(a: Todo, b: Todo): number {
   return aOrder - bOrder || b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id);
 }
 
-/** 表示中のタスクの位置だけを入れ替え、非表示のタスクの並びを保つ。 */
+/** Swap only the positions of the shown tasks and keep the order of hidden tasks. */
 export function reorderTodos(
   todos: readonly Todo[],
   visibleIds: readonly string[],
@@ -27,9 +27,9 @@ export function reorderTodos(
   const targetIndex = next.findIndex((todo) => todo.id === targetId);
   next.splice(targetIndex + Number(position === 'after'), 0, moved);
   if (next.every((todo, index) => todo === shown[index])) return [...todos];
-  // すでに全タスクに重ならない順番があれば、表示中のタスクが持っていた番号を入れ替えるだけにする。
-  // 非表示 (別フォルダ・ゴミ箱) のタスクを書き換えないので、その更新日時も変わらず、
-  // マージのインポートで「並べ替えただけ」のタスクが新しい扱いになることもない
+  // If every task already has a non-overlapping order, just swap the numbers held by the shown tasks.
+  // Hidden tasks (in other folders or the trash) are not rewritten, so their update times stay the same,
+  // and tasks that were "only reordered" are never treated as newer by a merge import
   const slots = shown.map((todo) => todo.customOrder);
   const orders = ordered.map((todo) => todo.customOrder);
   const isStrictlyIncreasing = orders.every(
@@ -39,7 +39,7 @@ export function reorderTodos(
   if (isStrictlyIncreasing) {
     byId = new Map(next.map((todo, index) => [todo.id, slots[index] as number]));
   } else {
-    // 番号が無い・重なっている (以前のデータやインポート) ときだけ、全体を 0 から振り直す
+    // Renumber everything from 0 only when numbers are missing or overlap (older data or imports)
     let shownIndex = 0;
     const ranked = ordered.map((todo) => (visible.has(todo.id) ? next[shownIndex++] : todo));
     byId = new Map(ranked.map((todo, index) => [todo.id, index]));

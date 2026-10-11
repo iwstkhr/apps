@@ -10,8 +10,8 @@ import type {
 } from './repository';
 
 /**
- * D1 の行 (migrations/0001_init.sql)。列名はスネークケースで、
- * 配列は JSON 文字列、真偽値は 0 / 1 で持つ。
+ * A D1 row (migrations/0001_init.sql). Column names are snake_case,
+ * arrays are stored as JSON strings, and booleans as 0 / 1.
  */
 type EventRow = {
   id: string;
@@ -63,7 +63,7 @@ const toAnswer = (row: AnswerRow): AnswerRecord => ({
   updatedAt: row.updated_at,
 });
 
-/** 部分更新で SET してよい列。キーは Record 側の名前で、列名と同じ。 */
+/** Columns that partial updates may SET. Keys use the Record names, which match the column names. */
 const EVENT_COLUMNS: Record<keyof EventPatch, true> = {
   title: true,
   fee: true,
@@ -78,7 +78,7 @@ const ANSWER_COLUMNS: Record<keyof AnswerPatch, true> = {
   choices: true,
 };
 
-/** D1 に入れる値への変換。配列は JSON 文字列、真偽値は 0 / 1 にする。 */
+/** Convert to values stored in D1: arrays become JSON strings and booleans 0 / 1. */
 function encode(value: unknown): unknown {
   if (Array.isArray(value)) return JSON.stringify(value);
   if (typeof value === 'boolean') return value ? 1 : 0;
@@ -86,10 +86,10 @@ function encode(value: unknown): unknown {
 }
 
 /**
- * D1 の例外を AppError に変える。
- * 元のエラーは Workers Logs にだけ残し、クライアントには握り潰した文言を返す。
- * 同じイベントに同じ名前の回答を入れようとした (UNIQUE 制約違反) ときだけは DUPLICATE_NAME にする。
- * operations.ts でも事前に確かめているが、同時に送信された場合はここで弾かれる。
+ * Convert D1 exceptions into AppError.
+ * The original error goes only to Workers Logs, and the client gets a generic message.
+ * Only an attempt to add a response with a duplicate name to the same event (UNIQUE constraint violation) becomes DUPLICATE_NAME.
+ * operations.ts also checks this beforehand, but simultaneous submissions are rejected here.
  */
 async function run<T>(context: string, fn: () => Promise<T>): Promise<T> {
   try {
@@ -105,8 +105,8 @@ async function run<T>(context: string, fn: () => Promise<T>): Promise<T> {
 }
 
 /**
- * patch に含まれるキーだけを SET し、更新後の行を返す。
- * 存在しない行の更新は想定外 (呼び出し側で存在を確かめている) なので INTERNAL にする。
+ * SET only the keys present in patch and return the updated row.
+ * Updating a missing row is unexpected (callers check that it exists), so it is INTERNAL.
  */
 function prepareUpdate(
   db: D1Database,
@@ -130,8 +130,8 @@ function prepareUpdate(
 }
 
 /**
- * 保存時点の回答から選択を補正する。事前に読み出した回答で上書きしないため、
- * 回答の編集と競合しても、その時点の選択を維持できる。
+ * Adjust choices based on the responses as of saving. Responses read beforehand are not written back,
+ * so even when this races with a response edit, the choices at that moment are kept.
  */
 function prepareReconcileAnswers(db: D1Database, eventId: string, timestamp: string) {
   const choices = `(SELECT json_group_array(json_object(
@@ -150,7 +150,7 @@ function prepareReconcileAnswers(db: D1Database, eventId: string, timestamp: str
     .bind(timestamp, eventId);
 }
 
-/** 本番の Repository 実装。テストは memory-repository.ts を使う。 */
+/** The production Repository implementation. Tests use memory-repository.ts. */
 export function createD1Repository(db: D1Database): Repository {
   return {
     async createEvent(input: NewEvent) {
@@ -190,7 +190,7 @@ export function createD1Repository(db: D1Database): Repository {
     async updateEvent(eventId: string, patch: EventPatch) {
       return run('updateEvent', async () => {
         const timestamp = new Date().toISOString();
-        // batch 全体がトランザクション。候補を変えたときは補正も含め、失敗すればイベント更新も戻る。
+        // The whole batch is one transaction. When candidates change, the adjustment is included, and a failure also rolls back the event update.
         const [result] = await db.batch<EventRow>([
           prepareUpdate(db, 'events', EVENT_COLUMNS, eventId, patch, timestamp),
           ...(patch.candidates === undefined
@@ -204,7 +204,7 @@ export function createD1Repository(db: D1Database): Repository {
     },
 
     async deleteEvent(eventId: string) {
-      // 回答は外部キーの ON DELETE CASCADE で一緒に消える
+      // Responses are deleted along with it through the foreign key's ON DELETE CASCADE
       await run('deleteEvent', () =>
         db.prepare('DELETE FROM events WHERE id = ?').bind(eventId).run(),
       );
@@ -244,7 +244,7 @@ export function createD1Repository(db: D1Database): Repository {
     },
 
     async listAnswersByEvent(eventId: string) {
-      // 並べ替えは operations.ts が createdAt で行う
+      // operations.ts sorts by createdAt
       const { results } = await run('listAnswersByEvent', () =>
         db.prepare('SELECT * FROM answers WHERE event_id = ?').bind(eventId).all<AnswerRow>(),
       );
@@ -274,10 +274,10 @@ export function createD1Repository(db: D1Database): Repository {
 }
 
 /**
- * 保持期間を過ぎたイベントを消す (回答は外部キーで一緒に消える)。Cron Trigger から呼ぶ。
- * 消えるまでの間も operations.ts が期限切れを「存在しない」として扱うので、
- * 実行が遅れたり失敗したりしても利用者からの見え方は変わらない。
- * 戻り値は消した行数 (外部キーで消えた回答を含む)。
+ * Delete events past their retention period (responses go with them through the foreign key). Called from the Cron Trigger.
+ * Until they are deleted, operations.ts treats expired events as "not found",
+ * so a delayed or failed run does not change what users see.
+ * Returns the number of rows deleted (including responses deleted through the foreign key).
  */
 export async function deleteExpired(db: D1Database, nowSeconds: number): Promise<number> {
   const result = await db

@@ -1,9 +1,9 @@
 import { type ReactNode, type RefObject, useEffect, useId, useRef } from 'react';
 
 /**
- * 確認・お知らせ用の小さなモーダル。表示中だけマウントする。
- * <dialog> の showModal() を使い、フォーカスの閉じ込めと背景の操作の無効化はブラウザに任せる。
- * Esc と背景のクリックは onClose に一本化する。
+ * A small modal for confirmations and notices, mounted only while shown.
+ * It uses <dialog>'s showModal() and leaves focus trapping and disabling the background to the browser.
+ * Esc and backdrop clicks both go through onClose.
  */
 export function ModalDialog({
   title,
@@ -13,7 +13,7 @@ export function ModalDialog({
 }: {
   title: string;
   onClose: () => void;
-  /** 開いたときにフォーカスする要素。省略時はブラウザに任せる (最初の操作できる要素) */
+  /** The element to focus when opened. When omitted, the browser decides (the first interactive element) */
   initialFocus?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
@@ -22,7 +22,7 @@ export function ModalDialog({
 
   useEffect(() => {
     const dialog = ref.current;
-    // 閉じると同時にアンマウントするため、<dialog> の標準の戻し先は使えない
+    // It unmounts as soon as it closes, so <dialog>'s native focus restoration cannot be used
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialog?.showModal();
     initialFocus?.current?.focus();
@@ -33,7 +33,7 @@ export function ModalDialog({
   }, [initialFocus]);
 
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: 背景のクリックに当たるキーボード操作は onCancel (Esc) で受ける
+    // biome-ignore lint/a11y/useKeyWithClickEvents: the keyboard equivalent of a backdrop click is handled by onCancel (Esc)
     <dialog
       ref={ref}
       aria-labelledby={titleId}
@@ -41,7 +41,7 @@ export function ModalDialog({
         e.preventDefault();
         onClose();
       }}
-      // 余白は内側の div に持たせ、dialog 自身がクリックされるのを背景のときだけにする
+      // Padding is on the inner div, so the dialog itself is clicked only when the backdrop is clicked
       onClick={(e) => e.target === e.currentTarget && onClose()}
       className="m-auto w-[min(24rem,calc(100%-2rem))] rounded-xl bg-white p-0 text-slate-900 shadow-xl ring-1 ring-slate-200 backdrop:bg-slate-900/60 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600 dark:backdrop:bg-black/70"
     >

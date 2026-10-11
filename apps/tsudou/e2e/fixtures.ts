@@ -4,12 +4,12 @@ import { english } from '../frontend/src/lib/translations.ts';
 export type Language = 'ja' | 'en';
 export type Options = { language: Language };
 
-/** 画面の文言 (日本語の原文) を、表示言語に合わせてアプリと同じ翻訳表で引く。 */
+/** Look up UI text (the Japanese source) in the app's translation table to match the display language. */
 export type Text = (source: string, ...values: (string | number)[]) => string;
 
 type Fixtures = {
   text: Text;
-  /** 別の人 (別のブラウザ) としてページを開く。主催者と参加者を分けるのに使う。 */
+  /** Open the page as another person (another browser). Used to separate the host from participants. */
   newUser: () => Promise<Page>;
 };
 
@@ -46,7 +46,7 @@ export const test = base.extend<Fixtures & Options>({
 
 export { expect } from '@playwright/test';
 
-/** 1 週間以上先の金曜 19:00 から、1 週おきに count 件。過去の日時は候補にできないので実行日から決める。 */
+/** count dates every other week from a Friday 19:00 at least a week ahead. Past dates cannot be candidates, so they are based on the run date. */
 function candidateInputs(count: number): string[] {
   const first = new Date();
   first.setDate(first.getDate() + 7 + ((5 - first.getDay() + 7) % 7));
@@ -58,7 +58,7 @@ function candidateInputs(count: number): string[] {
   });
 }
 
-/** ラベルの付いた URL 欄 (ShareLinkBox) に表示されている URL。 */
+/** The URL shown in a labeled URL box (ShareLinkBox). */
 export async function urlIn(page: Page, label: string): Promise<string> {
   const url = await page
     .getByText(label, { exact: true })
@@ -69,7 +69,7 @@ export async function urlIn(page: Page, label: string): Promise<string> {
   return url;
 }
 
-/** トップページからイベントを作り、作成完了画面に出る 2 つの URL を返す。 */
+/** Create an event from the top page and return the two URLs shown on the created screen. */
 export async function createEvent(
   page: Page,
   text: Text,
@@ -92,7 +92,7 @@ export async function createEvent(
 export type Choice = '参加' | '未定' | '不参加';
 const SYMBOLS: Record<Choice, string> = { 参加: '○', 未定: '△', 不参加: '×' };
 
-/** 回答フォームに入力する。choices は候補の順。 */
+/** Fill in the response form. choices are in candidate order. */
 export async function fillAnswer(
   page: Page,
   text: Text,
@@ -109,7 +109,7 @@ export async function fillAnswer(
   if (message !== undefined) await page.getByLabel(text('メッセージ (任意)')).fill(message);
 }
 
-/** 回答状況の表で、name さんの行 (候補ごとの ○△× のセル)。 */
+/** The row for name in the response table (the ○△× cells per candidate). */
 export function answerCells(page: Page, name: string) {
   return page
     .getByRole('row')

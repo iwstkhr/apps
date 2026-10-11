@@ -1,4 +1,4 @@
-/** エラーコードごとの HTTP ステータス。AppErrorCode はこのキーから導く。 */
+/** HTTP status per error code. AppErrorCode is derived from these keys. */
 export const STATUS_BY_CODE = {
   VALIDATION: 400,
   FORBIDDEN: 403,
@@ -12,9 +12,9 @@ export const STATUS_BY_CODE = {
 export type AppErrorCode = keyof typeof STATUS_BY_CODE;
 
 /**
- * クライアントが分岐できるエラー。HTTP 層 (app.ts) が code から
- * ステータスを決め、`{ error: { code, message: detail } }` としてそのまま返す。
- * message は `CODE: 人間向けの説明` の形にしておき、ログで読みやすくする。
+ * An error the client can branch on. The HTTP layer (app.ts) determines the status from code
+ * and returns it as is as `{ error: { code, message: detail } }`.
+ * message takes the form `CODE: human-readable description` so it reads well in logs.
  */
 export class AppError extends Error {
   readonly code: AppErrorCode;

@@ -118,7 +118,7 @@ describe('app', () => {
       request(app).patch(`/api/events/${eventId}`).set('x-manage-token', manageToken).send(body);
 
     expect((await patch({ fee: 1000 })).body.fee).toBe(1000);
-    // 省略は「変更しない」
+    // Omitted means "do not change"
     expect((await patch({ title: '新年会' })).body.fee).toBe(1000);
     expect((await patch({ fee: null })).body.fee).toBeNull();
   });
@@ -189,7 +189,7 @@ describe('app', () => {
     };
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    // パスに書式指定子を含めても、ログの書式として解釈されないこと
+    // Format specifiers in the path must not be interpreted as a log format
     const res = await request(createApp(repo)).get('/api/events/%25o');
     expect(res.status).toBe(500);
     expect(res.body.error.code).toBe('INTERNAL');

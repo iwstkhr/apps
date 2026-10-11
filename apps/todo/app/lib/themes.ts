@@ -1,5 +1,5 @@
-// 先頭のインディゴが既定。白いヘッダー・サイドバーにインディゴのアクセントを合わせる。
-// ほかは濃いヘッダー・サイドバーにする (色の組み合わせは themes.css)
+// The first one, indigo, is the default: a white header and sidebar with indigo accents.
+// The others use a dark header and sidebar (color combinations are in themes.css)
 export const THEMES = [
   { id: 'indigo', label: 'インディゴ', colors: ['#f8fafc', '#334155', '#4f46e5'] },
   { id: 'aubergine', label: 'オーベルジーヌ', colors: ['#3f0e40', '#ffffff', '#6a2c6b'] },

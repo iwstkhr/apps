@@ -1,7 +1,7 @@
 /**
- * 以前のバージョンは管理トークンと回答編集キーを localStorage に保存していた。
- * 共有 PC に残っていると次の利用者に使われるため、起動時に消す。
- * 今は両方ともメモリにだけ持つ (keyring.ts)。
+ * Earlier versions saved manage tokens and response edit keys in localStorage.
+ * Left on a shared PC, they could be used by the next person, so they are deleted on startup.
+ * Both now live only in memory (keyring.ts).
  */
 const LEGACY_KEYS = ['tsudou:hosted', 'tsudou:answered'];
 
@@ -10,7 +10,7 @@ export function purgeLegacyTokens(): void {
     try {
       localStorage.removeItem(key);
     } catch {
-      // 読み書きできない環境ならそもそも残っていない
+      // If storage cannot be read or written, nothing was left there in the first place
     }
   }
 }

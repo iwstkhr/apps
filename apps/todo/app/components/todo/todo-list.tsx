@@ -10,7 +10,7 @@ import type { Priority, Todo, TodoInput, TodoStatus } from '~/types/todo';
 interface TodoListProps {
   todos: Todo[];
   folders: Folder[];
-  /** 一覧で選んでいるフォルダ。そのフォルダに直接入っている TODO はフォルダ名を出さない */
+  /** The folder selected in the list. Todos directly inside it do not show the folder name */
   folderSelection: FolderSelection;
   today: string;
   tagSuggestions: string[];

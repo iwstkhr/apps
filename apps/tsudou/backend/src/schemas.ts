@@ -4,19 +4,19 @@ import * as z from 'zod';
 import { type AppErrorCode, STATUS_BY_CODE } from './errors';
 
 /**
- * HTTP の入出力の形を Zod で定義する。リクエストのスキーマは app.ts が実際の検査に使い、
- * すべてのスキーマは openapi.ts が OpenAPI ドキュメントの生成に使う。
+ * Define the shape of HTTP inputs and outputs with Zod. app.ts uses the request schemas for actual validation,
+ * and openapi.ts uses all the schemas to generate the OpenAPI document.
  *
- * ここで見るのは JSON の形だけで、値の中身 (長さ・範囲・日時の形式など) は
- * validate.ts が日本語のメッセージで弾く。長さの上限は前後の空白を除いてから数えるため、
- * Zod の .max() では検査せず、ドキュメント用のメタデータ (maxLength など) としてだけ書く。
+ * Only the JSON shape is checked here; validate.ts rejects the values themselves (length, range, date format, etc.)
+ * with Japanese messages. Length limits are counted after trimming surrounding whitespace,
+ * so they are not checked with Zod's .max() and are written only as documentation metadata (maxLength, etc.).
  *
- * メタデータは zod-to-openapi の .openapi() ではなく Zod 標準の .meta() で書く。
- * zod-to-openapi は .meta() も読めるので、ドキュメントを生成するとき (openapi.ts) だけ読み込めば済み、
- * Worker のバンドルに含めずに済む。id を付けたスキーマは components/schemas に切り出される。
- * zod は `import * as z` で読み込む (`import { z }` だと使わないロケールまでバンドルに入る)。
+ * Metadata is written with Zod's standard .meta() rather than zod-to-openapi's .openapi().
+ * zod-to-openapi can also read .meta(), so it only needs to be loaded when generating the document (openapi.ts)
+ * and stays out of the Worker bundle. Schemas with an id are extracted into components/schemas.
+ * zod is imported with `import * as z` (`import { z }` pulls unused locales into the bundle).
  */
-// ---------------------------------------------------------------- 共通
+// ---------------------------------------------------------------- Common
 
 export const AnswerStatusSchema = z.enum(['YES', 'NO', 'MAYBE']).meta({
   id: 'AnswerStatus',
@@ -64,13 +64,13 @@ const choices = z
   .array(ChoiceSchema)
   .meta({ description: 'Exactly one choice per candidate, with no missing or extra entries' });
 
-// ------------------------------------------------------------ リクエスト
+// ------------------------------------------------------------- Requests
 
 export const CreateEventBodySchema = z
   .object({ title, fee: fee.optional(), memo: memo.optional(), candidates })
   .meta({ id: 'CreateEventBody' });
 
-/** 省略した項目は変更しない。fee と memo は null で未設定に戻す。 */
+/** Omitted fields are not changed. fee and memo are reset to unset with null. */
 export const UpdateEventBodySchema = z
   .object({
     title: title.nullish(),
@@ -85,7 +85,7 @@ export const AnswerBodySchema = z
   .object({ name, message: message.optional(), choices })
   .meta({ id: 'AnswerBody' });
 
-// ------------------------------------------------------------ レスポンス
+// ------------------------------------------------------------ Responses
 
 export const AnswerViewSchema = z
   .object({
@@ -145,9 +145,9 @@ export const ErrorResponseSchema = z
   })
   .meta({ id: 'ErrorResponse' });
 
-// ------------------------------------------------ shared/types.ts との整合
+// ------------------------------------------- Consistency with shared/types.ts
 
-/** 2 つの型が等しいときだけ true になる。スキーマと共有の型がずれたら型エラーにする。 */
+/** true only when the two types are equal. A mismatch between the schemas and the shared types becomes a type error. */
 type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 

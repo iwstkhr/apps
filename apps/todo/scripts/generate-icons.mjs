@@ -1,6 +1,6 @@
-// ホーム画面とインストール用の PNG アイコンを public/ に書き出す。
-// favicon.svg と同じ図柄を、インストール済みの Google Chrome (Playwright) で描画する。
-// 図柄を変えたときだけ実行し、出来た PNG をコミットする:
+// Write PNG icons for the home screen and installation to public/.
+// Draws the same design as favicon.svg with the installed Google Chrome (Playwright).
+// Run only when the design changes, and commit the resulting PNGs:
 //
 //   node scripts/generate-icons.mjs
 import { writeFile } from 'node:fs/promises';
@@ -9,13 +9,13 @@ import { chromium } from '@playwright/test';
 const BLUE = '#2563eb';
 const CHECK = 'M18 33l9 9 19-20';
 
-// 角を丸めた青い四角 (favicon.svg と同じ)。四隅は透明になる
+// A blue rounded square (same as favicon.svg). The corners are transparent
 const rounded = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <rect x="4" y="4" width="56" height="56" rx="12" fill="${BLUE}"/>
   <path d="${CHECK}" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
-// 全面を青で塗る。OS が形を切り抜くので (maskable、iOS)、チェックは中央 80% の安全領域に収める
+// Fill the whole area with blue. The OS crops the shape (maskable, iOS), so the check mark stays within the central 80% safe zone
 const fullBleed = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <rect width="64" height="64" fill="${BLUE}"/>
   <g transform="translate(32 32) scale(0.8) translate(-32 -32)">

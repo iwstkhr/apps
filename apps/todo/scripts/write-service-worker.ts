@@ -4,13 +4,13 @@ import path from 'node:path';
 
 export const SERVICE_WORKER_FILE = 'sw.js';
 
-// Cloudflare の設定ファイルは配信されないので先読みしない
+// Cloudflare config files are not served, so they are not precached
 const NOT_SERVED = new Set([SERVICE_WORKER_FILE, '.assetsignore', '_headers', '_redirects']);
 
 /**
- * ビルド出力 (build/client) から、Service Worker が先読みするパスと版を求める。
- * パスは sw.js から見た相対パスで、index.html は Cloudflare が配信する URL (./) に置き換える。
- * 版はファイルの中身から求めるので、ビルドし直しても中身が同じなら変わらない。
+ * Determine the paths and version that the Service Worker precaches from the build output (build/client).
+ * Paths are relative to sw.js, and index.html is replaced with the URL Cloudflare serves it at (./).
+ * The version is derived from file contents, so rebuilding with the same contents does not change it.
  */
 export async function collectPrecache(clientDir: string) {
   const entries = await readdir(clientDir, { recursive: true, withFileTypes: true });
@@ -33,7 +33,7 @@ export async function collectPrecache(clientDir: string) {
   };
 }
 
-/** scripts/service-worker.js に版と先読みするパスを足して、build/client/sw.js に書き出す。 */
+/** Add the version and precache paths to scripts/service-worker.js and write it to build/client/sw.js. */
 export async function writeServiceWorker(clientDir: string) {
   const { version, urls } = await collectPrecache(clientDir);
   const source = await readFile(new URL('./service-worker.js', import.meta.url), 'utf8');

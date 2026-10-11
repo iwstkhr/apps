@@ -6,7 +6,7 @@ export type AnswerDraft = {
   choices: Record<string, AnswerStatus>;
 };
 
-/** 全候補を「未定」で埋めた初期値。未回答の候補が出ないようにする。 */
+/** The initial value with every candidate set to 「未定」, so no candidate is left unanswered. */
 export function emptyDraft(candidates: readonly Candidate[]): AnswerDraft {
   return {
     name: '',

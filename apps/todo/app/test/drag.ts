@@ -1,4 +1,4 @@
-/** happy-dom には DataTransfer が無いので、ドラッグ & ドロップのテスト用に最小限を用意する。 */
+/** happy-dom has no DataTransfer, so provide the minimum needed for drag-and-drop tests. */
 export function createDataTransfer(): DataTransfer {
   const data = new Map<string, string>();
   return {

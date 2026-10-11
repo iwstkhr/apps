@@ -10,13 +10,13 @@ import * as ops from './operations';
 import type { Repository } from './repository';
 import { AnswerBodySchema, CreateEventBodySchema, UpdateEventBodySchema } from './schemas';
 
-export const MANAGE_TOKEN = 'x-manage-token'; // leak-guard:ignore ヘッダ名
-export const EDIT_TOKEN = 'x-edit-token'; // leak-guard:ignore ヘッダ名
+export const MANAGE_TOKEN = 'x-manage-token'; // leak-guard:ignore header name
+export const EDIT_TOKEN = 'x-edit-token'; // leak-guard:ignore header name
 
 export type AppOptions = {
   /**
-   * レート制限。キー (クライアントの IP) ごとに、許可するなら true を返す。
-   * 本番は Workers の Rate Limiting バインディングを渡す。省略すると制限しない。
+   * Rate limiting. Returns true if the request for the key (the client IP) is allowed.
+   * Production passes the Workers Rate Limiting binding. When omitted, nothing is limited.
    */
   rateLimit?: (key: string) => Promise<boolean>;
 };
@@ -24,10 +24,10 @@ export type AppOptions = {
 const BAD_REQUEST = 'リクエストの形式が正しくありません';
 
 /**
- * ボディを Zod のスキーマ (schemas.ts) で検査する。形が合わなければ一律 BAD_REQUEST にする
- * (値の中身は validate.ts が項目ごとの日本語のメッセージで弾く)。
- * PATCH では「省略 = 変更しない」「null = 消す」の意味になるので、スキーマの側で
- * 省略 (undefined) と null を区別できるようにしておく。
+ * Validate the body against a Zod schema (schemas.ts). A shape mismatch is always BAD_REQUEST
+ * (validate.ts rejects the values themselves with a Japanese message per field).
+ * In PATCH, "omitted = do not change" and "null = clear", so the schemas
+ * must distinguish omitted (undefined) from null.
  */
 function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.output<T> {
   const result = schema.safeParse(body);
@@ -35,21 +35,21 @@ function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.output<T> {
   return result.data;
 }
 
-/** ヘッダのトークン。空文字は「無い」と同じに扱う。 */
+/** The token from a header. An empty string is treated the same as "absent". */
 const token = (req: Request, name: string) => req.get(name) || undefined;
 
-/** API のルートはすべてこの下に置く。画面と同じ Worker で配信するため、SPA のパスと分ける。 */
+/** All API routes live under this path. The UI is served by the same Worker, so it is kept apart from the SPA paths. */
 export const API_PREFIX = '/api';
 
 /**
- * 公開 API の Express アプリ。実処理は operations.ts に委譲する
- * (operations.ts は Repository を注入するだけなのでテストしやすい)。
+ * The Express app for the public API. The actual work is delegated to operations.ts
+ * (operations.ts only takes an injected Repository, so it is easy to test).
  *
- * 画面と同じオリジンから呼ばれるので CORS は扱わない。
- * イベントや回答を列挙するルートは意図的に存在しない。
+ * It is called from the same origin as the UI, so CORS is not handled.
+ * There are intentionally no routes that list events or responses.
  *
- * ルートを足したり入出力を変えたりしたら、openapi.ts の定義も合わせて直し、
- * `pnpm run openapi` で docs/openapi.yaml を作り直す。
+ * When adding routes or changing inputs and outputs, update the definitions in openapi.ts too,
+ * and regenerate docs/openapi.yaml with `pnpm run openapi`.
  */
 export function createApp(repo: Repository, options: AppOptions = {}): Express {
   const app = express();
@@ -61,7 +61,7 @@ export function createApp(repo: Repository, options: AppOptions = {}): Express {
   }
   api.use(express.json({ limit: '100kb' }));
 
-  /** 稼働確認用。 */
+  /** For health checks. */
   api.get('/healthz', (_req, res) => {
     res.json({ ok: true });
   });
@@ -111,7 +111,7 @@ export function createApp(repo: Repository, options: AppOptions = {}): Express {
     res.json(view);
   });
 
-  /** 編集キー (本人) または管理トークン (ホスト) のどちらかで削除できる。 */
+  /** Can be deleted with either the edit key (the respondent) or the manage token (the host). */
   api.delete('/answers/:answerId', async (req, res) => {
     await ops.deleteAnswer(repo, {
       answerId: req.params.answerId,
@@ -132,9 +132,9 @@ export function createApp(repo: Repository, options: AppOptions = {}): Express {
 }
 
 /**
- * AppError はステータス付きのエラーレスポンスに変える。
- * JSON のパース失敗やサイズ超過は入力エラーとして扱い、
- * 想定外の例外だけ詳細をログ (Workers Logs) に残して INTERNAL に潰す。
+ * Turn AppError into an error response with its status.
+ * JSON parse failures and size limit errors are treated as input errors,
+ * and only unexpected exceptions are logged in detail (Workers Logs) and collapsed into INTERNAL.
  */
 const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   let appError: AppError;
@@ -143,7 +143,7 @@ const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   } else if (isBodyParserError(error)) {
     appError = validationError(BAD_REQUEST);
   } else {
-    // 第 1 引数は書式文字列として解釈されるため固定にし、リクエスト由来の値は後ろに渡す
+    // The first argument is interpreted as a format string, so it is fixed, and request-derived values are passed after it
     console.error('unexpected error:', `${req.method} ${req.path}`, error);
     appError = new AppError('INTERNAL', '処理に失敗しました。時間をおいて再度お試しください');
   }
@@ -153,15 +153,15 @@ const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   });
 };
 
-/** express.json() が投げる、クライアント起因のエラー (不正な JSON・サイズ超過など)。 */
+/** Client-caused errors thrown by express.json() (invalid JSON, size limit exceeded, etc.). */
 function isBodyParserError(error: unknown): boolean {
   const status = (error as { status?: unknown } | null)?.status;
   return typeof status === 'number' && status >= 400 && status < 500;
 }
 
 /**
- * Cloudflare がクライアントの IP を入れるヘッダ。Workers の外 (テスト) では付かないので、
- * 無ければ全員を 1 つのキーにまとめる。
+ * The header in which Cloudflare puts the client IP. It is absent outside Workers (in tests),
+ * so in that case everyone shares one key.
  */
 const CLIENT_IP = 'cf-connecting-ip';
 

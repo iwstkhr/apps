@@ -1,9 +1,9 @@
 import { createContext, useContext } from 'react';
 
 export type ConfirmOptions = {
-  /** 確認する内容。ダイアログの見出しになる (翻訳済みの文言を渡す) */
+  /** What to confirm. Becomes the dialog heading (pass translated text) */
   message: string;
-  /** 実行するボタンの文言 (翻訳済み) */
+  /** Text of the button that performs the action (translated) */
   confirmLabel: string;
 };
 
@@ -12,9 +12,9 @@ export type Confirm = (options: ConfirmOptions) => Promise<boolean>;
 export const ConfirmContext = createContext<Confirm | null>(null);
 
 /**
- * window.confirm の代わりに、アプリ内のダイアログで確認する関数を返す。
- * 実行を選ぶと true、キャンセル・Esc・背景のクリックでは false で解決する。
- * ConfirmProvider の内側で使う。
+ * Return a function that confirms with an in-app dialog instead of window.confirm.
+ * It resolves to true when the action is chosen, and false on cancel, Esc, or a backdrop click.
+ * Use inside ConfirmProvider.
  */
 export function useConfirm(): Confirm {
   const confirm = useContext(ConfirmContext);

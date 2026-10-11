@@ -61,7 +61,7 @@ describe('custom order', () => {
 
   it('leaves hidden and trashed todos untouched once orders are set', () => {
     const now = new Date('2026-10-11T00:00:00.000Z');
-    // ゴミ箱から完全に削除した後のように、番号に隙間がある
+    // Gaps in the numbers, as after deleting forever from the trash
     const first = createTodoFixture({ id: 'first', customOrder: 0 });
     const other = createTodoFixture({ id: 'other', customOrder: 3 });
     const trashed = createTodoFixture({
@@ -73,7 +73,7 @@ describe('custom order', () => {
     const todos = [first, other, trashed, last];
 
     const next = reorderTodos(todos, ['first', 'last'], 'last', 'first', 'before', now);
-    // 表示中の 2 件が番号を入れ替え、ほかは同じオブジェクトのまま (更新日時も変わらない)
+    // The two shown items swap numbers; the others stay the same objects (their update times do not change)
     expect(next.find((todo) => todo.id === 'last')).toMatchObject({
       customOrder: 0,
       updatedAt: now.toISOString(),

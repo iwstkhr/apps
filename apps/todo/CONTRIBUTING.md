@@ -47,7 +47,7 @@ Record the reasoning when you reject an alternative or choose an implementation 
 Write commit subjects, bodies, PR descriptions, and documentation in English.
 Use the imperative present tense (`add`, `fix`, `remove`) in the subject, start with a lowercase letter, and omit the final period. Aim for no more than 72 characters.
 
-Code comments may remain in Japanese. Preserve actual Japanese UI labels when quoting them in documentation.
+Write code comments in English. Preserve actual Japanese UI labels when quoting them in documentation or code comments.
 
 ## Implementation conventions
 

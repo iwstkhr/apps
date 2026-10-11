@@ -4,13 +4,13 @@ import { t, useLanguage } from '../lib/i18n';
 import { ModalDialog } from './modal-dialog';
 import { Button } from './ui';
 
-/** useConfirm() の確認ダイアログを出す。アプリ全体を包む。 */
+/** Shows the confirmation dialog for useConfirm(). Wraps the whole app. */
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [request, setRequest] = useState<ConfirmOptions | null>(null);
   const resolveRef = useRef<((ok: boolean) => void) | null>(null);
 
   const confirm = useCallback<Confirm>((options) => {
-    // 表示中に次の確認が来たら、前の確認はキャンセル扱いにする
+    // When another confirmation arrives while one is shown, the previous one is treated as canceled
     resolveRef.current?.(false);
     return new Promise((resolve) => {
       resolveRef.current = resolve;
@@ -38,7 +38,7 @@ function ConfirmDialog({
   onResult,
 }: ConfirmOptions & { onResult: (ok: boolean) => void }) {
   useLanguage();
-  // 取り消せない操作が多いので、最初はキャンセルにフォーカスする
+  // Many actions are irreversible, so focus starts on cancel
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   return (

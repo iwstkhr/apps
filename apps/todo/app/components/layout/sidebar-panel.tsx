@@ -9,7 +9,7 @@ interface SidebarPanelProps {
   children: ReactNode;
 }
 
-/** 広い画面では常設、狭い画面では左から開くメニュー。 */
+/** Always shown on wide screens; a menu that opens from the left on narrow screens. */
 export function SidebarPanel({ open, onClose, children }: SidebarPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);

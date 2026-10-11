@@ -1,6 +1,6 @@
 import { closeDbForTesting } from '~/lib/todo-db';
 
-/** テストごとに DB を消す。次のテストの前に setup.ts が空の DB を作る。 */
+/** Delete the DB after each test. setup.ts creates an empty DB before the next test. */
 export async function resetDb(): Promise<void> {
   await closeDbForTesting();
   await new Promise<void>((resolve) => {
@@ -10,9 +10,9 @@ export async function resetDb(): Promise<void> {
 }
 
 /**
- * 空のデータベースを先に作っておく。アプリは初めて作るときだけサンプルを入れるので、
- * こうしておくと各テストは空の状態から始まる。バージョンを付けずに開くと store の無い
- * バージョン 1 ができ、アプリが開くときに store だけが作られる。
+ * Create an empty database in advance. The app adds samples only when it creates the database,
+ * so each test starts empty. Opening without a version creates version 1 with no stores,
+ * and the app creates only the stores when it opens.
  */
 export function createEmptyDb(): Promise<void> {
   return new Promise((resolve, reject) => {

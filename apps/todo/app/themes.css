@@ -1,6 +1,6 @@
-/* 本文の中立色は保ち、サイドバーとアクセントでテーマを表す。 */
-/* 既定。ヘッダーとサイドバーは白いまま、アクセントの青をインディゴにする。
-   保存したテーマを読み出す前 (data-theme が無い間) も同じ色にして、一瞬青く見えないようにする */
+/* Keep the body's neutral colors and express the theme through the sidebar and accents. */
+/* The default. The header and sidebar stay white, and the blue accent becomes indigo.
+   Use the same colors before the saved theme is read (while data-theme is absent) so it never flashes blue */
 :root:is([data-theme="indigo"], :not([data-theme])) {
   --color-blue-50: #eef2ff;
   --color-blue-100: #e0e7ff;
@@ -95,7 +95,7 @@
   --color-blue-950: var(--sidebar-background);
 }
 
-/* Slack のように、濃いナビゲーション領域には明るい文字を合わせる。 */
+/* As in Slack, pair dark navigation areas with light text. */
 :root[data-theme]:not([data-theme="indigo"]) .theme-sidebar {
   background: var(--sidebar-background);
   color: #f8fafc;
@@ -135,7 +135,7 @@
   outline-offset: -2px;
 }
 
-/* ヘッダーとナビゲーションは同じ色面、操作ボタンはその明るい階調に揃える。 */
+/* The header and navigation share one color surface, and action buttons use a lighter shade of it. */
 :root[data-theme]:not([data-theme="indigo"]) .theme-header {
   background: var(--sidebar-background);
   color: #f8fafc;
@@ -152,7 +152,7 @@
   background: #ffffff18;
 }
 
-/* 左の ☰ (フォルダを開く) も濃いヘッダーの上で読めるようにする */
+/* Keep the ☰ on the left (opens the folders) readable on dark headers */
 :root[data-theme]:not([data-theme="indigo"]) .theme-header .header-nav-button {
   color: #f8fafc;
 }
@@ -165,7 +165,7 @@
   color: #f8fafc;
 }
 
-/* タイトル横の説明は、濃いヘッダーの上で白より一段控えめにする */
+/* The description next to the title is one step more subdued than white on dark headers */
 :root[data-theme]:not([data-theme="indigo"]) .theme-header .app-tagline {
   color: #ffffffb3;
   border-color: #ffffff40;

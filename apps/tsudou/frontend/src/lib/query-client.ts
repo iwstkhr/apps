@@ -2,18 +2,18 @@ import { QueryClient } from '@tanstack/react-query';
 import { ApiError } from './errors';
 
 /**
- * サーバ由来のデータ (イベント) のキャッシュ。アプリ全体で 1 つだけ作る (main.tsx)。
- * テストは毎回 createQueryClient() で作り直し、ケース間でキャッシュを共有しない。
+ * Cache for server data (events). Only one is created for the whole app (main.tsx).
+ * Tests recreate it every time with createQueryClient() so no cache is shared between cases.
  *
- * 画面にフォーカスが戻ったときの取り直し (refetchOnWindowFocus) は既定のまま有効にしておく。
- * 管理画面を開いたままにしていても、タブに戻れば新しい回答が見える。
+ * Refetching when the window regains focus (refetchOnWindowFocus) stays enabled as by default.
+ * Even if the manage page is left open, returning to the tab shows new responses.
  */
 export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // 通信の失敗とサーバの想定外エラーだけ 1 回やり直す。
-        // レート制限などは何度送っても同じなので、すぐにエラーを見せる
+        // Retry once only for network failures and unexpected server errors.
+        // Things like rate limiting give the same result however often they are sent, so show the error immediately
         retry: (failureCount, error) =>
           failureCount < 1 &&
           error instanceof ApiError &&

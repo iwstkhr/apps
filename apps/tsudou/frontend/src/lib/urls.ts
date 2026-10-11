@@ -3,23 +3,23 @@ export function shareUrl(eventId: string): string {
 }
 
 /**
- * 管理トークンはクエリ文字列ではなくハッシュフラグメントに載せる。
- * クエリだと Referer / アクセスログ / CDN ログに残るが、
- * フラグメントはサーバに送信されない。
+ * The manage token goes in the hash fragment, not the query string.
+ * A query would remain in Referer, access logs, and CDN logs,
+ * but fragments are never sent to the server.
  */
 export function manageUrl(eventId: string, manageToken: string): string {
   return `${window.location.origin}${managePath(eventId, manageToken)}`;
 }
 
 /**
- * アプリ内リンク用の管理ページのパス。トークンはメモリにしか無いため、
- * フラグメントに載せておかないと新しいタブで開いたときに管理できない。
+ * Path of the manage page for in-app links. The token exists only in memory,
+ * so without putting it in the fragment the event cannot be managed when opened in a new tab.
  */
 export function managePath(eventId: string, manageToken: string): string {
   return `/e/${eventId}/manage#k=${encodeURIComponent(manageToken)}`;
 }
 
-/** 現在の URL のフラグメントから管理トークンを取り出す。 */
+/** Extract the manage token from the current URL's fragment. */
 export function readTokenFromHash(hash: string): string | null {
   const params = new URLSearchParams(hash.replace(/^#/, ''));
   const token = params.get('k');
@@ -29,16 +29,16 @@ export function readTokenFromHash(hash: string): string | null {
 export type AnswerKey = { answerId: string; editToken: string };
 
 /**
- * 回答編集 URL。共有 PC を想定して編集キーはブラウザに保存しないため (keyring.ts)、
- * 回答者が後から編集・削除するための唯一の手段になる。
- * 管理用 URL と同じく、サーバに送信されないフラグメントに載せる。
+ * The response edit URL. Edit keys are not saved in the browser because shared PCs are assumed (keyring.ts),
+ * so this is the only way for respondents to edit or delete their response later.
+ * As with the manage URL, it goes in the fragment, which is never sent to the server.
  */
 export function answerEditUrl(eventId: string, key: AnswerKey): string {
   const params = new URLSearchParams({ a: key.answerId, k: key.editToken });
   return `${window.location.origin}/e/${eventId}#${params.toString()}`;
 }
 
-/** 現在の URL のフラグメントから回答 ID と編集キーを取り出す。 */
+/** Extract the response ID and edit key from the current URL's fragment. */
 export function readAnswerKeyFromHash(hash: string): AnswerKey | null {
   const params = new URLSearchParams(hash.replace(/^#/, ''));
   const answerId = params.get('a')?.trim();
@@ -47,9 +47,9 @@ export function readAnswerKeyFromHash(hash: string): AnswerKey | null {
 }
 
 /**
- * 履歴に残らないようフラグメントだけを URL から取り除く。
- * (トークンを keyring に取り込んだあとに呼ぶ)。
- * react-router が history.state に持つ位置情報は残しておく。
+ * Remove only the fragment from the URL so it does not stay in history
+ * (called after the tokens are taken into the keyring).
+ * The location state react-router keeps in history.state is preserved.
  */
 export function stripHash(): void {
   if (!window.location.hash) return;

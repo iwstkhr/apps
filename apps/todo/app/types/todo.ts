@@ -34,8 +34,8 @@ export const REPEAT_LABELS: Record<RepeatFrequency, string> = {
 export interface Repeat {
   frequency: RepeatFrequency;
   /**
-   * 期限の「日」(1〜31)。毎月・毎年で 31 日を 30 日や 2/28 にそろえた後も、
-   * 次の月で元の日に戻すために覚えておく
+   * The day of the due date (1–31). Remembered so that, after monthly or yearly repeats clamp the 31st to the 30th or 2/28,
+   * the next month can return to the original day
    */
   anchorDay: number;
 }
@@ -46,29 +46,29 @@ export interface Todo {
   memo: string;
   status: TodoStatus;
   priority: Priority;
-  /** 'YYYY-MM-DD' (ローカル日付) */
+  /** 'YYYY-MM-DD' (local date) */
   dueDate: string | null;
   tags: string[];
-  /** 入っているフォルダ。null なら未分類 */
+  /** The folder it is in. null means 未分類 */
   folderId: string | null;
-  /** カスタム表示順。未設定なら null */
+  /** Custom display order. null if unset */
   customOrder: number | null;
   /** ISO 8601 */
   createdAt: string;
   updatedAt: string;
-  /** status が 'done' になった日時。ほかのステータスに戻すと null */
+  /** When status became 'done'. null after returning to another status */
   completedAt: string | null;
-  /** ゴミ箱に移した日時 (ISO 8601)。ゴミ箱に無ければ null */
+  /** When it was moved to the trash (ISO 8601). null if not in the trash */
   deletedAt: string | null;
-  /** 繰り返し。完了にすると次の回を作る。繰り返さなければ null */
+  /** Repeat. Completing it creates the next occurrence. null if it does not repeat */
   repeat: Repeat | null;
 }
 
-/** ゴミ箱に入れてからこの日数がたったタスクは、アプリを開いたときに完全に削除する */
+/** Tasks that have been in the trash for this many days are deleted forever when the app opens */
 export const TRASH_RETENTION_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** 追加・編集フォームで入力する項目。 */
+/** Fields entered in the add and edit forms. */
 export interface TodoInput {
   title: string;
   memo: string;
@@ -76,7 +76,7 @@ export interface TodoInput {
   dueDate: string | null;
   tags: string[];
   folderId: string | null;
-  /** 省略すると、編集では今の繰り返しをそのまま残す */
+  /** When omitted, editing keeps the current repeat as is */
   repeat?: RepeatFrequency | null;
 }
 
@@ -102,7 +102,7 @@ function isIsoDateTime(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(Date.parse(value));
 }
 
-/** タグの前後の空白を取り、空や重複を除く。 */
+/** Trim spaces around tags and remove empty and duplicate ones. */
 export function normalizeTags(tags: readonly string[]): string[] {
   const result: string[] = [];
   for (const tag of tags) {
@@ -112,14 +112,14 @@ export function normalizeTags(tags: readonly string[]): string[] {
   return result;
 }
 
-/** カンマ (全角含む) 区切りの文字列をタグの配列にする。 */
+/** Turn a comma-separated string (including full-width commas) into an array of tags. */
 export function parseTagText(text: string): string[] {
   return normalizeTags(text.split(/[,、，]/));
 }
 
 /**
- * 期限と繰り返しを決める。繰り返すのに期限が無ければ今日から始める。
- * anchorDay は期限の日にする (期限を変えたら合わせて変わる)。
+ * Decide the due date and repeat. A repeating task without a due date starts today.
+ * anchorDay is the due date's day (it changes along with the due date).
  */
 function scheduleOf(
   dueDate: string | null,
@@ -175,7 +175,7 @@ export function setTodoStatus(todo: Todo, status: TodoStatus, now: Date = new Da
   };
 }
 
-/** フォルダを移す。同じフォルダなら同じオブジェクトを返す。 */
+/** Move to a folder. Returns the same object if the folder is the same. */
 export function moveTodoToFolder(
   todo: Todo,
   folderId: string | null,
@@ -189,7 +189,7 @@ export function isTrashed(todo: Todo): boolean {
   return todo.deletedAt !== null;
 }
 
-/** ゴミ箱に移す。フォルダやステータスはそのまま残し、元に戻したときに同じ場所へ戻す。 */
+/** Move to the trash. The folder and status are kept, so restoring puts it back in the same place. */
 export function moveTodoToTrash(todo: Todo, now: Date = new Date()): Todo {
   if (isTrashed(todo)) return todo;
   const timestamp = now.toISOString();
@@ -201,7 +201,7 @@ export function restoreTodoFromTrash(todo: Todo, now: Date = new Date()): Todo {
   return { ...todo, deletedAt: null, updatedAt: now.toISOString() };
 }
 
-/** ゴミ箱のタスクが自動で削除されるまでの日数 (切り上げ)。0 なら削除の対象。 */
+/** Days until a task in the trash is deleted automatically (rounded up). 0 means it is due for deletion. */
 export function daysUntilPurge(todo: Todo, now: Date = new Date()): number {
   if (todo.deletedAt === null) return Number.POSITIVE_INFINITY;
   const purgeAt = Date.parse(todo.deletedAt) + TRASH_RETENTION_DAYS * DAY_MS;
@@ -213,9 +213,9 @@ export function shouldPurge(todo: Todo, now: Date = new Date()): boolean {
 }
 
 /**
- * 外部から来た値 (インポートしたファイル) を Todo に直す。
- * 必須項目 (id / title / createdAt / updatedAt) が欠けていれば null を返し、
- * 任意項目は既定値で補う。知らない項目は捨てる。
+ * Convert an external value (an imported file) into a Todo.
+ * Returns null if a required field (id / title / createdAt / updatedAt) is missing,
+ * and fills optional fields with defaults. Unknown fields are dropped.
  */
 export function toTodo(value: unknown): Todo | null {
   if (typeof value !== 'object' || value === null) return null;
@@ -236,7 +236,7 @@ export function toTodo(value: unknown): Todo | null {
     tags: Array.isArray(v.tags)
       ? normalizeTags(v.tags.filter((tag): tag is string => typeof tag === 'string'))
       : [],
-    // フォルダが存在するかはここでは見ない (sanitizeTodoFolders が見る)
+    // Whether the folder exists is not checked here (sanitizeTodoFolders does)
     folderId: typeof v.folderId === 'string' && v.folderId !== '' ? v.folderId : null,
     customOrder:
       typeof v.customOrder === 'number' && Number.isSafeInteger(v.customOrder) && v.customOrder >= 0
@@ -245,14 +245,14 @@ export function toTodo(value: unknown): Todo | null {
     createdAt: v.createdAt,
     updatedAt: v.updatedAt,
     completedAt: status === 'done' && isIsoDateTime(v.completedAt) ? v.completedAt : null,
-    // 以前のデータには無いので、無ければゴミ箱に入っていないものとして読む
+    // Older data lacks this, so when missing it is read as not in the trash
     deletedAt: isIsoDateTime(v.deletedAt) ? v.deletedAt : null,
-    // 以前のデータには無いので、無ければ繰り返さないものとして読む
+    // Older data lacks this, so when missing it is read as not repeating
     repeat: toRepeat(v.repeat, isDateString(v.dueDate) ? v.dueDate : null),
   };
 }
 
-/** 繰り返しを検証する。期限が無いと次の回を数えられないので繰り返さない。 */
+/** Validate the repeat. Without a due date the next occurrence cannot be counted, so it does not repeat. */
 function toRepeat(value: unknown, dueDate: string | null): Repeat | null {
   if (typeof value !== 'object' || value === null || dueDate === null) return null;
   const { frequency, anchorDay } = value as Record<string, unknown>;
@@ -269,7 +269,7 @@ function toRepeat(value: unknown, dueDate: string | null): Repeat | null {
   };
 }
 
-/** Date をローカル時刻の 'YYYY-MM-DD' にする。 */
+/** Convert a Date into a local 'YYYY-MM-DD'. */
 export function toLocalDateString(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -279,7 +279,7 @@ export function toLocalDateString(date: Date): string {
 
 export type DueStatus = 'overdue' | 'today' | 'upcoming' | 'none';
 
-/** 未完了の TODO の期限が過ぎているか・今日か。完了済みは 'none'。 */
+/** Whether an incomplete todo's due date has passed or is today. 'none' for completed ones. */
 export function getDueStatus(todo: Todo, today: string): DueStatus {
   if (todo.status === 'done' || todo.dueDate === null) return 'none';
   if (todo.dueDate < today) return 'overdue';
@@ -287,7 +287,7 @@ export function getDueStatus(todo: Todo, today: string): DueStatus {
   return 'upcoming';
 }
 
-/** 'YYYY-MM-DD' をローカル時刻の 0 時の Date にする。 */
+/** Convert 'YYYY-MM-DD' into a Date at local midnight. */
 function parseLocalDate(date: string): Date {
   const [y, m, d] = date.split('-').map(Number) as [number, number, number];
   return new Date(y, m - 1, d);
@@ -297,7 +297,7 @@ function daysInMonth(year: number, monthIndex: number): number {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
 
-/** 年・月 (0 始まり、12 以上は翌年) の anchorDay 日。その月に無い日は月末にする。 */
+/** Day anchorDay of the given year and month (0-based; 12 or more rolls into the next year). Days missing from that month become its last day. */
 function dayInMonth(year: number, monthIndex: number, anchorDay: number): Date {
   const first = new Date(year, monthIndex, 1);
   const last = daysInMonth(first.getFullYear(), first.getMonth());
@@ -313,7 +313,7 @@ function step(date: Date, repeat: Repeat): Date {
       return new Date(y, m, d + 1);
     case 'weekdays': {
       const next = new Date(y, m, d + 1);
-      // 土曜は月曜まで、日曜は月曜まで進める
+      // Move Saturday forward to Monday, and Sunday forward to Monday
       while (next.getDay() === 0 || next.getDay() === 6) next.setDate(next.getDate() + 1);
       return next;
     }
@@ -327,8 +327,8 @@ function step(date: Date, repeat: Repeat): Date {
 }
 
 /**
- * 次の回の期限。元の期限から数え、それでも今日より前なら今日以降になるまで進める
- * (期限切れのまま完了しても、次の回が最初から期限切れにならないように)。
+ * The next occurrence's due date. Counted from the original due date, then advanced until it is today or later
+ * (so completing an overdue task does not create an occurrence that is overdue from the start).
  */
 export function nextDueDate(dueDate: string, repeat: Repeat, today: string): string {
   let next = toLocalDateString(step(parseLocalDate(dueDate), repeat));
@@ -336,7 +336,7 @@ export function nextDueDate(dueDate: string, repeat: Repeat, today: string): str
   return next;
 }
 
-/** 繰り返すタスクの次の回。内容と繰り返しは受け継ぎ、未着手から始める。 */
+/** The next occurrence of a repeating task. It inherits the content and repeat, and starts as 未着手. */
 export function createNextOccurrence(todo: Todo, now: Date = new Date()): Todo | null {
   if (todo.repeat === null || todo.dueDate === null) return null;
   const timestamp = now.toISOString();

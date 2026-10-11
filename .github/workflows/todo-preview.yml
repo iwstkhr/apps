@@ -1,7 +1,7 @@
 name: "todo - Preview"
 
-# PR ごとに Cloudflare Workers の Preview (wrangler preview) を作り、URL を PR にコメントする。
-# Preview は PR を閉じたときに消す。設定は apps/todo/wrangler.jsonc の preview_urls と previews。
+# Create a Cloudflare Workers Preview (wrangler preview) for each PR and comment its URL on the PR.
+# The Preview is deleted when the PR is closed. Configured by preview_urls and previews in apps/todo/wrangler.jsonc.
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
@@ -16,7 +16,7 @@ on:
 permissions:
   contents: read
 
-# 同じ PR の古い Preview 作成は取り消すが、閉じたときの削除は取り消さない
+# Cancel older Preview builds for the same PR, but never cancel the deletion on close
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: ${{ github.event.action != 'closed' }}
@@ -30,13 +30,13 @@ env:
 
 jobs:
   preview:
-    # フォークからの PR ではシークレットが読めないので飛ばす
+    # Skip PRs from forks because they cannot read secrets
     if: ${{ github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-    # シークレットは依存パッケージのスクリプトから読まれないよう、Cloudflare を操作するステップにだけ渡す
+    # Pass secrets only to the steps that call Cloudflare so that dependency scripts cannot read them
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
@@ -54,7 +54,7 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      # ダッシュボードの Preview base config は使わず、wrangler.jsonc だけで設定する
+      # Do not use the dashboard's Preview base config; configure everything in wrangler.jsonc
       - name: Create or update Preview
         id: preview
         env:
@@ -63,11 +63,11 @@ jobs:
         run: |
           output="$(pnpm exec wrangler preview --name "$PREVIEW_NAME" --ignore-base-config --json)"
           printf '%s\n' "$output"
-          # wrangler は --json でもアセットのアップロード状況を JSON より前に標準出力へ書く
+          # Even with --json, wrangler writes asset upload progress to stdout before the JSON
           preview_url="$(printf '%s\n' "$output" | sed -n '/^{/,$p' | jq -ser '.[0].preview.urls[0]')"
           echo "url=$preview_url" >> "$GITHUB_OUTPUT"
 
-      # コメントは 1 つだけにして、push のたびに同じコメントを書き換える
+      # Keep a single comment and rewrite it on every push
       - name: Comment Preview URL
         env:
           GH_TOKEN: ${{ github.token }}
@@ -108,7 +108,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler preview delete --name "$PREVIEW_NAME" --skip-confirmation
 
-  # 失敗したときだけ Slack に流す。フォークからの PR では上のジョブごと飛ぶので通知もしない
+  # Report to Slack only on failure. PRs from forks skip the whole job above, so they are not reported either
   notify:
     name: Notify
     needs: [preview, cleanup]

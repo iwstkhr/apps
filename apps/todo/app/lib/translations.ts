@@ -1,6 +1,6 @@
-// 日本語の文言 → 英語。t() に渡す文言はすべてここに載せる (i18n.test.ts が漏れを見つける)。
+// Japanese text → English. Every string passed to t() must be listed here (i18n.test.ts catches omissions).
 export const english: Record<string, string> = {
-  // アプリ全体
+  // Whole app
   'ブラウザだけで使える TODO 管理アプリ。データは端末の中にだけ保存されます。':
     'A TODO app that runs entirely in your browser. Your data stays on this device.',
   言語: 'Language',
@@ -19,7 +19,7 @@ export const english: Record<string, string> = {
   未分類: 'Unfiled',
   画像: 'Image',
 
-  // ヘッダー・メニュー
+  // Header and menu
   メニュー: 'Menu',
   フォルダを開く: 'Open folders',
   フォルダを閉じる: 'Close folders',
@@ -30,10 +30,10 @@ export const english: Record<string, string> = {
   'エクスポートした JSON ファイルを読み込みます': 'Load an exported JSON file',
   インポートするファイル: 'File to import',
 
-  // ヘッダーのメニュー
+  // Header menu
   'テーマ…': 'Theme…',
 
-  // テーマ
+  // Themes
   テーマ: 'Theme',
   テーマを選ぶ: 'Choose theme',
   表示モード: 'Appearance',
@@ -47,7 +47,7 @@ export const english: Record<string, string> = {
   サンセット: 'Sunset',
   グラファイト: 'Graphite',
 
-  // ステータス・優先度
+  // Status and priority
   ステータス: 'Status',
   未着手: 'Not started',
   進行中: 'In progress',
@@ -57,7 +57,7 @@ export const english: Record<string, string> = {
   中: 'Medium',
   低: 'Low',
 
-  // フォルダ欄
+  // Folder pane
   フォルダ: 'Folders',
   'フォルダ|項目': 'Folder',
   'フォルダ: {0}': 'Folder: {0}',
@@ -73,7 +73,7 @@ export const english: Record<string, string> = {
   フォルダ欄の幅: 'Folder list width',
   'ドラッグで幅を変更 (ダブルクリックで元に戻す)': 'Drag to resize (double-click to reset)',
 
-  // フォルダのダイアログ
+  // Folder dialog
   フォルダを編集: 'Edit folder',
   名前: 'Name',
   フォルダ名: 'Folder name',
@@ -89,7 +89,7 @@ export const english: Record<string, string> = {
   緑: 'Green',
   グレー: 'Gray',
 
-  // 一覧と追加フォーム
+  // List and add form
   'TODO を追加': 'Add a todo',
   'TODO 一覧': 'Todo list',
   やること: 'What to do',
@@ -120,7 +120,7 @@ export const english: Record<string, string> = {
   'ここに TODO はありません。': 'No todos here.',
   通知を閉じる: 'Dismiss notification',
 
-  // タスクのカード
+  // Task card
   '「{0}」を未着手に戻す': 'Mark "{0}" as not started',
   '「{0}」を完了にする': 'Mark "{0}" as done',
   '「{0}」のヘッダー': 'Header of "{0}"',
@@ -140,7 +140,7 @@ export const english: Record<string, string> = {
   下へ移動: 'Move down',
   '「{0}」を編集': 'Edit "{0}"',
 
-  // 確認・通知
+  // Confirmations and notifications
   'フォルダ「{0}」を削除しますか？': 'Delete folder "{0}"?',
   '中のフォルダ {0} 件も削除されます。': 'Its {0} subfolders will also be deleted.',
   '中の TODO {0} 件は未分類に移ります。': 'Its {0} todos will be moved to Unfiled.',
@@ -156,7 +156,7 @@ export const english: Record<string, string> = {
   'ブラウザのデータを削除すると TODO も消えるため、定期的にエクスポートしてバックアップしてください。':
     'Clearing browser data also deletes your todos, so export a backup regularly.',
 
-  // ゴミ箱
+  // Trash
   ゴミ箱: 'Trash',
   'ゴミ箱の TODO': 'Todos in the trash',
   ゴミ箱に移動: 'Move to trash',
@@ -182,7 +182,7 @@ export const english: Record<string, string> = {
   明日までに自動で削除: 'Deleted within a day',
   '元の場所: ': 'Original location: ',
 
-  // インポート
+  // Import
   'JSON として読み込めませんでした。': 'The file is not valid JSON.',
   'このアプリでエクスポートしたファイルではありません。':
     'This file was not exported from this app.',
@@ -196,7 +196,7 @@ export const english: Record<string, string> = {
   '{0}に追加します。同じものは更新日時が新しい方を残します。':
     'Adds to {0}. When an item exists in both, the more recently updated one is kept.',
   '{0}をすべて削除してから読み込みます。': 'Deletes {0}, then imports.',
-  // 繰り返し
+  // Repeat
   繰り返し: 'Repeat',
   '繰り返し: ': 'Repeats: ',
   なし: 'None',

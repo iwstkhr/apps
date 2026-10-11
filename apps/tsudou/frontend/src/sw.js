@@ -1,9 +1,9 @@
-// Service Worker の本体。ビルド時に vite.config.ts の serviceWorker プラグインが
-// 先頭へ VERSION (ビルド内容のハッシュ) と PRECACHE (画面の起動に要るファイル) を足して
-// dist/sw.js として出力する。開発サーバでは登録しない (src/lib/service-worker.ts)。
+// The Service Worker itself. At build time, the serviceWorker plugin in vite.config.ts
+// prepends VERSION (a hash of the build contents) and PRECACHE (files needed to start the UI)
+// and outputs it as dist/sw.js. It is not registered on the dev server (src/lib/service-worker.ts).
 //
-// キャッシュするのはビルド成果物 (HTML / JS / CSS / 画像) だけ。/api は一切触らず、
-// イベントや回答のデータ・トークンがブラウザのキャッシュに残らないようにする。
+// Only build output (HTML / JS / CSS / images) is cached. /api is never touched,
+// so event and response data and tokens never remain in the browser cache.
 /* global VERSION, PRECACHE */
 
 const CACHE_PREFIX = 'tsudou-';
@@ -40,14 +40,14 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 
   if (request.mode === 'navigate') {
-    // 画面は常にネットワークから取り、オフラインのときだけキャッシュの index.html で起動する。
-    // URL ごとには保存しない (管理用 URL などをキャッシュのキーに残さない)
+    // Pages always come from the network, and only offline does the cached index.html start the app.
+    // Nothing is stored per URL (so URLs such as the manage URL are never kept as cache keys)
     event.respondWith(fetch(request).catch(() => caches.match('/')));
     return;
   }
 
   if (url.pathname.startsWith('/assets/')) {
-    // ファイル名にハッシュが付いていて中身が変わらないので、キャッシュを優先する
+    // File names include a hash and their contents never change, so prefer the cache
     event.respondWith(
       caches.match(request).then(
         (cached) =>
@@ -64,6 +64,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // favicon などの public/ のファイルは名前が変わらないので、ネットワークを優先する
+  // Files in public/ such as the favicon keep their names, so prefer the network
   event.respondWith(fetch(request).catch(() => caches.match(request)));
 });

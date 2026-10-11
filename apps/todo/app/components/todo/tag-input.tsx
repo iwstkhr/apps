@@ -8,17 +8,17 @@ const SEPARATOR = /[,、，]/;
 interface TagInputProps {
   tags: string[];
   onTagsChange: (tags: string[]) => void;
-  /** まだチップにしていない入力中の文字。確定せずに保存してもタグに含めるよう、フォームが持つ */
+  /** Text being typed that is not yet a chip. The form holds it so that it is included in the tags even when saved unconfirmed */
   draft: string;
   onDraftChange: (draft: string) => void;
-  /** 既存のタグ (入力候補) */
+  /** Existing tags (suggestions) */
   suggestions: readonly string[];
 }
 
 /**
- * 選んだタグをチップで並べる入力欄。WAI-ARIA の combobox パターンに沿って、
- * 打った文字で既存のタグを絞り込んだ候補を出す。候補に無い文字も Enter かカンマで新しいタグになる。
- * 1 つ選んでも候補は閉じず、続けて残りのタグを選べる。
+ * An input that shows the selected tags as chips. Following the WAI-ARIA combobox pattern,
+ * it suggests existing tags filtered by the typed text. Text that matches no suggestion also becomes a new tag with Enter or a comma.
+ * Choosing one does not close the suggestions, so the remaining tags can be chosen in a row.
  */
 export function TagInput({ tags, onTagsChange, draft, onDraftChange, suggestions }: TagInputProps) {
   const id = useId();
@@ -50,13 +50,13 @@ export function TagInput({ tags, onTagsChange, draft, onDraftChange, suggestions
 
   const changeDraft = (value: string, composing: boolean) => {
     let next = value;
-    // カンマを打ったり貼り付けたりしたら、最後のカンマまでをチップにする。IME の変換中は確定を待つ
+    // When a comma is typed or pasted, turn everything up to the last comma into chips. Wait for confirmation during IME composition
     if (!composing && SEPARATOR.test(value)) {
       const parts = value.split(SEPARATOR);
       next = parts.pop() ?? '';
       addTags(parts);
     }
-    // 「仕事, 家」のようにカンマの後に打った空白は、次のタグに含めない
+    // Spaces typed after a comma, as in 「仕事, 家」, are not part of the next tag
     onDraftChange(next.trimStart());
     setOpen(true);
     setActiveIndex(-1);
@@ -80,7 +80,7 @@ export function TagInput({ tags, onTagsChange, draft, onDraftChange, suggestions
         moveActive(event.key === 'ArrowDown' ? 1 : -1);
         break;
       case 'Enter':
-        // 選ぶものも打った文字も無いときは、フォームの送信に任せる
+        // When there is neither a suggestion to choose nor typed text, leave it to the form submission
         if (activeOption) {
           event.preventDefault();
           select(activeOption);
@@ -90,7 +90,7 @@ export function TagInput({ tags, onTagsChange, draft, onDraftChange, suggestions
         }
         break;
       case 'Escape':
-        // 候補を閉じるだけにして、編集フォームのキャンセルまでは届けない
+        // Only close the suggestions; do not let it reach the edit form's cancel
         if (expanded) {
           event.preventDefault();
           event.stopPropagation();
@@ -106,9 +106,9 @@ export function TagInput({ tags, onTagsChange, draft, onDraftChange, suggestions
 
   return (
     <div className="relative">
-      {/* 枠の空いたところを押しても入力欄にフォーカスが移るようにする。label で包むと、
-          中で最初のボタン (先頭のチップの ×) が押されたことになるので使わない */}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: マウスで押したときの補助で、キーボードでは入力欄に直接移れる */}
+      {/* Clicking an empty part of the box also moves focus to the input. Wrapping it in a label is avoided
+          because that counts as pressing the first button inside (the × of the first chip) */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: a mouse convenience; keyboard users can move to the input directly */}
       <div
         className="flex w-full cursor-text flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-white px-1.5 py-1 text-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-800"
         onMouseDown={(event) => {
@@ -148,8 +148,8 @@ export function TagInput({ tags, onTagsChange, draft, onDraftChange, suggestions
           onCompositionEnd={(event) => changeDraft(event.currentTarget.value, false)}
           onKeyDown={handleKeyDown}
           onFocus={() => setOpen(true)}
-          // 離れたときに打ちかけの文字をチップにすると、欄の高さが変わって押そうとした保存ボタンがずれる。
-          // 文字のまま残し、保存するときにフォームがタグに含める
+          // Turning the typed text into a chip on blur would change the box height and shift the save button being clicked.
+          // Leave it as text; the form includes it in the tags when saving
           onBlur={() => {
             setOpen(false);
             setActiveIndex(-1);
@@ -171,8 +171,8 @@ export function TagInput({ tags, onTagsChange, draft, onDraftChange, suggestions
           className="absolute top-full right-0 left-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900"
         >
           {options.map((tag, index) => (
-            // キーボードでは入力欄の矢印キーで選ぶので、候補自体にはフォーカスを移さない
-            // biome-ignore lint/a11y/useKeyWithClickEvents: 上のとおり、キー操作は combobox が受け持つ
+            // Keyboard users choose with the input's arrow keys, so focus never moves to the suggestions themselves
+            // biome-ignore lint/a11y/useKeyWithClickEvents: as above, the combobox handles key input
             <div
               key={tag}
               id={optionId(index)}
@@ -180,7 +180,7 @@ export function TagInput({ tags, onTagsChange, draft, onDraftChange, suggestions
               aria-selected={index === activeIndex}
               tabIndex={-1}
               className="cursor-pointer px-2.5 py-1 text-slate-700 hover:bg-slate-100 aria-selected:bg-blue-50 aria-selected:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-300"
-              // 押しても入力欄からフォーカスを外さず、続けて選べるようにする
+              // Keep focus in the input when pressed so more can be chosen in a row
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => select(tag)}
             >

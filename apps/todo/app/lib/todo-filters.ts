@@ -11,7 +11,7 @@ export type SortKey = 'due' | 'priority' | 'status' | 'created' | 'custom';
 export interface TodoFilters {
   keyword: string;
   status: StatusFilter;
-  /** null ならタグで絞り込まない */
+  /** null means no tag filter */
   tag: string | null;
   sort: SortKey;
 }
@@ -38,12 +38,12 @@ function matchesStatus(todo: Todo, status: StatusFilter): boolean {
   return todo.status === status;
 }
 
-// ステータスの定義順（未着手 → 進行中 → 保留 → 完了）の昇順
+// Ascending in the status definition order (未着手 → 進行中 → 保留 → 完了)
 const statusRank = (todo: Todo) => STATUSES.indexOf(todo.status);
 
 const priorityRank = (todo: Todo) => PRIORITIES.indexOf(todo.priority);
 
-// 期限なしは最後に回す
+// Items without a due date go last
 const dueRank = (todo: Todo) => todo.dueDate ?? '9999-99-99';
 
 function compareBy(sort: SortKey): (a: Todo, b: Todo) => number {
@@ -74,7 +74,7 @@ function compareBy(sort: SortKey): (a: Todo, b: Todo) => number {
 
 const isDone = (todo: Todo) => Number(todo.status === 'done');
 
-/** 絞り込んで並べる。カスタム以外は未完了を先、完了済みを後ろにまとめる。 */
+/** Filter and sort. Except for custom order, incomplete items come first and completed ones last. */
 export function applyFilters(todos: readonly Todo[], filters: TodoFilters): Todo[] {
   const compare = compareBy(filters.sort);
   return todos
@@ -87,7 +87,7 @@ export function applyFilters(todos: readonly Todo[], filters: TodoFilters): Todo
     .sort((a, b) => (filters.sort === 'custom' ? 0 : isDone(a) - isDone(b)) || compare(a, b));
 }
 
-/** 状態の絞り込みごとの件数。 */
+/** Counts per status filter. */
 export function countByStatus(todos: readonly Todo[]): Record<StatusFilter, number> {
   const counts: Record<StatusFilter, number> = {
     all: todos.length,
@@ -102,7 +102,7 @@ export function countByStatus(todos: readonly Todo[]): Record<StatusFilter, numb
   return counts;
 }
 
-/** すべての TODO に付いているタグを名前順で返す。 */
+/** Return the tags on all todos, sorted by name. */
 export function collectTags(todos: readonly Todo[]): string[] {
   return [...new Set(todos.flatMap((todo) => todo.tags))].sort((a, b) => a.localeCompare(b, 'ja'));
 }

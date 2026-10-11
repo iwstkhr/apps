@@ -6,7 +6,7 @@ interface ModalProps {
   children: ReactNode;
 }
 
-/** 画面の上に重ねるダイアログ。開いたら中の最初の入力欄 (無ければ最後のボタン) にフォーカスする。 */
+/** A dialog overlaid on the page. When opened, it focuses the first input inside (or the last button if none). */
 export function Modal({ title, onClose, children }: ModalProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);

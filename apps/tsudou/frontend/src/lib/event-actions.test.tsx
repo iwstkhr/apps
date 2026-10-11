@@ -60,8 +60,8 @@ const event: EventView = {
   createdAt: '2030-01-01T00:00:00.000Z',
   expiresAt: 2_000_000_000,
 };
-const key = { answerId: answer.id, editToken: 'test-edit-token' }; // leak-guard:ignore テスト専用のダミー
-const manageToken = 'test-manage-token'; // leak-guard:ignore テスト専用のダミー
+const key = { answerId: answer.id, editToken: 'test-edit-token' }; // leak-guard:ignore dummy value for tests only
+const manageToken = 'test-manage-token'; // leak-guard:ignore dummy value for tests only
 const draft = { name: ' guest ', message: '  ', choices: { c1: 'YES' as const } };
 const values = { title: 'updated', fee: null, memo: null, candidates: event.candidates };
 
@@ -90,7 +90,7 @@ function wrapperFor(client: ReturnType<typeof createQueryClient>) {
     </QueryClientProvider>
   );
 }
-/** 確認ダイアログが出る操作を始め、ダイアログのボタンを押して操作の結果を返す */
+/** Start an action that shows a confirmation dialog, press a dialog button, and return the action's result */
 async function answerConfirm<T>(action: () => Promise<T>, button: string) {
   let pending!: Promise<T>;
   act(() => {

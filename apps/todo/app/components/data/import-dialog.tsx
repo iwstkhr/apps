@@ -49,7 +49,7 @@ export function ImportDialog({
         <button type="button" className={dangerButtonClass} onClick={() => onConfirm('replace')}>
           {t('置き換え')}
         </button>
-        {/* 開いたときはマージ (最後のボタン) にフォーカスする */}
+        {/* Focus the merge button (the last one) when opened */}
         <button type="button" className={primaryButtonClass} onClick={() => onConfirm('merge')}>
           {t('マージ')}
         </button>

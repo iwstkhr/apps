@@ -10,13 +10,13 @@ interface StatusTabsProps {
 }
 
 /**
- * 一覧の上に横に並べるステータスの絞り込み。選んでいるフォルダの中の件数を出す。
- * 文字だけのタブは見落としやすいので、枠のある溝の中で選んだものを浮かせるセグメントの形にする。
- * 狭い画面では折り返さずに横にスクロールする。
+ * Status filters laid out horizontally above the list, showing counts within the selected folder.
+ * Text-only tabs are easy to miss, so they take a segmented form where the selected one is raised inside a bordered track.
+ * On narrow screens they scroll horizontally instead of wrapping.
  */
 export function StatusTabs({ value, counts, onChange }: StatusTabsProps) {
   return (
-    // fieldset は既定で中身より狭くならないので、min-w-0 で横スクロールできるようにする
+    // A fieldset does not shrink below its content by default, so min-w-0 allows horizontal scrolling
     <fieldset className="flex w-fit min-w-0 max-w-full gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-slate-100 p-1 [scrollbar-width:thin] dark:border-slate-800 dark:bg-slate-950">
       <legend className="sr-only">{t('ステータス')}</legend>
       {STATUS_FILTER_OPTIONS.map((option) => (

@@ -19,7 +19,7 @@ describe('StatusTabs', () => {
     expect(icon(/^保留/)).toHaveStyle({ color: '#a855f7' });
     expect(icon(/^完了/)).toHaveStyle({ color: '#059669' });
 
-    // 形でも見分けられる (アイコンが全部違う)
+    // Statuses are also distinguishable by shape (every icon differs)
     const shapes = [/^すべて/, /^未着手/, /^進行中/, /^保留/, /^完了/].map((name) =>
       screen.getByRole('button', { name }).querySelector('svg path')?.getAttribute('d'),
     );

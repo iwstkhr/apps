@@ -9,11 +9,11 @@ import {
 import { cn } from '~/lib/cn';
 import type { StatusFilter } from '~/lib/todo-filters';
 
-// 色だけに頼らないよう形も変える。色は白い背景・ダークモード・濃いサイドバーのどのテーマでも
-// アイコンとして 3:1 以上の明るさの差が出るものにする。
-// 濃いサイドバーでは style の無いアイコンを白くする CSS (themes.css) があるので、色は style で付ける
+// Shapes also differ so color is not the only cue. Colors are chosen so that, as icons, they reach a brightness contrast of
+// at least 3:1 in every theme: white background, dark mode, and dark sidebars.
+// themes.css turns icons without a style white in dark sidebars, so colors are set through style
 const STATUS_ICONS: Record<StatusFilter, { Icon: IconType; color?: string }> = {
-  // すべては色を付けず、フォルダ欄の「すべて」と同じ見た目にする
+  // すべて has no color and looks the same as 「すべて」 in the folder pane
   all: { Icon: FaLayerGroup },
   todo: { Icon: FaRegCircle, color: '#7a889c' },
   in_progress: { Icon: FaPlayCircle, color: '#3b82f6' },
@@ -21,7 +21,7 @@ const STATUS_ICONS: Record<StatusFilter, { Icon: IconType; color?: string }> = {
   done: { Icon: FaCheckCircle, color: '#059669' },
 };
 
-/** ステータスを表すアイコン。文字のラベルと並べて使う飾りなので読み上げない。 */
+/** An icon representing a status. It is decoration placed next to a text label, so it is not read aloud. */
 export function StatusIcon({ status, className }: { status: StatusFilter; className?: string }) {
   const { Icon, color } = STATUS_ICONS[status];
   return (

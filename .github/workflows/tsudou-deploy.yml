@@ -1,6 +1,6 @@
 name: "tsudou - Deploy"
 
-# 画面（静的アセット）と API（Express + D1）を 1 つの Cloudflare Worker として公開する。
+# Publish the UI (static assets) and the API (Express + D1) as a single Cloudflare Worker.
 on:
   push:
     branches: [main]
@@ -10,7 +10,7 @@ on:
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - '.github/workflows/tsudou-deploy.yml'
-  # 手動でデプロイし直すときに使う
+  # Used to redeploy manually
   workflow_dispatch:
 
 permissions:
@@ -27,7 +27,7 @@ defaults:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # シークレットは依存パッケージのスクリプトから読まれないよう、Cloudflare を操作するステップにだけ渡す
+    # Pass secrets only to the steps that call Cloudflare so that dependency scripts cannot read them
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -40,12 +40,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Worker が静的アセットとして配信する apps/tsudou/frontend/dist/ を作る
+      # Build apps/tsudou/frontend/dist/, which the Worker serves as static assets
       - name: Build frontend
         run: pnpm run build
 
-      # 初回だけデータベースを作る。wrangler deploy の自動作成はリージョンを指定できず、
-      # マイグレーションより後に走るので使わない。apps/tsudou/backend/wrangler.jsonc は名前で引くので ID の書き戻しは要らない
+      # Create the database only on the first run. wrangler deploy's auto-provisioning cannot choose a region
+      # and runs after migrations, so it is not used. apps/tsudou/backend/wrangler.jsonc looks the database up by name, so the ID need not be written back
       - name: Create D1 database if missing
         working-directory: apps/tsudou/backend
         env:
@@ -55,7 +55,7 @@ jobs:
           pnpm exec wrangler d1 info tsudou > /dev/null ||
             pnpm exec wrangler d1 create tsudou --location apac --no-update-config
 
-      # 新しいコードが新しいスキーマを前提にできるよう、Worker より先に流す（適用済みのものは飛ばされる）
+      # Apply migrations before the Worker so that new code can rely on the new schema (already applied ones are skipped)
       - name: Apply D1 migrations
         working-directory: apps/tsudou/backend
         env:
@@ -63,7 +63,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler d1 migrations apply tsudou --remote
 
-      # 設定は apps/tsudou/backend/wrangler.jsonc。SPA のフォールバックとレスポンスヘッダ（apps/tsudou/frontend/public/_headers）もここで効く
+      # Configured in apps/tsudou/backend/wrangler.jsonc. The SPA fallback and response headers (apps/tsudou/frontend/public/_headers) also take effect here
       - name: Deploy
         working-directory: apps/tsudou/backend
         env:
@@ -71,7 +71,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler deploy
 
-  # 成否どちらも Slack に流す。push と手動実行だけなのでシークレットは常に読める
+  # Report both success and failure to Slack. Only push and manual runs trigger this, so secrets are always readable
   notify:
     name: Notify
     needs: deploy

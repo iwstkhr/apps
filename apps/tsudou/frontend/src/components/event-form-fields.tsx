@@ -14,11 +14,11 @@ import { fieldError } from './field-error';
 import { Field, Input, Textarea } from './ui';
 
 /**
- * `useForm<EventFormValues>` が返すフォームの型。
- * TanStack Form は型引数が多いため、バリデータの型は any 相当で受ける
- * (このコンポーネントは values の形しか使わない)。
+ * The form type returned by `useForm<EventFormValues>`.
+ * TanStack Form has many type parameters, so validator types are accepted as roughly any
+ * (this component only uses the shape of values).
  */
-// biome-ignore-start lint/suspicious/noExplicitAny: TanStack Form の型引数は any 相当で受ける
+// biome-ignore-start lint/suspicious/noExplicitAny: accept TanStack Form type parameters as roughly any
 export type EventForm = ReactFormExtendedApi<
   EventFormValues,
   any,
@@ -33,11 +33,11 @@ export type EventForm = ReactFormExtendedApi<
   any,
   any
 >;
-// biome-ignore-end lint/suspicious/noExplicitAny: 型エイリアスの範囲のみ
+// biome-ignore-end lint/suspicious/noExplicitAny: only for the type alias
 
 /**
- * イベント名・日時候補・参加費・メモの入力欄。
- * 作成 (Home) と編集 (EventEditForm) で同じ検証ルールを使うため共通化している。
+ * Inputs for the event name, candidate dates, fee, and memo.
+ * Shared so that creating (Home) and editing (EventEditForm) use the same validation rules.
  */
 export function EventFormFields({
   form,
@@ -46,7 +46,7 @@ export function EventFormFields({
 }: {
   form: EventForm;
   disabled: boolean;
-  /** 作成時だけ過去の日時を拒否する。編集では開催済みの候補を残したまま保存できるようにする。 */
+  /** Reject past date-times only when creating. Editing allows saving with past candidates kept. */
   rejectPastCandidates?: boolean;
 }) {
   useLanguage();

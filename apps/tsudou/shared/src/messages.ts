@@ -1,9 +1,9 @@
 /**
- * サーバ (backend/src/validate.ts) とフロント (frontend/src/lib/form-validators.ts) が共有する
- * バリデーション文言。同じ検査を両側で行うため、文言が片方だけズレないよう
- * ここを唯一の定義とする。
+ * Validation messages shared by the server (backend/src/validate.ts) and the frontend (frontend/src/lib/form-validators.ts).
+ * Both sides run the same checks, so this is the single definition
+ * to keep the messages from drifting apart.
  *
- * ブラウザにもバンドルされるため、Node 専用の API は使えない (limits.ts と同じ制約)。
+ * This is also bundled for the browser, so Node-only APIs cannot be used (the same constraint as limits.ts).
  */
 
 export const requiredMessage = (label: string) => `${label}を入力してください`;
@@ -11,7 +11,7 @@ export const requiredMessage = (label: string) => `${label}を入力してくだ
 export const tooLongMessage = (label: string, max: number) =>
   `${label}は${max}文字以内で入力してください`;
 
-/** 候補日時に関する文言。両側で同じ検査をしている分だけを共有する。 */
+/** Messages about candidate dates. Only those for checks performed on both sides are shared. */
 export const CANDIDATE_MESSAGE = {
   none: '日時の候補を1つ以上追加してください',
   tooMany: (max: number) => `日時の候補は${max}件までです`,

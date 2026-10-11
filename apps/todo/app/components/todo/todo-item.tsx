@@ -44,7 +44,7 @@ const STATUS_CLASSES: Record<TodoStatus, string> = {
   done: 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
 };
 
-// 操作ボタンはクリックできることが分かるよう指のカーソルにする
+// Use the pointer cursor so the action buttons look clickable
 const iconButtonClass =
   'cursor-pointer rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
 
@@ -53,7 +53,7 @@ interface TodoItemProps {
   today: string;
   tagSuggestions: string[];
   folders: Folder[];
-  /** 表示するフォルダの道のり。今見ているフォルダと同じなら null */
+  /** The folder path to show. null when it is the folder being viewed */
   folderPath: string | null;
   onStatusChange: (id: string, status: TodoStatus) => void;
   onPriorityChange: (id: string, priority: Priority) => void;
@@ -106,7 +106,7 @@ export function TodoItem({
   }
 
   return (
-    // フォルダ欄へドラッグして別のフォルダに移せる
+    // Can be dragged onto the folder pane to move it to another folder
     <li
       data-todo-id={todo.id}
       className={cn(
@@ -121,7 +121,7 @@ export function TodoItem({
         type="checkbox"
         className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-blue-600"
         checked={done}
-        // 完了を外したときは未着手に戻す
+        // Unchecking done returns it to 未着手
         onChange={() => onStatusChange(todo.id, done ? 'todo' : 'done')}
         aria-label={t(done ? '「{0}」を未着手に戻す' : '「{0}」を完了にする', [todo.title])}
       />

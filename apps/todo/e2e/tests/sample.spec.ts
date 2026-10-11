@@ -13,12 +13,12 @@ test('shows sample todos and folders on the first visit only', async ({ page }) 
   const count = await todoItems(page).count();
   expect(count).toBeGreaterThan(1);
 
-  // 開き直しても増えない
+  // Reopening does not add more
   await page.reload();
   await expect(page.getByText('読み込み中…')).toBeHidden();
   await expect(todoItems(page)).toHaveCount(count);
 
-  // 全部ゴミ箱に入れて完全に消しても、もう入らない
+  // Even after moving everything to the trash and deleting it forever, samples are not added again
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
@@ -43,7 +43,7 @@ test('writes the samples in English for English browsers', async ({ browser }) =
   const context = await browser.newContext({ locale: 'en-US' });
   const page = await context.newPage();
   await page.goto('/');
-  // 一覧の名前も英語になるので、タイトルの文字で探す
+  // The names in the list are also in English, so search by the title text
   await expect(page.getByText('Welcome to TODO', { exact: true })).toBeVisible();
   await context.close();
 });

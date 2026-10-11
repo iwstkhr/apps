@@ -20,7 +20,7 @@ function renderConfirm() {
   return () => confirm;
 }
 
-/** 確認を始め、ダイアログで操作して結果を返す */
+/** Start a confirmation, act on the dialog, and return the result */
 async function settle(confirm: Confirm, operate: (dialog: HTMLElement) => void) {
   let pending!: Promise<boolean>;
   act(() => {

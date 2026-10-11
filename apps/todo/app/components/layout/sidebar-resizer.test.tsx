@@ -56,7 +56,7 @@ describe('SidebarResizer', () => {
     fireEvent.pointerUp(handle, { clientX: 160, pointerId: 1 });
     expect(document.body).not.toHaveClass('cursor-col-resize');
 
-    // 離した後は動かしても変わらない
+    // Moving after release changes nothing
     onChange.mockClear();
     fireEvent.pointerMove(handle, { clientX: 400, pointerId: 1 });
     expect(onChange).not.toHaveBeenCalled();

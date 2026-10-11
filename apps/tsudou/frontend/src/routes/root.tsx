@@ -10,7 +10,7 @@ export function Root() {
       <header className="theme-header border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
           <Link to="/" className="flex items-center gap-2 text-slate-900 dark:text-slate-50">
-            {/* リンク名はテキストの「Tsudou」で足りるので、アイコンは装飾扱い */}
+            {/* The text 「Tsudou」 is enough for the link name, so the icon is decorative */}
             <img src="/favicon.svg" alt="" width={24} height={24} className="size-6 shrink-0" />
             <span className="flex items-baseline gap-2">
               <span className="text-base font-bold tracking-tight">Tsudou</span>

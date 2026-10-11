@@ -4,7 +4,7 @@ import { writeServiceWorker } from './scripts/write-service-worker';
 
 export default {
   ssr: false,
-  // SPA の index.html が出来た後に、ビルド出力をすべて先読みする Service Worker を書き出す
+  // After the SPA's index.html is generated, write the Service Worker that precaches all build output
   async buildEnd({ reactRouterConfig }) {
     await writeServiceWorker(path.join(reactRouterConfig.buildDirectory, 'client'));
   },

@@ -7,9 +7,9 @@ import { Alert, Card } from '../components/ui';
 import { t, useLanguage } from '../lib/i18n';
 
 /**
- * 使い方のページ。画面キャプチャはサンプルデータで表示言語ごとに撮ったもので、
- * `pnpm run guide:capture` (frontend/scripts/capture-guide.mjs) で撮り直せる。
- * 画面の見た目を変えたら撮り直すこと。
+ * The guide page. The screenshots were taken with sample data for each display language
+ * and can be retaken with `pnpm run guide:capture` (frontend/scripts/capture-guide.mjs).
+ * Retake them whenever the UI's appearance changes.
  */
 
 const images = import.meta.glob<string>('../assets/guide/*/*.png', {
@@ -20,8 +20,8 @@ const images = import.meta.glob<string>('../assets/guide/*/*.png', {
 type ScreenshotName = keyof (typeof sizes)['ja'];
 
 /**
- * 表示言語の画面キャプチャ。幅・高さは撮影時に sizes.json へ書き出した
- * CSS ピクセル (2 倍解像度の画像の半分。レイアウトのずれ防止)。
+ * A screenshot for the display language. Width and height are the CSS pixels written to sizes.json
+ * at capture time (half of the 2x image, to prevent layout shift).
  */
 function Screenshot({
   name,
@@ -37,7 +37,7 @@ function Screenshot({
   const { width, height } = sizes[language][name];
   return (
     <figure className="space-y-2">
-      {/* スマートフォンでは縮小されて読みにくいので、タップで原寸を開けるようにする */}
+      {/* On smartphones the image is scaled down and hard to read, so tapping opens it at full size */}
       <a href={src} target="_blank" rel="noopener noreferrer" className="block">
         <img
           src={src}
@@ -85,8 +85,8 @@ export function Guide() {
   useLanguage();
   const { hash } = useLocation();
 
-  // /guide#guest のように直接開いたとき、ブラウザの自動スクロールは描画前に終わってしまうので、
-  // 描画後に自前で見出しまで移動する
+  // When opened directly, as with /guide#guest, the browser's automatic scrolling finishes before rendering,
+  // so scroll to the heading ourselves after rendering
   useEffect(() => {
     if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView();
   }, [hash]);
@@ -130,7 +130,7 @@ export function Guide() {
         </p>
       </Card>
 
-      {/* ------------------------------------------------------------ 主催者 */}
+      {/* -------------------------------------------------------------- Hosts */}
       <Card className="space-y-6">
         <div>
           <h2 id="host" className="scroll-mt-6 text-lg font-bold">
@@ -287,7 +287,7 @@ export function Guide() {
         </ol>
       </Card>
 
-      {/* ------------------------------------------------------------ 参加者 */}
+      {/* ------------------------------------------------------- Participants */}
       <Card className="space-y-6">
         <div>
           <h2 id="guest" className="scroll-mt-6 text-lg font-bold">
@@ -405,7 +405,7 @@ export function Guide() {
         </ol>
       </Card>
 
-      {/* ------------------------------------------------------ よくある質問 */}
+      {/* --------------------------------------------------------------- FAQ */}
       <Card className="space-y-4">
         <h2 id="faq" className="scroll-mt-6 text-lg font-bold">
           {t('よくある質問')}

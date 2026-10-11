@@ -29,7 +29,7 @@ export function exportFileName(now: Date = new Date()): string {
   return `todo-export-${toLocalDateString(now).replaceAll('-', '')}.json`;
 }
 
-/** JSON をファイルとして保存させる。 */
+/** Have the browser save JSON as a file. */
 export function downloadExport(data: StoredData, now: Date = new Date()): void {
   const json = JSON.stringify(createExport(data, now), null, 2);
   const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
@@ -39,7 +39,7 @@ export function downloadExport(data: StoredData, now: Date = new Date()): void {
   document.body.append(link);
   link.click();
   link.remove();
-  // クリック直後に解放するとダウンロードが始まらないブラウザがあるので少し待つ
+  // Some browsers do not start the download if the URL is revoked right after the click, so wait a little
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
@@ -48,11 +48,11 @@ export class ImportError extends Error {
 }
 
 export interface ParsedImport extends StoredData {
-  /** 形式が正しくない・重複していて読み飛ばした件数 (TODO とフォルダの合計) */
+  /** Number of entries skipped as malformed or duplicated (todos and folders combined) */
   skipped: number;
 }
 
-/** id が重複していたら更新日時が新しい方を残す。 */
+/** When ids collide, keep the one with the newer update time. */
 function dedupe<T extends { id: string; updatedAt: string }>(
   items: readonly unknown[],
   convert: (value: unknown) => T | null,
@@ -72,13 +72,13 @@ function dedupe<T extends { id: string; updatedAt: string }>(
   return { items: [...byId.values()], skipped };
 }
 
-/** 親の無いフォルダや存在しないフォルダを指す TODO を直す。 */
+/** Fix folders without a parent and todos that point to missing folders. */
 export function sanitizeData({ todos, folders }: StoredData): StoredData {
   const fixedFolders = sanitizeFolders(folders);
   return { folders: fixedFolders, todos: sanitizeTodoFolders(todos, fixedFolders) };
 }
 
-/** エクスポートしたファイルの中身 (文字列) を検証して TODO とフォルダを取り出す。 */
+/** Validate the contents (a string) of an exported file and extract the todos and folders. */
 export function parseImport(text: string): ParsedImport {
   let data: unknown;
   try {
@@ -122,7 +122,7 @@ function mergeById<T extends { id: string; updatedAt: string }>(
   return [...byId.values()];
 }
 
-/** 今のデータにインポートしたデータを合わせる。id が同じものは更新日時が新しい方を採る。 */
+/** Merge imported data into the current data. For matching ids, the one with the newer update time wins. */
 export function mergeData(current: StoredData, incoming: StoredData): StoredData {
   return sanitizeData({
     todos: mergeById(current.todos, incoming.todos),

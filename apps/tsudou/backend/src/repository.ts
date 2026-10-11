@@ -8,7 +8,7 @@ export type EventRecord = {
   candidates: Candidate[];
   closed: boolean;
   manageTokenHash: string;
-  /** 保持期限 (エポック秒)。過ぎたものは Cron Trigger が消す。 */
+  /** Retention deadline (epoch seconds). The Cron Trigger deletes records past it. */
   expiresAt: number;
   createdAt: string;
   updatedAt: string;
@@ -21,7 +21,7 @@ export type AnswerRecord = {
   message: string | null;
   choices: Choice[];
   editTokenHash: string;
-  /** イベントと同じ値。イベントと同時に消えるようにする。 */
+  /** Same value as the event's, so it is deleted together with the event. */
   expiresAt: number;
   createdAt: string;
   updatedAt: string;
@@ -36,15 +36,15 @@ export type EventPatch = Partial<
 export type AnswerPatch = Partial<Pick<AnswerRecord, 'name' | 'message' | 'choices'>>;
 
 /**
- * データアクセスの境界。本番は D1 実装 (d1-repository.ts)、
- * テストはインメモリ実装を差し込む。
+ * The data access boundary. Production plugs in the D1 implementation (d1-repository.ts),
+ * and tests plug in the in-memory one.
  */
 export interface Repository {
   createEvent(input: NewEvent): Promise<EventRecord>;
   getEvent(eventId: string): Promise<EventRecord | null>;
-  /** 候補を更新する場合、既存回答の選択も同じ処理で補正し、全体を原子的に保存する。 */
+  /** When candidates are updated, existing responses' choices are adjusted in the same operation, and everything is saved atomically. */
   updateEvent(eventId: string, patch: EventPatch): Promise<EventRecord>;
-  /** イベントと関連回答を一緒に削除する。他のイベントには影響しない。 */
+  /** Delete an event together with its responses. Other events are unaffected. */
   deleteEvent(eventId: string): Promise<void>;
 
   createAnswer(input: NewAnswer): Promise<AnswerRecord>;

@@ -7,11 +7,11 @@ import { t, useLanguage } from '../lib/i18n';
 import { Button, Input } from './ui';
 
 /**
- * 候補日時の一覧エディタ。TanStack Form の配列フィールド1つ
- * （`candidates`）の値と変更ハンドラを受け取る。
+ * A list editor for candidate dates. Receives the value and change handler
+ * of a single TanStack Form array field (`candidates`).
  *
- * 配列全体のエラー（件数・重複）は呼び出し側の Field が表示し、
- * ここでは行ごとの未入力・形式エラーだけを出す。
+ * Errors for the array as a whole (count, duplicates) are shown by the caller's Field;
+ * this only shows per-row errors for missing input and format.
  */
 export function CandidateEditor({
   value,
@@ -25,10 +25,10 @@ export function CandidateEditor({
   value: CandidateDraft[];
   onChange: (next: CandidateDraft[]) => void;
   onBlur?: () => void;
-  /** 行ごとのエラーを表示するか (フィールドが touched になってから true にする)。 */
+  /** Whether to show per-row errors (set to true once the field is touched). */
   showRowErrors?: boolean;
   max?: number;
-  /** 過去の日時を拒否する (イベント作成時)。ピッカーでも選べないよう min を付ける。 */
+  /** Reject past date-times (when creating an event). Also sets min so the picker cannot choose them. */
   rejectPast?: boolean;
   disabled?: boolean;
 }) {

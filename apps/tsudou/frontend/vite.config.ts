@@ -5,19 +5,19 @@ import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 
-/** オフラインでも画面を起動できるよう、install 時に取っておく public/ のファイル */
+/** Files in public/ fetched on install so the UI can start offline */
 const PRECACHE_PUBLIC = ['/favicon.svg'];
 
 /**
- * src/sw.js の先頭に、キャッシュの版 (VERSION) と先読みするファイル (PRECACHE) を足して
- * dist/sw.js を出力する。ビルド成果物のファイル名は毎回変わるので、ここで一覧を作る。
- * 画像 (使い方ページの画面キャプチャ) は大きいので先読みせず、開いたときにキャッシュする。
+ * Prepend the cache version (VERSION) and the files to precache (PRECACHE) to src/sw.js
+ * and output dist/sw.js. Build output file names change every time, so the list is built here.
+ * Images (the guide page screenshots) are large, so they are not precached and are cached when opened.
  */
 function serviceWorker(): Plugin {
   return {
     name: 'tsudou:service-worker',
     apply: 'build',
-    // index.html は Vite の HTML プラグインが generateBundle で出力するので、その後に動かす
+    // index.html is emitted by Vite's HTML plugin in generateBundle, so run after it
     enforce: 'post',
     generateBundle(_, bundle) {
       const files = Object.values(bundle)
@@ -49,8 +49,8 @@ function serviceWorker(): Plugin {
 export default defineConfig({
   plugins: [react(), tailwindcss(), serviceWorker()],
   server: {
-    // 本番では API が同じ Worker の /api 以下にあるので、開発時も同一オリジンに見せる。
-    // 転送先は `pnpm run dev:api` (backend で wrangler dev) の待ち受けポート
+    // In production the API is under /api in the same Worker, so development also makes it look same-origin.
+    // The target is the port that `pnpm run dev:api` (wrangler dev in backend) listens on
     proxy: { '/api': 'http://localhost:8080' },
   },
   test: {

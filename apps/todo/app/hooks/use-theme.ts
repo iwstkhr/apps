@@ -9,7 +9,7 @@ import {
   toTheme,
 } from '~/lib/themes';
 
-/** データとは別に、このブラウザの配色設定を保存する。 */
+/** Saves this browser's color settings separately from the data. */
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
   const [appearance, setAppearance] = useState<Appearance>('system');
@@ -20,7 +20,7 @@ export function useTheme() {
       setTheme(toTheme(localStorage.getItem(THEME_KEY)));
       setAppearance(toAppearance(localStorage.getItem(APPEARANCE_KEY)));
     } catch {
-      // 保存領域を使えなくてもテーマを選べる。
+      // Themes can be chosen even when storage is unavailable.
     }
     setRestored(true);
   }, []);
@@ -31,7 +31,7 @@ export function useTheme() {
     try {
       localStorage.setItem(THEME_KEY, theme);
     } catch {
-      // 保存できない場合も選択したテーマを適用する。
+      // Apply the chosen theme even when it cannot be saved.
     }
   }, [theme, restored]);
 
@@ -47,7 +47,7 @@ export function useTheme() {
     try {
       localStorage.setItem(APPEARANCE_KEY, appearance);
     } catch {
-      // 保存できない場合も明るさの設定を適用する。
+      // Apply the brightness setting even when it cannot be saved.
     }
     return () => media.removeEventListener('change', apply);
   }, [appearance, restored]);

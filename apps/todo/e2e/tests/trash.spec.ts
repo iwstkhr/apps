@@ -65,14 +65,14 @@ test('drops a todo on the trash and deletes it forever after confirming', async 
   await trashRow(page).click();
   const deleteForever = page.getByRole('button', { name: '「洗濯」を完全に削除' });
   await deleteForever.click();
-  // 誤って確定しないよう、最初はキャンセルにフォーカスがあり、Escape で取り消せる
+  // To prevent accidental confirmation, focus starts on cancel, and Escape cancels
   const dialog = page.getByRole('dialog', { name: '「洗濯」を完全に削除しますか？' });
   await expect(dialog).toContainText('この操作は元に戻せません。');
   await expect(dialog.getByRole('button', { name: 'キャンセル' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(trashItems(page)).toHaveCount(1);
-  // 閉じるとフォーカスは押したボタンに戻る
+  // Closing returns focus to the pressed button
   await expect(deleteForever).toBeFocused();
 
   await deleteForever.click();
@@ -98,6 +98,6 @@ test('empties the trash after confirming in the app dialog', async ({ page }) =>
   await page.getByRole('button', { name: 'ゴミ箱を空にする' }).click();
   await answerConfirmation(page, 'ゴミ箱の 2 件を完全に削除しますか？', '空にする');
   await expect(page.getByText('ゴミ箱は空です。')).toBeVisible();
-  // ブラウザ標準の確認ダイアログは出さない
+  // The browser's native confirmation dialog is not shown
   expect(dialogs).toBe(0);
 });

@@ -24,7 +24,7 @@ describe('ShareLinkBox', () => {
   });
 
   it('クリップボードに書き込めないときは、URL を選択した状態のダイアログで出す', async () => {
-    // jsdom には navigator.clipboard が無い。書き込みを拒否される環境を再現する
+    // jsdom has no navigator.clipboard. Reproduce an environment where writing is refused
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
@@ -51,7 +51,7 @@ describe('ShareLinkBox', () => {
       render(<ShareLinkBox label="共有用 URL" url={url} qrCode />);
       fireEvent.click(screen.getByRole('button', { name: 'QR コード' }));
     };
-    /** 閉じる操作のあと、フェードアウトを待ってから消えることを確かめる */
+    /** Check that after closing, it disappears only after the fade-out */
     const expectClosedAfterFade = () => {
       expect(dialog()).toHaveAttribute('data-closing');
       act(() => vi.advanceTimersByTime(QR_FADE_MS - 1));
@@ -97,7 +97,7 @@ describe('ShareLinkBox', () => {
       fireEvent.click(screen.getByText('周りの人に読み取られないよう、10 秒後に自動で閉じます。'));
       expect(dialog()).not.toHaveAttribute('data-closing');
 
-      // 背景のクリックは dialog 要素そのものへのクリックとして届く
+      // A backdrop click arrives as a click on the dialog element itself
       fireEvent.click(dialog() as HTMLElement);
       expectClosedAfterFade();
     });

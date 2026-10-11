@@ -68,7 +68,7 @@ describe('useTodos', () => {
     expect(result.current.todos[0]).toMatchObject({ title: 'b', status: 'in_progress' });
     expect((await getAll()).todos).toEqual(result.current.todos);
 
-    // 削除するとゴミ箱に移り、データは残る
+    // Deleting moves it to the trash and keeps the data
     await act(() => result.current.removeTodo(id));
     expect(result.current.todos).toEqual([]);
     expect(result.current.trash.map((todo) => todo.id)).toEqual([id]);
@@ -136,7 +136,7 @@ describe('useTodos', () => {
     const { result } = await renderLoaded();
     await act(() => result.current.removeTodo(todo.id));
     expect(await act(() => result.current.restoreTodos([todo.id]))).toBe(1);
-    // もう戻っている・完全に削除済みなら 0
+    // 0 if already restored or deleted forever
     expect(await act(() => result.current.restoreTodos([todo.id]))).toBe(0);
     await act(() => result.current.removeTodo(todo.id));
     await act(() => result.current.deleteTodosForever([todo.id]));
@@ -156,7 +156,7 @@ describe('useTodos', () => {
     expect(result.current.todos.map((t) => t.title).sort()).toEqual(['a', 'c']);
     expect(result.current.trash.map((t) => t.title)).toEqual(['b']);
 
-    // ゴミ箱の外のタスクは完全に削除しない
+    // Tasks outside the trash are never deleted forever
     await act(() => result.current.deleteTodosForever([c.id]));
     expect(result.current.todos.map((t) => t.title).sort()).toEqual(['a', 'c']);
 
@@ -195,7 +195,7 @@ describe('useTodos', () => {
       name: '案件 A',
       parentId: null,
     });
-    // DB は id 順に返すので順番は比べない
+    // The DB returns items in id order, so the order is not compared
     const stored = (await getAll()).folders;
     expect(stored).toHaveLength(2);
     expect(stored).toEqual(expect.arrayContaining(result.current.folders));
@@ -267,7 +267,7 @@ describe('useTodos', () => {
       });
       const stored = (await getAll()).todos;
       expect(stored).toHaveLength(2);
-      // 繰り返しは次の回に移る
+      // A repeating task moves to the next occurrence
       expect(stored.find((item) => item.id === todo.id)).toMatchObject({
         status: 'done',
         repeat: null,

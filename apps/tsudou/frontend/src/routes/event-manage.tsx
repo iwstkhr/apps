@@ -84,7 +84,7 @@ export function EventManage() {
       <Card>
         <h2 className="text-base font-bold">{t('内容を編集')}</h2>
         <div className="mt-4">
-          {/* key を変えることで、別イベントを開いたときにフォームを作り直す */}
+          {/* Changing key recreates the form when another event is opened */}
           <EventEditForm
             key={event.id}
             event={event}

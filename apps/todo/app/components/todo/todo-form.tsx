@@ -32,12 +32,12 @@ interface TodoFormProps {
   submitLabel: string;
   onSubmit: (input: TodoInput) => void | Promise<void>;
   onCancel?: () => void;
-  /** 追加フォームでは詳細項目を畳んでおく */
+  /** The add form keeps the detail fields collapsed */
   collapsible?: boolean;
-  /** 既存のタグ (入力候補) */
+  /** Existing tags (suggestions) */
   tagSuggestions?: string[];
   folders?: Folder[];
-  /** 追加フォームで入れる先のフォルダ。一覧で選んでいるフォルダに合わせて変わる */
+  /** The folder that the add form adds to. Follows the folder selected in the list */
   defaultFolderId?: string | null;
 }
 
@@ -62,11 +62,11 @@ export function TodoForm({
   const [folderId, setFolderId] = useState(initial.title ? initial.folderId : defaultFolderId);
   const [expanded, setExpanded] = useState(!collapsible);
   const isEditing = Boolean(initial.title);
-  // 追加フォーム (キャンセルがない) は検索欄と見分けられるよう、＋の印と「追加」と分かる文言を付ける
+  // The add form (which has no cancel) gets a + mark and wording that says 「追加」 so it is distinguishable from the search box
   const isAdding = !onCancel;
   const titleRef = useRef<HTMLInputElement>(null);
 
-  // 追加フォームは一覧で別のフォルダを選んだらそのフォルダに入れる
+  // The add form adds to another folder when that folder is selected in the list
   useEffect(() => {
     if (!isEditing) setFolderId(defaultFolderId);
   }, [isEditing, defaultFolderId]);
@@ -89,7 +89,7 @@ export function TodoForm({
       onSubmit={async (event) => {
         event.preventDefault();
         if (!canSubmit) {
-          // 追加ボタンは空でも押せる見た目にしているので、押されたらタイトル欄へ案内する
+          // The add button looks clickable even when empty, so pressing it guides the user to the title field
           titleRef.current?.focus();
           return;
         }
@@ -102,7 +102,7 @@ export function TodoForm({
           folderId,
           repeat,
         };
-        // 保存を待たずに空にして、続けて入力した文字が消えたり前の入力に混ざったりしないようにする
+        // Clear without waiting for the save so text typed next is not lost or mixed with the previous input
         if (!isEditing) reset();
         await onSubmit(input);
       }}
@@ -126,7 +126,7 @@ export function TodoForm({
             placeholder={t(isAdding ? '新しいタスクを入力…' : 'やること')}
             aria-label={t('タイトル')}
             maxLength={200}
-            // biome-ignore lint/a11y/noAutofocus: 編集を始めたらすぐ入力できるようにする
+            // biome-ignore lint/a11y/noAutofocus: allow typing as soon as editing starts
             autoFocus={Boolean(onCancel)}
           />
         </div>
@@ -141,7 +141,7 @@ export function TodoForm({
             {t('詳細')}
           </button>
         )}
-        {/* 編集フォームでは保存をキャンセルと並べて下に置く */}
+        {/* In the edit form, place save next to cancel at the bottom */}
         {isAdding && (
           <button type="submit" className={`${primaryButtonClass} shrink-0`}>
             <FaPlus className="h-3 w-3" aria-hidden="true" />
@@ -210,7 +210,7 @@ export function TodoForm({
               ))}
             </select>
           </label>
-          {/* 繰り返しは期限から次の回を数えるので、期限が無ければ今日から始めることを伝える */}
+          {/* Repeats count the next occurrence from the due date, so explain that it starts today when there is no due date */}
           {repeat !== null && dueDate === '' && (
             <p className="text-xs text-slate-500 sm:col-span-4 dark:text-slate-400">
               {t('期限が無いときは今日から始めます。')}

@@ -102,7 +102,7 @@ describe('filterByFolder / countOpenByFolder', () => {
     expect(titles(filterByFolder(todos, folders, 'work'))).toEqual(['docs', 'work']);
     expect(titles(filterByFolder(todos, folders, 'a'))).toEqual(['docs']);
     expect(titles(filterByFolder(todos, folders, 'unfiled'))).toEqual(['unfiled']);
-    // ゴミ箱の中身は画面側で出すので、ここでは何も返さない
+    // The trash contents are shown by the UI, so nothing is returned here
     expect(filterByFolder(todos, folders, 'trash')).toEqual([]);
   });
 

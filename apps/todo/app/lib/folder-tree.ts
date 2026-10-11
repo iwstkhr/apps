@@ -2,8 +2,8 @@ import type { Folder } from '~/types/folder';
 import type { Todo } from '~/types/todo';
 
 /**
- * 一覧で選んでいるフォルダ。'all' はすべて、'unfiled' はどのフォルダにも入っていない TODO、
- * 'trash' はゴミ箱 (ゴミ箱の中身は filterByFolder ではなく画面側で出す)。
+ * The folder selected in the list. 'all' is everything, 'unfiled' is todos in no folder,
+ * and 'trash' is the trash (its contents are shown by the UI, not by filterByFolder).
  */
 export type FolderSelection = 'all' | 'unfiled' | 'trash' | string;
 
@@ -28,8 +28,8 @@ function childrenMap(folders: readonly Folder[]): Map<string | null, Folder[]> {
 }
 
 /**
- * フォルダを木の順 (親の直後に子、兄弟は名前順) に並べる。
- * collapsed に入っているフォルダの子孫は出さない。
+ * Order folders as a tree (children right after their parent, siblings by name).
+ * Descendants of folders in collapsed are omitted.
  */
 export function flattenFolderTree(
   folders: readonly Folder[],
@@ -48,7 +48,7 @@ export function flattenFolderTree(
   return result;
 }
 
-/** 指定したフォルダとその子孫すべての id。 */
+/** The ids of the given folder and all its descendants. */
 export function getSubtreeIds(folders: readonly Folder[], id: string): Set<string> {
   const children = childrenMap(folders);
   const ids = new Set<string>();
@@ -62,7 +62,7 @@ export function getSubtreeIds(folders: readonly Folder[], id: string): Set<strin
   return ids;
 }
 
-/** 最上位から指定したフォルダまでの道のり。見つからなければ空。 */
+/** The path from the top level to the given folder. Empty if not found. */
 export function getFolderPath(folders: readonly Folder[], id: string | null): Folder[] {
   const byId = new Map(folders.map((folder) => [folder.id, folder]));
   const path: Folder[] = [];
@@ -82,7 +82,7 @@ export function formatFolderPath(folders: readonly Folder[], id: string | null):
     .join(' / ');
 }
 
-/** folder を newParentId の下へ動かすと、自分自身や子孫の下に入ってしまうか。 */
+/** Whether moving folder under newParentId would put it under itself or a descendant. */
 export function wouldCreateCycle(
   folders: readonly Folder[],
   folderId: string,
@@ -92,8 +92,8 @@ export function wouldCreateCycle(
 }
 
 /**
- * 親が存在しないフォルダや、親をたどると輪になるフォルダを最上位に置き直す。
- * インポートしたデータを信用しないため。
+ * Move folders whose parent is missing, or whose parent chain forms a cycle, to the top level.
+ * Imported data is not trusted.
  */
 export function sanitizeFolders(folders: readonly Folder[]): Folder[] {
   const byId = new Map(folders.map((folder) => [folder.id, folder]));
@@ -107,7 +107,7 @@ export function sanitizeFolders(folders: readonly Folder[]): Folder[] {
         seen.add(current.id);
         current = byId.get(current.parentId);
       }
-      // 親が無い、またはたどった先で自分に戻ってくる
+      // The parent is missing, or following the chain leads back to itself
       const broken = !byId.has(parentId) || (current !== undefined && seen.has(current.id));
       if (broken) parentId = null;
     }
@@ -116,7 +116,7 @@ export function sanitizeFolders(folders: readonly Folder[]): Folder[] {
   return [...fixed.values()];
 }
 
-/** 存在しないフォルダを指している TODO を未分類に戻す。 */
+/** Return todos that point to missing folders to 未分類. */
 export function sanitizeTodoFolders(todos: readonly Todo[], folders: readonly Folder[]): Todo[] {
   const ids = new Set(folders.map((folder) => folder.id));
   return todos.map((todo) =>
@@ -124,7 +124,7 @@ export function sanitizeTodoFolders(todos: readonly Todo[], folders: readonly Fo
   );
 }
 
-/** 選んでいるフォルダ (子孫を含む) に入っている TODO だけにする。 */
+/** Keep only todos in the selected folder (including descendants). */
 export function filterByFolder(
   todos: readonly Todo[],
   folders: readonly Folder[],
@@ -137,7 +137,7 @@ export function filterByFolder(
   return todos.filter((todo) => todo.folderId !== null && ids.has(todo.folderId));
 }
 
-/** フォルダごと (子孫を含む) の未完了の TODO の件数。'unfiled' と 'all' も入れる。 */
+/** Number of incomplete todos per folder (including descendants). Also includes 'unfiled' and 'all'. */
 export function countOpenByFolder(
   todos: readonly Todo[],
   folders: readonly Folder[],
@@ -155,7 +155,7 @@ export function countOpenByFolder(
       counts.set('unfiled', (counts.get('unfiled') ?? 0) + 1);
       continue;
     }
-    // 親をたどって数える (getFolderPath は呼ぶたびに Map を作るので使わない)
+    // Count by walking up the parents (getFolderPath is not used because it builds a Map on every call)
     const seen = new Set<string>();
     for (
       let folder = byId.get(todo.folderId);

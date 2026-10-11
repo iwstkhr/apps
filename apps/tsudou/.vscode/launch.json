@@ -16,8 +16,8 @@
       }
     },
     {
-      // ローカルの D1 にマイグレーションを流してから、API の Worker を wrangler dev で起動する。
-      // Worker は workerd の中で動くので node のデバッガはアタッチしない (wrangler dev の [d] で DevTools を開く)
+      // Apply migrations to the local D1, then start the API Worker with wrangler dev.
+      // The Worker runs inside workerd, so the node debugger is not attached (open DevTools with [d] in wrangler dev)
       "name": "api",
       "type": "node",
       "request": "launch",

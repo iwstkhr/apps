@@ -6,9 +6,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# wrangler (.wrangler/ にはローカルの D1 のデータも入る)
+# wrangler (.wrangler/ also holds the local D1 data)
 .wrangler/
-# `wrangler types` の生成物 (typecheck のたびに作り直す)
+# Output of `wrangler types` (regenerated on every typecheck)
 worker-configuration.d.ts
 
 # env / local

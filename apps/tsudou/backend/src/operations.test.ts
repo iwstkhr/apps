@@ -120,7 +120,7 @@ describe('保持期間 (TTL)', () => {
     const { eventId, manageToken } = await seedEvent();
     await answerAll(eventId, '山田', ['YES', 'NO']);
 
-    // 期限切れの削除は 1 日 1 回の Cron Trigger なので、レコードは残ったまま期限だけが過ぎる
+    // Expired events are deleted by a once-a-day Cron Trigger, so the record remains and only its expiry passes
     await repo.updateEvent(eventId, { expiresAt: Math.floor(Date.now() / 1000) - 1 } as never);
 
     expect(await ops.getEvent(repo, { eventId })).toBeNull();
@@ -128,7 +128,7 @@ describe('保持期間 (TTL)', () => {
       /NOT_FOUND/,
     );
     await expect(ops.deleteEvent(repo, { eventId, manageToken })).rejects.toThrow(/NOT_FOUND/);
-    // answerAll はヘルパ内で getEvent を呼ぶため、submitAnswer を直接叩く
+    // answerAll calls getEvent inside the helper, so call submitAnswer directly
     await expect(
       ops.submitAnswer(repo, { eventId, name: '佐藤', message: null, choices: [] }),
     ).rejects.toThrow(/NOT_FOUND/);
@@ -200,7 +200,7 @@ describe('updateEvent', () => {
     expect(updated.candidates).toHaveLength(3);
     expect(updated.answers[0]!.choices).toHaveLength(3);
     expect(updated.answers[0]!.choices[2]!.status).toBe('MAYBE');
-    // 既存の回答は維持される
+    // Existing responses are kept
     expect(updated.answers[0]!.choices[0]!.status).toBe('YES');
   });
 

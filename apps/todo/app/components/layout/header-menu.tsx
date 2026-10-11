@@ -21,9 +21,9 @@ const itemClass =
   'flex w-full items-center gap-2.5 rounded px-2.5 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800';
 
 /**
- * ヘッダー右端の「メニュー」。言語・テーマ・エクスポート・インポートをまとめる。
- * WAI-ARIA の menu の作法に合わせ、開くと最初の項目にフォーカスし、↑↓ / Home / End で移動、
- * Escape で閉じてボタンにフォーカスを戻す。Tab や外側のクリックでも閉じる。
+ * The 「メニュー」 at the right end of the header, grouping language, theme, export, and import.
+ * Following the WAI-ARIA menu pattern, opening it focuses the first item, ↑↓ / Home / End move,
+ * and Escape closes it and returns focus to the button. Tab and outside clicks also close it.
  */
 export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuProps) {
   const language = useLanguage();
@@ -54,7 +54,7 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
     buttonRef.current?.focus();
   };
 
-  /** 項目を選んだらメニューを閉じてから動かす (ダイアログなどにフォーカスが移るように)。 */
+  /** After an item is chosen, close the menu first and then act (so focus can move to a dialog, etc.). */
   const choose = (action: () => void) => {
     close();
     action();
@@ -80,7 +80,7 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
         event.preventDefault();
         return close();
       case 'Tab':
-        // Tab はメニューを閉じて、ページの次の要素へそのまま進める
+        // Tab closes the menu and moves on to the next element on the page
         setOpen(false);
     }
   };
@@ -96,7 +96,7 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((value) => !value)}
         onKeyDown={(event) => {
-          // ↓ や ↑ でも開ける
+          // ↓ and ↑ also open it
           if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
             event.preventDefault();
             setOpen(true);
@@ -104,7 +104,7 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
         }}
       >
         <FaEllipsisH aria-hidden="true" />
-        {/* 名前はどの幅でも「メニュー」。狭い画面では左の ☰ と並ぶので文字は出さず、読み上げだけにする */}
+        {/* The name is 「メニュー」 at every width. On narrow screens it sits next to ☰ on the left, so the text is hidden and only read aloud */}
         <span className="sr-only lg:not-sr-only lg:ml-1.5">{t('メニュー')}</span>
       </button>
 
@@ -116,10 +116,10 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
           aria-label={t('メニュー')}
           tabIndex={-1}
           onKeyDown={onMenuKeyDown}
-          // ヘッダーの配色 (濃いテーマでは白い文字) を引き継がないよう、色はここで決める
+          // Set the colors here so the header colors (white text in dark themes) are not inherited
           className="absolute top-full right-0 z-30 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-1.5 text-slate-900 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
-          {/* biome-ignore lint/a11y/useSemanticElements: role="menu" の中で menuitemradio をまとめるには group を使う (fieldset は menu の子にできない) */}
+          {/* biome-ignore lint/a11y/useSemanticElements: group is used to group menuitemradio inside role="menu" (fieldset cannot be a child of menu) */}
           <div role="group" aria-labelledby={`${menuId}-language`}>
             <p
               id={`${menuId}-language`}
@@ -161,7 +161,7 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
             type="button"
             role="menuitem"
             className={itemClass}
-            // 無効でもフォーカスは移せるよう disabled ではなく aria-disabled にする
+            // Use aria-disabled instead of disabled so that focus can still move to it
             aria-disabled={exportDisabled || undefined}
             title={t('すべての TODO を JSON ファイルに保存します')}
             onClick={() => {

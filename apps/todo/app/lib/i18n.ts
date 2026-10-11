@@ -1,10 +1,10 @@
 import { useSyncExternalStore } from 'react';
 import { english } from '~/lib/translations';
 
-// tsudou と同じく、日本語の文言をそのままキーにして英語の訳を引く。
-// タスク名やフォルダ名など、利用者が入力した内容は訳さない。
+// As in tsudou, the Japanese text itself is the key used to look up the English translation.
+// User-entered content such as task and folder names is not translated.
 
-// メニューにはこの順に並ぶ
+// Listed in the menu in this order
 export const LANGUAGES = [
   { id: 'en', label: 'English' },
   { id: 'ja', label: '日本語' },
@@ -13,10 +13,10 @@ export type Language = (typeof LANGUAGES)[number]['id'];
 export const LANGUAGE_KEY = 'todo:language';
 
 const listeners = new Set<() => void>();
-// 保存できない環境 (プライベートモードなど) で選んだ言語をこの画面の間だけ覚えておく
+// Remember the chosen language for this page only in environments that cannot save it (e.g. private mode)
 let unsavedLanguage: Language | null = null;
-// t() は描画のたびに何百回も呼ばれるので、localStorage は一度だけ読んで覚えておく。
-// undefined はまだ読んでいない、null は保存されていない
+// t() is called hundreds of times per render, so localStorage is read only once and cached.
+// undefined means not read yet; null means nothing is saved
 let savedLanguage: Language | null | undefined;
 
 function readSavedLanguage(): Language | null {
@@ -25,13 +25,13 @@ function readSavedLanguage(): Language | null {
     const saved = localStorage.getItem(LANGUAGE_KEY);
     savedLanguage = isLanguage(saved) ? saved : null;
   } catch {
-    // 保存領域を読めなくてもブラウザの言語で表示する
+    // Show the browser's language even when storage cannot be read
     savedLanguage = null;
   }
   return savedLanguage;
 }
 
-/** テスト用: 覚えている言語を忘れ、次は localStorage から読み直す。 */
+/** For tests: forget the cached language so it is read from localStorage again next time. */
 export function forgetSavedLanguageForTesting(): void {
   savedLanguage = undefined;
   unsavedLanguage = null;
@@ -41,7 +41,7 @@ function isLanguage(value: unknown): value is Language {
   return LANGUAGES.some((language) => language.id === value);
 }
 
-/** ブラウザの優先言語のうち、最初に対応しているもの。どれにも対応していなければ英語。 */
+/** The first supported language among the browser's preferred languages. English if none is supported. */
 export function getBrowserLanguage(): Language {
   if (typeof navigator === 'undefined') return 'en';
   const locales = navigator.languages?.length ? navigator.languages : [navigator.language];
@@ -52,12 +52,12 @@ export function getBrowserLanguage(): Language {
   return 'en';
 }
 
-/** 選んだ言語。まだ選んでいなければブラウザの言語に合わせる。 */
+/** The chosen language. Follows the browser's language if none has been chosen. */
 export function getLanguage(): Language {
   return unsavedLanguage ?? readSavedLanguage() ?? getBrowserLanguage();
 }
 
-/** html の lang・タブのタイトル・説明文を言語に合わせる。 */
+/** Match the html lang, the tab title, and the description to the language. */
 export function applyLanguage(language: Language): void {
   if (typeof document === 'undefined') return;
   document.documentElement.lang = language;
@@ -67,10 +67,10 @@ export function applyLanguage(language: Language): void {
     ?.setAttribute('content', translate(language, APP_DESCRIPTION));
 }
 
-/** ヘッダーのタイトル横とタブのタイトルに出す一言 */
+/** The tagline shown next to the header title and in the tab title */
 export const APP_TAGLINE = 'ブラウザで完結';
 
-/** ブラウザのタブに出す「TODO | 一言」 */
+/** "TODO | tagline" shown in the browser tab */
 export function appTitle(language: Language): string {
   return `TODO | ${translate(language, APP_TAGLINE)}`;
 }
@@ -92,7 +92,7 @@ export function setLanguage(language: Language): void {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  // 別のタブで言語を変えたらこのタブも合わせる
+  // Follow language changes made in another tab
   const onStorage = (event: StorageEvent) => {
     if (event.key === LANGUAGE_KEY || event.key === null) {
       unsavedLanguage = null;
@@ -109,16 +109,16 @@ function subscribe(listener: () => void) {
 }
 
 /**
- * 今の言語。言語が変わるとこのフックを使うコンポーネントが描き直される。
- * 画面の一番上 (Home) で使えば、その下は t() を呼ぶだけで切り替わる。
- * ビルド時に作る HTML には画面の中身が入らないので、サーバー側の値も同じ関数で求める。
+ * The current language. Components using this hook re-render when the language changes.
+ * Used at the top of the page (Home), everything below switches just by calling t().
+ * The HTML generated at build time contains no page content, so the server-side value comes from the same function.
  */
 export function useLanguage(): Language {
   return useSyncExternalStore(subscribe, getLanguage, getLanguage);
 }
 
 function translate(language: Language, source: string, values: readonly (string | number)[] = []) {
-  // 同じ日本語でも英語では言い分ける語は「日本語|文脈」をキーにする。日本語では | より前だけを出す
+  // Words that share one Japanese form but differ in English use "Japanese|context" as the key. Japanese shows only the part before |
   const japanese = source.split('|')[0] ?? source;
   const text = language === 'en' ? (english[source] ?? japanese) : japanese;
   return text.replace(/\{(\d+)\}/g, (match, index: string) =>
@@ -126,7 +126,7 @@ function translate(language: Language, source: string, values: readonly (string 
   );
 }
 
-/** アプリの文言を今の言語にする。{0} などは values で置き換える (値は訳さない)。 */
+/** Translate app text into the current language. Placeholders such as {0} are replaced with values (values are not translated). */
 export function t(source: string, values: readonly (string | number)[] = []): string {
   return translate(getLanguage(), source, values);
 }

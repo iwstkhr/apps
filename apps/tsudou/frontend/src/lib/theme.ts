@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { PALETTE_KEY, readThemePalette, THEME_PRESETS, type ThemePalette } from './theme-presets';
 
 /**
- * ライト / ダークの切り替え。選択は localStorage に覚え、
- * 「システム」のときは OS の設定 (prefers-color-scheme) に追従する。
+ * Switch between light and dark. The choice is remembered in localStorage,
+ * and 「システム」 follows the OS setting (prefers-color-scheme).
  *
- * 初回描画のチラつきを避けるため、index.html のインラインスクリプトでも
- * 同じキーを読んで <html data-theme> と theme-color を先に決めている。キーや値を変えるときは
- * そちらも合わせて直すこと。
+ * To avoid a flash on first render, the inline script in index.html also
+ * reads the same key and decides <html data-theme> and theme-color first. When changing keys or values,
+ * update it as well.
  */
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -16,7 +16,7 @@ export type ResolvedTheme = 'light' | 'dark';
 export const THEME_KEY = 'tsudou:theme';
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 
-/** ブラウザ UI (アドレスバーやインストール後のタイトルバー) の色。ヘッダの背景 (white / slate-900) に揃える */
+/** Color of the browser UI (address bar and the title bar after installation). Matches the header background (white / slate-900) */
 export const THEME_COLORS: Record<ResolvedTheme, string> = { light: '#ffffff', dark: '#0f172b' };
 
 export function readThemePreference(): ThemePreference {
@@ -33,7 +33,7 @@ function writeThemePreference(preference: ThemePreference): void {
     if (preference === 'system') localStorage.removeItem(THEME_KEY);
     else localStorage.setItem(THEME_KEY, preference);
   } catch {
-    // プライベートモードなど。次回開いたときに覚えていないだけなので無視してよい
+    // e.g. private mode. It only means the choice is not remembered next time, so this can be ignored
   }
 }
 

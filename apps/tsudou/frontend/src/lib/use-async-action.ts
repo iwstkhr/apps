@@ -3,15 +3,15 @@ import { useCallback } from 'react';
 import { errorMessage } from './errors';
 
 /**
- * 「実行中フラグを立てる → 走らせる → 失敗したらメッセージを出す」という
- * 画面側の定型をまとめたもの。実体は TanStack Query の useMutation。
+ * Bundles the UI routine of "set a running flag → run → show a message on failure".
+ * Backed by TanStack Query's useMutation.
  *
- * 1 つの画面の操作 (保存・締切・削除など) で実行中フラグとエラーを共有したいので、
- * 操作ごとに useMutation を分けず、渡された処理をそのまま走らせる 1 つの mutation にしている。
- * 新しく run() すると前回のエラーは消える。
+ * Actions on one screen (save, close, delete, etc.) should share the running flag and error,
+ * so instead of one useMutation per action, a single mutation runs whatever it is given.
+ * A new run() clears the previous error.
  *
- * run() は成功したかどうかを boolean で返す。呼び出し側が成功時だけ
- * 後処理 (再取得・遷移) をしたい場合に使う。
+ * run() returns a boolean saying whether it succeeded, for callers that want to
+ * do follow-up work (refetching, navigation) only on success.
  */
 export function useAsyncAction() {
   const { mutateAsync, isPending, error } = useMutation({
@@ -24,7 +24,7 @@ export function useAsyncAction() {
         await mutateAsync(action);
         return true;
       } catch {
-        // エラーは error に入っている
+        // The error is in error
         return false;
       }
     },

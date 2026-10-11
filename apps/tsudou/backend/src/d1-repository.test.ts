@@ -5,8 +5,8 @@ import { createD1Repository, deleteExpired } from './d1-repository';
 import type { NewAnswer, NewEvent, Repository } from './repository';
 
 /**
- * wrangler.jsonc の D1 バインディングを、ローカルの D1 (workerd) で動かして検証する。
- * データはメモリにだけ置き (persist: false)、マイグレーションはテストの開始時に流す。
+ * Test the D1 binding in wrangler.jsonc against a local D1 (workerd).
+ * Data lives only in memory (persist: false), and migrations run at the start of the tests.
  */
 const MIGRATIONS_DIR = new URL('../migrations/', import.meta.url);
 
@@ -205,7 +205,7 @@ describe('d1Repository', () => {
     await repo.createEvent(newEvent({ id: 'new', expiresAt: 3000 }));
     await repo.createAnswer(newAnswer({ eventId: 'old', expiresAt: 1000 }));
 
-    // イベント 1 件と、外部キーで消えた回答 1 件
+    // One event, plus one response deleted through the foreign key
     expect(await deleteExpired(db, 2000)).toBe(2);
     expect(await repo.getEvent('old')).toBeNull();
     expect(await repo.getAnswer('answer-1')).toBeNull();

@@ -113,7 +113,7 @@ describe('validateCandidates', () => {
 
     expect(() => validateCandidates(past, { rejectPast: true, now })).toThrow(/過去/);
     expect(validateCandidates(past, { now })).toHaveLength(1);
-    // ちょうど現在は過去ではない
+    // Exactly now is not in the past
     expect(
       validateCandidates([{ startAt: iso(2030, 1, 1, 10) }], { rejectPast: true, now }),
     ).toHaveLength(1);
@@ -161,7 +161,7 @@ describe('validateChoices', () => {
 
   it('不正な状態を拒否する', () => {
     expect(() =>
-      // @ts-expect-error 壊れた入力を意図的に渡す
+      // @ts-expect-error intentionally pass broken input
       validateChoices([{ candidateId: 'c1', status: 'PROBABLY' }], candidates),
     ).toThrow(/回答の値/);
   });

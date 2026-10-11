@@ -1,5 +1,5 @@
 {
-  // Playwright のテストは Node.js で動き、ページの操作は Playwright の API 越しに行う
+  // Playwright tests run on Node.js and drive the page through the Playwright API
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023", "DOM"],

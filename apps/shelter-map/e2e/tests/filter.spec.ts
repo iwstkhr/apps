@@ -23,7 +23,7 @@ test.describe('絞り込み', () => {
     await expect(tableRows(page).first()).toContainText('川崎テスト公園');
     await expect(mapMarkers(page)).toHaveCount(1);
 
-    // 空にすると元に戻る
+    // Clearing it restores the original
     await page.getByPlaceholder('名前で絞り込み').fill('');
     await expect(resultCount(page)).toHaveText('4 件');
     await expect(mapMarkers(page)).toHaveCount(4);
@@ -62,7 +62,7 @@ test.describe('絞り込み', () => {
     await expect(page.getByPlaceholder('名前で絞り込み')).toBeHidden();
     await expect(toggle).toHaveClass(/bg-blue-100/);
 
-    // 閉じても絞り込みは残る
+    // The filter stays after closing
     await toggle.click();
     await expect(page.getByPlaceholder('名前で絞り込み')).toHaveValue('テスト');
   });

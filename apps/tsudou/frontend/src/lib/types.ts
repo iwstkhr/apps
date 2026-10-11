@@ -1,6 +1,6 @@
 /**
- * ドメイン型はサーバと共有する (shared/src/types.ts が唯一の定義)。
- * 表示用のラベルだけがフロント固有なのでここに置く。
+ * Domain types are shared with the server (shared/src/types.ts is the single definition).
+ * Only display labels are frontend-specific, so they live here.
  */
 export type {
   AnswerStatus,

@@ -1,13 +1,13 @@
-// 使い方ページ (src/routes/guide.tsx) の画面キャプチャを、サンプルデータで撮り直す。
+// Retake the screenshots for the guide page (src/routes/guide.tsx) with sample data.
 //
-// 前提: `pnpm run dev` (API と画面) を起動しておく (ローカルの D1 にサンプルの
-// イベントが言語ごとに 1 件ずつでき、最後に締め切った状態で残る)。ブラウザはインストール済みの
-// Google Chrome を使う (Playwright のブラウザはダウンロードしない)。
+// Prerequisite: start `pnpm run dev` (API and UI) (one sample event per language is created
+// in the local D1 and left closed at the end). The browser is the installed
+// Google Chrome (Playwright's browsers are not downloaded).
 //
 //   pnpm run guide:capture
 //
-// 画像は表示言語ごとに src/assets/guide/<ja|en>/ に上書きされ、寸法は
-// src/assets/guide/sizes.json に書き出される (guide.tsx が読む)。
+// Images are overwritten in src/assets/guide/<ja|en>/ per display language, and their dimensions
+// are written to src/assets/guide/sizes.json (read by guide.tsx).
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 import { english } from '../src/lib/translations.ts';
@@ -15,10 +15,10 @@ import { english } from '../src/lib/translations.ts';
 const BASE = process.env.GUIDE_BASE_URL ?? 'http://localhost:5173';
 const OUT = new URL('../src/assets/guide/', import.meta.url).pathname;
 const SCALE = 2;
-// URL 欄に出る localhost を本番風の表記に差し替える (トークンはサンプルなのでそのまま)
+// Replace the localhost shown in URL boxes with a production-like address (tokens are samples, so they stay)
 const SHOWN_ORIGIN = 'https://tsudou.example.com';
 
-/** 言語ごとのブラウザ設定とサンプルデータ。入力内容は翻訳されないので、言語ごとに用意する。 */
+/** Browser settings and sample data per language. Entered content is not translated, so it is prepared per language. */
 const LANGUAGES = {
   ja: {
     locale: 'ja-JP',
@@ -47,7 +47,7 @@ const LANGUAGES = {
   },
 };
 
-/** 候補日: 1 週間以上先の金曜 19:00 から 3 週ぶん。過去の日時は候補にできないので実行日から決める。 */
+/** Candidate dates: three weeks from a Friday 19:00 at least a week ahead. Past dates cannot be candidates, so they are based on the run date. */
 function candidateDates() {
   const first = new Date();
   first.setDate(first.getDate() + 7 + ((5 - first.getDay() + 7) % 7));
@@ -72,17 +72,17 @@ const maskOrigin = (page) =>
 
 const card = (page, text) => page.locator('section').filter({ hasText: text }).first();
 
-/** 画像の寸法 (CSS ピクセル)。guide.tsx の width / height に使う。 */
+/** Image dimensions (CSS pixels), used for width / height in guide.tsx. */
 const sizes = {};
 
-/** 1 言語ぶんを撮る。 */
+/** Capture one language. */
 async function capture(language) {
   const sample = LANGUAGES[language];
   const out = `${OUT}${language}/`;
   mkdirSync(out, { recursive: true });
   sizes[language] = {};
 
-  /** 画面の文言を、アプリと同じ翻訳表で撮影する言語に合わせる。 */
+  /** Match UI text to the language being captured, using the app's translation table. */
   const text = (source, ...values) =>
     (language === 'en' ? (english[source] ?? source) : source).replace(/\{(\d+)\}/g, (_, i) =>
       String(values[Number(i)]),
@@ -104,7 +104,7 @@ async function capture(language) {
     const page = locator.page();
     await page.waitForLoadState('networkidle');
     await page.mouse.move(0, 0);
-    // 再描画で戻らないよう、撮る直前に差し替える
+    // Replace right before capturing so re-rendering does not revert it
     await maskOrigin(page);
     // A flash message or query update may rerender URL fields during screenshot capture.
     // Keep sample origins masked until capture completes.
@@ -124,7 +124,7 @@ async function capture(language) {
     const png = await locator.screenshot({ path: `${out}${name}.png`, animations: 'disabled' });
     await maskObserver.evaluate((observer) => observer.disconnect());
     await maskObserver.dispose();
-    // PNG の IHDR から幅・高さを読む
+    // Read the width and height from the PNG's IHDR
     sizes[language][name] = {
       width: Math.round(png.readUInt32BE(16) / SCALE),
       height: Math.round(png.readUInt32BE(20) / SCALE),
@@ -134,7 +134,7 @@ async function capture(language) {
 
   const dates = candidateDates();
 
-  // ------------------------------------------------------------ 主催者: 作成
+  // ------------------------------------------------------------- Host: create
   const host = await newPage();
   await host.goto(BASE);
   await host.getByLabel(text('イベント名')).fill(sample.title);
@@ -152,7 +152,7 @@ async function capture(language) {
   const [shareUrl, manageUrl] = await host.locator('code').allTextContents();
   await shot(card(host, text('イベントを作成しました')), 'host-created');
 
-  // -------------------------------------------------- 他の参加者の回答 (API)
+  // -------------------------------------------- Other participants' responses (API)
   const eventId = new URL(shareUrl).pathname.split('/')[2];
   const event = await (await fetch(`${BASE}/api/events/${eventId}`)).json();
   for (const [name, statuses, message] of sample.respondents) {
@@ -168,7 +168,7 @@ async function capture(language) {
     if (!res.ok) throw new Error(`回答の投入に失敗しました: ${res.status} ${await res.text()}`);
   }
 
-  // ------------------------------------------------------------ 参加者: 回答
+  // ---------------------------------------------------------- Participant: respond
   const guest = await newPage();
   await guest.goto(shareUrl);
   await guest.getByRole('heading', { name: sample.title }).waitFor();
@@ -191,7 +191,7 @@ async function capture(language) {
   await guest.getByText(text('回答を保存しました。')).waitFor();
   await shot(card(guest, text('自分の回答を編集')), 'guest-answered');
 
-  // ------------------------------------------------------------ 主催者: 管理
+  // ------------------------------------------------------------- Host: manage
   const manager = await newPage();
   await manager.goto(manageUrl);
   await manager.getByRole('heading', { name: text('イベントの管理') }).waitFor();
@@ -203,7 +203,7 @@ async function capture(language) {
   await manager.getByRole('button', { name: text('回答を締め切る') }).click();
   await manager.getByText(text('締切中です。参加者は回答できません。')).waitFor();
 
-  // --------------------------------------------------------- 参加者: 締切後
+  // --------------------------------------------------- Participant: after closing
   const late = await newPage();
   await late.goto(shareUrl);
   await late.getByText(text('このイベントは締め切られているため、回答できません。')).waitFor();

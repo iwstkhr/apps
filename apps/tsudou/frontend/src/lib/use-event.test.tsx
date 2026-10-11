@@ -78,7 +78,7 @@ describe('useEvent', () => {
     mockedGetEvent.mockRejectedValue(new ApiError('RATE_LIMITED', 'アクセスが集中しています'));
     await act(() => result.current.reload());
 
-    // キャッシュが失敗の状態になってからも、取得済みのイベントを出し続ける
+    // Keep showing the fetched event even after the cache enters the error state
     await waitFor(() =>
       expect(client.getQueryState(eventQueryKey('event-1'))?.status).toBe('error'),
     );

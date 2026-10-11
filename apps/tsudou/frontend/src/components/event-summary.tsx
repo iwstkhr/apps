@@ -12,7 +12,7 @@ export function EventSummary({ event }: { event: EventView }) {
       {event.memo && (
         <>
           <dt className="font-medium text-slate-500 dark:text-slate-400">{t('メモ')}</dt>
-          {/* 改行をそのまま見せたいので whitespace-pre-wrap。HTML は解釈しない */}
+          {/* whitespace-pre-wrap shows line breaks as is. HTML is not interpreted */}
           <dd className="whitespace-pre-wrap text-slate-900 dark:text-slate-100">{event.memo}</dd>
         </>
       )}

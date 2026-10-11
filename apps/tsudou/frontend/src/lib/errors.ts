@@ -1,4 +1,4 @@
-/** API が返す `{ error: { code, message } }` のエラーコード。 */
+/** Error codes in the `{ error: { code, message } }` returned by the API. */
 const SERVER_CODES = [
   'VALIDATION',
   'NOT_FOUND',
@@ -26,8 +26,8 @@ export class ApiError extends Error {
 }
 
 /**
- * エラーレスポンスのボディ (JSON をパースしたもの) を ApiError に変える。
- * 形が想定外 (Cloudflare 自体のエラーなど) でも必ず ApiError を返す。
+ * Convert an error response body (parsed JSON) into ApiError.
+ * Always returns ApiError, even for unexpected shapes (such as errors from Cloudflare itself).
  */
 export function parseApiError(body: unknown): ApiError {
   const error =

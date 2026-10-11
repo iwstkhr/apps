@@ -149,7 +149,7 @@ export function EventPublic() {
             )}
 
             <div className="mt-4">
-              {/* key を変えることで、対象が変わったときに下書きを作り直す */}
+              {/* Changing key recreates the draft when the target changes */}
               <AnswerForm
                 key={`${event.id}:${myAnswer?.id ?? 'new'}:${event.candidates.map((c) => c.id).join(',')}`}
                 candidates={event.candidates}

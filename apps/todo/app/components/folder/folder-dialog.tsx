@@ -24,9 +24,9 @@ const COLOR_PRESETS = [
 
 interface FolderDialogProps {
   folders: Folder[];
-  /** 編集するフォルダ。無ければ新しく作る */
+  /** The folder to edit. Creates a new one when absent */
   folder?: Folder;
-  /** 新しく作るときの親 */
+  /** The parent when creating a new one */
   defaultParentId?: string | null;
   onSubmit: (input: FolderInput) => void;
   onCancel: () => void;

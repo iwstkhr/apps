@@ -21,7 +21,7 @@ describe('expiresAtFrom', () => {
     const value = expiresAtFrom(from);
 
     expect(Number.isInteger(value)).toBe(true);
-    // ミリ秒で返していれば from.getTime() と同じ桁数になる
+    // Returning milliseconds would give the same number of digits as from.getTime()
     expect(value).toBe(Math.floor(Date.parse('2026-12-20T10:00:00.500Z') / 1000));
   });
 });

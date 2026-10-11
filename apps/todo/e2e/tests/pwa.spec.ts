@@ -20,7 +20,7 @@ test.describe('PWA', () => {
   test('opens with saved todos while offline', async ({ page, context }) => {
     await openApp(page);
     await addTodo(page, 'オフラインでも見える');
-    // 先読みが終わって、このページを Service Worker が受け持つまで待つ
+    // Wait until precaching finishes and the Service Worker controls this page
     await page.evaluate(async () => {
       await navigator.serviceWorker.ready;
       if (!navigator.serviceWorker.controller) {

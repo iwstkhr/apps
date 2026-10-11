@@ -1,61 +1,61 @@
-// Tsudou を 1 つの Cloudflare Worker で配信する。
-//  - /api/*  : API サーバ (Express)。データは D1
-//  - それ以外 : フロントエンドのビルド結果 (frontend/dist/) を静的アセットとして返す
-// 画面と API が同一オリジンになるので CORS は要らない。
+// Serve Tsudou from a single Cloudflare Worker.
+//  - /api/*  : the API server (Express), with data in D1
+//  - others  : the frontend build output (frontend/dist/) returned as static assets
+// The UI and API share one origin, so CORS is unnecessary.
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "tsudou",
   "main": "src/worker.ts",
   "compatibility_date": "2026-09-01",
-  // Express (node:http / node:crypto など) を動かすのに要る
+  // Required to run Express (node:http, node:crypto, etc.)
   "compatibility_flags": ["nodejs_compat"],
-  // 独自ドメインで公開する。DNS レコードと証明書は wrangler deploy が作る (wasabee.dev のゾーンが同じアカウントにあること)
+  // Publish on a custom domain. wrangler deploy creates the DNS record and certificate (the wasabee.dev zone must be in the same account)
   "routes": [{ "pattern": "tsudou.wasabee.dev", "custom_domain": true }],
-  // 本番の公開 URL は独自ドメインに一本化するため、本番の workers.dev は無効にする
+  // Disable workers.dev in production so that the custom domain is the only public URL
   "workers_dev": false,
-  // PR ごとのプレビュー (wrangler preview) は workers.dev で配信する。noindex ヘッダーが自動で付く。
-  // この設定は wrangler deploy で反映される
+  // Per-PR previews (wrangler preview) are served on workers.dev, which adds a noindex header automatically.
+  // This setting takes effect on wrangler deploy
   "preview_urls": true,
   "assets": {
-    // デプロイ前に `pnpm run build` (リポジトリ直下) でフロントエンドをビルドしておく
+    // Build the frontend with `pnpm run build` (in apps/tsudou/) before deploying
     "directory": "../frontend/dist",
-    // 未知のパスへのナビゲーションには index.html を 200 で返し、SPA のルーティングに任せる
+    // Return index.html with 200 for navigation to unknown paths and leave routing to the SPA
     "not_found_handling": "single-page-application",
-    // API のパスはアセットより先に Worker に渡す (/api/events/... を index.html にしない)。
-    // それ以外はアセットを先に探し、当たればそのまま返す (Worker は起動しない)
+    // API paths go to the Worker before assets (so /api/events/... never becomes index.html).
+    // Everything else looks for an asset first and returns it as is on a hit (the Worker does not run)
     "run_worker_first": ["/api/*"]
   },
   "d1_databases": [
     {
       "binding": "DB",
-      // database_id は置かない。wrangler がアカウント内のこの名前の DB を引く
-      // (初回だけ `wrangler d1 create tsudou` で作っておく。README 参照)
+      // No database_id. wrangler looks up the DB with this name in the account
+      // (create it once with `wrangler d1 create tsudou`; see the README)
       "database_name": "tsudou",
       "migrations_dir": "migrations"
     }
   ],
-  // 認証の無い公開 API なので、濫用に備えてクライアントの IP ごとにレートを絞る
+  // This public API has no authentication, so throttle per client IP against abuse
   "ratelimits": [
     {
       "name": "RATE_LIMITER",
-      // アカウント内で一意な任意の整数 (文字列)
+      // Any integer (as a string) unique within the account
       "namespace_id": "1001",
       "simple": { "limit": 100, "period": 60 }
     }
   ],
-  // 保持期間を過ぎたイベントと回答を消す (1 日 1 回、UTC 18:00 = JST 3:00)
+  // Delete events and responses past their retention period (once a day, 18:00 UTC = 03:00 JST)
   "triggers": { "crons": ["0 18 * * *"] },
   "observability": { "enabled": true },
-  // PR ごとのプレビュー (wrangler preview) の設定。バインディングは本番から引き継がれないので書き直す。
-  // Cron Trigger はプレビューでは動かないので、プレビュー用 DB の期限切れデータは
-  // GitHub Actions (.github/workflows/tsudou-preview-cleanup.yml) で毎日消す
+  // Settings for per-PR previews (wrangler preview). Bindings are not inherited from production, so they are redefined.
+  // Cron Triggers do not run in previews, so expired data in the preview DB is deleted
+  // daily by GitHub Actions (.github/workflows/tsudou-preview-cleanup.yml)
   "previews": {
     "d1_databases": [
       {
         "binding": "DB",
-        // 全プレビューで共有するプレビュー用 DB。本番の DB には触れない。
-        // マイグレーションは wrangler.preview-migrations.jsonc で流す (同じ DB を指すこと)。
-        // wrangler preview は名前から ID を引かないので database_id も書く
+        // The preview DB shared by all previews. The production DB is never touched.
+        // Migrations are applied with wrangler.preview-migrations.jsonc (which must point to the same DB).
+        // wrangler preview does not look up the ID by name, so database_id is also set
         "database_name": "tsudou-preview",
         "database_id": "1d900f6e-52b9-4c57-88d6-09ef713cbf92"
       }
@@ -63,16 +63,16 @@
     "ratelimits": [
       {
         "name": "RATE_LIMITER",
-        // 本番とカウンタを分けるため別の namespace_id にする
+        // A separate namespace_id keeps the counters apart from production
         "namespace_id": "1002",
         "simple": { "limit": 100, "period": 60 }
       }
     ]
   },
   "env": {
-    // e2e テスト (../e2e) のローカルサーバ用 (`wrangler dev --env e2e`)。デプロイには使わない。
-    // テストは同じ IP から短時間に多くのリクエストを送るので、レート制限だけを緩める。
-    // d1_databases と ratelimits は環境ごとに引き継がれないので、両方とも書き直す
+    // For the local server of the e2e tests (../e2e) (`wrangler dev --env e2e`). Not used for deployment.
+    // The tests send many requests from the same IP in a short time, so only the rate limit is relaxed.
+    // d1_databases and ratelimits are not inherited per environment, so both are redefined
     "e2e": {
       "d1_databases": [
         {

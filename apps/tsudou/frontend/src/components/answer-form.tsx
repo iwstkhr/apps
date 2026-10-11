@@ -18,9 +18,9 @@ const SELECTED_CLASS: Record<AnswerStatus, string> = {
 };
 
 /**
- * 下書きの状態は TanStack Form が持つ。
- * 対象が変わったとき (別のイベント / 自分の回答の有無) は呼び出し側が key を変えて
- * 作り直すことで初期値を入れ替える。親のエフェクトで setState する必要がない。
+ * TanStack Form holds the draft state.
+ * When the target changes (another event, or whether the user has a response), the caller changes the key
+ * to recreate it and swap in new initial values. No setState in a parent effect is needed.
  */
 export function AnswerForm({
   candidates,
@@ -74,13 +74,13 @@ export function AnswerForm({
         )}
       </form.Field>
 
-      {/* 候補ごとの出欠はキー付きのオブジェクト1つとして扱う */}
+      {/* Attendance per candidate is handled as a single keyed object */}
       <form.Field name="choices">
         {(field) => {
           const setStatus = (candidateId: string, status: AnswerStatus) =>
             field.handleChange({ ...field.state.value, [candidateId]: status });
 
-          /** 全候補をまとめて同じ回答にする (「全部だめ」などが1タップで済む)。 */
+          /** Set every candidate to the same answer (so things like "none work" take one tap). */
           const setAll = (status: AnswerStatus) =>
             field.handleChange(Object.fromEntries(candidates.map((c) => [c.id, status])));
 
@@ -127,7 +127,7 @@ export function AnswerForm({
                         {STATUSES.map((status) => {
                           const selected = current === status;
                           return (
-                            // biome-ignore lint/a11y/useSemanticElements: ボタン外観のまま radiogroup を組むため、input[type=radio] ではなく role で表現する
+                            // biome-ignore lint/a11y/useSemanticElements: builds a radiogroup that keeps the button look, so it uses roles instead of input[type=radio]
                             <button
                               key={status}
                               type="button"
@@ -184,7 +184,7 @@ export function AnswerForm({
         )}
       </form.Field>
 
-      {/* 検証エラーが残っている間は送信させない (未操作のうちは押せ、押すと検証が走る) */}
+      {/* Block submission while validation errors remain (it can be pressed while untouched, and pressing runs validation) */}
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
           <Button type="submit" loading={submitting} disabled={!canSubmit}>

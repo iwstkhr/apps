@@ -19,13 +19,13 @@ export function ShareLinkBox({
   description?: string;
   tone?: 'default' | 'warning';
   /**
-   * 「開く」ボタンを出す。新しいタブで開くので、元の画面 (作成完了画面など) は残る。
-   * トークンは URL のフラグメントに載っているため、新しいタブでもそのまま使える。
+   * Show the 「開く」 button. It opens a new tab, so the original screen (such as the created screen) remains.
+   * The token is in the URL fragment, so it works as is in the new tab.
    */
   openable?: boolean;
   /**
-   * 「QR コード」ボタンを出す。PC の画面からスマートフォンで開くときに使う。
-   * QR コードはモーダルで出し、一定時間で自動で閉じる (QrCodeDialog)。
+   * Show the 「QR コード」 button, used to open the URL on a smartphone from a PC screen.
+   * The QR code appears in a modal that closes automatically after a while (QrCodeDialog).
    */
   qrCode?: boolean;
 }) {
@@ -33,7 +33,7 @@ export function ShareLinkBox({
   const [copied, flashCopied] = useFlash(2000);
   const [qrOpen, setQrOpen] = useState(false);
   const [manualCopyOpen, setManualCopyOpen] = useState(false);
-  // QrCodeDialog のタイマーが再描画のたびに作り直されないよう、同じ関数を渡す
+  // Pass the same function so QrCodeDialog's timer is not recreated on every render
   const closeQr = useCallback(() => setQrOpen(false), []);
 
   const copy = async () => {
@@ -41,8 +41,8 @@ export function ShareLinkBox({
       await navigator.clipboard.writeText(url);
       flashCopied();
     } catch {
-      // クリップボード API が使えない環境 (http, 権限拒否など)。
-      // URL は画面に出ているので手動でコピーしてもらう。
+      // Environments where the Clipboard API is unavailable (http, permission denied, etc.).
+      // The URL is shown on screen, so the user copies it manually.
       setManualCopyOpen(true);
     }
   };
@@ -70,7 +70,7 @@ export function ShareLinkBox({
             {copied ? t('コピーしました') : t('コピー')}
           </Button>
           {openable && (
-            // opener を渡さない (noopener)。Referer は no-referrer で元から送らない
+            // Do not pass the opener (noopener). Referer is never sent anyway because of no-referrer
             <a
               href={url}
               target="_blank"
@@ -112,7 +112,7 @@ export function ShareLinkBox({
   );
 }
 
-/** クリップボードに書き込めないときに、URL を選択した状態で出して手でコピーしてもらう */
+/** When the clipboard cannot be written, show the URL selected so the user can copy it manually */
 function ManualCopyDialog({
   label,
   url,

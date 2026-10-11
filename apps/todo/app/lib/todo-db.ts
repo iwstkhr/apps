@@ -4,7 +4,7 @@ import { type Folder, toFolder } from '~/types/folder';
 import { type Todo, toTodo } from '~/types/todo';
 
 const DB_NAME = 'todo';
-// 2: フォルダの store を追加
+// 2: add the folder store
 const DB_VERSION = 2;
 const TODOS = 'todos';
 const FOLDERS = 'folders';
@@ -35,7 +35,7 @@ function openDb(): Promise<IDBDatabase> {
       for (const name of STORES) {
         if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: 'id' });
       }
-      // データベースを初めて作ったときだけサンプルを入れる。全部消した人や、すでに使っている人には入れない
+      // Add the samples only when the database is first created. Not for people who deleted everything or who already use the app
       if (event.oldVersion === 0) {
         const tx = request.transaction as IDBTransaction;
         const { todos, folders } = createSampleData(getLanguage());
@@ -45,7 +45,7 @@ function openDb(): Promise<IDBDatabase> {
     };
     request.onsuccess = () => {
       const db = request.result;
-      // 別タブで新しいバージョンが開かれたら閉じて、次の呼び出しで開き直す
+      // When a newer version is opened in another tab, close and reopen on the next call
       db.onversionchange = () => {
         db.close();
         dbPromise = null;
@@ -60,7 +60,7 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
-/** 1 つのトランザクションで両方の store を書き換え、完了まで待つ。途中で失敗したら何も変わらない。 */
+/** Rewrite both stores in one transaction and wait for completion. Nothing changes if it fails midway. */
 async function write(run: (stores: Record<StoreName, IDBObjectStore>) => void): Promise<void> {
   const db = await openDb();
   await new Promise<void>((resolve, reject) => {
@@ -72,7 +72,7 @@ async function write(run: (stores: Record<StoreName, IDBObjectStore>) => void): 
   });
 }
 
-/** 保存済みのデータを読む。toTodo() / toFolder() で形を確かめ、読めないものは捨てる。 */
+/** Read the saved data. toTodo() / toFolder() check the shape, and unreadable entries are dropped. */
 export async function getAll(): Promise<StoredData> {
   const db = await openDb();
   const tx = db.transaction(STORES, 'readonly');
@@ -86,7 +86,7 @@ export async function getAll(): Promise<StoredData> {
   };
 }
 
-/** TODO とフォルダをまとめて書き込む (追加・更新)。 */
+/** Write todos and folders together (add and update). */
 export function putAll({ todos = [], folders = [] }: Partial<StoredData>): Promise<void> {
   return write((stores) => {
     for (const todo of todos) stores.todos.put(todo);
@@ -98,7 +98,7 @@ export function putTodos(todos: readonly Todo[]): Promise<void> {
   return putAll({ todos: [...todos] });
 }
 
-/** TODO の書き込みと削除を 1 つのトランザクションで行う。 */
+/** Write and delete todos in one transaction. */
 export function putAndDeleteTodos(put: readonly Todo[], remove: readonly string[]): Promise<void> {
   return write((stores) => {
     for (const todo of put) stores.todos.put(todo);
@@ -112,7 +112,7 @@ export function deleteTodos(ids: readonly string[]): Promise<void> {
   });
 }
 
-/** フォルダを消し、中の TODO を書き換える (未分類に移す) のを 1 つのトランザクションで行う。 */
+/** Delete a folder and rewrite the todos inside (moving them to 未分類) in one transaction. */
 export function deleteFolders(ids: readonly string[], movedTodos: readonly Todo[]): Promise<void> {
   return write((stores) => {
     for (const id of ids) stores.folders.delete(id);
@@ -120,7 +120,7 @@ export function deleteFolders(ids: readonly string[], movedTodos: readonly Todo[
   });
 }
 
-/** すべて消してから書き込む (インポートの「置き換え」)。 */
+/** Delete everything, then write (the import's 「置き換え」). */
 export function replaceAll({ todos, folders }: StoredData): Promise<void> {
   return write((stores) => {
     stores.todos.clear();
@@ -130,7 +130,7 @@ export function replaceAll({ todos, folders }: StoredData): Promise<void> {
   });
 }
 
-/** テスト用: 開いている接続を閉じて忘れる。 */
+/** For tests: close and forget the open connection. */
 export async function closeDbForTesting(): Promise<void> {
   if (!dbPromise) return;
   const db = await dbPromise;

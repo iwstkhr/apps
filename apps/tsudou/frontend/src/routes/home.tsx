@@ -17,7 +17,7 @@ export function Home() {
   const create = useMutation({
     mutationFn: createEvent,
     onSuccess: ({ eventId, manageToken }) => {
-      // 管理トークンはここでしか受け取れない。メモリに持ったまま作成完了画面で管理用 URL を見せる
+      // The manage token can only be received here. Keep it in memory and show the manage URL on the created screen
       setManageToken(eventId, manageToken);
       void navigate(`/e/${eventId}/created`);
     },
@@ -31,8 +31,8 @@ export function Home() {
       memo: '',
       candidates: [defaultCandidate()],
     } satisfies EventFormValues,
-    // 送信中の表示はフォームの isSubmitting で出すので、ここでは完了まで待つ。
-    // 失敗は create.error に入るので、例外はここで止める
+    // The form's isSubmitting shows the submitting state, so just wait for completion here.
+    // Failures go into create.error, so the exception stops here
     onSubmit: ({ value }) => create.mutateAsync(eventFormToInput(value)).catch(() => {}),
   });
 
@@ -73,7 +73,7 @@ export function Home() {
 
                 {error && <Alert variant="error">{error}</Alert>}
 
-                {/* 検証エラーが残っている間は送信させない (未操作のうちは押せ、押すと検証が走る) */}
+                {/* Block submission while validation errors remain (it can be pressed while untouched, and pressing runs validation) */}
                 <Button type="submit" loading={isSubmitting} disabled={!canSubmit}>
                   {t('イベントを作成して URL を発行')}
                 </Button>

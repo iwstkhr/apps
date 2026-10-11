@@ -1,17 +1,17 @@
-// タスクをフォルダ欄へドラッグするときに DataTransfer に入れる形式。ほかのドラッグ (ファイルや文字) と区別するため独自の型にする
+// The DataTransfer type used when dragging a task onto the folder pane. A custom type distinguishes it from other drags (files or text)
 export const TODO_DRAG_TYPE = 'application/x-todo-id';
 
-// ドラッグ中の見た目 (タスク名だけの小さなラベル) を指先からずらす量 (px)。
-// ずらさないと、ブラウザ既定のカード全体の半透明画像がフォルダ欄に重なり、移動先の名前が読めない
+// How far (px) the drag image (a small label with only the task name) is offset from the pointer.
+// Without the offset, the browser's default translucent image of the whole card covers the folder pane and hides the target's name
 const DRAG_IMAGE_OFFSET = { x: 16, y: 20 };
 
 /**
- * ドラッグ中に指先の右下に出す、タスク名だけのラベルを作る。
- * setDragImage はその瞬間の見た目を写し取るので、画面外に置いて写したらすぐ消す。
+ * Create the label with only the task name that appears at the lower right of the pointer while dragging.
+ * setDragImage captures the appearance at that moment, so it is placed off screen, captured, and removed right away.
  */
 function createDragImage(title: string): HTMLElement {
   const wrapper = document.createElement('div');
-  // 余白の部分は透明なので、ラベルだけが指先から離れて表示される
+  // The padding is transparent, so only the label appears, away from the pointer
   Object.assign(wrapper.style, {
     position: 'fixed',
     top: '-1000px',
@@ -40,7 +40,7 @@ function createDragImage(title: string): HTMLElement {
 export function setDraggedTodo(dataTransfer: DataTransfer, todoId: string, title: string): void {
   dataTransfer.setData(TODO_DRAG_TYPE, todoId);
   dataTransfer.effectAllowed = 'move';
-  // setDragImage が無い環境 (テスト用の DOM など) では既定の見た目のままにする
+  // Keep the default appearance where setDragImage is missing (e.g. the test DOM)
   if (typeof dataTransfer.setDragImage !== 'function') return;
   const image = createDragImage(title);
   document.body.append(image);
@@ -48,7 +48,7 @@ export function setDraggedTodo(dataTransfer: DataTransfer, todoId: string, title
   setTimeout(() => image.remove(), 0);
 }
 
-/** ドラッグ中のものがタスクか。dragover の間は中身を読めないので型だけを見る。 */
+/** Whether the item being dragged is a task. Its data cannot be read during dragover, so only the type is checked. */
 export function isDraggingTodo(dataTransfer: DataTransfer | null): boolean {
   return dataTransfer !== null && [...dataTransfer.types].includes(TODO_DRAG_TYPE);
 }

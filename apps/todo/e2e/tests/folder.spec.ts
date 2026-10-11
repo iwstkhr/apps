@@ -70,7 +70,7 @@ test('moves a todo to another folder by drag and drop', async ({ page }) => {
   await page.getByRole('textbox', { name: 'メモ' }).fill('洗剤を用意する');
   await page.getByRole('button', { name: '保存', exact: true }).click();
 
-  // ヘッダーだけをつかめて、操作ボタンは指のカーソル
+  // Only the header can be grabbed, and the action buttons use the pointer cursor
   const card = todoItems(page).filter({ hasText: '洗濯' });
   const header = card.locator('[draggable="true"]');
   await expect(card).not.toHaveAttribute('draggable', 'true');
@@ -197,7 +197,7 @@ test('opens the folder list from a button on narrow screens', async ({ page }) =
   const toggle = page.locator('header').getByRole('button', { name: 'フォルダを開く' });
   await toggle.click();
   await createFolder(page, '買い物');
-  // フォルダを選ぶと一覧は畳まれ、ボタンに選んだフォルダが出る
+  // Choosing a folder collapses the list, and the button shows the chosen folder
   await expect(folderNav(page)).toBeHidden();
   await expect(page.getByRole('heading', { level: 2 })).toHaveText('買い物');
 });
@@ -224,7 +224,7 @@ test('resizes the folder pane by dragging and keeps the width after reloading', 
   await page.reload();
   await expect(handle).toHaveAttribute('aria-valuenow', '340');
 
-  // ダブルクリックで元の幅に戻る
+  // Double-clicking restores the default width
   await handle.dblclick();
   await expect(handle).toHaveAttribute('aria-valuenow', '240');
 });
@@ -236,11 +236,11 @@ test('keeps the folder pane as tall as the window while the list scrolls', async
   const pane = page.locator('#folder-sidebar');
   const header = (await page.locator('header').boundingBox())?.height ?? 0;
   const atTop = await pane.boundingBox();
-  // ヘッダーの下から画面の下端まで (上下に 16px の余白)
+  // From below the header to the bottom of the viewport (16px margin at top and bottom)
   expect(atTop?.y).toBeCloseTo(header + 16, 0);
   expect((atTop?.y ?? 0) + (atTop?.height ?? 0)).toBeCloseTo(600 - 16, 0);
 
-  // ページの一番下までスクロールしても動かない
+  // Does not move even when scrolled to the bottom of the page
   await page.mouse.wheel(0, 10_000);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   expect(await pane.boundingBox()).toEqual(atTop);
@@ -266,7 +266,7 @@ test('uses a modal slide-out menu without shifting tasks on narrow screens', asy
   expect(box?.x).toBe(0);
   expect(box?.width).toBeLessThanOrEqual(375 * 0.85);
 
-  // 最初の要素から Shift+Tab でメニューの最後 (ゴミ箱) に回り、外へは出ない
+  // Shift+Tab from the first element wraps to the last menu item (the trash) and does not leave
   await page.keyboard.press('Shift+Tab');
   await expect(menu.getByRole('button', { name: /^ゴミ箱/ })).toBeFocused();
   await page.keyboard.press('Tab');

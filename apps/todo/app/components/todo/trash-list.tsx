@@ -15,8 +15,8 @@ interface TrashListProps {
 }
 
 /**
- * ゴミ箱の中身。ゴミ箱のタスクは編集できないので、一覧のカードではなく
- * 名前・元の場所・自動で削除されるまでの日数と、元に戻す / 完全に削除のボタンだけを出す。
+ * The trash contents. Tasks in the trash cannot be edited, so instead of the list cards it shows only
+ * the name, the original location, the days left until automatic deletion, and restore / delete forever buttons.
  */
 export function TrashList({
   todos,
@@ -26,7 +26,7 @@ export function TrashList({
   onDeleteForever,
   onEmpty,
 }: TrashListProps) {
-  // 新しく入れたものを上に出す
+  // Show the most recently added first
   const sorted = [...todos].sort((a, b) => (b.deletedAt ?? '').localeCompare(a.deletedAt ?? ''));
 
   return (
@@ -56,7 +56,7 @@ export function TrashList({
                 key={todo.id}
                 className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
               >
-                {/* 狭い画面では名前を細くせず、ボタンを次の行に回す */}
+                {/* On narrow screens, move the buttons to the next line instead of squeezing the name */}
                 <div className="min-w-0 flex-[1_1_15rem]">
                   <p className="break-words font-medium text-slate-700 dark:text-slate-300">
                     {todo.title}

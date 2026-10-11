@@ -7,7 +7,7 @@ import { getAll, putTodos } from '~/lib/todo-db';
 import { createTodoFixture } from '~/test/fixtures';
 import { resetDb } from '~/test/indexed-db';
 
-// 期限切れのゴミ箱の削除だけを失敗させる
+// Fail only the deletion of expired trash
 vi.mock('~/lib/todo-db', async (importOriginal) => ({
   ...(await importOriginal<typeof import('~/lib/todo-db')>()),
   deleteTodos: vi.fn(() => Promise.reject(new Error('quota exceeded'))),
@@ -30,7 +30,7 @@ describe('useTodos purging expired trash', () => {
     expect(result.current.error).toBeNull();
     expect(result.current.todos.map((t) => t.title)).toEqual(['active']);
     expect(result.current.trash).toEqual([]);
-    // 消せなかったものは残り、次に開いたときにまた削除を試す
+    // Items that could not be deleted remain, and deletion is retried the next time the app opens
     expect((await getAll()).todos).toHaveLength(2);
   });
 });

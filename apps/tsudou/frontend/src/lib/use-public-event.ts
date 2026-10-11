@@ -8,7 +8,7 @@ import { useEvent } from './use-event';
 import { useAnswerKeyFromHash } from './use-event-keys';
 import { useFlash } from './use-flash';
 
-/** 公開イベントの取得、本人の回答、保存・削除後の再取得をまとめる。 */
+/** Bundles fetching the public event, the user's own response, and refetching after saving or deleting. */
 export function usePublicEvent(eventId: string | undefined, hash: string) {
   const state = useEvent(eventId);
   const { event, reload } = state;
@@ -18,7 +18,7 @@ export function usePublicEvent(eventId: string | undefined, hash: string) {
   const confirm = useConfirm();
   const [justSaved, flashSaved] = useFlash();
 
-  // 編集キーを持っていて、かつサーバ側にもその回答が残っている場合だけ「自分の回答」
+  // It is "your response" only when you hold the edit key and the server still has that response
   const myAnswer = mine ? event?.answers.find((a) => a.id === mine.answerId) : undefined;
   const keyIsStale = event !== null && mine !== null && myAnswer === undefined;
 
@@ -39,7 +39,7 @@ export function usePublicEvent(eventId: string | undefined, hash: string) {
         await updateAnswer({ answerId: myAnswer.id, editToken: mine.editToken, ...body });
       } else {
         const { answer, editToken } = await submitAnswer({ eventId, ...body });
-        // 編集キーはここでしか受け取れない。画面に回答編集 URL を出して持ち帰ってもらう
+        // The edit key can only be received here. Show the response edit URL so the user can keep it
         setAnswerKey(eventId, { answerId: answer.id, editToken });
       }
 

@@ -7,7 +7,7 @@ import { HeaderMenu } from '~/components/layout/header-menu';
 import { getLanguage, setLanguage } from '~/lib/i18n';
 
 beforeAll(() => {
-  // happy-dom の dialog は showModal を持たないことがあるので用意する
+  // happy-dom's dialog may lack showModal, so provide it
   HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
     this.open = true;
   };
@@ -55,7 +55,7 @@ describe('HeaderMenu', () => {
       'エクスポート',
       'インポート',
     ]);
-    // 最初の項目 (English) にフォーカスし、今の言語 (日本語) に印が付く
+    // Focus goes to the first item (English), and the current language (日本語) is marked
     expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveFocus();
     expect(screen.getByRole('menuitemradio', { name: '日本語' })).toBeChecked();
   });
@@ -119,14 +119,14 @@ describe('HeaderMenu', () => {
     await user.click(screen.getByRole('menuitem', { name: 'テーマ…' }));
     const dialog = screen.getByRole('dialog', { name: 'テーマ' });
 
-    // 中で押して背景で離した (文字の選択など) ときは閉じない
+    // Do not close when pressed inside and released on the backdrop (e.g. while selecting text)
     fireEvent.pointerDown(screen.getByRole('heading', { name: 'テーマ' }));
     fireEvent.click(dialog);
     expect(dialog).toHaveAttribute('open');
     await user.click(screen.getByRole('radio', { name: 'ダーク' }));
     expect(dialog).toHaveAttribute('open');
 
-    // 背景のクリックは dialog 要素そのものに届く
+    // A click on the backdrop reaches the dialog element itself
     fireEvent.pointerDown(dialog);
     fireEvent.click(dialog);
     expect(dialog).not.toHaveAttribute('open');

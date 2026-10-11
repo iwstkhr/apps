@@ -1,16 +1,16 @@
 export interface Folder {
   id: string;
   name: string;
-  /** null なら最上位 */
+  /** null means top level */
   parentId: string | null;
-  /** フォルダアイコンの色 (#rrggbb) */
+  /** Color of the folder icon (#rrggbb) */
   color: string;
   /** ISO 8601 */
   createdAt: string;
   updatedAt: string;
 }
 
-/** フォルダの作成・編集ダイアログで入力する項目。 */
+/** Fields entered in the folder create and edit dialog. */
 export interface FolderInput {
   name: string;
   parentId: string | null;
@@ -53,8 +53,8 @@ function isIsoDateTime(value: unknown): value is string {
 }
 
 /**
- * 外部から来た値 (インポートしたファイルや DB) を Folder に直す。
- * 必須項目が欠けていれば null を返す。親が存在するかはここでは見ない (sanitizeFolders が見る)。
+ * Convert an external value (an imported file or the DB) into a Folder.
+ * Returns null if a required field is missing. Whether the parent exists is not checked here (sanitizeFolders does).
  */
 export function toFolder(value: unknown): Folder | null {
   if (typeof value !== 'object' || value === null) return null;

@@ -17,7 +17,7 @@ test.describe('参加者', () => {
     const editUrl = await urlIn(guest, text('回答編集 URL'));
     expect(editUrl).toContain('#a=');
 
-    // 別のブラウザでも、回答編集 URL を開けば自分の回答を直せる
+    // Even in another browser, opening the response edit URL lets the respondent fix their response
     const sameGuest = await newUser();
     await sameGuest.goto(editUrl);
     await expect(sameGuest.getByLabel(text('お名前'))).toHaveValue('田中');

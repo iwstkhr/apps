@@ -18,8 +18,8 @@ import {
 export type { AnswerView, EventView } from '@tsudou/shared/types';
 
 /**
- * 公開してよいフィールドだけを持つ型に詰め替える。
- * manageTokenHash / editTokenHash は型に存在しないので構造的に漏れない。
+ * Copy into a type that has only the fields safe to expose.
+ * manageTokenHash / editTokenHash do not exist in the type, so they cannot leak structurally.
  */
 function toAnswerView(answer: AnswerRecord): AnswerView {
   return {
@@ -50,8 +50,8 @@ function toEventView(event: EventRecord, answers: AnswerRecord[]): EventView {
 }
 
 /**
- * 期限切れの削除は 1 日 1 回の Cron Trigger なので、期限を過ぎたレコードは
- * まだ読めてしまう。アプリ側では存在しないものとして扱う。
+ * Expired events are deleted by a once-a-day Cron Trigger, so records past their expiry
+ * can still be read. The app treats them as nonexistent.
  */
 async function findLiveEvent(repo: Repository, eventId: string): Promise<EventRecord | null> {
   const event = await repo.getEvent(eventId);
@@ -75,7 +75,7 @@ async function loadAnswer(repo: Repository, answerId: string): Promise<AnswerRec
   return answer;
 }
 
-/** 締切済みなら弾く。回答の新規作成と更新で共通。 */
+/** Reject if closed. Shared by creating and updating responses. */
 function assertOpen(event: EventRecord): void {
   if (event.closed) {
     throw new AppError('CLOSED', 'このイベントは締め切られています');
@@ -83,8 +83,8 @@ function assertOpen(event: EventRecord): void {
 }
 
 /**
- * 同じ名前の回答がすでにあれば弾く。
- * 更新時は自分自身を除外する (名前を変えずに保存できるように)。
+ * Reject if a response with the same name already exists.
+ * When updating, exclude the response itself (so it can be saved without changing the name).
  */
 function assertNameAvailable(
   answers: readonly AnswerRecord[],
@@ -97,7 +97,7 @@ function assertNameAvailable(
   }
 }
 
-/** 管理トークンを検証したうえでイベントを返す。 */
+/** Verify the manage token and return the event. */
 async function loadEventAsHost(
   repo: Repository,
   eventId: string,
@@ -119,7 +119,7 @@ export async function createEvent(repo: Repository, args: CreateEventArgs) {
 
   const event = await repo.createEvent({
     id: generateEventId(),
-    // 保持期間は作成時点から数える。以降の更新では延長しない。
+    // The retention period counts from creation. Later updates do not extend it.
     expiresAt: expiresAtFrom(),
     title: validateTitle(args.title),
     fee: validateFee(args.fee),
@@ -129,7 +129,7 @@ export async function createEvent(repo: Repository, args: CreateEventArgs) {
     manageTokenHash: hashToken(manageToken),
   });
 
-  // 管理トークンを平文で返すのはこの一度きり。以降はハッシュしか保持しない。
+  // This is the only time the manage token is returned in plain text. Afterwards only its hash is kept.
   return { eventId: event.id, manageToken };
 }
 
@@ -189,7 +189,7 @@ export async function submitAnswer(repo: Repository, args: SubmitAnswerArgs) {
   const answer = await repo.createAnswer({
     id: crypto.randomUUID(),
     eventId: event.id,
-    // イベントと同時に消えるよう、イベントの期限をそのまま引き継ぐ
+    // Inherit the event's expiry so the response is deleted together with the event
     expiresAt: event.expiresAt,
     name,
     message: normalizeOptionalText(args.message, 'メッセージ', LIMITS.messageMax),
@@ -197,7 +197,7 @@ export async function submitAnswer(repo: Repository, args: SubmitAnswerArgs) {
     editTokenHash: hashToken(editToken),
   });
 
-  // 編集キーを平文で返すのはこの一度きり。クライアントが localStorage に保持する。
+  // This is the only time the edit key is returned in plain text. The client keeps it in localStorage.
   return { answer: toAnswerView(answer), editToken };
 }
 
@@ -236,7 +236,7 @@ export type DeleteAnswerArgs = {
 export async function deleteAnswer(repo: Repository, args: DeleteAnswerArgs): Promise<void> {
   const answer = await loadAnswer(repo, args.answerId);
 
-  // 本人 (編集キー) かホスト (管理トークン) のどちらかであればよい
+  // Either the respondent (edit key) or the host (manage token) is enough
   const isOwner = verifyToken(args.editToken, answer.editTokenHash);
   let isHost = false;
   if (!isOwner && args.manageToken) {

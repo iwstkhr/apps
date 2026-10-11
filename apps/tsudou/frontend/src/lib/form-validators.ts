@@ -4,11 +4,11 @@ import type { CandidateDraft } from './candidate-draft';
 import { fromDateTimeLocal } from './format';
 
 /**
- * TanStack Form のフィールドバリデータ。エラーが無ければ undefined を返す。
+ * Field validators for TanStack Form. Return undefined when there is no error.
  *
- * サーバ側 (backend/src/validate.ts) が最終的な門番であり、ここは
- * 送信前に気づかせるための UI 上の検査。上限値は LIMITS を共有しているので
- * 片方だけがズレることはない。
+ * The server (backend/src/validate.ts) is the final gatekeeper; these are
+ * UI checks that catch problems before submission. Limits come from the shared LIMITS,
+ * so the two sides cannot drift apart.
  */
 
 export function validateRequiredText(
@@ -43,7 +43,7 @@ export const validateMemoValue = (value: string) =>
 export const validateMessageValue = (value: string) =>
   validateOptionalText(value, 'メッセージ', LIMITS.messageMax);
 
-/** 参加費は「空欄 = 未設定」。入力された場合のみ 0〜上限の整数を要求する。 */
+/** The fee is "blank = unset". Only when entered must it be an integer from 0 to the limit. */
 export function validateFeeValue(value: string): string | undefined {
   const trimmed = value.trim();
   if (trimmed === '') return undefined;
@@ -56,19 +56,19 @@ export function validateFeeValue(value: string): string | undefined {
   return undefined;
 }
 
-/** 空欄なら null (未設定) を返す。validateFeeValue を通過した値にのみ使う。 */
+/** Returns null (unset) when blank. Use only on values that passed validateFeeValue. */
 export function parseFeeValue(value: string): number | null {
   const trimmed = value.trim();
   return trimmed === '' ? null : Number(trimmed);
 }
 
 export type CandidateRules = {
-  /** 現在より前の日時を拒否する (イベント作成時)。編集では開催済みの候補を残せるよう許す。 */
+  /** Reject date-times before now (when creating an event). Editing allows keeping past candidates. */
   rejectPast?: boolean;
   now?: number;
 };
 
-/** 候補1行ぶんの検査。行ごとのメッセージ表示にも使う。 */
+/** Check one candidate row. Also used for per-row messages. */
 export function validateCandidateRow(
   draft: CandidateDraft,
   { rejectPast = false, now = Date.now() }: CandidateRules = {},
@@ -88,13 +88,13 @@ export function validateCandidatesValue(
   if (drafts.length > LIMITS.candidatesMax) return CANDIDATE_MESSAGE.tooMany(LIMITS.candidatesMax);
 
   const rowErrors = drafts.map((draft) => validateCandidateRow(draft, rules));
-  // 行ごとのメッセージ (validateCandidateRow) と重ならないよう、欄全体では要約だけ出す
+  // Show only a summary for the field as a whole so it does not duplicate the per-row messages (validateCandidateRow)
   if (rowErrors.includes(CANDIDATE_MESSAGE.past)) return '過去の日時の候補があります';
   if (rowErrors.some((error) => error !== undefined)) {
     return '入力されていない候補があります';
   }
 
-  // 同じ日時を2つ送るとサーバに弾かれるので、ここで気づかせる
+  // Sending the same date-time twice is rejected by the server, so catch it here
   const times = drafts.map((draft) => fromDateTimeLocal(draft.value));
   if (new Set(times).size !== times.length) return CANDIDATE_MESSAGE.duplicate;
 

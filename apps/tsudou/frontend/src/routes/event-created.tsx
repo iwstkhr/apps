@@ -11,14 +11,14 @@ export function EventCreated() {
   const { eventId } = useParams();
   const manageToken = useManageToken(eventId);
 
-  // 管理トークンはメモリにしか無く、再読み込みやタブを閉じると管理用 URL を二度と出せない。
-  // ブラウザ標準の確認ダイアログで、控えずに離れてしまうのを防ぐ。
-  // アプリ内の画面遷移ではトークンが残るので対象外 (beforeunload は発火しない)。
+  // The manage token exists only in memory, and after a reload or closing the tab the manage URL can never be shown again.
+  // The browser's native confirmation dialog prevents leaving without noting it down.
+  // Navigation within the app keeps the token, so it is not covered (beforeunload does not fire).
   useEffect(() => {
     if (!manageToken) return;
     const confirmLeave = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      // 古いブラウザは returnValue の設定が無いとダイアログを出さない
+      // Older browsers show no dialog unless returnValue is set
       e.returnValue = '';
     };
     window.addEventListener('beforeunload', confirmLeave);

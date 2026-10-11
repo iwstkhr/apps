@@ -5,9 +5,9 @@ import { afterEach, beforeEach } from 'vitest';
 import { setLanguage } from '~/lib/i18n';
 import { createEmptyDb } from '~/test/indexed-db';
 
-// 既存のテストは日本語の画面を前提にしている。英語やブラウザの言語に合わせる動きは
-// i18n のテストでそれぞれ設定して確かめる
+// Existing tests assume the Japanese UI. Following English or the browser language
+// is set up and checked in each i18n test
 beforeEach(() => setLanguage('ja'));
-// サンプルを入れずに空の状態から始める。サンプルはそれを確かめるテストで入れる
+// Start empty without samples. The tests that check samples add them
 beforeEach(createEmptyDb);
 afterEach(cleanup);

@@ -1,23 +1,23 @@
-// todo を Cloudflare Workers の静的アセットとして配信する (Worker のスクリプトは持たない)。
-// データはブラウザの IndexedDB にだけ保存し、サーバーには送らない。
-// デプロイ前に `pnpm run build` で build/client/ を作っておく。
+// Serve todo as static assets on Cloudflare Workers (no Worker script).
+// Data is stored only in the browser's IndexedDB and never sent to a server.
+// Run `pnpm run build` before deploying to create build/client/.
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "todo",
   "compatibility_date": "2026-09-01",
-  // 独自ドメインで公開する。DNS レコードと証明書は wrangler deploy が作る (wasabee.dev のゾーンが同じアカウントにあること)
+  // Publish on a custom domain. wrangler deploy creates the DNS record and certificate (the wasabee.dev zone must be in the same account)
   "routes": [{ "pattern": "todo.wasabee.dev", "custom_domain": true }],
-  // 本番の公開 URL は独自ドメインに一本化するため、本番の workers.dev は無効にする
+  // Disable workers.dev in production so that the custom domain is the only public URL
   "workers_dev": false,
-  // PR ごとのプレビュー (wrangler preview) は workers.dev で配信する。noindex ヘッダーが自動で付く。
-  // この設定は wrangler deploy で反映される
+  // Per-PR previews (wrangler preview) are served on workers.dev, which adds a noindex header automatically.
+  // This setting takes effect on wrangler deploy
   "preview_urls": true,
   "assets": {
     "directory": "./build/client",
-    // 未知のパスへのナビゲーションには index.html を 200 で返し、SPA のルーティングに任せる
+    // Return index.html with 200 for navigation to unknown paths and leave routing to the SPA
     "not_found_handling": "single-page-application"
   },
   "observability": { "enabled": true },
-  // プレビューは本番と同じ設定で良いので空にしておく (wrangler preview に必要)
+  // Previews use the same settings as production, so leave this empty (required by wrangler preview)
   "previews": {}
 }

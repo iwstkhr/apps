@@ -1,7 +1,7 @@
 name: "shelter-map - Test"
 
-# 型チェックとユニットテスト (Vitest) を回し、e2e テスト (Playwright) も回す。
-# Lint とフォーマット (Biome) はリポジトリ直下の pre-commit.yml が見る。
+# Run type checks and unit tests (Vitest), then e2e tests (Playwright).
+# Lint and formatting (Biome) are checked by pre-commit.yml at the repository root.
 on:
   pull_request:
     paths:
@@ -36,7 +36,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     outputs:
-      # ジョブの if ではシークレットを読めないので、Slack の設定があるかだけを渡す
+      # Job-level if conditions cannot read secrets, so pass only whether Slack is configured
       slack-enabled: ${{ secrets.SLACK_BOT_TOKEN != '' && secrets.SLACK_CHANNEL_ID != '' }}
     steps:
       - name: Checkout
@@ -56,8 +56,8 @@ jobs:
       - name: Test
         run: pnpm run test
 
-  # 本番ビルドを wrangler dev で配信して画面を操作する。地図タイルはテスト側で差し替えるので外部には取りに行かない。
-  # ブラウザはランナーにインストール済みの Google Chrome を使う
+  # Serve the production build with wrangler dev and drive the UI. Map tiles are stubbed by the tests, so nothing is fetched from outside.
+  # Use the Google Chrome already installed on the runner
   e2e:
     name: E2E
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
       - name: E2E test
         run: pnpm run test:e2e
 
-      # 失敗の原因を追えるよう、レポート (トレース付き) を残す
+      # Keep the report (with traces) so failures can be investigated
       - name: Upload report
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -85,7 +85,7 @@ jobs:
           path: apps/shelter-map/e2e/playwright-report/
           retention-days: 7
 
-  # 失敗したときだけ Slack に流す。フォークからの PR ではシークレットが読めないので飛ばす
+  # Report to Slack only on failure. Skip PRs from forks because they cannot read secrets
   notify:
     name: Notify
     needs: [test, e2e]

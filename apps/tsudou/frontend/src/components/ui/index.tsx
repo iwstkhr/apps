@@ -28,7 +28,7 @@ const BUTTON_VARIANTS = {
     'bg-white text-red-600 ring-1 ring-red-300 ring-inset hover:bg-red-50 focus-visible:outline-red-600 dark:bg-slate-800 dark:text-red-400 dark:ring-red-800 dark:hover:bg-red-950',
 } as const;
 
-/** ボタンの見た目。<a> をボタンとして見せたいとき (外部・新しいタブで開くリンク) にも使う。 */
+/** The button look. Also used to present an <a> as a button (links that open externally or in a new tab). */
 export function buttonClassName({
   variant = 'primary',
   size = 'md',
@@ -187,9 +187,9 @@ export function Card({ className, children }: { className?: string; children: Re
   );
 }
 
-// ------------------------------------------------------- 画面全体の状態表示
+// ------------------------------------------------------- Page-level states
 
-/** データ取得中のプレースホルダ。 */
+/** Placeholder while data is loading. */
 export function LoadingBlock({ children = t('読み込み中...') }: { children?: ReactNode }) {
   useLanguage();
   return (
@@ -200,8 +200,8 @@ export function LoadingBlock({ children = t('読み込み中...') }: { children?
 }
 
 /**
- * 「見つかりません」「管理用 URL が必要です」のような、ページの代わりに出す案内。
- * 補足やリンクは children に渡す。
+ * A notice shown in place of the page, such as 「見つかりません」 or 「管理用 URL が必要です」.
+ * Pass supplementary text and links as children.
  */
 export function MessageCard({
   title,

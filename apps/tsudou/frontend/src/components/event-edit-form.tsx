@@ -7,8 +7,8 @@ import { EventFormFields } from './event-form-fields';
 import { Alert, Button } from './ui';
 
 /**
- * 編集フォームの状態は TanStack Form が持つ。呼び出し側は key={event.id} で
- * 作り直すことで defaultValues を入れ替えるため、エフェクトでの同期が要らない。
+ * TanStack Form holds the edit form state. The caller recreates it with key={event.id}
+ * to swap defaultValues, so no syncing in an effect is needed.
  */
 export function EventEditForm({
   event,
@@ -50,7 +50,7 @@ export function EventEditForm({
       {saved && <Alert variant="success">{t('保存しました。')}</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
 
-      {/* 検証エラーが残っている間は送信させない */}
+      {/* Block submission while validation errors remain */}
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
           <Button type="submit" loading={saving} disabled={!canSubmit}>

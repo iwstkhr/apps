@@ -3,7 +3,7 @@ import { test as base, expect, type Page } from '@playwright/test';
 import type { ShelterGeoJsonFeature, ShelterGeoJsonProperties } from '../app/types/shelter';
 
 export type Options = {
-  /** fixture: 下の SHELTERS だけを配信する / real: リポジトリにある本物のデータを使う */
+  /** fixture: serve only SHELTERS below / real: use the real data in the repository */
   dataset: 'fixture' | 'real';
 };
 
@@ -52,7 +52,7 @@ function feature(
   };
 }
 
-/** すべて初期表示 (関東周辺、ズーム 8) の範囲に収まる位置に置く。 */
+/** All placed within the initial view (around Kanto, zoom 8). */
 export const SHELTERS = [
   feature('1', '横浜テスト小学校', '神奈川県横浜市中区1-1', [139.638, 35.444], {
     洪水: '1',
@@ -66,19 +66,19 @@ export const SHELTERS = [
     '崖崩れ、土石流及び地滑り': '1',
     地震: '1',
   }),
-  // ポップアップで HTML としてではなく文字として表示されることを確かめる
+  // Check that the popup shows this as text, not as HTML
   feature('4', '<b>港</b>&テスト広場', '東京都港区4-4', [139.751, 35.658], {
     大規模な火事: '1',
   }),
 ] as const;
 
-/** 住所が無いので読み込み時に捨てられる。 */
+/** Has no address, so it is dropped on load. */
 const INVALID_FEATURE = {
   ...SHELTERS[0],
   properties: { ...SHELTERS[0].properties, 共通ID: '99', 住所: undefined },
 };
 
-// 1x1 の透明な PNG
+// A 1x1 transparent PNG
 const EMPTY_TILE = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
   'base64',
@@ -88,7 +88,7 @@ export const test = base.extend<Options>({
   dataset: ['fixture', { option: true }],
 
   page: async ({ page, dataset }, use) => {
-    // 外部のタイルサーバ (OpenStreetMap / 国土地理院) には取りに行かない
+    // Never fetch from the external tile servers (OpenStreetMap / GSI)
     await page.route(/tile\.openstreetmap\.org|cyberjapandata\.gsi\.go\.jp/, (route) =>
       route.fulfill({ contentType: 'image/png', body: EMPTY_TILE }),
     );
@@ -108,7 +108,7 @@ export const test = base.extend<Options>({
 
 export { expect };
 
-/** トップページを開き、避難場所データの読み込みが終わるまで待つ。 */
+/** Open the top page and wait until the shelter data has loaded. */
 export async function openApp(page: Page): Promise<void> {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '指定緊急避難場所マップ' })).toBeVisible();
@@ -117,27 +117,27 @@ export async function openApp(page: Page): Promise<void> {
   });
 }
 
-/** 表の右上に出る件数。 */
+/** The count shown at the top right of the table. */
 export function resultCount(page: Page) {
   return page.getByText(/^[\d,]+ 件$/);
 }
 
-/** 表のデータ行 (仮想スクロールで描画されている分)。 */
+/** Data rows of the table (those rendered by virtual scrolling). */
 export function tableRows(page: Page) {
   return page.getByRole('rowgroup').getByRole('row');
 }
 
-/** 地図上のピン。 */
+/** Pins on the map. */
 export function mapMarkers(page: Page) {
   return page.locator('.leaflet-marker-pane .leaflet-marker-icon');
 }
 
-/** 列見出しのフィルターを開く。 */
+/** Open a column header filter. */
 export async function openColumnFilter(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: `${label}のフィルター` }).click();
 }
 
-/** 地図の今のズームレベル。前面にあるタイル層の URL ({z}/{x}/{y}) から読む。 */
+/** The current zoom level of the map, read from the URL ({z}/{x}/{y}) of the front tile layer. */
 export function currentZoom(page: Page): Promise<number | null> {
   return page.evaluate(() => {
     const levels = [...document.querySelectorAll<HTMLElement>('.leaflet-tile-container')];

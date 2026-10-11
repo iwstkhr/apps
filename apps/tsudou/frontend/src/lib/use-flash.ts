@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
- * 「保存しました」のような一時表示。show() を呼ぶと ms 後に自動で消える。
+ * A temporary message such as 「保存しました」. Calling show() makes it disappear automatically after ms.
  *
- * タイマーはアンマウント時と再表示時に必ず破棄する。各画面で
- * setTimeout を直接書いていたときはクリーンアップが無く、
- * 画面を離れたあとに setState が走っていた。
+ * The timer is always cleared on unmount and when shown again. When each screen
+ * called setTimeout directly there was no cleanup,
+ * and setState ran after leaving the screen.
  */
 export function useFlash(ms = 3000): [boolean, () => void] {
   const [visible, setVisible] = useState(false);

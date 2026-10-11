@@ -24,7 +24,7 @@ test.describe('in a Japanese browser', () => {
       /runs entirely in your browser/,
     );
 
-    // 入力した内容は訳さない
+    // Entered content is not translated
     await page.getByRole('textbox', { name: 'Title' }).fill('牛乳を買う');
     await page.getByRole('button', { name: 'Add', exact: true }).click();
     await expect(page.getByRole('list', { name: 'Todo list' }).getByRole('listitem')).toHaveText([
@@ -60,15 +60,15 @@ test.describe('in an English browser', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 
     await page.locator('header').getByRole('button', { name: 'Menu', exact: true }).click();
-    // メニューも画面の幅に収まる
+    // The menu also fits within the viewport width
     const menu = await page.getByRole('menu').boundingBox();
     expect(menu?.x).toBeGreaterThanOrEqual(0);
     expect((menu?.x ?? 0) + (menu?.width ?? 0)).toBeLessThanOrEqual(320);
     await languageItem(page, '日本語').click();
     await expect(page.getByRole('button', { name: '追加', exact: true })).toBeVisible();
-    // 英語に戻すメニュー操作はキーボードでもできる
+    // The menu action to switch back to English also works with the keyboard
     await page.locator('header').getByRole('button', { name: 'メニュー', exact: true }).focus();
-    // ↓ で開くと最初の項目 (English) にフォーカスが移る
+    // Opening with ↓ moves focus to the first item (English)
     await page.keyboard.press('ArrowDown');
     await expect(
       page.getByRole('menu').getByRole('menuitemradio', { name: 'English' }),

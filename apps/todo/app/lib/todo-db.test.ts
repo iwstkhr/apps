@@ -55,7 +55,7 @@ describe('todo-db', () => {
   it('normalizes stored records and drops broken ones', async () => {
     const valid = createTodoFixture({ tags: [' a ', 'a'] });
     const folder = createFolderFixture({ name: ' 仕事 ' });
-    // 壊れたデータが保存されていても読み込みで落ちないこと
+    // Loading must not crash even when corrupted data is stored
     await putAll({
       todos: [valid, { id: 'broken' } as unknown as Todo],
       folders: [folder, { id: 'broken' } as unknown as Folder],
@@ -67,7 +67,7 @@ describe('todo-db', () => {
   });
 
   describe('sample data', () => {
-    // setup.ts が作った空のデータベースを消して、初めて開く状態にする
+    // Delete the empty database created by setup.ts to simulate the first open
     async function deleteDb() {
       await closeDbForTesting();
       await new Promise<void>((resolve) => {

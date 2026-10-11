@@ -34,7 +34,7 @@ test.describe('データの読み込み', () => {
   test('未知のパスを開くと、SPA が 404 を表示する', async ({ page }) => {
     const response = await page.goto('/no-such-page');
 
-    // wrangler.jsonc の not_found_handling により index.html が 200 で返る
+    // not_found_handling in wrangler.jsonc returns index.html with 200
     expect(response?.status()).toBe(200);
     await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
     await expect(page.getByText('お探しのページは見つかりませんでした。')).toBeVisible();

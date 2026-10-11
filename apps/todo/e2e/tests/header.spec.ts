@@ -9,14 +9,14 @@ test('labels the header menu button メニュー and shows the text only on wide
   const menuButton = header.getByRole('button', { name: 'メニュー', exact: true });
   await expect(menuButton).toBeVisible();
   const label = menuButton.getByText('メニュー', { exact: true });
-  // 読み上げ用に残す文字は 1px に縮めて隠す (sr-only) ので、見えているかは大きさで確かめる
+  // Text kept for screen readers is shrunk to 1px and hidden (sr-only), so visibility is checked by size
   const labelWidth = async () => (await label.boundingBox())?.width ?? 0;
   expect(await labelWidth()).toBeGreaterThan(20);
-  // 広い画面では左の ☰ は出ないので、「メニュー」はひとつだけ
+  // Wide screens have no ☰ on the left, so there is only one 「メニュー」
   await expect(header.getByRole('button', { name: 'フォルダを開く' })).toBeHidden();
 
   await page.setViewportSize({ width: 375, height: 800 });
-  // 狭い画面では ⋯ だけにし、読み上げの名前は「メニュー」のまま
+  // Narrow screens show only ⋯, and the accessible name stays 「メニュー」
   await expect(menuButton).toBeVisible();
   await expect.poll(labelWidth).toBeLessThanOrEqual(1);
   const navButton = header.getByRole('button', { name: 'フォルダを開く' });
@@ -50,12 +50,12 @@ test('describes local-only storage next to the title on wide screens', async ({ 
   await expect(tagline).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('TODO');
 
-  // 濃いヘッダーでも読めるよう、白に寄せた色になる
+  // The color leans toward white so it stays readable on dark headers
   await page.evaluate(() => localStorage.setItem('todo:theme', 'mint'));
   await page.reload();
   await expect(tagline).toHaveCSS('color', 'rgba(255, 255, 255, 0.7)');
 
-  // 狭い画面では ☰ とメニューの場所を空けるため隠す
+  // Hidden on narrow screens to make room for ☰ and the menu
   await page.setViewportSize({ width: 375, height: 800 });
   await expect(tagline).toBeHidden();
 });

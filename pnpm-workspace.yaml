@@ -4,21 +4,21 @@ packages:
 
 saveExact: true
 
-# 依存パッケージのインストール時スクリプトは既定でブロックされるため、
-# 必要なものだけを明示的に許可する。
+# Install scripts of dependencies are blocked by default,
+# so allow only the ones that are needed explicitly.
 allowBuilds:
   '@parcel/watcher': true
   core-js: false
   esbuild: true
   workerd: true
 
-# サプライチェーン攻撃対策
-# 公開から 7 日 (10080 分) 経っていないバージョンはインストールしない
+# Supply chain attack protection
+# Do not install versions published less than 7 days (10080 minutes) ago
 minimumReleaseAge: 10080
-# 以前のバージョンより信頼性 (provenance など) が下がったバージョンを拒否する
+# Reject versions whose trust level (provenance, etc.) is lower than earlier versions
 trustPolicy: no-downgrade
-# メンテナーが CI を使わず手動公開した正規のリリースのため除外する
+# Excluded because the maintainer published this legitimate release manually without CI
 trustPolicyExclude:
   - semver@6.3.1
-# 推移的依存が Git リポジトリや tarball URL から取得されるのをブロックする
+# Block transitive dependencies from being fetched from Git repositories or tarball URLs
 blockExoticSubdeps: true

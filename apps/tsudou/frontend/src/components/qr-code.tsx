@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 import { encode } from 'uqr';
 
 /**
- * URL の QR コード。外部サービスに URL (管理用 URL のトークンを含む) を送らないよう、
- * ブラウザ内で生成して SVG で描く。ダークモードでも読み取れるよう背景は常に白にする。
+ * The URL's QR code. To avoid sending the URL (including the manage URL's token) to an external service,
+ * it is generated in the browser and drawn as SVG. The background is always white so it can be scanned in dark mode.
  */
 export function QrCode({ value, label }: { value: string; label: string }) {
   const { size, path } = useMemo(() => {
-    // border は QR コードの規格で推奨される余白 (クワイエットゾーン) の幅
+    // border is the width of the margin (quiet zone) recommended by the QR code standard
     const { size, data } = encode(value, { border: 4 });
     const cells: string[] = [];
     data.forEach((row, y) => {

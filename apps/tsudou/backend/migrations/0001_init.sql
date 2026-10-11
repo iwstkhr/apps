@@ -1,5 +1,5 @@
--- イベントと回答。候補日時 (candidates) と回答の選択 (choices) は JSON 文字列で持つ。
--- 日時 (created_at / updated_at) は ISO 8601 文字列、expires_at はエポック秒。
+-- Events and responses. Candidate dates (candidates) and response choices (choices) are stored as JSON strings.
+-- Timestamps (created_at / updated_at) are ISO 8601 strings; expires_at is epoch seconds.
 
 CREATE TABLE events (
   id TEXT PRIMARY KEY,
@@ -14,12 +14,12 @@ CREATE TABLE events (
   updated_at TEXT NOT NULL
 );
 
--- 期限切れの削除 (Cron Trigger) 用
+-- For deleting expired events (Cron Trigger)
 CREATE INDEX events_expires_at ON events (expires_at);
 
 CREATE TABLE answers (
   id TEXT PRIMARY KEY,
-  -- イベントを消すと回答も消える
+  -- Deleting an event also deletes its responses
   event_id TEXT NOT NULL REFERENCES events (id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   message TEXT,
@@ -28,6 +28,6 @@ CREATE TABLE answers (
   expires_at INTEGER NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  -- 同じイベントに同じ名前の回答は置けない。1 イベントの回答を引くインデックスも兼ねる
+  -- One event cannot have two responses with the same name. Also serves as the index for looking up an event's responses
   UNIQUE (event_id, name)
 );

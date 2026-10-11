@@ -9,7 +9,7 @@ const TODAY = '2026-10-11';
 describe('createSampleData', () => {
   it('creates valid todos and folders that point to each other', () => {
     const { todos, folders } = createSampleData('ja', NOW);
-    // 読み込みの検査をそのまま通る形で作る
+    // Built in a form that passes the load-time validation as is
     expect(todos.map(toTodo)).toEqual(todos);
     expect(folders.map(toFolder)).toEqual(folders);
 
@@ -20,7 +20,7 @@ describe('createSampleData', () => {
     for (const todo of todos) {
       if (todo.folderId !== null) expect(folderIds).toContain(todo.folderId);
     }
-    // 入れ子のフォルダと未分類のタスクを含む
+    // Includes nested folders and unfiled tasks
     expect(folders.some((folder) => folder.parentId !== null)).toBe(true);
     expect(todos.some((todo) => todo.folderId === null)).toBe(true);
   });

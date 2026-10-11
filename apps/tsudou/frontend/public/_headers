@@ -1,6 +1,6 @@
-# Cloudflare Workers の静的アセットに付けるレスポンスヘッダ。
-# Referrer-Policy: 管理用 URL の #k=<token> がフラグメントとはいえ、
-# 外部リンク経由での情報漏れを避けるため Referer は一切送らない
+# Response headers for the Cloudflare Workers static assets.
+# Referrer-Policy: although #k=<token> in the manage URL is a fragment,
+# never send Referer to avoid leaking information through external links
 /*
   Strict-Transport-Security: max-age=63072000; includeSubDomains
   X-Content-Type-Options: nosniff
@@ -9,16 +9,16 @@
   Permissions-Policy: geolocation=(), camera=(), microphone=()
   X-Robots-Tag: noindex, nofollow
 
-# 検索エンジンに載せるのはトップページだけ。どのパスにも同じ index.html を返すため
-# HTML の <meta name="robots"> では出し分けられず、ヘッダで制御する。
-# 載せないのを既定にし、トップページだけ外す (新しいルートが増えても漏れない)
+# Only the top page is listed by search engines. Every path returns the same index.html,
+# so <meta name="robots"> in the HTML cannot differ per path, and headers control it instead.
+# Unlisted is the default, and only the top page is excluded (new routes cannot slip through)
 /
   ! X-Robots-Tag
 
-# Service Worker は名前が変わらないので、デプロイ後の更新がすぐ届くよう毎回確かめさせる
+# The Service Worker's name never changes, so make browsers revalidate every time so updates arrive right after deploy
 /sw.js
   Cache-Control: no-cache
 
-# ファイル名にハッシュが付くので長期キャッシュしてよい
+# File names include a hash, so long-term caching is fine
 /assets/*
   Cache-Control: public, max-age=31536000, immutable

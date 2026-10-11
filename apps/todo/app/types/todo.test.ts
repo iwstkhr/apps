@@ -231,7 +231,7 @@ describe('repeat', () => {
 
   it('keeps, changes or removes the repeat when editing', () => {
     const todo = createTodo({ ...base, dueDate: '2026-10-09', repeat: 'weekly' }, NOW);
-    // 省略したら残し、期限を変えたら anchorDay も合わせる
+    // Kept when omitted, and anchorDay follows when the due date changes
     expect(updateTodo(todo, { ...base, dueDate: '2026-10-20' }, NOW).repeat).toEqual({
       frequency: 'weekly',
       anchorDay: 20,
@@ -248,7 +248,7 @@ describe('repeat', () => {
     const today = '2026-01-01';
     expect(nextDueDate('2026-10-09', repeat('daily'), today)).toBe('2026-10-10');
     expect(nextDueDate('2026-10-09', repeat('weekly'), today)).toBe('2026-10-16');
-    // 2026-10-09 は金曜、10-10 は土曜
+    // 2026-10-09 is a Friday and 10-10 a Saturday
     expect(nextDueDate('2026-10-09', repeat('weekdays'), today)).toBe('2026-10-12');
     expect(nextDueDate('2026-10-10', repeat('weekdays'), today)).toBe('2026-10-12');
     expect(nextDueDate('2026-10-12', repeat('weekdays'), today)).toBe('2026-10-13');
@@ -316,7 +316,7 @@ describe('repeat', () => {
     const { repeat: _omitted, ...older } = stored;
     expect(toTodo(older)?.repeat).toBeNull();
     expect(toTodo({ ...stored, repeat: { frequency: 'hourly', anchorDay: 9 } })?.repeat).toBeNull();
-    // 壊れた anchorDay は期限の日で補い、期限が無ければ繰り返さない
+    // A broken anchorDay is filled from the due date's day, and without a due date it does not repeat
     expect(toTodo({ ...stored, repeat: { frequency: 'monthly', anchorDay: 40 } })?.repeat).toEqual({
       frequency: 'monthly',
       anchorDay: 9,

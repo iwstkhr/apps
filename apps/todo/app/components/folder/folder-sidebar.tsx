@@ -18,7 +18,7 @@ import type { Folder } from '~/types/folder';
 
 interface FolderSidebarProps {
   folders: Folder[];
-  /** 未完了の TODO の件数 (子孫を含む) */
+  /** Number of incomplete todos (including descendants) */
   openCounts: Map<FolderSelection, number>;
   selection: FolderSelection;
   onSelect: (selection: FolderSelection) => void;
@@ -27,24 +27,24 @@ interface FolderSidebarProps {
   onAdd: (parentId: string | null) => void;
   onEdit: (folder: Folder) => void;
   onRemove: (folder: Folder) => void;
-  /** タスクをフォルダ (null は未分類) にドロップした */
+  /** A task was dropped on a folder (null means 未分類) */
   onDropTodo: (todoId: string, folderId: string | null) => void;
-  /** ゴミ箱の件数 */
+  /** Number of items in the trash */
   trashCount: number;
-  /** タスクをゴミ箱にドロップした */
+  /** A task was dropped on the trash */
   onDropTodoToTrash: (todoId: string) => void;
 }
 
-/** ドロップ先。'all' には落とせない */
+/** Drop target. Nothing can be dropped on 'all' */
 type DropTarget = 'unfiled' | 'trash' | string;
 
-// 畳んだフォルダの上でこの時間待つと開いて、中のフォルダにも落とせるようにする
+// Hovering over a collapsed folder for this long expands it so tasks can be dropped on its subfolders
 const EXPAND_ON_HOVER_MS = 700;
 
 const rowClass =
   'group flex min-w-0 items-center gap-1 rounded-md text-sm transition-colors hover:bg-slate-100 dark:hover:bg-slate-800';
-// ドロップ先は選択中の行 (薄い青) と見分けられるよう、明るさの差が大きい塗りつぶしにする。
-// ダークモードでも同じ色にし、名前と件数も白にする
+// Fill the drop target with a color whose brightness differs strongly so it is distinguishable from the selected row (light blue).
+// Use the same color in dark mode, and make the name and count white
 const dropTargetRowClass =
   'bg-blue-600 text-white ring-2 ring-blue-300 hover:bg-blue-600 dark:bg-blue-500 dark:ring-blue-200 dark:hover:bg-blue-500 [&_span]:text-white';
 const selectedRowClass =
@@ -84,7 +84,7 @@ export function FolderSidebar({
     return () => clearTimeout(timer);
   }, [dropTarget, collapsed, onToggleCollapsed]);
 
-  /** タスクのドロップを受け付ける行に付けるハンドラ。 */
+  /** Handlers for rows that accept dropped tasks. */
   const dropHandlers = (target: DropTarget) => ({
     onDragOver: (event: DragEvent) => {
       if (!isDraggingTodo(event.dataTransfer)) return;
@@ -93,7 +93,7 @@ export function FolderSidebar({
       if (dropTarget !== target) setDropTarget(target);
     },
     onDragLeave: (event: DragEvent) => {
-      // 行の中の要素へ移っただけなら外れていない
+      // Moving onto an element inside the row does not count as leaving
       if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
       setDropTarget((current) => (current === target ? null : current));
     },
@@ -116,12 +116,12 @@ export function FolderSidebar({
     <li
       className={cn(
         rowClass,
-        // ドロップ先の色を優先する (両方付けると CSS の並び順次第でどちらかが勝つ)
+        // Prefer the drop target color (with both, whichever comes later in the CSS wins)
         dropTarget === value ? dropTargetRowClass : selection === value && selectedRowClass,
       )}
       {...(value === 'unfiled' || value === 'trash' ? dropHandlers(value) : {})}
     >
-      {/* フォルダの一覧の中では、開閉ボタンの幅を空けてフォルダのアイコンと縦にそろえる */}
+      {/* In the folder list, leave room for the expand button so folder icons line up vertically */}
       {value !== 'trash' && <span className="w-5 shrink-0" />}
       <button
         type="button"
@@ -156,7 +156,7 @@ export function FolderSidebar({
         </button>
       </div>
 
-      {/* すべて と 未分類 はフォルダではないが、フォルダで絞り込む項目なので同じ見出しの下の先頭に置く */}
+      {/* すべて and 未分類 are not folders but filter by folder, so they go first under the same heading */}
       <ul className="flex flex-col gap-0.5">
         {fixedItem('all', 'すべて', FaLayerGroup)}
         {fixedItem('unfiled', '未分類', FaInbox)}
@@ -214,7 +214,7 @@ export function FolderSidebar({
                 <span className="truncate">{folder.name}</span>
                 <Count value={openCounts.get(folder.id)} />
               </button>
-              {/* 操作ボタンは画面が広いときはホバー・フォーカス中だけ出す */}
+              {/* On wide screens, show the action buttons only on hover or focus */}
               <div className="flex shrink-0 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
                 <button
                   type="button"
@@ -254,7 +254,7 @@ export function FolderSidebar({
         </p>
       )}
 
-      {/* ゴミ箱はフォルダの一覧の下に分けて置く。タスクをドロップしてもゴミ箱に移せる */}
+      {/* The trash sits separately below the folder list. Dropping a task on it also moves the task to the trash */}
       <ul className="flex flex-col gap-0.5 border-t border-slate-200 pt-2 dark:border-slate-800">
         {fixedItem('trash', 'ゴミ箱', FaTrash, trashCount)}
       </ul>

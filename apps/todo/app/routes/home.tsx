@@ -38,7 +38,7 @@ import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
   return [
-    // 最初は日本語で出し、表示した後は applyLanguage() が選んだ言語に置き換える
+    // Render in Japanese first; after rendering, applyLanguage() switches to the chosen language
     { title: appTitle('ja') },
     {
       name: 'description',
@@ -56,7 +56,7 @@ type FolderDialogState =
   | { mode: 'edit'; folder: Folder };
 
 export default function Home() {
-  // 言語を変えたら画面全体を描き直す (各コンポーネントは t() で今の言語の文言を出す)
+  // Re-render the whole page when the language changes (each component renders text in the current language with t())
   const language = useLanguage();
   useEffect(() => applyLanguage(language), [language]);
   const {
@@ -99,17 +99,17 @@ export default function Home() {
   const closeMenu = useCallback(() => setShowFolders(false), []);
   const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
-  // 取り消せない操作の前に出す確認
+  // Confirmation shown before irreversible actions
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const closeConfirmation = useCallback(() => setConfirmation(null), []);
-  // undo があれば通知に「元に戻す」を出す (ゴミ箱に移した直後など)
+  // If undo is given, the notification shows 「元に戻す」 (e.g. right after moving to the trash)
   const [notice, setNotice] = useState<{
     kind: 'info' | 'error';
     text: string;
     undo?: () => void;
   } | null>(null);
 
-  // 選んでいたフォルダが消えたら (別タブで消した場合も) すべてに戻す
+  // When the selected folder is deleted (including from another tab), return to すべて
   const selection: FolderSelection =
     selectedFolder === 'all' ||
     selectedFolder === 'unfiled' ||
@@ -180,7 +180,7 @@ export default function Home() {
       return;
     }
     const folder = await addFolder(input);
-    // 作ったフォルダが見えるよう親を開いてから選ぶ
+    // Expand the parent first so the created folder is visible, then select it
     if (input.parentId !== null) {
       setCollapsedFolders((current) => {
         const next = new Set(current);
@@ -237,7 +237,7 @@ export default function Home() {
   const cancelImport = useCallback(() => setPendingImport(null), []);
   const cancelFolderDialog = useCallback(() => setFolderDialog(null), []);
 
-  // 繰り返すタスクを完了にしたら次の回を作り、通知の「元に戻す」で取り消せるようにする
+  // Completing a repeating task creates the next occurrence, which the notification's 「元に戻す」 can undo
   const handleStatusChange = async (id: string, status: TodoStatus) => {
     const previous = todos.find((todo) => todo.id === id);
     const created = await changeStatus(id, status);
@@ -255,7 +255,7 @@ export default function Home() {
     });
   };
 
-  // ゴミ箱へは確認なしで移し、通知の「元に戻す」で取り消せるようにする
+  // Move to the trash without confirmation; the notification's 「元に戻す」 can undo it
   const handleRemove = async (id: string) => {
     const todo = todos.find((t) => t.id === id);
     if (!todo) return;
@@ -268,7 +268,7 @@ export default function Home() {
   };
 
   const handleRemoveCompleted = async () => {
-    // ボタンの件数どおり、今見ているフォルダの完了済みだけを移す
+    // As the button's count says, move only the completed tasks in the folder being viewed
     const ids = await removeCompleted(folderTodos.map((todo) => todo.id));
     if (ids.length === 0) return;
     setNotice({
@@ -280,7 +280,7 @@ export default function Home() {
 
   const handleRestore = async (restored: Todo[]) => {
     const count = await restoreTodos(restored.map((todo) => todo.id));
-    // 完全に削除した後や、もう戻した後に古い通知の「元に戻す」を押したときは何も言わない
+    // Say nothing when 「元に戻す」 is pressed on an old notification after deleting forever or after already restoring
     if (count === 0) return setNotice(null);
     setNotice({
       kind: 'info',
@@ -297,7 +297,7 @@ export default function Home() {
     setNotice({ kind: 'info', text: t('{0} 件を元に戻しました。', [count]) });
   };
 
-  // 完全に削除すると戻せないので、こちらは確認する
+  // Deleting forever cannot be undone, so this one asks for confirmation
   const handleDeleteForever = (todo: Todo) => {
     setConfirmation({
       title: t('「{0}」を完全に削除しますか？', [todo.title]),
@@ -329,7 +329,7 @@ export default function Home() {
       <AppHeader
         menuOpen={showFolders}
         onOpenMenu={() => setShowFolders(true)}
-        // ゴミ箱のタスクもエクスポートする (deletedAt ごと戻せるように)
+        // Also export tasks in the trash (so they can be restored with deletedAt)
         onExport={() => downloadExport({ todos: allTodos, folders })}
         onImportFile={(file) => void handleImportFile(file)}
         exportDisabled={allTodos.length === 0 && folders.length === 0}
@@ -339,8 +339,8 @@ export default function Home() {
         className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3 py-4 sm:px-4 lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:items-start lg:gap-6"
         style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
       >
-        {/* 広い画面ではヘッダーの下から画面の下端までの高さにし、一覧をスクロールしても動かさない
-            (ヘッダー 3.5rem + 境界線 1px + 上下の余白 1rem ずつ) */}
+        {/* On wide screens, span from below the header to the bottom of the viewport so it stays put while the list scrolls
+            (header 3.5rem + 1px border + 1rem padding at top and bottom) */}
         <aside
           id="folder-sidebar"
           className="relative lg:sticky lg:top-[calc(3.5rem+1px+1rem)] lg:mb-0 lg:flex lg:h-[calc(100svh-3.5rem-1px-2rem)] lg:flex-col"
@@ -377,13 +377,13 @@ export default function Home() {
           />
         </aside>
 
-        {/* フッターも右の列に入れ、フォルダ欄がページの下端まで画面に固定されるようにする */}
+        {/* The footer also goes in the right column so the folder pane stays fixed to the bottom of the viewport */}
         <div id="todo-main-column" className="flex min-w-0 flex-1 flex-col gap-8 lg:self-stretch">
           <main className="flex min-w-0 flex-1 flex-col gap-4">
             {(error || notice) && (
               <div
                 role={error || notice?.kind === 'error' ? 'alert' : 'status'}
-                // 一覧の下の方で削除しても「元に戻す」が見えるよう、ヘッダーのすぐ下に貼り付ける
+                // Stick right below the header so 「元に戻す」 is visible even after deleting far down the list
                 className={cn(
                   'sticky top-[calc(3.5rem+1px+0.5rem)] z-10 flex items-start gap-2 rounded-md px-3 py-2 text-sm shadow-sm',
                   error || notice?.kind === 'error'
@@ -431,7 +431,7 @@ export default function Home() {
                 )}
                 <span className="truncate">{selectionLabel}</span>
               </h2>
-              {/* 見ているフォルダをその場で編集できるようにする (フォルダ欄の編集ボタンと同じダイアログ) */}
+              {/* Allow editing the folder being viewed in place (the same dialog as the folder pane's edit button) */}
               {selectedFolderObject && (
                 <button
                   type="button"
@@ -479,7 +479,7 @@ export default function Home() {
                   tags={tags}
                 />
 
-                {/* 一覧の表示を切り替えるものなので、追加フォームから離して一覧のすぐ上に置く */}
+                {/* It switches how the list is shown, so it sits right above the list, away from the add form */}
                 <StatusTabs
                   value={filters.status}
                   counts={counts}

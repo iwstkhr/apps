@@ -91,7 +91,7 @@ describe('useViewState', () => {
     act(() => result.current.setSelectedFolder('unfiled'));
     act(() => result.current.setCollapsedFolders(new Set()));
     act(() => result.current.setSidebarWidth(10_000));
-    // 保存は変化が落ち着いてからまとめて行う
+    // Saving happens in one go after changes settle
     await waitFor(() =>
       expect(readViewState()).toEqual({
         folder: 'unfiled',
@@ -108,7 +108,7 @@ describe('useViewState', () => {
     await waitFor(() => expect(readViewState()).not.toBeNull());
     const setItem = vi.spyOn(localStorage, 'setItem');
 
-    // ドラッグ中のように幅が続けて変わる
+    // The width changes repeatedly, as during a drag
     for (const width of [250, 260, 270, 280, 290]) act(() => result.current.setSidebarWidth(width));
     expect(setItem).not.toHaveBeenCalled();
     await waitFor(() => expect(readViewState()?.sidebarWidth).toBe(290));

@@ -5,12 +5,12 @@ export type CandidateTally = {
   yes: number;
   maybe: number;
   no: number;
-  /** 並べ替え用のスコア。参加=1点、未定=0.5点。 */
+  /** Score used for sorting: attending = 1 point, undecided = 0.5 points. */
   score: number;
 };
 
 /**
- * 候補ごとの集計。最有力候補を強調するために使う。
+ * Totals per candidate. Used to highlight the leading candidates.
  */
 export function summarize(
   candidates: readonly Candidate[],
@@ -31,7 +31,7 @@ export function summarize(
   });
 }
 
-/** 最もスコアの高い候補の id 群 (同点なら複数)。回答が0件、または全員が不参加なら空。 */
+/** The ids of the highest-scoring candidates (several if tied). Empty when there are no responses or nobody can attend. */
 export function bestCandidateIds(
   tallies: readonly CandidateTally[],
   answerCount: number,

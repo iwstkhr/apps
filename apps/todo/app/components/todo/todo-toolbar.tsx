@@ -5,7 +5,7 @@ import { t } from '~/lib/i18n';
 import { fieldClass, inputClass } from '~/lib/styles';
 import type { SortKey, TodoFilters } from '~/lib/todo-filters';
 
-// 既定の「新しい順」を先頭に置き、手で並べ替えるカスタムは最後にする
+// Put the default 「新しい順」 first and the manual カスタム order last
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'created', label: '新しい順' },
   { value: 'due', label: '期限順' },
@@ -37,7 +37,7 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
         </p>
       )}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        {/* 虫眼鏡を付けて、上の追加フォーム (＋) と見分けられるようにする */}
+        {/* Add a magnifying glass to distinguish it from the add form (+) above */}
         <div className="relative min-w-48 flex-1">
           <FaSearch
             className="pointer-events-none absolute top-1/2 left-2.5 h-3 w-3 -translate-y-1/2 text-slate-400"
@@ -53,8 +53,8 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
           />
         </div>
 
-        {/* 値だけでは何の欄か分からないので見出しを付ける。select を label で包むと
-            選択肢の文字まで見出しに入るので、htmlFor で結ぶ */}
+        {/* The value alone does not tell what the field is, so add a label. Wrapping the select in a label
+            would put the option text into the label too, so they are linked with htmlFor */}
         <div className="flex items-center gap-1.5">
           <label htmlFor={sortId} className={captionClass}>
             <FaSortAmountDown aria-hidden="true" />
@@ -74,19 +74,19 @@ export function TodoToolbar({ filters, onChange, tags }: TodoToolbarProps) {
           </select>
         </div>
 
-        {/* タグが無ければ選ぶものが無いので出さない */}
+        {/* Hidden when there are no tags, since there is nothing to choose */}
         {(tags.length > 0 || tagActive) && (
           <div className="flex items-center gap-1.5">
             <label htmlFor={tagId} className={captionClass}>
               <FaTag aria-hidden="true" />
               {t('タグ')}
             </label>
-            {/* 追加フォームの「タグ」欄と名前が重ならないよう、名前は「タグで絞り込み」にする */}
+            {/* Named 「タグで絞り込み」 so the name does not clash with the 「タグ」 field of the add form */}
             <select
               id={tagId}
               className={cn(
                 fieldClass,
-                // リストのタグをクリックして絞り込んだときにも気づけるよう、選択中は色を付ける
+                // Highlight it while selected so the user notices even when filtering by clicking a tag in the list
                 tagActive &&
                   'border-blue-500 bg-blue-50 font-medium text-blue-800 dark:border-blue-400 dark:bg-blue-950 dark:text-blue-200',
               )}

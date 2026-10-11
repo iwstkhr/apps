@@ -37,11 +37,11 @@ describe('todo drag data', () => {
     const [image, x, y] = setDragImage.mock.calls[0];
     expect(image).toHaveTextContent('洗濯物をたたむ');
     expect([x, y]).toEqual([0, 0]);
-    // 透明な余白でラベルを指先の右下にずらす
+    // Transparent padding shifts the label to the lower right of the pointer
     expect((image as HTMLElement).style.padding).toBe('20px 0px 0px 16px');
     expect(document.body).toContainElement(image);
 
-    // 写し取った後は画面から消す
+    // Removed from the page after it is captured
     vi.runAllTimers();
     expect(document.body).not.toContainElement(image);
   });

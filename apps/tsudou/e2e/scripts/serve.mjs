@@ -1,11 +1,11 @@
-// e2e テスト用のサーバを立てる (playwright.config.ts の webServer から呼ばれる)。
+// Start the server for e2e tests (called from webServer in playwright.config.ts).
 //
-// 本番と同じく、ビルドしたフロントエンドと API を 1 つの Worker (wrangler dev) で配信する。
-// D1 は開発用 (backend/.wrangler/) とは別の場所に毎回作り直すので、開発中のデータと混ざらない。
-// wrangler.jsonc の e2e 環境で動かし、レート制限を緩める (同じ IP から短時間に多く送るため)。
+// As in production, a single Worker (wrangler dev) serves the built frontend and the API.
+// D1 is recreated every time in a location separate from development (backend/.wrangler/), so it never mixes with development data.
+// Runs in the e2e environment of wrangler.jsonc, which relaxes the rate limit (the tests send many requests from the same IP in a short time).
 //
-//   E2E_PORT        待ち受けるポート (既定 8788)
-//   E2E_SKIP_BUILD  1 ならフロントエンドのビルドを省く (ビルド済みの frontend/dist/ を使う)
+//   E2E_PORT        Port to listen on (default 8788)
+//   E2E_SKIP_BUILD  Skip the frontend build when 1 (use the existing frontend/dist/)
 import { execFileSync, spawn } from 'node:child_process';
 import { rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -37,7 +37,7 @@ run(
   BACKEND,
 );
 
-// pnpm exec を挟むと終了のシグナルが wrangler (と子の workerd) まで届かず、テスト後に残るので直接起動する
+// Start wrangler directly: through pnpm exec, termination signals do not reach wrangler (and its child workerd), which is left running after the tests
 const server = spawn(
   `${BACKEND}/node_modules/.bin/wrangler`,
   [
@@ -52,6 +52,6 @@ const server = spawn(
   ],
   { cwd: BACKEND, stdio: 'inherit' },
 );
-// Playwright はテストが終わると SIGTERM を送る (playwright.config.ts の gracefulShutdown)
+// Playwright sends SIGTERM when the tests finish (gracefulShutdown in playwright.config.ts)
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => server.kill(signal));
 server.on('exit', (code) => process.exit(code ?? 0));

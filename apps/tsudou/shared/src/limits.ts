@@ -1,9 +1,9 @@
 /**
- * 入力値の上限。サーバ (backend/src/validate.ts) とフロント
- * (frontend/src/lib/form-validators.ts) の両方から参照する唯一の定義。
+ * Input limits. The single definition referenced by both the server (backend/src/validate.ts)
+ * and the frontend (frontend/src/lib/form-validators.ts).
  *
- * ブラウザにもバンドルされるため、Node 専用の API は使えない
- * (shared/tsconfig.json が DOM と Node の型を読み込まないので型エラーになる)。
+ * This is also bundled for the browser, so Node-only APIs cannot be used
+ * (shared/tsconfig.json loads neither DOM nor Node types, so they cause type errors).
  */
 export const LIMITS = {
   titleMax: 100,
@@ -15,7 +15,7 @@ export const LIMITS = {
 } as const;
 
 /**
- * イベントと回答の保持期間 (作成時点から)。
- * この期間を過ぎたレコードは Cron Trigger で自動削除される。
+ * Retention period for events and responses (from creation).
+ * Records past this period are deleted automatically by the Cron Trigger.
  */
 export const RETENTION_MONTHS = 3;

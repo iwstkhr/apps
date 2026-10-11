@@ -4,19 +4,19 @@ import type { AnswerView, CandidateInput, Choice, EventView } from './types';
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 /**
- * API は画面と同じ Worker の `/api` 以下にある (backend/wrangler.jsonc)。同一オリジンなので CORS は要らない。
- * ローカル開発では Vite の開発サーバが `/api` を wrangler dev に転送する (vite.config.ts)。
+ * The API lives under `/api` in the same Worker as the UI (backend/wrangler.jsonc). It is the same origin, so CORS is unnecessary.
+ * In local development, Vite's dev server forwards `/api` to wrangler dev (vite.config.ts).
  */
 const API_BASE = '/api';
 
-/** トークンはパスやクエリに載せず、専用ヘッダで送る (アクセスログに残さないため)。 */
+/** Tokens are sent in a dedicated header, not in the path or query (so they stay out of access logs). */
 type Tokens = { manageToken?: string | undefined; editToken?: string | undefined };
 
 /**
- * API を呼び、成功なら JSON (204 なら undefined) を返し、失敗なら ApiError を投げる。
+ * Call the API, returning the JSON on success (undefined for 204) and throwing ApiError on failure.
  *
- * レスポンスの形は API サーバ (backend/src/app.ts) が保証しているので、
- * アプリ内の型へのキャストはここ一箇所に閉じ込める。各関数の戻り値注釈が型の門番になる。
+ * The API server (backend/src/app.ts) guarantees the response shape,
+ * so casting to the app's types is confined to this one place. Each function's return type annotation guards the types.
  */
 async function request<T>(
   method: Method,
@@ -62,7 +62,7 @@ export async function getEvent(eventId: string): Promise<EventView | null> {
   try {
     return await request<EventView>('GET', eventPath(eventId));
   } catch (error) {
-    // 未存在 (期限切れを含む) は正常系として null を返す
+    // Not found (including expired) is a normal case and returns null
     if (error instanceof ApiError && error.code === 'NOT_FOUND') return null;
     throw error;
   }

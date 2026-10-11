@@ -9,13 +9,13 @@ import {
   toDateTimeLocal,
 } from './format';
 
-/** ローカルタイムで組み立てる (テスト環境の TZ に依存しないようにするため) */
+/** Built in local time (so it does not depend on the test environment's TZ) */
 const local = (y: number, m: number, d: number, h = 0, min = 0) =>
   new Date(y, m - 1, d, h, min).toISOString();
 
 describe('formatDateTime', () => {
   it('曜日付きで整形する', () => {
-    // 2026-10-03 は土曜日
+    // 2026-10-03 is a Saturday
     expect(formatDateTime(local(2026, 10, 3, 19, 0), { withYear: false })).toBe('10/3(土) 19:00');
   });
 

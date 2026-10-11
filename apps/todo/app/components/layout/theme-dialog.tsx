@@ -5,18 +5,18 @@ import { secondaryButtonClass } from '~/lib/styles';
 import { APPEARANCES, THEMES } from '~/lib/themes';
 
 /**
- * テーマと表示モードを選ぶダイアログ。ヘッダーのメニューから ref で showModal() して開く。
- * 閉じると、開く前にフォーカスがあった要素 (メニューのボタン) にブラウザがフォーカスを戻す。
- * 背景をクリックしても閉じる。余白は内側の div に持たせ、dialog 要素そのものへのクリックを背景とみなす。
+ * A dialog for choosing the theme and display mode, opened with showModal() through a ref from the header menu.
+ * When it closes, the browser returns focus to the element focused before opening (the menu button).
+ * Clicking the backdrop also closes it. Padding is on the inner div, so clicks on the dialog element itself count as backdrop clicks.
  */
 export function ThemeDialog({ ref }: { ref: Ref<HTMLDialogElement> }) {
   const { theme, setTheme, appearance, setAppearance } = useTheme();
   const titleId = useId();
-  // 中で押してから背景で離した (文字の選択など) ときは閉じない
+  // Do not close when pressed inside and released on the backdrop (e.g. while selecting text)
   const pressedBackdrop = useRef(false);
 
   return (
-    // Escape でも閉じられるので、背景のクリックはマウス操作の近道として扱う
+    // Escape also closes it, so a backdrop click is treated as a mouse shortcut
     // biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes the dialog natively
     <dialog
       ref={ref}

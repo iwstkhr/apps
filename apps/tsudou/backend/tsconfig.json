@@ -9,7 +9,7 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    // TypeScript 7 はルートの node_modules/@types を自動で読まないため明示する
+    // TypeScript 7 does not automatically read node_modules/@types at the root, so list it explicitly
     "types": ["node"]
   },
   "include": ["**/*.ts"],

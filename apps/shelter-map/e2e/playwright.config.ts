@@ -4,22 +4,22 @@ const PORT = process.env.E2E_PORT ?? '8789';
 const CI = !!process.env.CI;
 
 /**
- * 本番と同じ構成 (wrangler dev が build/client/ を静的アセットとして配信) で画面を操作する。
- * 地図タイルは外部サーバへ取りに行かないよう fixtures.ts で差し替える。
+ * Drive the UI with the same setup as production (wrangler dev serves build/client/ as static assets).
+ * Map tiles are stubbed in fixtures.ts so nothing is fetched from external servers.
  */
 export default defineConfig({
   testDir: 'tests',
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
-  // パッケージ直下から実行しても、結果は e2e/ の下にまとめる
+  // Keep the output under e2e/ even when run from the package root
   outputDir: 'test-results',
   reporter: CI
     ? [['github'], ['html', { open: 'never', outputFolder: 'playwright-report' }]]
     : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,
-    // インストール済みの Google Chrome を使う (GitHub Actions の ubuntu-latest にも入っている)
+    // Use the installed Google Chrome (also available on GitHub Actions ubuntu-latest)
     channel: 'chrome',
     locale: 'ja-JP',
     timezoneId: 'Asia/Tokyo',
@@ -31,9 +31,9 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     env: { E2E_PORT: PORT },
     reuseExistingServer: !CI,
-    // 本番ビルドを含む
+    // Includes the production build
     timeout: 180_000,
-    // 既定の SIGKILL では wrangler が子プロセス (workerd) を片付けられずに残る
+    // With the default SIGKILL, wrangler cannot clean up its child process (workerd), which is left running
     gracefulShutdown: { signal: 'SIGTERM', timeout: 10_000 },
     stdout: 'pipe',
   },

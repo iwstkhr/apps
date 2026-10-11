@@ -25,7 +25,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* インストールしたアプリのタイトルバーを、既定テーマのヘッダー (白、ダークは slate-900) に合わせる */}
+        {/* Match the installed app's title bar to the default theme's header (white; slate-900 in dark mode) */}
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
         <Meta />

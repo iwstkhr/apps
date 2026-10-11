@@ -30,7 +30,7 @@ test('picks several existing tags in a row from the suggestions', async ({ page 
   await tags.click();
   const suggestions = page.getByRole('listbox', { name: 'タグの候補' });
   await suggestions.getByRole('option', { name: '#家' }).click();
-  // 1 つ選んでも候補は閉じず、残りのタグを続けて選べる
+  // Choosing one does not close the suggestions, so the remaining tags can be chosen in a row
   const options = suggestions.getByRole('option');
   await expect(options).toHaveCount(2);
   await expect(suggestions).not.toContainText('#家');
@@ -131,7 +131,7 @@ test('filters by status above the list, also on narrow screens', async ({ page }
     'true',
   );
   await expect(todoItems(page)).toHaveText([/洗濯/]);
-  // 狭い画面でもドロワーを開かずに選べ、はみ出した分は横にスクロールする
+  // Even on narrow screens it can be chosen without opening the drawer, and overflow scrolls horizontally
   await page.setViewportSize({ width: 320, height: 800 });
   await statusTabs.getByRole('button', { name: '完了 1', exact: true }).click();
   await expect(todoItems(page)).toHaveText([/掃除/]);
@@ -149,7 +149,7 @@ test('completes, edits and deletes todos', async ({ page }) => {
   await expect(todoItems(page)).toHaveText([/掃除/]);
   await statusTabs.getByRole('button', { name: 'すべて 2' }).click();
 
-  // ステータスもリロード後に残る
+  // The status also persists after reload
   await page.reload();
   await expect(page.getByRole('combobox', { name: '「掃除」のステータス' })).toHaveValue(
     'in_progress',
@@ -179,7 +179,7 @@ test('exports and imports todos', async ({ page }) => {
   expect(download.suggestedFilename()).toMatch(/^todo-export-\d{8}\.json$/);
   const path = await download.path();
 
-  // 一度消してから読み込み直す
+  // Delete once, then import again
   await page.getByRole('button', { name: '「バックアップ対象」をゴミ箱に移動' }).click();
   await expect(page.getByText(/TODO はまだありません/)).toBeVisible();
 
@@ -258,7 +258,7 @@ test('adds the next occurrence of a weekly todo when it is completed', async ({ 
   await expect(todoItems(page)).toHaveText([/繰り返し: 毎週/]);
 
   await page.getByRole('checkbox', { name: '「ゴミ出し」を完了にする' }).check();
-  // 元の期限から数え、過去になる回は飛ばして今日以降にする
+  // Count from the original due date, skipping occurrences in the past to land on today or later
   const status = page.getByRole('status');
   await expect(status).toHaveText(/「ゴミ出し」の次の回を \d{4}\/\d{2}\/\d{2} に追加しました。/);
   await expect(todoItems(page)).toHaveCount(2);

@@ -25,7 +25,7 @@ export function AppHeader({
       id="app-header"
       className="theme-header sticky top-0 z-20 border-b border-slate-300 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
     >
-      {/* フォルダ欄の高さをヘッダーの高さから決めるので、高さは h-14 に固定する */}
+      {/* The folder pane's height is derived from the header's, so the header is fixed at h-14 */}
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-2 px-3 sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
           <button
@@ -43,7 +43,7 @@ export function AppHeader({
             <FaCheckSquare className="app-logo h-7 w-7 shrink-0 text-blue-600" aria-hidden="true" />
             <span className="truncate">TODO</span>
           </h1>
-          {/* 一番の特徴をタイトルの横で伝える。見出しには入れず、狭い画面ではフッターの注意書きに任せる */}
+          {/* State the key feature next to the title. It is not part of the heading, and narrow screens rely on the footer note instead */}
           <p className="app-tagline hidden shrink-0 items-center gap-1.5 border-l border-slate-300 pl-2 text-xs text-slate-500 sm:flex dark:border-slate-600 dark:text-slate-400">
             <FaLock aria-hidden="true" />
             {t(APP_TAGLINE)}
@@ -64,7 +64,7 @@ export function AppHeader({
             aria-label={t('インポートするファイル')}
             onChange={(event) => {
               const file = event.target.files?.[0];
-              // 同じファイルを続けて選んでも change が起きるよう空に戻す
+              // Reset to empty so that choosing the same file again still fires change
               event.target.value = '';
               if (file) onImportFile(file);
             }}

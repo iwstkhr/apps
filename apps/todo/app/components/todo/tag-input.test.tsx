@@ -12,7 +12,7 @@ function Harness({ initial = [] as string[], onKeyDown = () => {} }) {
   const [tags, setTags] = useState(initial);
   const [draft, setDraft] = useState('');
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: Escape が外へ届くかを確かめるため
+    // biome-ignore lint/a11y/noStaticElementInteractions: checks whether Escape reaches the outside
     <div onKeyDown={onKeyDown}>
       <TagInput
         tags={tags}
@@ -77,7 +77,7 @@ describe('TagInput', () => {
     expect(tagsValue()).toBe('新規|a|b');
     expect(input()).toHaveValue('c');
 
-    // 離れても打ちかけの文字はそのまま残す (保存するときにフォームがタグに含める)
+    // Text being typed stays after leaving (the form includes it in the tags when saving)
     await user.click(screen.getByRole('button', { name: 'other' }));
     expect(tagsValue()).toBe('新規|a|b');
     expect(input()).toHaveValue('c');
@@ -106,7 +106,7 @@ describe('TagInput', () => {
     expect(input()).toHaveAttribute('aria-expanded', 'false');
     expect(onKeyDown).not.toHaveBeenCalled();
 
-    // 閉じた後の Escape は外へ届ける (編集フォームのキャンセル)
+    // Escape after closing reaches the outside (canceling the edit form)
     await user.keyboard('{Escape}');
     expect(onKeyDown).toHaveBeenCalledTimes(1);
   });

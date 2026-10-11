@@ -3,9 +3,9 @@ import type { StoredData } from '~/lib/todo-db';
 import type { Folder } from '~/types/folder';
 import { type RepeatFrequency, type Todo, toLocalDateString } from '~/types/todo';
 
-// 初めて開いたときに入れるサンプル。何ができるか一目で分かるよう、入れ子のフォルダ・タグ・
-// 期限切れ / 今日 / 先の期限・各ステータス・Markdown のメモを一通り含める。
-// 中身は利用者のデータとして扱うので、作った後は言語を切り替えても訳さない。
+// Sample data added on first open. To show at a glance what the app can do, it covers nested folders, tags,
+// overdue / today / future due dates, every status, and a Markdown memo.
+// The contents are treated as user data, so they are not translated after creation even if the language changes.
 
 type Text = Record<Language, string>;
 
@@ -22,7 +22,7 @@ interface SampleTodo {
   folder: string | null;
   status: Todo['status'];
   priority: Todo['priority'];
-  /** 今日から何日後が期限か。null なら期限なし */
+  /** Days from today until the due date. null means no due date */
   dueInDays: number | null;
   repeat?: RepeatFrequency;
   tags: Text[];
@@ -122,7 +122,7 @@ function addDays(date: Date, days: number): Date {
   return result;
 }
 
-/** サンプルのフォルダと TODO を作る。期限は now を基準にするので、いつ開いても同じ見え方になる。 */
+/** Create the sample folders and todos. Due dates are relative to now, so they look the same whenever opened. */
 export function createSampleData(language: Language, now: Date = new Date()): StoredData {
   const timestamp = now.toISOString();
   const folderIds = new Map(FOLDERS.map(({ key }) => [key, crypto.randomUUID()]));
@@ -137,7 +137,7 @@ export function createSampleData(language: Language, now: Date = new Date()): St
     updatedAt: timestamp,
   }));
 
-  // 「新しい順」でも上の並びになるよう、作成日時を 1 秒ずつずらす
+  // Offset creation times by one second each so the order above holds even in 「新しい順」
   const todos: Todo[] = TODOS.map((todo, index) => {
     const createdAt = new Date(now.getTime() - index * 1000).toISOString();
     const dueDate =

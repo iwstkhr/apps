@@ -2,12 +2,12 @@ import { useSyncExternalStore } from 'react';
 import type { AnswerKey } from './urls';
 
 /**
- * 管理トークンと回答編集キーの置き場所。
+ * Where manage tokens and response edit keys are kept.
  *
- * 共有 PC で次の利用者に使われないよう、ブラウザのストレージには保存せず
- * メモリにだけ持つ。再読み込みやタブを閉じると消えるが、アプリ内の画面遷移
- * (作成完了 → 管理ページ → イベントページ など) では保たれる。
- * 持ち運びは管理用 URL / 回答編集 URL で行う。
+ * So the next person on a shared PC cannot use them, they are never saved in browser storage
+ * and live only in memory. They disappear on reload or when the tab closes, but survive navigation within the app
+ * (created screen → manage page → event page, etc.).
+ * They are carried around through the manage URL / response edit URL.
  */
 
 const manageTokens = new Map<string, string>();
@@ -34,7 +34,7 @@ export function setAnswerKey(eventId: string, key: AnswerKey | null): void {
   notify();
 }
 
-/** イベントを削除したときに、そのイベントのキーをまとめて捨てる。 */
+/** Discard all keys for an event when it is deleted. */
 export function forgetEventKeys(eventId: string): void {
   manageTokens.delete(eventId);
   answerKeys.delete(eventId);

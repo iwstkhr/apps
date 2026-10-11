@@ -12,14 +12,14 @@ import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
 import { toLocalDateString } from '~/types/todo';
 
 beforeEach(() => {
-  // 確認はアプリ内のダイアログで行う。ブラウザ標準の確認が出ていないことを確かめるために置き換える
+  // Confirmations use in-app dialogs. Replaced to check that the browser's native confirm is not shown
   vi.stubGlobal(
     'confirm',
     vi.fn(() => true),
   );
 });
 
-/** アプリ内の確認ダイアログを確かめて、ボタンを押す。 */
+/** Check the in-app confirmation dialog and press a button. */
 async function answerConfirmation(
   user: ReturnType<typeof userEvent.setup>,
   title: string,
@@ -33,7 +33,7 @@ async function answerConfirmation(
 }
 
 afterEach(async () => {
-  // 画面を閉じると表示の状態を保存するので、localStorage を消す前に閉じる
+  // Unmounting saves the view state, so unmount before clearing localStorage
   cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -91,7 +91,7 @@ describe('Home', () => {
     const user = await renderHome();
     const sortSelect = screen.getByRole('combobox', { name: '並び順' });
     expect(sortSelect).toHaveValue('created');
-    // 既定の並び順を候補の先頭に置く
+    // The default sort order is the first option
     expect(
       within(sortSelect)
         .getAllByRole('option')
@@ -152,7 +152,7 @@ describe('Home', () => {
       expect(document.documentElement.lang).toBe('en');
       expect(localStorage.getItem(LANGUAGE_KEY)).toBe('en');
 
-      // 作り直しても英語のまま
+      // Stays in English after re-rendering
       cleanup();
       await renderHome();
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
@@ -227,7 +227,7 @@ describe('Home', () => {
     await user.type(screen.getByRole('textbox', { name: 'タイトル' }), 'ゴミ出し');
     await user.click(screen.getByRole('button', { name: '詳細' }));
     await user.selectOptions(screen.getByRole('combobox', { name: '繰り返し' }), '毎週');
-    // 期限が空なら今日から始めることを伝える
+    // When the due date is empty, it says the repeat starts today
     expect(screen.getByText('期限が無いときは今日から始めます。')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '追加' }));
 
@@ -244,7 +244,7 @@ describe('Home', () => {
     expect(items()).toHaveLength(2);
     const open = items().find((li) => li.textContent?.includes(nextDue));
     expect(open).toHaveTextContent('繰り返し: 毎週');
-    // 完了した方は繰り返しを次の回に渡したので、バッジを出さない
+    // The completed one has handed the repeat to the next occurrence, so it shows no badge
     const done = items().find((li) => !li.textContent?.includes(nextDue));
     expect(done).not.toHaveTextContent('繰り返し');
 
@@ -262,7 +262,7 @@ describe('Home', () => {
     const add = screen.getByRole('button', { name: '追加' });
     expect(add).toBeEnabled();
 
-    // 空のまま押しても追加せず、タイトル欄へ案内する
+    // Pressing with an empty title adds nothing and guides the user to the title field
     await user.click(add);
     expect(title).toHaveFocus();
     expect(screen.queryByRole('list', { name: 'TODO 一覧' })).not.toBeInTheDocument();
@@ -293,7 +293,7 @@ describe('Home', () => {
     expect(screen.getByText('洗濯物をたたむ')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '「洗濯物をたたむ」をゴミ箱に移動' }));
-    // ゴミ箱へは確認なしで移す
+    // Moving to the trash needs no confirmation
     expect(window.confirm).not.toHaveBeenCalled();
     expect(screen.queryByRole('list', { name: 'TODO 一覧' })).not.toBeInTheDocument();
   });
@@ -483,7 +483,7 @@ describe('Home', () => {
       await user.click(trashRow());
       await user.click(screen.getByRole('button', { name: '「洗濯」を完全に削除' }));
       await answerConfirmation(user, '「洗濯」を完全に削除しますか？', '完全に削除');
-      // 削除した後に残っていた通知の「元に戻す」を押しても、戻したとは言わない
+      // Pressing 「元に戻す」 on a notification left over after deletion does not claim to have restored it
       await user.click(undo);
       await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
       expect(screen.queryByText('「洗濯」を元に戻しました。')).not.toBeInTheDocument();
@@ -517,14 +517,14 @@ describe('Home', () => {
       expect(laundry).toHaveTextContent('元の場所: 家');
       expect(laundry).toHaveTextContent('あと 28 日で自動で削除');
 
-      // 元に戻すと元のフォルダに戻る
+      // Undo returns it to its original folder
       await user.click(screen.getByRole('button', { name: '「洗濯」を元に戻す' }));
       expect(trashItems()).toHaveLength(2);
       await user.click(within(nav()).getByRole('button', { name: /^家/ }));
       expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('洗濯')]);
 
       await user.click(trashRow());
-      // キャンセルすれば残る
+      // Canceling keeps it
       await user.click(screen.getByRole('button', { name: '「掃除」を完全に削除' }));
       await answerConfirmation(
         user,
@@ -586,7 +586,7 @@ describe('Home', () => {
       await createFolder(user, '仕事');
       await createFolder(user, '案件', '仕事');
 
-      // 作ったフォルダが選ばれ、見出しに道のりが出る
+      // The created folder is selected, and its path appears in the heading
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('仕事 / 案件');
       expect(
         within(folderNav()).getByRole('button', { name: /^案件/, current: true }),
@@ -601,7 +601,7 @@ describe('Home', () => {
       expect(project?.parentId).toBe(folders.find((f) => f.name === '仕事')?.id);
       expect(todos[0].folderId).toBe(project?.id);
 
-      // 親フォルダには子フォルダの TODO も出て、フォルダ名が付く
+      // A parent folder also shows its subfolders' todos, labeled with the folder name
       await user.click(within(folderNav()).getByRole('button', { name: /^仕事/ }));
       expect(items()[0]).toHaveTextContent('フォルダ: 仕事 / 案件');
 
@@ -637,7 +637,7 @@ describe('Home', () => {
       const user = await renderHome();
       const main = () => within(screen.getByRole('main'));
 
-      // すべて・未分類はフォルダではないので編集ボタンは出さない
+      // すべて and 未分類 are not folders, so they have no edit button
       expect(main().queryByRole('button', { name: /を編集$/ })).not.toBeInTheDocument();
       await user.click(within(folderNav()).getByRole('button', { name: /^未分類/ }));
       expect(main().queryByRole('button', { name: /を編集$/ })).not.toBeInTheDocument();
@@ -701,7 +701,7 @@ describe('Home', () => {
         '中のフォルダ 1 件も削除されます。 中の TODO 1 件は未分類に移ります。',
       );
 
-      // 選んでいたフォルダが消えたらすべてに戻る
+      // When the selected folder is deleted, the view returns to すべて
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('すべて');
       expect(within(folderNav()).getByText('フォルダはまだありません。')).toBeInTheDocument();
       await user.click(within(folderNav()).getByRole('button', { name: /^未分類/ }));
@@ -719,7 +719,7 @@ describe('Home', () => {
         within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を閉じる' }),
       );
 
-      // リロードの代わりに画面を作り直す
+      // Re-render instead of reloading
       cleanup();
       await renderHome();
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('仕事');
@@ -736,7 +736,7 @@ describe('Home', () => {
     });
 
     describe('drag and drop', () => {
-      /** タスクの行をフォルダ欄の行へドラッグする。dragover が受け付けられたかを返す。 */
+      /** Drag a task row onto a folder pane row. Returns whether dragover was accepted. */
       function dragTodoTo(title: string, rowName: RegExp) {
         const dataTransfer = createDataTransfer();
         const item = items().find((li) => li.textContent?.includes(title));
@@ -748,7 +748,7 @@ describe('Home', () => {
         if (!header) throw new Error('todo header not found');
         fireEvent.dragStart(header, { dataTransfer });
         fireEvent.dragEnter(row, { dataTransfer });
-        // preventDefault されたら (= ドロップできる) false が返る
+        // Returns false when preventDefault was called (= dropping is allowed)
         const accepted = !fireEvent.dragOver(row, { dataTransfer });
         return {
           accepted,

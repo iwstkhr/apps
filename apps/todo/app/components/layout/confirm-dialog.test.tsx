@@ -21,7 +21,7 @@ function renderDialog() {
 }
 
 describe('ConfirmDialog', () => {
-  // 最初のフォーカスと Escape はブラウザの dialog の動きなので、E2E で確かめる
+  // Initial focus and Escape are native dialog behavior, so they are checked in E2E
   it('opens as a modal named by the question', () => {
     renderDialog();
     const dialog = screen.getByRole('dialog', { name: '「洗濯」を完全に削除しますか？' });

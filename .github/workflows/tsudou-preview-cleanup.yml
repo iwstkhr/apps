@@ -1,13 +1,13 @@
 name: "tsudou - Preview Cleanup"
 
-# Preview では Cron Trigger が動かないので、共有の Preview 用 D1 (tsudou-preview) の期限切れデータをここで消す。
-# 本番の Cron Trigger (apps/tsudou/backend/src/worker.ts の scheduled → deleteExpired) と同じ条件で消す。
-# 回答は外部キーの ON DELETE CASCADE でイベントと一緒に消える。
+# Cron Triggers do not run in Previews, so delete expired data from the shared Preview D1 (tsudou-preview) here.
+# Uses the same conditions as the production Cron Trigger (scheduled → deleteExpired in apps/tsudou/backend/src/worker.ts).
+# Responses are deleted together with their events through the foreign key's ON DELETE CASCADE.
 on:
   schedule:
-    # 本番の Cron Trigger と同じ毎日 18:00 UTC（日本時間 3:00）
+    # Daily at 18:00 UTC (03:00 JST), the same as the production Cron Trigger
     - cron: '0 18 * * *'
-  # 手動で消し直すときに使う
+  # Used to rerun the cleanup manually
   workflow_dispatch:
 
 permissions:
@@ -24,7 +24,7 @@ defaults:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    # シークレットは依存パッケージのスクリプトから読まれないよう、Cloudflare を操作するステップにだけ渡す
+    # Pass secrets only to the steps that call Cloudflare so that dependency scripts cannot read them
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # wrangler d1 は previews ブロックを読まないので、Preview 用 DB だけを書いた設定ファイルを使う
+      # wrangler d1 does not read the previews block, so use a config file that defines only the Preview database
       - name: Delete expired events
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -48,7 +48,7 @@ jobs:
           pnpm exec wrangler d1 execute tsudou-preview --remote --config wrangler.preview-migrations.jsonc \
             --command 'DELETE FROM events WHERE expires_at <= unixepoch()'
 
-  # 失敗したときだけ Slack に流す
+  # Report to Slack only on failure
   notify:
     name: Notify
     needs: cleanup

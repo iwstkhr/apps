@@ -21,8 +21,8 @@ import {
 } from './schemas';
 
 /**
- * app.ts のルートを OpenAPI のドキュメントにする。Worker からは読み込まない
- * (生成は scripts/openapi.ts、生成物が最新かどうかは openapi.test.ts が確かめる)。
+ * Turn the routes in app.ts into an OpenAPI document. Not loaded by the Worker
+ * (generation is done by scripts/openapi.ts, and openapi.test.ts checks that the output is up to date).
  */
 export function generateOpenApiDocument() {
   const registry = new OpenAPIRegistry();
@@ -49,7 +49,7 @@ export function generateOpenApiDocument() {
     content: { 'application/json': { schema } },
   });
 
-  /** エラーはステータスごとにまとめ、起こりうるコードを説明に並べる。 */
+  /** Errors are grouped by status, with the possible codes listed in the description. */
   const errors = (...codes: AppErrorCode[]): Record<string, ResponseConfig> => {
     const byStatus = new Map<number, AppErrorCode[]>();
     for (const code of [...codes, 'RATE_LIMITED', 'INTERNAL'] as const) {
@@ -174,7 +174,7 @@ export function generateOpenApiDocument() {
   });
 }
 
-/** 生成物の置き場所。リポジトリのルートの docs/ に、仕様書と並べて置く。 */
+/** Where the output goes: docs/ at the app root (apps/tsudou/docs/), next to the specification. */
 export const OPENAPI_PATH = fileURLToPath(new URL('../../docs/openapi.yaml', import.meta.url));
 
 export function renderOpenApiYaml(): string {

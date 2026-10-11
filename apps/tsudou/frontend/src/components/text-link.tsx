@@ -3,8 +3,8 @@ import { Link } from 'react-router';
 import { cx } from '../lib/cx';
 
 /**
- * 本文中のリンク。同じ配色をルート各所でベタ書きしていたのをここに集約する。
- * 余白や display は呼び出し側の className で足す。
+ * A link in body text. Gathers the color scheme that used to be hard-coded across routes.
+ * Margins and display are added by the caller's className.
  */
 export function TextLink({ className, ...props }: ComponentProps<typeof Link>) {
   return (

@@ -6,10 +6,10 @@ import { generateCandidateId } from './tokens';
 
 export { LIMITS };
 
-/** 検証用の集合。UI の表示順 (answer-form.tsx) とは別物なので統合しない。 */
+/** Sets used for validation. Separate from the UI display order (answer-form.tsx), so they are not merged. */
 const STATUSES: readonly AnswerStatus[] = ['YES', 'NO', 'MAYBE'];
 
-/** 前後の空白を削る。空文字になったら null を返す (空文字は保存しない)。 */
+/** Trim surrounding whitespace. Returns null if the result is empty (empty strings are not stored). */
 export function normalizeOptionalText(
   value: string | null | undefined,
   label: string,
@@ -55,14 +55,14 @@ export function validateFee(value: number | null | undefined): number | null {
 }
 
 /**
- * 候補日時を検証して正規化する。
- * - 1〜30 件
- * - ISO8601 としてパースできること
- * - 同一日時の重複を禁止
- * - rejectPast のときは現在より前の日時を禁止 (イベント作成時)。
- *   編集では開催済みの候補を残したまま保存できるよう許す
- * - 既存の id は維持し (既存回答との紐付けが切れないように)、無ければ採番
- * - 開始日時の昇順に並べ替え
+ * Validate and normalize candidate dates.
+ * - 1 to 30 items
+ * - Must parse as ISO 8601
+ * - No duplicate date-times
+ * - With rejectPast, date-times before now are rejected (when creating an event).
+ *   Editing allows them so that the event can be saved with past candidates kept
+ * - Existing ids are kept (so links to existing responses are not broken); new ones are assigned
+ * - Sorted by start date-time in ascending order
  */
 export function validateCandidates(
   input: readonly CandidateInput[] | null | undefined,
@@ -95,7 +95,7 @@ export function validateCandidates(
     };
   });
 
-  // id の重複はクライアント由来の壊れた入力なので弾く
+  // Duplicate ids are broken client input, so reject them
   if (new Set(candidates.map((c) => c.id)).size !== candidates.length) {
     throw validationError('候補の識別子が重複しています');
   }
@@ -104,8 +104,8 @@ export function validateCandidates(
 }
 
 /**
- * 回答を検証して正規化する。候補と過不足なく 1:1 で対応していることを要求し、
- * イベント側の候補順に並べ替えて返す。
+ * Validate and normalize a response. Requires a strict 1:1 match with the candidates,
+ * and returns the choices sorted in the event's candidate order.
  */
 export function validateChoices(
   input: readonly Choice[] | null | undefined,
@@ -143,8 +143,8 @@ export function validateChoices(
 }
 
 /**
- * 候補を編集した結果、既存の回答から消えた候補を取り除き、
- * 新しく増えた候補を MAYBE (未定) で埋める。
+ * After candidates are edited, remove from existing responses the candidates that no longer exist,
+ * and fill newly added candidates with MAYBE (undecided).
  */
 export function reconcileChoices(
   existing: readonly Choice[],

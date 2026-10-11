@@ -1,8 +1,8 @@
 /**
- * サーバとフロントで共有するドメイン型。
+ * Domain types shared by the server and the frontend.
  *
- * ブラウザにもバンドルされるため、Node 専用の API は使えない (limits.ts と同じ制約)。
- * フロントはバックエンドのパッケージを参照できないので、両方で使う型はここに置く。
+ * This is also bundled for the browser, so Node-only APIs cannot be used (the same constraint as limits.ts).
+ * The frontend cannot reference the backend package, so types used by both live here.
  */
 
 export type AnswerStatus = 'YES' | 'NO' | 'MAYBE';
@@ -28,7 +28,7 @@ export type EventView = {
   candidates: Candidate[];
   closed: boolean;
   createdAt: string;
-  /** 自動削除される時刻 (エポック秒)。 */
+  /** When it is deleted automatically (epoch seconds). */
   expiresAt: number;
   answers: AnswerView[];
 };

@@ -30,30 +30,30 @@ import {
   updateTodo,
 } from '~/types/todo';
 
-// 同じブラウザの別タブで変更されたら読み直す
+// Reload when another tab in the same browser makes changes
 const CHANNEL_NAME = 'todo-changes';
 
 export type ImportMode = 'replace' | 'merge';
 
 export interface UseTodos {
-  /** ゴミ箱に入っていないタスク */
+  /** Tasks not in the trash */
   todos: Todo[];
-  /** ゴミ箱のタスク */
+  /** Tasks in the trash */
   trash: Todo[];
-  /** ゴミ箱を含むすべてのタスク (エクスポート用) */
+  /** All tasks, including the trash (for export) */
   allTodos: Todo[];
   folders: Folder[];
   isLoading: boolean;
   error: string | null;
   addTodo: (input: TodoInput) => Promise<void>;
   editTodo: (id: string, input: TodoInput) => Promise<void>;
-  /** 繰り返すタスクを完了にしたら次の回を作って返す。作らなければ null */
+  /** Completing a repeating task creates and returns the next occurrence. null if none is created */
   changeStatus: (id: string, status: TodoStatus) => Promise<Todo | null>;
-  /** 繰り返すタスクの完了を取り消す。previous は完了にする前のタスク、nextId は作った次の回 */
+  /** Undo completing a repeating task. previous is the task before completion, nextId the created next occurrence */
   undoRepeat: (previous: Todo, nextId: string) => Promise<void>;
   changePriority: (id: string, priority: Priority) => Promise<void>;
   removeTag: (id: string, tag: string) => Promise<void>;
-  /** folderId が null なら未分類に移す */
+  /** A null folderId moves it to 未分類 */
   moveTodo: (id: string, folderId: string | null) => Promise<void>;
   reorderTodo: (
     id: string,
@@ -61,22 +61,22 @@ export interface UseTodos {
     position: DropPosition,
     visibleIds: readonly string[],
   ) => Promise<void>;
-  /** ゴミ箱に移す */
+  /** Move to the trash */
   removeTodo: (id: string) => Promise<void>;
   /**
-   * 完了済みをゴミ箱に移し、移した id を返す (元に戻すため)。
-   * scopeIds を渡すとその中 (今見ているフォルダのタスク) だけを対象にする
+   * Move completed tasks to the trash and return the moved ids (for undo).
+   * When scopeIds is given, only tasks within it (those in the folder being viewed) are affected
    */
   removeCompleted: (scopeIds?: readonly string[]) => Promise<string[]>;
-  /** ゴミ箱から戻し、実際に戻した件数を返す (完全に削除済みなら 0) */
+  /** Restore from the trash and return how many were actually restored (0 if already deleted forever) */
   restoreTodos: (ids: readonly string[]) => Promise<number>;
-  /** ゴミ箱から完全に削除する */
+  /** Delete forever from the trash */
   deleteTodosForever: (ids: readonly string[]) => Promise<void>;
   emptyTrash: () => Promise<void>;
-  /** 作ったフォルダを返す */
+  /** Returns the created folder */
   addFolder: (input: FolderInput) => Promise<Folder>;
   editFolder: (id: string, input: FolderInput) => Promise<void>;
-  /** フォルダと子孫を消し、中の TODO は未分類に移す */
+  /** Delete a folder and its descendants, moving the todos inside to 未分類 */
   removeFolder: (id: string) => Promise<void>;
   importData: (incoming: StoredData, mode: ImportMode) => Promise<void>;
 }
@@ -84,8 +84,8 @@ export interface UseTodos {
 const EMPTY: StoredData = { todos: [], folders: [] };
 
 /**
- * 新しいタスクを一覧の末尾に足す。カスタム順を使い始めていれば、今の並びを 0 からの連番に
- * 詰め直してから末尾の番号を付ける。保存し直す必要があるタスク (新しいものを含む) も返す。
+ * Append a new task to the end of the list. If the custom order is in use, renumber the current order
+ * from 0 before giving it the last number. Also returns the tasks that need saving again (including the new one).
  */
 function appendTodo(current: readonly Todo[], todo: Todo): { next: Todo[]; changed: Todo[] } {
   let normalized: readonly Todo[] = current;
@@ -109,7 +109,7 @@ export function useTodos(): UseTodos {
   const [data, setData] = useState<StoredData>(EMPTY);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // 非同期の処理から常に最新のデータを読むため
+  // So that async work always reads the latest data
   const dataRef = useRef<StoredData>(EMPTY);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
@@ -121,12 +121,12 @@ export function useTodos(): UseTodos {
   const reload = useCallback(async () => {
     try {
       const loaded = await getAll();
-      // ゴミ箱に入れてから期限を過ぎたものは、開いたときに完全に削除する
+      // Delete forever, on open, tasks whose time in the trash has expired
       const expired = loaded.todos.filter((todo) => shouldPurge(todo)).map((todo) => todo.id);
       if (expired.length > 0) {
         const ids = new Set(expired);
         loaded.todos = loaded.todos.filter((todo) => !ids.has(todo.id));
-        // 削除に失敗しても読み込んだデータは表示する (次に開いたときにまた試す)
+        // Show the loaded data even if deletion fails (retry the next time the app opens)
         void deleteTodos(expired).catch(() => {});
       }
       apply(loaded);
@@ -142,7 +142,7 @@ export function useTodos(): UseTodos {
 
   useEffect(() => {
     void reload();
-    // ブラウザがストレージを勝手に消さないよう永続化を頼む (断られても動作は変わらない)
+    // Request persistence so the browser does not clear storage on its own (behavior is the same if refused)
     void navigator.storage?.persist?.().catch(() => {});
 
     if (typeof BroadcastChannel === 'undefined') return;
@@ -155,7 +155,7 @@ export function useTodos(): UseTodos {
     };
   }, [reload]);
 
-  /** 画面を先に更新してから保存する。保存に失敗したら DB の内容に戻す。 */
+  /** Update the UI first, then save. If saving fails, revert to the DB contents. */
   const commit = useCallback(
     async (next: StoredData, persist: () => Promise<void>) => {
       apply(next);
@@ -214,7 +214,7 @@ export function useTodos(): UseTodos {
         await replaceOne(id, (todo) => setTodoStatus(todo, status));
         return null;
       }
-      // 繰り返しは次の回に引き継ぐ。完了した方から外すので、完了を外して付け直しても二重に作らない
+      // Repeating carries over to the next occurrence. It is removed from the completed one, so unchecking and checking again does not create a duplicate
       const completed: Todo = { ...setTodoStatus(current, status), repeat: null };
       const { next, changed } = appendTodo(
         dataRef.current.todos.map((todo) => (todo.id === id ? completed : todo)),
@@ -284,7 +284,7 @@ export function useTodos(): UseTodos {
     [replaceOne],
   );
 
-  /** 指定したタスクをまとめて書き換えて保存する。変わらなかったものは保存しない。 */
+  /** Rewrite and save the given tasks together. Unchanged ones are not saved. */
   const replaceMany = useCallback(
     async (ids: readonly string[], change: (todo: Todo) => Todo) => {
       const targets = new Set(ids);
@@ -316,7 +316,7 @@ export function useTodos(): UseTodos {
 
   const deleteTodosForever = useCallback(
     async (ids: readonly string[]) => {
-      // 誤ってゴミ箱の外のタスクを消さないよう、ゴミ箱にあるものだけを対象にする
+      // Target only tasks in the trash so tasks outside it are never deleted by mistake
       const targets = new Set(
         dataRef.current.todos
           .filter((todo) => isTrashed(todo) && ids.includes(todo.id))
@@ -376,7 +376,7 @@ export function useTodos(): UseTodos {
     async (id: string, input: FolderInput) => {
       const { folders } = dataRef.current;
       const current = folders.find((folder) => folder.id === id);
-      // 自分や子孫の下には動かせない (画面でも選べないようにしている)
+      // A folder cannot be moved under itself or its descendants (the UI also prevents choosing them)
       if (!current || wouldCreateCycle(folders, id, input.parentId)) return;
       const updated = updateFolder(current, input);
       await commit(

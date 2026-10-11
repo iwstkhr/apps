@@ -17,7 +17,7 @@ describe('parseApiError', () => {
   });
 
   it('想定外の形でも既定の文言を返す', () => {
-    // Cloudflare 自体が返すエラーなどはこの形になる
+    // Errors returned by Cloudflare itself, among others, take this form
     expect(parseApiError({ message: 'Too Many Requests' }).code).toBe('INTERNAL');
     expect(parseApiError(null).message).toContain('通信に失敗しました');
     expect(parseApiError({ error: { code: 'VALIDATION', message: '' } }).message).toContain(

@@ -3,23 +3,23 @@ import { t } from '~/lib/i18n';
 import { dangerPrimaryButtonClass, secondaryButtonClass } from '~/lib/styles';
 
 export interface Confirmation {
-  /** 問いかけ。ダイアログの見出しになる */
+  /** The question. Becomes the dialog heading */
   title: string;
-  /** 見出しの下に 1 行ずつ出す補足 */
+  /** Supplementary lines shown one per line below the heading */
   details?: string[];
   confirmLabel: string;
   onConfirm: () => void;
 }
 
 interface ConfirmDialogProps extends Confirmation {
-  /** 確定・取り消しのどちらでも、閉じた後に呼ぶ */
+  /** Called after closing, whether confirmed or canceled */
   onClose: () => void;
 }
 
 /**
- * window.confirm の代わりに、取り消せない操作の前に出す確認ダイアログ。
- * showModal() で開くので、フォーカスは中に閉じ込められ、Escape で取り消せる。
- * 誤って確定しないよう、最初のフォーカスは先頭の「キャンセル」に置く。
+ * A confirmation dialog shown before irreversible actions, in place of window.confirm.
+ * It opens with showModal(), so focus is trapped inside and Escape cancels.
+ * To prevent accidental confirmation, initial focus goes to the leading 「キャンセル」 button.
  */
 export function ConfirmDialog({
   title,
@@ -43,7 +43,7 @@ export function ConfirmDialog({
       aria-labelledby={titleId}
       aria-describedby={details.length > 0 ? detailsId : undefined}
       className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg bg-white text-slate-900 shadow-xl backdrop:bg-slate-900/50 dark:bg-slate-900 dark:text-slate-100 dark:ring-1 dark:ring-slate-700"
-      // 押したボタンの value が returnValue に入る。Escape で閉じたときは空のまま
+      // returnValue holds the value of the pressed button. It stays empty when closed with Escape
       onClose={(event) => {
         if (event.currentTarget.returnValue === 'confirm') onConfirm();
         onClose();

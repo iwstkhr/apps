@@ -9,7 +9,7 @@ import { useEvent } from './use-event';
 import { useManageTokenFromHash } from './use-event-keys';
 import { useFlash } from './use-flash';
 
-/** 管理画面の保存・締切・削除と、キャッシュ・鍵・遷移の後処理をまとめる。 */
+/** Bundles saving, closing, and deleting on the manage page with the follow-up for cache, keys, and navigation. */
 export function useManagedEvent(eventId: string | undefined, hash: string) {
   const navigate = useNavigate();
   const state = useEvent(eventId);

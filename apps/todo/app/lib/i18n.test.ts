@@ -24,7 +24,7 @@ function browserLanguages(languages: string[], language = languages[0] ?? '') {
 }
 
 beforeEach(() => {
-  // setup.ts が日本語にしているので、ここでは保存なしの状態から始める
+  // setup.ts sets Japanese, so start here from a state with nothing saved
   localStorage.removeItem(LANGUAGE_KEY);
   forgetSavedLanguageForTesting();
 });
@@ -156,7 +156,7 @@ describe('t', () => {
 });
 
 describe('translations', () => {
-  // ソースの t('…') と、画面に出すラベルの定数がすべて訳されているか
+  // Check that every t('…') in the source and every label constant shown in the UI is translated
   const sources = import.meta.glob(['../**/*.{ts,tsx}', '!../**/*.test.{ts,tsx}', '!../test/**'], {
     query: '?raw',
     import: 'default',
@@ -167,7 +167,7 @@ describe('translations', () => {
     const keys = new Set<string>();
     for (const code of Object.values(sources)) {
       for (const match of code.matchAll(/\bt\(\s*'((?:[^'\\]|\\.)*)'/g)) keys.add(match[1]);
-      // t(条件 ? 'a' : 'b') の形
+      // The t(condition ? 'a' : 'b') form
       for (const match of code.matchAll(/\bt\([^'()]*\?\s*'([^']*)'\s*:\s*'([^']*)'/g)) {
         keys.add(match[1]);
         keys.add(match[2]);
@@ -198,7 +198,7 @@ describe('translations', () => {
 
   it('has an English translation for every label literal in the source', () => {
     const labels = Object.entries(sources)
-      // 言語名 (日本語 / English) はどの言語でもそのまま出す
+      // Language names (日本語 / English) are shown as is in every language
       .filter(([path]) => !path.endsWith('/i18n.ts'))
       .flatMap(([, code]) => [...code.matchAll(/\blabel: '([^']+)'/g)].map((m) => m[1]));
     expect(labels.length).toBeGreaterThan(10);

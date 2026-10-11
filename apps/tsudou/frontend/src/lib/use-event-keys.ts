@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { setAnswerKey, setManageToken, useAnswerKey, useManageToken } from './keyring';
 import { readAnswerKeyFromHash, readTokenFromHash, stripHash } from './urls';
 
-/** URL の鍵はメモリにだけ取り込み、すぐにフラグメントを消す。 */
+/** Take the keys in the URL into memory only, and clear the fragment immediately. */
 export function useAnswerKeyFromHash(eventId: string | undefined, hash: string) {
   const key = useAnswerKey(eventId);
   useEffect(() => {

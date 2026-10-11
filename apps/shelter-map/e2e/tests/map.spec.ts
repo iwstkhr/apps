@@ -46,7 +46,7 @@ test.describe('地図', () => {
     if (!box) throw new Error('地図が表示されていません');
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 
-    // ホイールだけではページのスクロールに任せ、ズームしない
+    // The wheel alone scrolls the page and does not zoom
     await page.mouse.wheel(0, -100);
     await page.waitForTimeout(500);
     expect(await currentZoom(page)).toBe(8);

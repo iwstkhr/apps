@@ -1,9 +1,9 @@
-// e2e テスト用のサーバを立てる (playwright.config.ts の webServer から呼ばれる)。
+// Start the server for e2e tests (called from webServer in playwright.config.ts).
 //
-// 本番と同じく、ビルドした build/client/ を wrangler dev が静的アセットとして配信する。
+// As in production, wrangler dev serves the built build/client/ as static assets.
 //
-//   E2E_PORT        待ち受けるポート (既定 8789)
-//   E2E_SKIP_BUILD  1 ならビルドを省く (ビルド済みの build/client/ を使う)
+//   E2E_PORT        Port to listen on (default 8789)
+//   E2E_SKIP_BUILD  Skip the build when 1 (use the existing build/client/)
 import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -14,12 +14,12 @@ if (process.env.E2E_SKIP_BUILD !== '1') {
   execFileSync('pnpm', ['run', 'build'], { cwd: ROOT, stdio: 'inherit' });
 }
 
-// pnpm exec を挟むと終了のシグナルが wrangler (と子の workerd) まで届かず、テスト後に残るので直接起動する
+// Start wrangler directly: through pnpm exec, termination signals do not reach wrangler (and its child workerd), which is left running after the tests
 const server = spawn(
   `${ROOT}node_modules/.bin/wrangler`,
   ['dev', '--port', PORT, '--show-interactive-dev-session=false'],
   { cwd: ROOT, stdio: 'inherit' },
 );
-// Playwright はテストが終わると SIGTERM を送る (playwright.config.ts の gracefulShutdown)
+// Playwright sends SIGTERM when the tests finish (gracefulShutdown in playwright.config.ts)
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => server.kill(signal));
 server.on('exit', (code) => process.exit(code ?? 0));

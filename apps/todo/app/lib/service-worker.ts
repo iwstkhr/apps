@@ -1,13 +1,13 @@
 import { publicUrl } from '~/lib/public-url';
 
 /**
- * オフラインでも開けるよう Service Worker を登録する。sw.js は本番ビルドでだけ作られるので
- * (react-router.config.ts の buildEnd)、開発サーバーでは登録しない。
+ * Register the Service Worker so the app opens offline. sw.js is generated only in production builds
+ * (buildEnd in react-router.config.ts), so it is not registered on the dev server.
  */
 export function registerServiceWorker() {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
   navigator.serviceWorker.register(publicUrl('sw.js')).catch((error: unknown) => {
-    // 登録できなくても、オンラインならこれまでどおり使える
+    // Even if registration fails, the app works as before while online
     console.error('Failed to register the service worker', error);
   });
 }
