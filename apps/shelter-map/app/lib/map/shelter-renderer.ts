@@ -112,3 +112,15 @@ export function syncShelterLayers(
     registry.set(shelter.id, { kind, style, layer });
   }
 }
+
+export function findShelterIdByLayer(
+  registry: ShelterLayerRegistry,
+  layer: L.Layer,
+): Shelter['id'] | undefined {
+  for (const [shelterId, entry] of registry) {
+    if (entry.layer === layer) {
+      return shelterId;
+    }
+  }
+  return undefined;
+}

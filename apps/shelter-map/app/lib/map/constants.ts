@@ -33,3 +33,6 @@ export const SHELTER_MARKER_Z_INDEX_OFFSETS: Record<ShelterLayerStyle, number> =
 // Below this zoom, markers are drawn only when few shelters are in view to keep panning responsive.
 export const SHELTER_MARKER_MIN_ZOOM = 15;
 export const SHELTER_MARKER_LIMIT_BELOW_MIN_ZOOM = 100;
+
+// Selecting a shelter in the table zooms in at least this far, where it is drawn as a pin.
+export const SHELTER_FOCUS_MIN_ZOOM = 16;

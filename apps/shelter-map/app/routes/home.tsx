@@ -24,10 +24,15 @@ export default function Home() {
     () => ({ ...filters, keyword: debouncedKeyword }),
     [filters, debouncedKeyword],
   );
-  const { displayedShelters, isLoading, loadError, changeTileLayer } = useShelterMap(
-    mapContainerRef,
-    appliedFilters,
-  );
+  const {
+    displayedShelters,
+    visibleShelters,
+    selectedShelterId,
+    focusShelter,
+    isLoading,
+    loadError,
+    changeTileLayer,
+  } = useShelterMap(mapContainerRef, appliedFilters);
 
   return (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
@@ -49,7 +54,14 @@ export default function Home() {
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-[4] flex-col">
-        <MapTable shelters={displayedShelters} />
+        <MapTable
+          shelters={displayedShelters}
+          visibleShelters={visibleShelters}
+          withinMapOnly={filters.withinMapOnly}
+          onWithinMapOnlyChange={(withinMapOnly) => setFilters({ ...filters, withinMapOnly })}
+          selectedShelterId={selectedShelterId}
+          onSelect={focusShelter}
+        />
       </div>
     </section>
   );

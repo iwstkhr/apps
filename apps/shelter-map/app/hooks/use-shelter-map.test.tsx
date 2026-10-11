@@ -25,11 +25,25 @@ const mockMap = {
   off: vi.fn(),
   addLayer: vi.fn(),
   getZoom: vi.fn(() => 15),
+  getSize: vi.fn(() => ({ x: 800, y: 600 })),
+  flyTo: vi.fn(),
 } as unknown as LeafletMap & {
   on: ReturnType<typeof vi.fn>;
   off: ReturnType<typeof vi.fn>;
   addLayer: ReturnType<typeof vi.fn>;
+  getSize: ReturnType<typeof vi.fn>;
+  flyTo: ReturnType<typeof vi.fn>;
 };
+
+function getMoveEndHandler(): () => void {
+  const handler = mockMap.on.mock.calls
+    .filter((call: unknown[]) => call[0] === 'moveend')
+    .at(-1)?.[1];
+  if (typeof handler !== 'function') {
+    throw new Error('expected moveend handler');
+  }
+  return handler;
+}
 
 const changeTileLayer = vi.fn();
 
@@ -49,6 +63,9 @@ describe('useShelterMap', () => {
     vi.spyOn(shelterRenderer, 'syncShelterLayers').mockImplementation(() => {});
     changeTileLayer.mockReset();
     mockMap.addLayer.mockClear();
+    mockMap.on.mockClear();
+    mockMap.flyTo.mockClear();
+    mockMap.getSize.mockReturnValue({ x: 800, y: 600 });
   });
 
   it('renders shelters when map and data are ready', async () => {
@@ -131,18 +148,12 @@ describe('useShelterMap', () => {
       expect(result.current.displayedShelters).toEqual(shelters);
     });
 
-    const moveHandler = mockMap.on.mock.calls.find(
-      (call: unknown[]) => call[0] === 'moveend',
-    )?.[1] as (() => void) | undefined;
-    if (typeof moveHandler !== 'function') {
-      throw new Error('expected moveend handler');
-    }
-
     act(() => {
-      moveHandler();
+      getMoveEndHandler()();
     });
 
     expect(result.current.displayedShelters).toEqual(shelters);
+    expect(result.current.visibleShelters).toEqual([yokohama]);
     expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.any(Map),
@@ -150,6 +161,60 @@ describe('useShelterMap', () => {
       15,
       [],
     );
+  });
+
+  it('keeps the last viewport while the map is hidden', async () => {
+    const mapContainerRef = createRef<HTMLDivElement>();
+    const { result } = renderHook(() => useShelterMap(mapContainerRef, emptyShelterFilters));
+
+    await waitFor(() => {
+      expect(result.current.visibleShelters).toEqual(shelters);
+    });
+
+    vi.spyOn(viewportFilter, 'filterSheltersWithinMap').mockReturnValue([]);
+    mockMap.getSize.mockReturnValue({ x: 0, y: 0 });
+    act(() => {
+      getMoveEndHandler()();
+    });
+
+    expect(result.current.visibleShelters).toEqual(shelters);
+  });
+
+  it('flies to a selected shelter and opens its popup once the map stops moving', async () => {
+    const openPopup = vi.fn();
+    vi.mocked(shelterRenderer.syncShelterLayers).mockImplementation((_group, registry) => {
+      registry.set(kawasaki.id, {
+        kind: 'marker',
+        style: 'default',
+        layer: { openPopup } as unknown as L.Layer,
+      });
+    });
+
+    const mapContainerRef = createRef<HTMLDivElement>();
+    const { result } = renderHook(() => useShelterMap(mapContainerRef, emptyShelterFilters));
+
+    await waitFor(() => {
+      expect(result.current.visibleShelters).toEqual(shelters);
+    });
+
+    act(() => {
+      result.current.focusShelter(kawasaki);
+    });
+
+    expect(result.current.selectedShelterId).toBe('kawasaki');
+    expect(mockMap.flyTo).toHaveBeenCalledWith([kawasaki.latitude, kawasaki.longitude], 16);
+    expect(openPopup).not.toHaveBeenCalled();
+
+    act(() => {
+      getMoveEndHandler()();
+    });
+    expect(openPopup).toHaveBeenCalledOnce();
+
+    // Later moves do not reopen it
+    act(() => {
+      getMoveEndHandler()();
+    });
+    expect(openPopup).toHaveBeenCalledOnce();
   });
 
   it('adds shelter layer groups to the map and removes them on unmount', async () => {

@@ -1,4 +1,13 @@
-import { currentZoom, expect, mapMarkers, openApp, searchBox, test } from '../fixtures';
+import {
+  currentZoom,
+  expect,
+  mapMarkers,
+  openApp,
+  resultCount,
+  searchBox,
+  tableRows,
+  test,
+} from '../fixtures';
 
 test.describe('地図', () => {
   test('ピンをクリックすると、名前・住所・災害種別ごとの指定状況を表示する', async ({ page }) => {
@@ -24,6 +33,33 @@ test.describe('地図', () => {
     const popup = page.locator('.shelter-popup');
     await expect(popup.locator('strong')).toHaveText('<b>港</b>&テスト広場');
     await expect(popup.locator('b')).toHaveCount(0);
+  });
+
+  test('表の行を選ぶと地図がその避難場所へ移動してポップアップを開き、ピンを選ぶと行が強調される', async ({
+    page,
+  }) => {
+    await openApp(page);
+
+    await tableRows(page).filter({ hasText: '川崎テスト公園' }).click();
+    const popup = page.locator('.shelter-popup');
+    await expect(popup.locator('strong')).toHaveText('川崎テスト公園');
+    await expect.poll(() => currentZoom(page)).toBe(16);
+    await expect(tableRows(page).filter({ hasText: '川崎テスト公園' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+
+    // Only the selected shelter is inside the zoomed-in viewport
+    await page.getByRole('checkbox', { name: '地図の表示範囲のみ' }).check();
+    await expect(resultCount(page)).toHaveText('1 件');
+    await expect(page.getByText('/ 該当 4 件')).toBeVisible();
+
+    // Closing the popup clears the selection
+    await popup.locator('.leaflet-popup-close-button').click();
+    await expect(tableRows(page).first()).not.toHaveAttribute('aria-current');
+
+    await mapMarkers(page).click();
+    await expect(tableRows(page).first()).toHaveAttribute('aria-current', 'true');
   });
 
   test('地図タイルを国土地理院の写真に切り替えられる', async ({ page }) => {
