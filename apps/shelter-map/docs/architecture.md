@@ -149,7 +149,7 @@ On `moveend` / `zoomlevelschange`, the app:
 | --- | --- |
 | `fetch-shelters` | Fetch, decompress, parse, and cache assets |
 | `types/shelter` | Convert GeoJSON to `Shelter` and validate it |
-| `types/shelter-type` | Define disaster type keys and Japanese labels |
+| `types/shelter-type` | Define disaster type keys, Japanese labels, and colors |
 | `types/shelter-filters` | Define the filter state, keyword and disaster type matching |
 | `types/tile-layer` | Define tile layers and defaults |
 | `generated/dataset-meta` | Provide the data update date displayed in the UI |

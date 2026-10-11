@@ -1,10 +1,12 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useEffect, useRef } from 'react';
+import { ShelterTypeDot } from '~/components/shelter/shelter-type-dot';
 import { cn } from '~/lib/cn';
 import type { Shelter } from '~/types/shelter';
 import { matchesShelterTypes } from '~/types/shelter-filters';
 import {
   getShelterTypeTableLabel,
+  SHELTER_TYPE_COLORS,
   type ShelterTypeKey,
   shelterTypeKeys,
 } from '~/types/shelter-type';
@@ -125,7 +127,14 @@ function ShelterTableCells({ shelter, selected }: { shelter: Shelter; selected: 
       </div>
       {shelterTypeKeys.map((key) => (
         <div key={key} className={SHELTER_TYPE_CELL_CLASS} role="cell">
-          <span className={shelter.type[key] ? 'app-content-ready' : 'app-content-not-ready'} />
+          {shelter.type[key] ? (
+            <span
+              className="app-content-ready"
+              style={{ '--type-color': SHELTER_TYPE_COLORS[key] } as React.CSSProperties}
+            />
+          ) : (
+            <span className="app-content-not-ready" />
+          )}
         </div>
       ))}
     </>
@@ -148,8 +157,9 @@ function ShelterCardCells({ shelter, dimmed }: { shelter: Shelter; dimmed: boole
           designatedTypes.map((key) => (
             <span
               key={key}
-              className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800 ring-1 ring-emerald-200"
+              className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200"
             >
+              <ShelterTypeDot typeKey={key} />
               {getShelterTypeTableLabel(key)}
             </span>
           ))

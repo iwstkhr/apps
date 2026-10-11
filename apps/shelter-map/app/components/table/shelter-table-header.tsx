@@ -1,3 +1,4 @@
+import { ShelterTypeDot } from '~/components/shelter/shelter-type-dot';
 import {
   SHELTER_TABLE_GRID_TEMPLATE,
   SHELTER_TYPE_COLUMN_CLASS,
@@ -28,6 +29,7 @@ export function ShelterTableHeader() {
           className={cn(HEADER_CELL_CLASS, SHELTER_TYPE_HEADER_CLASS)}
           role="columnheader"
         >
+          <ShelterTypeDot typeKey={key} className="mb-0.5 block mx-auto" />
           {getShelterTypeTableLabel(key)}
         </div>
       ))}

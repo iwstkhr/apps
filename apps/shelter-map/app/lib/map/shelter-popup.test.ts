@@ -8,7 +8,9 @@ describe('getPopupContent', () => {
 
     expect(html).toContain('<strong>テスト避難所</strong>');
     expect(html).toContain('神奈川県横浜市');
-    expect(html).toContain('class="app-content-ready shelter-type-ready">洪水</span>');
+    expect(html).toContain(
+      'class="app-content-ready shelter-type-ready" style="--type-color: #2a78d6">洪水</span>',
+    );
     expect(html).toContain('class="app-content-not-ready shelter-type-not-ready">津波</span>');
   });
 

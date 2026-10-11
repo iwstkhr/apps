@@ -1,5 +1,5 @@
 import type { Shelter } from '~/types/shelter';
-import { ShelterTypeJapanese, shelterTypeKeys } from '~/types/shelter-type';
+import { SHELTER_TYPE_COLORS, ShelterTypeJapanese, shelterTypeKeys } from '~/types/shelter-type';
 
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -26,7 +26,8 @@ export function getPopupContent(shelter: Shelter): string {
     .map((key) => {
       const status = shelter.type[key] ? 'ready' : 'not-ready';
       const name = escapeHtml(ShelterTypeJapanese[key]);
-      return `<span class="app-content-${status} shelter-type-${status}">${name}</span>`;
+      const style = shelter.type[key] ? ` style="--type-color: ${SHELTER_TYPE_COLORS[key]}"` : '';
+      return `<span class="app-content-${status} shelter-type-${status}"${style}>${name}</span>`;
     })
     .join('');
   popup += `<div class="shelter-popup-types">${types}</div>`;

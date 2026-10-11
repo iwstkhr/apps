@@ -24,6 +24,7 @@ import { L } from '~/lib/leaflet';
 import {
   createShelterLayerRegistry,
   getShelterLayerStyle,
+  getShelterMatchColor,
   shouldRenderShelterMarkers,
   syncShelterLayers,
 } from '~/lib/map/shelter-renderer';
@@ -64,6 +65,13 @@ describe('getShelterLayerStyle', () => {
   it('distinguishes shelters that match every selected type', () => {
     expect(getShelterLayerStyle(createShelter(), ['flood', 'earthquake'])).toBe('match');
     expect(getShelterLayerStyle(createShelter(), ['flood', 'tsunami'])).toBe('dim');
+  });
+});
+
+describe('getShelterMatchColor', () => {
+  it('uses the color of a single selected type and a neutral color for several', () => {
+    expect(getShelterMatchColor(['tsunami'])).toBe('#1baf7a');
+    expect(getShelterMatchColor(['flood', 'tsunami'])).toBe('#1e293b');
   });
 });
 
@@ -181,5 +189,24 @@ describe('syncShelterLayers', () => {
     syncShelterLayers(group, registry, [matching, dimmed], 15, ['tsunami']);
 
     expect([...registry.keys()]).toEqual(['dimmed', 'matching']);
+  });
+
+  it('fills matching pins with the selected type color and recolors them when it changes', () => {
+    const group = createGroup();
+    const registry = createShelterLayerRegistry();
+    const shelter = createShelter();
+
+    syncShelterLayers(group, registry, [shelter], 15, ['flood']);
+    expect(L.marker).toHaveBeenLastCalledWith(
+      expect.any(Array),
+      expect.objectContaining({
+        icon: expect.objectContaining({ html: expect.stringContaining('--pin-fill: #2a78d6') }),
+      }),
+    );
+    const floodLayer = registry.get(shelter.id)?.layer;
+
+    syncShelterLayers(group, registry, [shelter], 15, ['earthquake']);
+    expect(group.removeLayer).toHaveBeenCalledWith(floodLayer);
+    expect(registry.get(shelter.id)?.matchColor).toBe('#eb6834');
   });
 });

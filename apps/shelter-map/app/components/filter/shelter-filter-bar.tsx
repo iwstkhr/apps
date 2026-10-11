@@ -1,4 +1,5 @@
 import { FaMagnifyingGlass, FaXmark } from 'react-icons/fa6';
+import { ShelterTypeDot } from '~/components/shelter/shelter-type-dot';
 import { cn } from '~/lib/cn';
 import {
   emptyShelterFilters,
@@ -6,7 +7,11 @@ import {
   type ShelterFilters,
   toggleShelterType,
 } from '~/types/shelter-filters';
-import { getShelterTypeTableLabel, shelterTypeKeys } from '~/types/shelter-type';
+import {
+  getShelterTypeTableLabel,
+  SHELTER_TYPE_COLORS,
+  shelterTypeKeys,
+} from '~/types/shelter-type';
 
 export function ShelterFilterBar({
   filters,
@@ -63,12 +68,23 @@ export function ShelterFilterBar({
                     onChange({ ...filters, types: toggleShelterType(filters.types, key) })
                   }
                   className={cn(
-                    'shrink-0 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors sm:text-sm',
+                    'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap text-slate-800 transition-colors sm:text-sm',
                     selected
-                      ? 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-100',
+                      ? 'bg-white'
+                      : 'border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-100',
                   )}
+                  // A selected chip takes its type's color as a thick outline and a light tint.
+                  style={
+                    selected
+                      ? {
+                          borderColor: SHELTER_TYPE_COLORS[key],
+                          boxShadow: `inset 0 0 0 1px ${SHELTER_TYPE_COLORS[key]}`,
+                          backgroundColor: `${SHELTER_TYPE_COLORS[key]}1f`,
+                        }
+                      : undefined
+                  }
                 >
+                  <ShelterTypeDot typeKey={key} className={selected ? 'size-2.5' : undefined} />
                   {getShelterTypeTableLabel(key)}
                 </button>
               );

@@ -16,7 +16,7 @@ a:link {
 
 .app-content-ready::before {
   content: "●";
-  color: #059669;
+  color: var(--type-color, #059669);
   font-size: 1.125rem;
   line-height: 1;
 }
@@ -65,7 +65,7 @@ a:link {
 }
 
 .shelter-popup .shelter-type-ready {
-  color: #047857;
+  color: #0f172a;
   font-weight: 500;
 }
 
@@ -112,8 +112,9 @@ a:link {
 }
 
 .shelter-pin-match {
-  --pin-fill: #10b981;
-  --pin-stroke: #047857;
+  /* --pin-fill is set per icon from the selected disaster type. */
+  --pin-fill: #1e293b;
+  --pin-stroke: #ffffff;
 }
 
 .shelter-pin-dim {

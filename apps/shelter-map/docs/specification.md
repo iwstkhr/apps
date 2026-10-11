@@ -91,7 +91,7 @@ Colors follow the selected disaster types:
 | Style | Condition | Color |
 | --- | --- | --- |
 | default | No disaster type is selected | Blue |
-| match | Designated for every selected type | Green, drawn on top |
+| match | Designated for every selected type | The type's color with one type selected, dark slate with several; white outline, drawn on top |
 | dim | Misses a selected type (shown only with "非該当も表示") | Gray, smaller |
 
 Layers are synchronized incrementally after panning or zooming ends to avoid unnecessary recreation.
@@ -113,7 +113,7 @@ Strings from the data are HTML-escaped before insertion. The site whose popup is
 | --- | --- |
 | Name | Facility or site name |
 | Address | Address |
-| Disaster type × 8 | Designated (green dot) / Not designated (gray dot) |
+| Disaster type × 8 | Designated (dot in the type's color) / Not designated (gray dot) |
 
 - Display the result count at the upper right; with "地図の表示範囲のみ" on, show only sites inside the map viewport and the count as "N 件 / 該当 M 件"
 - Display the source link and data update date (`DATASET_UPDATED_AT`)
@@ -137,7 +137,7 @@ The map and table share the filters in the filter bar above the map.
 
 ### Disaster type chips
 
-- Each chip toggles one disaster type (`aria-pressed`)
+- Each chip toggles one disaster type (`aria-pressed`); a selected chip takes the type's color as its outline and tint
 - A site matches when it is designated for every selected type (AND)
 - Chip changes apply immediately
 - With "非該当も表示" (shown while a type is selected), non-matching sites are kept and shown dimmed instead of hidden
@@ -163,16 +163,18 @@ interface Shelter {
 
 GeoJSON property names and table labels below retain their original Japanese values.
 
-| Key | GeoJSON property name | Abbreviated table label |
-| --- | --- | --- |
-| `flood` | 洪水 | 洪水 |
-| `landslide` | 崖崩れ、土石流及び地滑り | 崖崩れ |
-| `storm_surge` | 高潮 | 高潮 |
-| `earthquake` | 地震 | 地震 |
-| `tsunami` | 津波 | 津波 |
-| `big_fire` | 大規模な火事 | 火事 |
-| `flood_within_levee` | 内水氾濫 | 内水氾濫 |
-| `volcanic_activity` | 火山現象 | 火山現象 |
+| Key | GeoJSON property name | Abbreviated table label | Color |
+| --- | --- | --- | --- |
+| `flood` | 洪水 | 洪水 | `#2a78d6` blue |
+| `landslide` | 崖崩れ、土石流及び地滑り | 崖崩れ | `#008300` green |
+| `storm_surge` | 高潮 | 高潮 | `#4a3aa7` violet |
+| `earthquake` | 地震 | 地震 | `#eb6834` orange |
+| `tsunami` | 津波 | 津波 | `#1baf7a` aqua |
+| `big_fire` | 大規模な火事 | 火事 | `#e34948` red |
+| `flood_within_levee` | 内水氾濫 | 内水氾濫 | `#e87ba4` magenta |
+| `volcanic_activity` | 火山現象 | 火山現象 | `#eda100` yellow |
+
+The colors are a validated 8-hue categorical palette. They appear as dots beside the labels (chips, table header and cells, cards, popups) and as the fill of matching markers; labels always stay in the text color because several hues are below 3:1 contrast on white.
 
 In GeoJSON, the string `"1"` indicates designation; all other values indicate no designation.
 

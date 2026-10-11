@@ -19,9 +19,13 @@ export type ShelterLayerStyle = 'default' | 'match' | 'dim';
 
 export const SHELTER_CIRCLE_STYLES = {
   default: { radius: 6, color: '#1e40af', fillColor: '#3b82f6', fillOpacity: 0.85, weight: 1.5 },
-  match: { radius: 7, color: '#047857', fillColor: '#10b981', fillOpacity: 0.9, weight: 2 },
+  // fillColor is replaced by the match color (see getShelterMatchColor).
+  match: { radius: 7, color: '#ffffff', fillColor: '#1e293b', fillOpacity: 0.95, weight: 1.5 },
   dim: { radius: 4, color: '#64748b', fillColor: '#cbd5e1', fillOpacity: 0.7, weight: 1 },
 } as const satisfies Record<ShelterLayerStyle, CircleMarkerOptions>;
+
+// With several types selected no single type color fits, so matches use a neutral dark ink.
+export const SHELTER_MULTI_TYPE_MATCH_COLOR = '#1e293b';
 
 // Circles shrink when zoomed out so thousands of them do not cover the map.
 export function getShelterCircleRadiusScale(zoom: number): number {

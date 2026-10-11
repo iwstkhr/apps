@@ -36,6 +36,20 @@ const shelterTypeTableLabelOverrides: Partial<Record<ShelterTypeKey, string>> = 
   big_fire: '火事',
 };
 
+// The validated 8-hue categorical palette, matched to each hazard where a hue fits
+// (water is blue/aqua, fire red, slopes green, ash amber). Colors mark identity only;
+// labels always stay in the text color, because several hues are below 3:1 on white.
+export const SHELTER_TYPE_COLORS = {
+  flood: '#2a78d6',
+  landslide: '#008300',
+  storm_surge: '#4a3aa7',
+  earthquake: '#eb6834',
+  tsunami: '#1baf7a',
+  big_fire: '#e34948',
+  flood_within_levee: '#e87ba4',
+  volcanic_activity: '#eda100',
+} as const satisfies Record<ShelterTypeKey, string>;
+
 export function getShelterTypeTableLabel(key: ShelterTypeKey): string {
   return shelterTypeTableLabelOverrides[key] ?? ShelterTypeJapanese[key];
 }
