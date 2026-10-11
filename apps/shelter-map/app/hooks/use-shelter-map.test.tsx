@@ -11,7 +11,7 @@ import { L } from '~/lib/leaflet';
 import * as shelterRenderer from '~/lib/map/shelter-renderer';
 import * as viewportFilter from '~/lib/map/viewport-filter';
 import { createShelter } from '~/test/fixtures';
-import { emptyShelterColumnFilters } from '~/types/shelter-filters';
+import { emptyShelterFilters, type ShelterFilters } from '~/types/shelter-filters';
 
 vi.mock('~/hooks/use-leaflet-map');
 vi.mock('~/hooks/use-shelter-data');
@@ -53,7 +53,7 @@ describe('useShelterMap', () => {
 
   it('renders shelters when map and data are ready', async () => {
     const mapContainerRef = createRef<HTMLDivElement>();
-    const { result } = renderHook(() => useShelterMap(mapContainerRef));
+    const { result } = renderHook(() => useShelterMap(mapContainerRef, emptyShelterFilters));
 
     await waitFor(() => {
       expect(result.current.displayedShelters).toEqual(shelters);
@@ -64,20 +64,18 @@ describe('useShelterMap', () => {
     expect(shelterRenderer.syncShelterLayers).toHaveBeenCalled();
   });
 
-  it('updates displayed shelters when column filters change', async () => {
+  it('updates displayed shelters when filters change', async () => {
     const mapContainerRef = createRef<HTMLDivElement>();
-    const { result } = renderHook(() => useShelterMap(mapContainerRef));
+    const { result, rerender } = renderHook(
+      ({ filters }: { filters: ShelterFilters }) => useShelterMap(mapContainerRef, filters),
+      { initialProps: { filters: emptyShelterFilters } },
+    );
 
     await waitFor(() => {
       expect(result.current.displayedShelters).toEqual(shelters);
     });
 
-    act(() => {
-      result.current.updateColumnFilters({
-        ...emptyShelterColumnFilters,
-        name: '横浜',
-      });
-    });
+    rerender({ filters: { ...emptyShelterFilters, keyword: '横浜' } });
 
     expect(result.current.displayedShelters).toEqual([yokohama]);
     expect(shelterRenderer.syncShelterLayers).toHaveBeenLastCalledWith(
@@ -88,7 +86,7 @@ describe('useShelterMap', () => {
     );
   });
 
-  it('applies column filters entered while data is loading once data loads', async () => {
+  it('applies filters entered while data is loading once data loads', async () => {
     vi.mocked(useShelterData).mockReturnValue({
       shelters: [],
       isLoading: true,
@@ -96,17 +94,10 @@ describe('useShelterMap', () => {
     });
 
     const mapContainerRef = createRef<HTMLDivElement>();
-    const { result, rerender } = renderHook(() => useShelterMap(mapContainerRef));
-
-    act(() => {
-      result.current.updateColumnFilters({
-        ...emptyShelterColumnFilters,
-        name: '横浜',
-      });
-    });
+    const filters = { ...emptyShelterFilters, keyword: '横浜' };
+    const { result, rerender } = renderHook(() => useShelterMap(mapContainerRef, filters));
 
     expect(result.current.displayedShelters).toEqual([]);
-    const updateColumnFiltersWhileLoading = result.current.updateColumnFilters;
 
     vi.mocked(useShelterData).mockReturnValue({
       shelters,
@@ -124,8 +115,6 @@ describe('useShelterMap', () => {
       [yokohama],
       15,
     );
-    // A stable updater keeps the table's debounced filter sync from re-rendering the map on load.
-    expect(result.current.updateColumnFilters).toBe(updateColumnFiltersWhileLoading);
   });
 
   it('keeps the full filtered list in the table when the map moves', async () => {
@@ -134,7 +123,7 @@ describe('useShelterMap', () => {
       .mockReturnValue([yokohama]);
 
     const mapContainerRef = createRef<HTMLDivElement>();
-    const { result } = renderHook(() => useShelterMap(mapContainerRef));
+    const { result } = renderHook(() => useShelterMap(mapContainerRef, emptyShelterFilters));
 
     await waitFor(() => {
       expect(result.current.displayedShelters).toEqual(shelters);
@@ -164,7 +153,9 @@ describe('useShelterMap', () => {
     const removeSpy = vi.spyOn(L.LayerGroup.prototype, 'remove');
 
     const mapContainerRef = createRef<HTMLDivElement>();
-    const { result, unmount } = renderHook(() => useShelterMap(mapContainerRef));
+    const { result, unmount } = renderHook(() =>
+      useShelterMap(mapContainerRef, emptyShelterFilters),
+    );
 
     await waitFor(() => {
       expect(result.current.displayedShelters).toEqual(shelters);
@@ -195,7 +186,7 @@ describe('useShelterMap', () => {
     });
 
     const mapContainerRef = createRef<HTMLDivElement>();
-    const { result } = renderHook(() => useShelterMap(mapContainerRef));
+    const { result } = renderHook(() => useShelterMap(mapContainerRef, emptyShelterFilters));
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.loadError).toBe('network error');
@@ -204,7 +195,7 @@ describe('useShelterMap', () => {
 
   it('forwards tile layer changes to useLeafletMap', async () => {
     const mapContainerRef = createRef<HTMLDivElement>();
-    const { result } = renderHook(() => useShelterMap(mapContainerRef));
+    const { result } = renderHook(() => useShelterMap(mapContainerRef, emptyShelterFilters));
 
     await waitFor(() => {
       expect(result.current.displayedShelters).toEqual(shelters);

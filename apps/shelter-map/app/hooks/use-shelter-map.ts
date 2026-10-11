@@ -4,13 +4,12 @@ import { useShelterData } from '~/hooks/use-shelter-data';
 import { L } from '~/lib/leaflet';
 import { createShelterLayerRegistry, syncShelterLayers } from '~/lib/map/shelter-renderer';
 import { filterSheltersWithinMap } from '~/lib/map/viewport-filter';
-import {
-  emptyShelterColumnFilters,
-  filterSheltersByColumns,
-  type ShelterColumnFilters,
-} from '~/types/shelter-filters';
+import { filterShelters, type ShelterFilters } from '~/types/shelter-filters';
 
-export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | null>) {
+export function useShelterMap(
+  mapContainerRef: React.RefObject<HTMLDivElement | null>,
+  filters: ShelterFilters,
+) {
   const { mapRef, mapReady, changeTileLayer } = useLeafletMap(mapContainerRef);
   const { shelters, isLoading, loadError } = useShelterData();
 
@@ -18,14 +17,7 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
     group: L.layerGroup(),
     registry: createShelterLayerRegistry(),
   }));
-  // Filters are kept even before data loads, so the first render after loading applies them.
-  const [columnFilters, setColumnFilters] =
-    useState<ShelterColumnFilters>(emptyShelterColumnFilters);
-
-  const displayedShelters = useMemo(
-    () => filterSheltersByColumns(shelters, columnFilters),
-    [shelters, columnFilters],
-  );
+  const displayedShelters = useMemo(() => filterShelters(shelters, filters), [shelters, filters]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -65,7 +57,6 @@ export function useShelterMap(mapContainerRef: React.RefObject<HTMLDivElement | 
     displayedShelters,
     isLoading,
     loadError,
-    updateColumnFilters: setColumnFilters,
     changeTileLayer,
   };
 }

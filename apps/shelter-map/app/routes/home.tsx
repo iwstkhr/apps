@@ -1,22 +1,38 @@
-import { useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { ShelterFilterBar } from '~/components/filter/shelter-filter-bar';
 import { MapHelpHint } from '~/components/map/map-help-hint';
 import { MapTileLayerControl } from '~/components/map/map-tile-layer-control';
 import { ShelterDataLoadingOverlay } from '~/components/map/shelter-data-loading-overlay';
 import { MapTable } from '~/components/table/map-table';
+import { useDebouncedValue } from '~/hooks/use-debounced-value';
 import { useShelterMap } from '~/hooks/use-shelter-map';
+import { emptyShelterFilters, type ShelterFilters } from '~/types/shelter-filters';
 import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: '指定緊急避難場所マップ' }];
 }
 
+const KEYWORD_DEBOUNCE_MS = 200;
+
 export default function Home() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const { displayedShelters, isLoading, loadError, updateColumnFilters, changeTileLayer } =
-    useShelterMap(mapContainerRef);
+  const [filters, setFilters] = useState<ShelterFilters>(emptyShelterFilters);
+  // Only typing is debounced; chip and checkbox changes apply immediately.
+  const debouncedKeyword = useDebouncedValue(filters.keyword, KEYWORD_DEBOUNCE_MS);
+  const appliedFilters = useMemo(
+    () => ({ ...filters, keyword: debouncedKeyword }),
+    [filters, debouncedKeyword],
+  );
+  const { displayedShelters, isLoading, loadError, changeTileLayer } = useShelterMap(
+    mapContainerRef,
+    appliedFilters,
+  );
 
   return (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+      <ShelterFilterBar filters={filters} onChange={setFilters} />
+
       {loadError && (
         <div className="shrink-0 text-right text-sm font-medium text-red-700">{loadError}</div>
       )}
@@ -33,7 +49,7 @@ export default function Home() {
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-[4] flex-col">
-        <MapTable shelters={displayedShelters} onFiltersChange={updateColumnFilters} />
+        <MapTable shelters={displayedShelters} />
       </div>
     </section>
   );

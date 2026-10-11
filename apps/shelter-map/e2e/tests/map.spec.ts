@@ -1,10 +1,9 @@
-import { currentZoom, expect, mapMarkers, openApp, openColumnFilter, test } from '../fixtures';
+import { currentZoom, expect, mapMarkers, openApp, searchBox, test } from '../fixtures';
 
 test.describe('地図', () => {
   test('ピンをクリックすると、名前・住所・災害種別ごとの指定状況を表示する', async ({ page }) => {
     await openApp(page);
-    await openColumnFilter(page, '名前');
-    await page.getByPlaceholder('名前で絞り込み').fill('横浜');
+    await searchBox(page).fill('横浜');
     await expect(mapMarkers(page)).toHaveCount(1);
 
     await mapMarkers(page).click();
@@ -18,8 +17,7 @@ test.describe('地図', () => {
 
   test('データ中の HTML はタグとして解釈せず、文字のまま表示する', async ({ page }) => {
     await openApp(page);
-    await openColumnFilter(page, '住所');
-    await page.getByPlaceholder('住所で絞り込み').fill('港区');
+    await searchBox(page).fill('港区');
     await expect(mapMarkers(page)).toHaveCount(1);
 
     await mapMarkers(page).click();

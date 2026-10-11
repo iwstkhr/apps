@@ -1,23 +1,18 @@
 import { useRef } from 'react';
 import { ShelterTableHeader } from '~/components/table/shelter-table-header';
 import { ShelterTableRows } from '~/components/table/shelter-table-rows';
-import { useShelterTableFilters } from '~/components/table/use-shelter-table-filters';
 import { DATASET_UPDATED_AT } from '~/generated/dataset-meta';
 import type { Shelter } from '~/types/shelter';
-import type { ShelterColumnFilters } from '~/types/shelter-filters';
 
 const DATASET_SOURCE_URL = 'https://www.gsi.go.jp/bousaichiri/hinanbasho.html';
 const DATASET_SOURCE_LABEL = '国土地理院 指定緊急避難場所データ';
 
 interface MapTableProps {
   shelters: Shelter[];
-  onFiltersChange: (filters: ShelterColumnFilters) => void;
 }
 
-export function MapTable({ shelters, onFiltersChange }: MapTableProps) {
+export function MapTable({ shelters }: MapTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { draftFilters, openFilterColumn, setDraftFilters, toggleFilterColumn } =
-    useShelterTableFilters(onFiltersChange);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
@@ -41,12 +36,7 @@ export function MapTable({ shelters, onFiltersChange }: MapTableProps) {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">
         <div ref={tableContainerRef} className="min-h-0 flex-1 overflow-auto">
           <div className="min-w-[58rem] text-left text-sm text-slate-800" role="table">
-            <ShelterTableHeader
-              filters={draftFilters}
-              openFilterColumn={openFilterColumn}
-              onToggleFilter={toggleFilterColumn}
-              onFiltersChange={setDraftFilters}
-            />
+            <ShelterTableHeader />
             <ShelterTableRows shelters={shelters} scrollContainerRef={tableContainerRef} />
           </div>
         </div>
