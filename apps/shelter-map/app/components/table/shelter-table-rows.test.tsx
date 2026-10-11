@@ -7,13 +7,19 @@ import { ShelterTableRows } from '~/components/table/shelter-table-rows';
 import { createShelter } from '~/test/fixtures';
 import { shelterTypeKeys } from '~/types/shelter-type';
 
+const virtualizerOptions = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
+
 vi.mock('@tanstack/react-virtual', () => ({
-  useVirtualizer: ({ count }: { count: number }) => ({
-    getTotalSize: () => count * 56,
-    getVirtualItems: () => (count > 0 ? [{ index: 0, start: 0 }] : []),
-    measureElement: vi.fn(),
-    scrollToIndex: vi.fn(),
-  }),
+  useVirtualizer: (options: { count: number; scrollMargin?: number }) => {
+    virtualizerOptions.current = options;
+    const { count, scrollMargin = 0 } = options;
+    return {
+      getTotalSize: () => count * 56,
+      getVirtualItems: () => (count > 0 ? [{ index: 0, start: scrollMargin }] : []),
+      measureElement: vi.fn(),
+      scrollToIndex: vi.fn(),
+    };
+  },
 }));
 
 describe('ShelterTableRows', () => {
@@ -73,5 +79,19 @@ describe('ShelterTableRows', () => {
     const cells = within(screen.getByRole('row')).getAllByRole('cell');
     expect(cells).toHaveLength(3);
     expect(cells[2]).toHaveTextContent('洪水地震');
+  });
+
+  it('offsets scrolling by the sticky header height', () => {
+    render(
+      <ShelterTableRows
+        shelters={[createShelter()]}
+        scrollContainerRef={createRef<HTMLDivElement>()}
+        stickyHeaderHeight={48}
+      />,
+    );
+
+    expect(virtualizerOptions.current).toMatchObject({ scrollMargin: 48, scrollPaddingStart: 48 });
+    // Item starts include the margin, but the rows are positioned inside the row group below it
+    expect(screen.getByRole('row')).toHaveStyle({ transform: 'translateY(0px)' });
   });
 });

@@ -10,9 +10,10 @@ const HEADER_CELL_CLASS = 'px-3 py-2 font-medium';
 const SHELTER_TYPE_HEADER_CLASS = `${SHELTER_TYPE_COLUMN_CLASS} text-xs leading-snug`;
 const NAME_HEADER_CLASS = 'sticky left-0 z-10 bg-slate-100';
 
-export function ShelterTableHeader() {
+export function ShelterTableHeader({ ref }: { ref?: React.Ref<HTMLDivElement> }) {
   return (
     <div
+      ref={ref}
       className="sticky top-0 z-20 grid border-b border-slate-300 bg-slate-100 text-slate-900"
       style={{ gridTemplateColumns: SHELTER_TABLE_GRID_TEMPLATE }}
       role="row"

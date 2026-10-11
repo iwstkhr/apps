@@ -94,6 +94,7 @@ export default function Home() {
           selectedShelterId={selectedShelterId}
           onSelect={selectShelter}
           highlightTypes={appliedFilters.showNonMatching ? appliedFilters.types : undefined}
+          visible={mobileView === 'list'}
         />
       </div>
     </section>

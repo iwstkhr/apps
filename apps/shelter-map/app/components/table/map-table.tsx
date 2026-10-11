@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { ShelterTableHeader } from '~/components/table/shelter-table-header';
 import { ShelterTableRows } from '~/components/table/shelter-table-rows';
 import { DATASET_UPDATED_AT } from '~/generated/dataset-meta';
+import { useElementHeight } from '~/hooks/use-element-height';
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query';
 import { cn } from '~/lib/cn';
 import type { Shelter } from '~/types/shelter';
@@ -20,6 +21,8 @@ interface MapTableProps {
   selectedShelterId?: Shelter['id'] | null;
   onSelect?: (shelter: Shelter) => void;
   highlightTypes?: readonly ShelterTypeKey[];
+  /** False while the list is hidden behind the map tab on phones. */
+  visible?: boolean;
 }
 
 export function MapTable({
@@ -30,11 +33,14 @@ export function MapTable({
   selectedShelterId,
   onSelect,
   highlightTypes,
+  visible = true,
 }: MapTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const rows = withinMapOnly ? visibleShelters : shelters;
   // Phones show each shelter as a card instead of a wide table that needs horizontal scrolling.
   const layout = useMediaQuery(DESKTOP_MEDIA_QUERY, true) ? 'table' : 'card';
+  const headerRef = useRef<HTMLDivElement>(null);
+  const headerHeight = useElementHeight(headerRef, layout === 'table');
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
@@ -79,13 +85,16 @@ export function MapTable({
             role="table"
             aria-label="避難場所の一覧"
           >
-            {layout === 'table' && <ShelterTableHeader />}
+            {layout === 'table' && <ShelterTableHeader ref={headerRef} />}
             <ShelterTableRows
               shelters={rows}
               scrollContainerRef={tableContainerRef}
               selectedShelterId={selectedShelterId}
               onSelect={onSelect}
               layout={layout}
+              // Ignore a height measured just before the header was removed (card layout).
+              stickyHeaderHeight={layout === 'table' ? headerHeight : 0}
+              visible={visible || layout === 'table'}
               highlightTypes={highlightTypes}
             />
           </div>

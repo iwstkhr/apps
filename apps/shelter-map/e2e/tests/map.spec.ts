@@ -1,6 +1,8 @@
+import { gzipSync } from 'node:zlib';
 import {
   currentZoom,
   expect,
+  feature,
   mapMarkers,
   openApp,
   resultCount,
@@ -64,6 +66,56 @@ test.describe('地図', () => {
 
     await mapMarkers(page).click();
     await expect(tableRows(page).first()).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('ピンを選ぶと、一覧の上下どちらにあっても行が見出しに隠れず表示される', async ({ page }) => {
+    // Enough shelters that the table scrolls, spread out so each pin can be clicked
+    const shelters = Array.from({ length: 60 }, (_, i) =>
+      feature(
+        String(i + 1),
+        `グリッド避難所${i + 1}`,
+        `神奈川県テスト市${i + 1}`,
+        [138.2 + (i % 10) * 0.3, 34.9 + Math.floor(i / 10) * 0.2],
+        { 地震: '1' },
+      ),
+    );
+    await page.route('**/assets/mergeFromCity_2.geojson.gz', (route) =>
+      route.fulfill({
+        contentType: 'application/gzip',
+        body: gzipSync(JSON.stringify({ type: 'FeatureCollection', features: shelters })),
+      }),
+    );
+    await openApp(page);
+    await expect(mapMarkers(page)).toHaveCount(60);
+
+    const scroller = page.getByRole('table').locator('xpath=..');
+    const header = page.getByRole('table').getByRole('row').first();
+    const expectSelectedRowVisible = async (name: string) => {
+      const row = tableRows(page).filter({
+        has: page.getByRole('cell', { name, exact: true }),
+      });
+      await expect(row).toHaveAttribute('aria-current', 'true');
+      const [rowBox, headerBox, scrollerBox] = await Promise.all([
+        row.boundingBox(),
+        header.boundingBox(),
+        scroller.boundingBox(),
+      ]);
+      if (!rowBox || !headerBox || !scrollerBox) throw new Error('行が表示されていません');
+      expect(rowBox.y).toBeGreaterThanOrEqual(headerBox.y + headerBox.height - 1);
+      expect(rowBox.y + rowBox.height).toBeLessThanOrEqual(scrollerBox.y + scrollerBox.height + 1);
+    };
+
+    // A row below the visible part of the table (not the last one, which the scroll end clamps)
+    await page.getByTitle('グリッド避難所20', { exact: true }).click();
+    await expectSelectedRowVisible('グリッド避難所20');
+
+    // A row above it, after scrolling the table to the bottom (reload so the popup's auto-pan
+    // has not moved the next pin out of view)
+    await openApp(page);
+    await expect(mapMarkers(page)).toHaveCount(60);
+    await scroller.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+    await page.getByTitle('グリッド避難所30', { exact: true }).click();
+    await expectSelectedRowVisible('グリッド避難所30');
   });
 
   test('地図タイルを国土地理院の写真に切り替えられる', async ({ page }) => {
@@ -139,6 +191,25 @@ test.describe('スマートフォン', () => {
     await expect(hint.getByText('ピンチ')).toBeVisible();
     await expect(hint.getByText('タップ')).toBeVisible();
     await expect(hint.getByText('クリック')).toBeHidden();
+  });
+
+  test('データの読み込み前に一覧へ切り替えても、読み込み後に一覧が表示される', async ({ page }) => {
+    // Hold the data back until the list tab is open
+    let releaseData: () => void = () => {};
+    const dataHeld = new Promise<void>((resolve) => {
+      releaseData = resolve;
+    });
+    await page.route('**/assets/mergeFromCity_2.geojson.gz', async (route) => {
+      await dataHeld;
+      await route.fallback();
+    });
+
+    await page.goto('/');
+    await page.getByRole('tab', { name: /一覧/ }).click();
+    releaseData();
+
+    await expect(page.getByRole('tab', { name: /一覧/ })).toContainText('(4)');
+    await expect(tableRows(page)).toHaveCount(4);
   });
 
   test('地図と一覧をタブで切り替え、一覧はカード表示で、選ぶと地図に戻って表示する', async ({

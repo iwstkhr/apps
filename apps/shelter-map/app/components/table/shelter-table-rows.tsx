@@ -30,6 +30,8 @@ export function ShelterTableRows({
   selectedShelterId = null,
   onSelect,
   layout = 'table',
+  stickyHeaderHeight = 0,
+  visible = true,
   highlightTypes = [],
 }: {
   shelters: Shelter[];
@@ -37,6 +39,10 @@ export function ShelterTableRows({
   selectedShelterId?: Shelter['id'] | null;
   onSelect?: (shelter: Shelter) => void;
   layout?: ShelterRowLayout;
+  /** Height of the sticky header above the rows inside the same scroll container. */
+  stickyHeaderHeight?: number;
+  /** False while the list is hidden (the map tab on phones); it scrolls once shown again. */
+  visible?: boolean;
   /** Rows that miss any of these types are grayed out, like the dimmed markers. */
   highlightTypes?: readonly ShelterTypeKey[];
 }) {
@@ -45,20 +51,24 @@ export function ShelterTableRows({
     getScrollElement: () => scrollContainerRef.current,
     estimateSize: () => ROW_ESTIMATE_HEIGHTS[layout],
     overscan: 10,
+    // The rows start below the sticky header, which also covers the top of the viewport.
+    // Without both, scrolling to a row lands it under the header or past the bottom edge.
+    scrollMargin: stickyHeaderHeight,
+    scrollPaddingStart: stickyHeaderHeight,
   });
 
   // Scroll only when the selection changes, not whenever the list changes while the map moves.
   const sheltersRef = useRef(shelters);
   sheltersRef.current = shelters;
   useEffect(() => {
-    if (!selectedShelterId) {
+    if (!selectedShelterId || !visible) {
       return;
     }
     const index = sheltersRef.current.findIndex((shelter) => shelter.id === selectedShelterId);
     if (index >= 0) {
       rowVirtualizer.scrollToIndex(index, { align: 'auto' });
     }
-  }, [selectedShelterId, rowVirtualizer]);
+  }, [selectedShelterId, visible, rowVirtualizer]);
 
   return (
     <div
@@ -87,7 +97,7 @@ export function ShelterTableRows({
             )}
             style={{
               gridTemplateColumns: layout === 'table' ? SHELTER_TABLE_GRID_TEMPLATE : undefined,
-              transform: `translateY(${virtualRow.start}px)`,
+              transform: `translateY(${virtualRow.start - stickyHeaderHeight}px)`,
             }}
             role="row"
             tabIndex={0}

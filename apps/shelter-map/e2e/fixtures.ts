@@ -21,7 +21,7 @@ type Designations = Partial<
   >
 >;
 
-function feature(
+export function feature(
   id: string,
   name: string,
   address: string,
