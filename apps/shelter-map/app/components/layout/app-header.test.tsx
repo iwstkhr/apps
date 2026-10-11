@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { AppHeader } from '~/components/layout/app-header';
 
 describe('AppHeader', () => {
-  it('renders the app title and GitHub link', () => {
+  it('renders the app title without external links', () => {
     render(<AppHeader />);
 
     expect(screen.getByRole('heading', { name: '指定緊急避難場所マップ' })).toBeInTheDocument();
@@ -13,9 +13,6 @@ describe('AppHeader', () => {
       'src',
       `${import.meta.env.BASE_URL}favicon.svg`,
     );
-    expect(screen.getByRole('link', { name: 'GitHub リポジトリを開く' })).toHaveAttribute(
-      'href',
-      'https://github.com/iwstkhr/apps',
-    );
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 });

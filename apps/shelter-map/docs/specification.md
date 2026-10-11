@@ -29,7 +29,7 @@ Specifications for a web application that displays designated emergency evacuati
 
 ```text
 ┌──────────────────────────────────────────────────┐
-│ Header (title / GitHub link)                      │
+│ Header (title)                                    │
 ├──────────────────────────────────────────────────┤
 │ Filter bar (keyword / disaster type chips)        │
 │ [Map | List] tabs (phones only)                   │
@@ -52,7 +52,6 @@ Specifications for a web application that displays designated emergency evacuati
 ### Header
 
 - App name "指定緊急避難場所マップ" (Designated Emergency Evacuation Site Map) and favicon
-- External link to the GitHub repository
 
 ### Map
 
