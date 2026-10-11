@@ -121,9 +121,14 @@ export function FolderSidebar({
       )}
       {...(value === 'unfiled' || value === 'trash' ? dropHandlers(value) : {})}
     >
+      {/* フォルダの一覧の中では、開閉ボタンの幅を空けてフォルダのアイコンと縦にそろえる */}
+      {value !== 'trash' && <span className="w-5 shrink-0" />}
       <button
         type="button"
-        className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left"
+        className={cn(
+          'flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left',
+          value === 'trash' ? 'px-2' : 'pr-1',
+        )}
         onClick={() => onSelect(value)}
         aria-current={selection === value ? 'true' : undefined}
       >
@@ -136,12 +141,7 @@ export function FolderSidebar({
 
   return (
     <nav aria-label={t('フォルダ')} className="flex flex-col gap-2">
-      <ul className="flex flex-col gap-0.5">
-        {fixedItem('all', 'すべて', FaLayerGroup)}
-        {fixedItem('unfiled', '未分類', FaInbox)}
-      </ul>
-
-      <div className="flex items-center justify-between border-t border-slate-200 pt-2 dark:border-slate-800">
+      <div className="flex items-center justify-between">
         <span className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
           {t('フォルダ')}
         </span>
@@ -156,101 +156,102 @@ export function FolderSidebar({
         </button>
       </div>
 
-      {entries.length === 0 ? (
+      {/* すべて と 未分類 はフォルダではないが、フォルダで絞り込む項目なので同じ見出しの下の先頭に置く */}
+      <ul className="flex flex-col gap-0.5">
+        {fixedItem('all', 'すべて', FaLayerGroup)}
+        {fixedItem('unfiled', '未分類', FaInbox)}
+        {entries.map(({ folder, depth, hasChildren }) => {
+          const isSelected = selection === folder.id;
+          const isCollapsed = collapsed.has(folder.id);
+          return (
+            <li
+              key={folder.id}
+              className={cn(
+                rowClass,
+                dropTarget === folder.id ? dropTargetRowClass : isSelected && selectedRowClass,
+              )}
+              style={{ paddingLeft: `${depth * 0.875}rem` }}
+              {...dropHandlers(folder.id)}
+            >
+              {hasChildren ? (
+                <button
+                  type="button"
+                  className="shrink-0 rounded p-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
+                  onClick={() => onToggleCollapsed(folder.id)}
+                  aria-expanded={!isCollapsed}
+                  aria-label={t(isCollapsed ? 'フォルダ「{0}」を開く' : 'フォルダ「{0}」を閉じる', [
+                    folder.name,
+                  ])}
+                >
+                  {isCollapsed ? (
+                    <FaChevronRight className="h-3 w-3" aria-hidden="true" />
+                  ) : (
+                    <FaChevronDown className="h-3 w-3" aria-hidden="true" />
+                  )}
+                </button>
+              ) : (
+                <span className="w-5 shrink-0" />
+              )}
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-1 text-left"
+                onClick={() => onSelect(folder.id)}
+                aria-current={isSelected ? 'true' : undefined}
+              >
+                {isSelected ? (
+                  <FaFolderOpen
+                    className="shrink-0"
+                    style={{ color: folder.color }}
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <FaFolder
+                    className="shrink-0"
+                    style={{ color: folder.color }}
+                    aria-hidden="true"
+                  />
+                )}
+                <span className="truncate">{folder.name}</span>
+                <Count value={openCounts.get(folder.id)} />
+              </button>
+              {/* 操作ボタンは画面が広いときはホバー・フォーカス中だけ出す */}
+              <div className="flex shrink-0 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
+                <button
+                  type="button"
+                  className={actionClass}
+                  onClick={() => onAdd(folder.id)}
+                  aria-label={t('フォルダ「{0}」の中にフォルダを追加', [folder.name])}
+                  title={t('この中にフォルダを追加')}
+                >
+                  <FaFolderPlus className="h-3 w-3" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className={actionClass}
+                  onClick={() => onEdit(folder)}
+                  aria-label={t('フォルダ「{0}」を編集', [folder.name])}
+                  title={t('名前・色・場所を変更')}
+                >
+                  <FaPen className="h-3 w-3" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className={cn(actionClass, 'hover:text-red-600 dark:hover:text-red-400')}
+                  onClick={() => onRemove(folder)}
+                  aria-label={t('フォルダ「{0}」を削除', [folder.name])}
+                  title={t('削除')}
+                >
+                  <FaTrash className="h-3 w-3" aria-hidden="true" />
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {entries.length === 0 && (
         <p className="px-2 text-xs text-slate-500 dark:text-slate-400">
           {t('フォルダはまだありません。')}
         </p>
-      ) : (
-        <ul className="flex flex-col gap-0.5">
-          {entries.map(({ folder, depth, hasChildren }) => {
-            const isSelected = selection === folder.id;
-            const isCollapsed = collapsed.has(folder.id);
-            return (
-              <li
-                key={folder.id}
-                className={cn(
-                  rowClass,
-                  dropTarget === folder.id ? dropTargetRowClass : isSelected && selectedRowClass,
-                )}
-                style={{ paddingLeft: `${depth * 0.875}rem` }}
-                {...dropHandlers(folder.id)}
-              >
-                {hasChildren ? (
-                  <button
-                    type="button"
-                    className="shrink-0 rounded p-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
-                    onClick={() => onToggleCollapsed(folder.id)}
-                    aria-expanded={!isCollapsed}
-                    aria-label={t(
-                      isCollapsed ? 'フォルダ「{0}」を開く' : 'フォルダ「{0}」を閉じる',
-                      [folder.name],
-                    )}
-                  >
-                    {isCollapsed ? (
-                      <FaChevronRight className="h-3 w-3" aria-hidden="true" />
-                    ) : (
-                      <FaChevronDown className="h-3 w-3" aria-hidden="true" />
-                    )}
-                  </button>
-                ) : (
-                  <span className="w-5 shrink-0" />
-                )}
-                <button
-                  type="button"
-                  className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-1 text-left"
-                  onClick={() => onSelect(folder.id)}
-                  aria-current={isSelected ? 'true' : undefined}
-                >
-                  {isSelected ? (
-                    <FaFolderOpen
-                      className="shrink-0"
-                      style={{ color: folder.color }}
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <FaFolder
-                      className="shrink-0"
-                      style={{ color: folder.color }}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <span className="truncate">{folder.name}</span>
-                  <Count value={openCounts.get(folder.id)} />
-                </button>
-                {/* 操作ボタンは画面が広いときはホバー・フォーカス中だけ出す */}
-                <div className="flex shrink-0 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
-                  <button
-                    type="button"
-                    className={actionClass}
-                    onClick={() => onAdd(folder.id)}
-                    aria-label={t('フォルダ「{0}」の中にフォルダを追加', [folder.name])}
-                    title={t('この中にフォルダを追加')}
-                  >
-                    <FaFolderPlus className="h-3 w-3" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className={actionClass}
-                    onClick={() => onEdit(folder)}
-                    aria-label={t('フォルダ「{0}」を編集', [folder.name])}
-                    title={t('名前・色・場所を変更')}
-                  >
-                    <FaPen className="h-3 w-3" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(actionClass, 'hover:text-red-600 dark:hover:text-red-400')}
-                    onClick={() => onRemove(folder)}
-                    aria-label={t('フォルダ「{0}」を削除', [folder.name])}
-                    title={t('削除')}
-                  >
-                    <FaTrash className="h-3 w-3" aria-hidden="true" />
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
       )}
 
       {/* ゴミ箱はフォルダの一覧の下に分けて置く。タスクをドロップしてもゴミ箱に移せる */}

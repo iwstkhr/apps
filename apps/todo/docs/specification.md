@@ -74,7 +74,7 @@ Editing shows the original Markdown source. Storage, keyword search, and JSON ex
 - The left pane includes a ステータス section with すべて, 未着手, 進行中, 保留, and 完了. Selecting a status filters the selected folder and its subfolders together with the tag and keyword filters. Counts show the totals in that folder before applying status, tag, and keyword filters. The main toolbar contains sorting, tag, and keyword controls; status selection is available only in the left pane. On narrow screens, open the pane with the menu button; selecting a status closes it.
 
 - Folders can be nested to any depth. Each todo belongs to at most one folder; todos without a folder are 未分類 (unfiled).
-- The folder list shows すべて (all), 未分類, and the folder tree, with the number of open (not 完了) todos next to each. A folder's count includes its subfolders.
+- The folder list shows, under the フォルダ heading, すべて (all), 未分類, and then the folder tree, with the number of open (not 完了) todos next to each. すべて and 未分類 are not folders, but they sit at the top of the same list because they also choose which folder to show, so the status list's own すべて is not confused with them; their icons line up with the top-level folder icons. A folder's count includes its subfolders.
 - Selecting a folder shows the todos in that folder and all of its subfolders. Todos that are not directly in the selected folder show their folder path (for example `仕事 / 案件 A`). The status, tag, and keyword filters apply within the selected folder.
 - The folder icon next to フォルダ creates a top-level folder. Each folder row has buttons to create a folder inside it, rename or move it (choose a new parent; a folder cannot be moved into itself or its subfolders), and delete it.
 - When a folder is selected, a pencil button next to its name in the main area heading opens the same edit dialog as the folder row's edit button, so the folder can be renamed, recolored, or moved without finding it in the folder list. すべて and 未分類 have no such button because they are not folders.
@@ -109,15 +109,15 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 ┌──────────────────────────────────────────────────────────────┐
 │ Header: TODO                                     [⋯ メニュー] │
 ├────────────────┬─────────────────────────────────────────────┤
-│ すべて       5 │ 仕事 / 案件 A                               │
-│ 未分類       2 │ Add form: [やること      ] [詳細] [追加]    │
-│ フォルダ   [+] │ Filters: [並び順] [タグ]        │
+│ フォルダ   [+] │ 仕事 / 案件 A                               │
+│   すべて     5 │ Add form: [やること      ] [詳細] [追加]    │
+│   未分類     2 │ Filters: [並び順] [タグ]        │
 │ ▾ 仕事       2 │ [キーワードで検索                         ] │
 │   ▾ 案件 A   1 │ ┌─────────────────────────────────────────┐ │
 │       資料   1 │ │ ☐ Title                        ✎  🗑    │ │
 │     会議       │ │   [進行中▾] 優先度: 高  📁 仕事 / 案件 A │ │
 │   家         1 │ └─────────────────────────────────────────┘ │
-│                │                       [完了済みを削除 (n)]  │
+│ ゴミ箱         │                       [完了済みを削除 (n)]  │
 ├────────────────┴─────────────────────────────────────────────┤
 │ Footer: note on local storage and backups                    │
 │         © <year> wasabee.dev. All Rights Reserved.           │
