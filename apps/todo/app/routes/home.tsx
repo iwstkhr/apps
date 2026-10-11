@@ -22,7 +22,7 @@ import {
   formatFolderPath,
   getSubtreeIds,
 } from '~/lib/folder-tree';
-import { APP_DESCRIPTION, applyLanguage, t, useLanguage } from '~/lib/i18n';
+import { APP_DESCRIPTION, applyLanguage, appTitle, t, useLanguage } from '~/lib/i18n';
 import { secondaryButtonClass } from '~/lib/styles';
 import {
   applyFilters,
@@ -37,10 +37,10 @@ import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
   return [
-    { title: 'TODO' },
+    // 最初は日本語で出し、表示した後は applyLanguage() が選んだ言語に置き換える
+    { title: appTitle('ja') },
     {
       name: 'description',
-      // 表示した後は applyLanguage() が選んだ言語の説明文に置き換える
       content: APP_DESCRIPTION,
     },
   ];

@@ -4,6 +4,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_DESCRIPTION,
+  APP_TAGLINE,
   forgetSavedLanguageForTesting,
   getBrowserLanguage,
   getLanguage,
@@ -72,7 +73,7 @@ describe('choosing a language', () => {
     expect(getLanguage()).toBe('ja');
   });
 
-  it('updates the html lang and the description', () => {
+  it('updates the html lang, the tab title, and the description', () => {
     const meta = document.createElement('meta');
     meta.name = 'description';
     document.head.append(meta);
@@ -80,8 +81,10 @@ describe('choosing a language', () => {
     setLanguage('en');
     expect(document.documentElement.lang).toBe('en');
     expect(meta.content).toBe(english[APP_DESCRIPTION]);
+    expect(document.title).toBe(`TODO | ${english[APP_TAGLINE]}`);
     setLanguage('ja');
     expect(document.documentElement.lang).toBe('ja');
+    expect(document.title).toBe('TODO | ブラウザで完結');
     expect(meta.content).toBe(APP_DESCRIPTION);
     meta.remove();
   });

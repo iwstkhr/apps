@@ -46,7 +46,7 @@ test('describes local-only storage next to the title on wide screens', async ({ 
   await page.emulateMedia({ colorScheme: 'light' });
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
-  const tagline = page.locator('header').getByText('データはブラウザだけに保存');
+  const tagline = page.locator('header').getByText('ブラウザで完結');
   await expect(tagline).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('TODO');
 

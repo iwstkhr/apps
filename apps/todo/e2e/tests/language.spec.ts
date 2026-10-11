@@ -12,11 +12,13 @@ test.describe('in a Japanese browser', () => {
     await openApp(page);
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
     await expect(page.getByRole('button', { name: '追加', exact: true })).toBeVisible();
+    await expect(page).toHaveTitle('TODO | ブラウザで完結');
 
     await page.locator('header').getByRole('button', { name: 'メニュー', exact: true }).click();
     await languageItem(page, 'English').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
+    await expect(page).toHaveTitle('TODO | Runs entirely in your browser');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
       /runs entirely in your browser/,

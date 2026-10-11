@@ -57,13 +57,22 @@ export function getLanguage(): Language {
   return unsavedLanguage ?? readSavedLanguage() ?? getBrowserLanguage();
 }
 
-/** html の lang と説明文を言語に合わせる。 */
+/** html の lang・タブのタイトル・説明文を言語に合わせる。 */
 export function applyLanguage(language: Language): void {
   if (typeof document === 'undefined') return;
   document.documentElement.lang = language;
+  document.title = appTitle(language);
   document
     .querySelector('meta[name="description"]')
     ?.setAttribute('content', translate(language, APP_DESCRIPTION));
+}
+
+/** ヘッダーのタイトル横とタブのタイトルに出す一言 */
+export const APP_TAGLINE = 'ブラウザで完結';
+
+/** ブラウザのタブに出す「TODO | 一言」 */
+export function appTitle(language: Language): string {
+  return `TODO | ${translate(language, APP_TAGLINE)}`;
 }
 
 export const APP_DESCRIPTION =

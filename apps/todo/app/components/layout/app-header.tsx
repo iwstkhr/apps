@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { FaBars, FaCheckSquare, FaLock } from 'react-icons/fa';
 import { HeaderMenu } from '~/components/layout/header-menu';
-import { t } from '~/lib/i18n';
+import { APP_TAGLINE, t } from '~/lib/i18n';
 
 interface AppHeaderProps {
   menuOpen: boolean;
@@ -46,7 +46,7 @@ export function AppHeader({
           {/* 一番の特徴をタイトルの横で伝える。見出しには入れず、狭い画面ではフッターの注意書きに任せる */}
           <p className="app-tagline hidden shrink-0 items-center gap-1.5 border-l border-slate-300 pl-2 text-xs text-slate-500 sm:flex dark:border-slate-600 dark:text-slate-400">
             <FaLock aria-hidden="true" />
-            {t('データはブラウザだけに保存')}
+            {t(APP_TAGLINE)}
           </p>
         </div>
 

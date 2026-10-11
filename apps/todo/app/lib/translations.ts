@@ -149,7 +149,7 @@ export const english: Record<string, string> = {
   'データを読み込めませんでした。ブラウザの設定で保存が許可されているか確認してください。':
     'Could not load your data. Check that your browser allows this site to store data.',
   '保存できませんでした。もう一度お試しください。': 'Could not save. Please try again.',
-  データはブラウザだけに保存: 'Data stays in your browser',
+  ブラウザで完結: 'Runs entirely in your browser',
   'データはこのブラウザの中 (IndexedDB) にだけ保存され、サーバーには送信されません。':
     'Your data is stored only in this browser (IndexedDB) and is never sent to a server.',
   'ブラウザのデータを削除すると TODO も消えるため、定期的にエクスポートしてバックアップしてください。':

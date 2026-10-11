@@ -97,7 +97,7 @@ describe('Home', () => {
 
   it('describes local-only storage next to the title without changing the heading', async () => {
     await renderHome();
-    const tagline = screen.getByText('データはブラウザだけに保存');
+    const tagline = screen.getByText('ブラウザで完結');
     expect(tagline.closest('header')).not.toBeNull();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^TODO$/);
   });
