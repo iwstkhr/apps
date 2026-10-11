@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { StatusTabs } from '~/components/todo/status-tabs';
@@ -34,5 +34,48 @@ describe('StatusTabs', () => {
     }
     await userEvent.setup().click(screen.getByRole('button', { name: '進行中 1' }));
     expect(onChange).toHaveBeenCalledWith('in_progress');
+  });
+
+  it('fades the side with hidden tabs and shows an arrow there', () => {
+    const { container } = render(<StatusTabs value="all" counts={counts} onChange={() => {}} />);
+    const scroller = container.querySelector('fieldset > div') as HTMLDivElement;
+    const shown = () =>
+      [...container.querySelectorAll('[data-scroll-hint]')]
+        .filter((hint) => !hint.classList.contains('opacity-0'))
+        .map((hint) => hint.getAttribute('data-scroll-hint'));
+    expect(shown()).toEqual([]);
+
+    // Make the tabs wider than the track
+    Object.defineProperty(scroller, 'scrollWidth', { configurable: true, value: 600 });
+    Object.defineProperty(scroller, 'clientWidth', { configurable: true, value: 300 });
+    fireEvent.scroll(scroller);
+    expect(shown()).toEqual(['end']);
+
+    // In the middle, both sides fade
+    scroller.scrollLeft = 150;
+    fireEvent.scroll(scroller);
+    expect(shown()).toEqual(['start', 'end']);
+
+    // At the end, only the left side fades
+    scroller.scrollLeft = 300;
+    fireEvent.scroll(scroller);
+    expect(shown()).toEqual(['start']);
+  });
+
+  it('does not change the scroller while it scrolls, which would stop touch scrolling', () => {
+    const { container } = render(<StatusTabs value="all" counts={counts} onChange={() => {}} />);
+    const scroller = container.querySelector('fieldset > div') as HTMLDivElement;
+    const before = { style: scroller.getAttribute('style'), children: scroller.children.length };
+    const hints = [...container.querySelectorAll('[data-scroll-hint]')];
+
+    Object.defineProperty(scroller, 'scrollWidth', { configurable: true, value: 600 });
+    Object.defineProperty(scroller, 'clientWidth', { configurable: true, value: 300 });
+    scroller.scrollLeft = 150;
+    fireEvent.scroll(scroller);
+
+    expect(scroller.getAttribute('style')).toBe(before.style);
+    expect(scroller.children).toHaveLength(before.children);
+    // The hints are the same elements, only shown
+    expect([...container.querySelectorAll('[data-scroll-hint]')]).toEqual(hints);
   });
 });
