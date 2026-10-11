@@ -1,9 +1,19 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ConfirmProvider } from '../components/confirm-dialog';
 import { EventManage } from '../routes/event-manage';
 import {
   deleteAnswer,
@@ -63,7 +73,6 @@ beforeEach(() => {
   window.history.replaceState(null, '', '/');
   setLanguage('ja');
   vi.mocked(getEvent).mockResolvedValue(event);
-  vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 afterEach(() => {
   cleanup();
@@ -75,9 +84,26 @@ afterEach(() => {
 function wrapperFor(client: ReturnType<typeof createQueryClient>) {
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>
-      <MemoryRouter>{children}</MemoryRouter>
+      <ConfirmProvider>
+        <MemoryRouter>{children}</MemoryRouter>
+      </ConfirmProvider>
     </QueryClientProvider>
   );
+}
+/** 確認ダイアログが出る操作を始め、ダイアログのボタンを押して操作の結果を返す */
+async function answerConfirm<T>(action: () => Promise<T>, button: string) {
+  let pending!: Promise<T>;
+  act(() => {
+    pending = action();
+  });
+  const dialog = await screen.findByRole('dialog');
+  let result!: T;
+  await act(async () => {
+    fireEvent.click(within(dialog).getByRole('button', { name: button }));
+    result = await pending;
+  });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  return result;
 }
 function renderPublicHook(hash = '') {
   const client = createQueryClient();
@@ -159,23 +185,18 @@ describe('public event actions', () => {
     vi.mocked(getEvent).mockResolvedValue({ ...event, answers: [answer] });
     const { result } = renderPublicHook();
     await waitFor(() => expect(result.current.myAnswer).toEqual(answer));
-    vi.mocked(window.confirm).mockReturnValueOnce(false);
-    act(() => {
-      result.current.removeMyAnswer();
-    });
+    expect(
+      await answerConfirm(() => result.current.removeMyAnswer(), 'キャンセル'),
+    ).toBeUndefined();
     expect(deleteAnswer).not.toHaveBeenCalled();
     vi.mocked(deleteAnswer).mockRejectedValueOnce(new ApiError('FORBIDDEN', '編集できません'));
-    await act(async () => {
-      expect(await result.current.removeMyAnswer()).toBe(false);
-    });
+    expect(await answerConfirm(() => result.current.removeMyAnswer(), '削除')).toBe(false);
     await waitFor(() => expect(result.current.formError).toBe('編集できません'));
     expect(result.current.mine).toEqual(key);
     expect(getEvent).toHaveBeenCalledTimes(1);
     vi.mocked(deleteAnswer).mockResolvedValueOnce(undefined);
     vi.mocked(getEvent).mockResolvedValue(event);
-    await act(async () => {
-      expect(await result.current.removeMyAnswer()).toBe(true);
-    });
+    expect(await answerConfirm(() => result.current.removeMyAnswer(), '削除')).toBe(true);
     expect(deleteAnswer).toHaveBeenLastCalledWith({
       answerId: answer.id,
       editToken: key.editToken,
@@ -249,7 +270,7 @@ describe('managed event actions', () => {
     expect(updateEvent).not.toHaveBeenCalled();
     expect(deleteAnswer).not.toHaveBeenCalled();
     expect(deleteEvent).not.toHaveBeenCalled();
-    expect(window.confirm).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('管理者の回答削除に管理キーを渡し、成功後に再取得する', async () => {
@@ -257,16 +278,11 @@ describe('managed event actions', () => {
     vi.mocked(getEvent).mockResolvedValue({ ...event, answers: [answer] });
     const { result } = renderManageHook();
     await waitFor(() => expect(result.current.event?.answers).toHaveLength(1));
-    vi.mocked(window.confirm).mockReturnValueOnce(false);
-    act(() => {
-      result.current.removeAnswer(answer.id, answer.name);
-    });
+    await answerConfirm(() => result.current.removeAnswer(answer.id, answer.name), 'キャンセル');
     expect(deleteAnswer).not.toHaveBeenCalled();
     vi.mocked(deleteAnswer).mockResolvedValue(undefined);
     vi.mocked(getEvent).mockResolvedValue(event);
-    await act(async () => {
-      await result.current.removeAnswer(answer.id, answer.name);
-    });
+    await answerConfirm(() => result.current.removeAnswer(answer.id, answer.name), '削除');
     expect(deleteAnswer).toHaveBeenCalledWith({
       answerId: answer.id,
       manageToken: manageToken,
@@ -288,18 +304,27 @@ describe('managed event actions', () => {
     );
     render(
       <QueryClientProvider client={client}>
-        <RouterProvider router={router} />
+        <ConfirmProvider>
+          <RouterProvider router={router} />
+        </ConfirmProvider>
       </QueryClientProvider>,
     );
     const button = await screen.findByRole('button', { name: 'イベントを削除' });
+    const confirmDeletion = async () => {
+      await user.click(button);
+      const dialog = await screen.findByRole('dialog', {
+        name: 'イベントと、すべての回答を削除します。元に戻せません。よろしいですか?',
+      });
+      await user.click(within(dialog).getByRole('button', { name: 'イベントを削除' }));
+    };
     vi.mocked(deleteEvent).mockRejectedValueOnce(new ApiError('FORBIDDEN', '削除できません'));
-    await user.click(button);
+    await confirmDeletion();
     await screen.findByText('削除できません');
     expect(router.state.location.pathname).toBe(`/e/${event.id}/manage`);
     expect(client.getQueryData(eventQueryKey(event.id))).toEqual(event);
     vi.mocked(deleteEvent).mockResolvedValueOnce(undefined);
     vi.mocked(getEvent).mockResolvedValue(null);
-    await user.click(button);
+    await confirmDeletion();
     await screen.findByText('Home after deletion');
     expect(deleteEvent).toHaveBeenLastCalledWith(event.id, manageToken);
     expect(client.getQueryData(eventQueryKey(event.id))).toBeFalsy();

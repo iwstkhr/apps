@@ -273,6 +273,7 @@ Server data lives in a single app-wide TanStack Query cache (`frontend/src/lib/q
 | Form drafts | TanStack Form, owned by each form component |
 | Pending operations and errors | `useAsyncAction` (internally TanStack Query's `useMutation`) |
 | Temporary feedback, such as saved confirmations | `useFlash` |
+| Pending deletion confirmation | `ConfirmProvider` (`components/confirm-dialog.tsx`), requested with `useConfirm` (`lib/confirm.ts`) |
 | Management tokens / response edit keys | Memory only (`frontend/src/lib/keyring.ts`), loaded from URL fragments |
 | Display language | External store (`lib/i18n.ts`), `localStorage` (`tsudou:language`), and `useSyncExternalStore`; translation catalog in `lib/translations.ts` |
 | Theme preference | `localStorage` and `<html data-theme>` (`frontend/src/lib/theme.ts`) |

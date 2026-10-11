@@ -285,6 +285,7 @@ export const english: Record<string, string> = {
   '周りの人に読み取られないよう、{0} 秒後に自動で閉じます。':
     'Closes automatically after {0} seconds so people nearby cannot scan it.',
   閉じる: 'Close',
+  キャンセル: 'Cancel',
   システム設定に合わせる: 'Follow system settings',
   ライトテーマ: 'Light theme',
   ダークテーマ: 'Dark theme',

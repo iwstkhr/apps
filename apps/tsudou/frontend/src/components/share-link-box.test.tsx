@@ -23,6 +23,28 @@ describe('ShareLinkBox', () => {
     expect(screen.queryByRole('button', { name: 'QR コード' })).not.toBeInTheDocument();
   });
 
+  it('クリップボードに書き込めないときは、URL を選択した状態のダイアログで出す', async () => {
+    // jsdom には navigator.clipboard が無い。書き込みを拒否される環境を再現する
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
+    });
+    render(<ShareLinkBox label="共有用 URL" url={url} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'コピー' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'この URL をコピーしてください' });
+    const input = within(dialog).getByRole('textbox', { name: '共有用 URL' });
+    expect(input).toHaveValue(url);
+    expect(input).toHaveFocus();
+    expect((input as HTMLInputElement).selectionStart).toBe(0);
+    expect((input as HTMLInputElement).selectionEnd).toBe(url.length);
+
+    fireEvent.click(within(dialog).getByRole('button', { name: '閉じる' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    Reflect.deleteProperty(navigator, 'clipboard');
+  });
+
   describe('QR コード', () => {
     const dialog = () => screen.queryByRole('dialog', { name: '共有用 URL の QR コード' });
     const openQr = () => {

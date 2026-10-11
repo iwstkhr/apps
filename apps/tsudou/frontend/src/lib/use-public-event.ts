@@ -1,5 +1,6 @@
 import { type AnswerDraft, draftFromAnswer, draftToChoices, emptyDraft } from './answer-draft';
 import { deleteAnswer, submitAnswer, updateAnswer } from './api';
+import { useConfirm } from './confirm';
 import { t } from './i18n';
 import { setAnswerKey, useManageToken } from './keyring';
 import { useAsyncAction } from './use-async-action';
@@ -14,6 +15,7 @@ export function usePublicEvent(eventId: string | undefined, hash: string) {
   const mine = useAnswerKeyFromHash(eventId, hash);
   const manageToken = useManageToken(eventId);
   const { pending: submitting, error: formError, run } = useAsyncAction();
+  const confirm = useConfirm();
   const [justSaved, flashSaved] = useFlash();
 
   // 編集キーを持っていて、かつサーバ側にもその回答が残っている場合だけ「自分の回答」
@@ -46,9 +48,13 @@ export function usePublicEvent(eventId: string | undefined, hash: string) {
     });
   };
 
-  const removeMyAnswer = () => {
+  const removeMyAnswer = async () => {
     if (!eventId || !myAnswer || !mine) return;
-    if (!window.confirm(t('自分の回答を削除します。よろしいですか?'))) return;
+    const ok = await confirm({
+      message: t('自分の回答を削除します。よろしいですか?'),
+      confirmLabel: t('削除'),
+    });
+    if (!ok) return;
 
     return run(async () => {
       await deleteAnswer({ answerId: myAnswer.id, editToken: mine.editToken });

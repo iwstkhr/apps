@@ -28,8 +28,11 @@ test.describe('参加者', () => {
     await other.goto(shareUrl);
     await expect(answerCells(other, '田中')).toHaveText(['×', '○', '○']);
 
-    sameGuest.once('dialog', (dialog) => void dialog.accept());
     await sameGuest.getByRole('button', { name: text('自分の回答を削除') }).click();
+    await sameGuest
+      .getByRole('dialog')
+      .getByRole('button', { name: text('削除'), exact: true })
+      .click();
     await expect(sameGuest.getByRole('heading', { name: text('出欠を回答する') })).toBeVisible();
 
     await other.reload();

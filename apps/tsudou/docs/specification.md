@@ -73,6 +73,7 @@ Explains host and participant workflows with screenshots captured using sample d
 ### Creation confirmation (`/e/<eventId>/created`)
 
 Displays shared and management URLs with copy, "開く" (open), and "QR コード" (QR code) buttons.
+If writing to the clipboard fails (for example over HTTP or when permission is denied), an in-app dialog shows the URL preselected so it can be copied manually.
 The QR code button opens a modal with a QR code of the URL, for opening it on a phone. The modal closes with its "閉じる" (close) button, Esc, or a click on the backdrop, and closes automatically after 10 seconds so people nearby cannot read the management URL; helper text in the modal explains this. The modal fades in and out (200 ms), without the fade when the OS reduces motion. QR codes are generated in the browser so URLs, including the management token, are never sent to an external service.
 Opening a URL uses a new tab, leaving the confirmation screen available. Management URLs include the token in a fragment, allowing management in the new tab.
 Because management tokens are not persisted in the browser, this is the only screen where the management URL can be displayed at creation.
@@ -111,7 +112,7 @@ Operations require a management token. Without one, the page displays "管理用
 - Controls to close or reopen responses.
 - Event deletion with a confirmation dialog, and the automatic deletion date.
 
-All deletion operations use `window.confirm`.
+All deletion operations ask for confirmation in an in-app dialog (`useConfirm`) rather than `window.confirm`. Focus starts on "キャンセル" (cancel), and Esc or a backdrop click cancels.
 After event deletion, navigation returns to the home page and the event's token is removed from memory.
 
 ## Input constraints

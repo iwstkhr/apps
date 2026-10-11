@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router';
 import { deleteAnswer, deleteEvent, updateEvent } from './api';
+import { useConfirm } from './confirm';
 import type { EventFormInput } from './event-form';
 import { t } from './i18n';
 import { forgetEventKeys } from './keyring';
@@ -15,6 +16,7 @@ export function useManagedEvent(eventId: string | undefined, hash: string) {
   const { event, replace, reload, forget } = state;
   const manageToken = useManageTokenFromHash(eventId, hash);
   const { pending: saving, error: formError, run } = useAsyncAction();
+  const confirm = useConfirm();
   const [saved, flashSaved] = useFlash();
 
   const save = (values: EventFormInput) => {
@@ -32,19 +34,26 @@ export function useManagedEvent(eventId: string | undefined, hash: string) {
     });
   };
 
-  const removeAnswer = (answerId: string, name: string) => {
+  const removeAnswer = async (answerId: string, name: string) => {
     if (!eventId || !event || !manageToken) return;
-    if (!window.confirm(t('「{0}」の回答を削除します。よろしいですか?', [name]))) return;
+    const ok = await confirm({
+      message: t('「{0}」の回答を削除します。よろしいですか?', [name]),
+      confirmLabel: t('削除'),
+    });
+    if (!ok) return;
     return run(async () => {
       await deleteAnswer({ answerId, manageToken });
       await reload();
     });
   };
 
-  const removeEvent = () => {
+  const removeEvent = async () => {
     if (!eventId || !event || !manageToken) return;
-    if (!window.confirm(t('イベントと、すべての回答を削除します。元に戻せません。よろしいですか?')))
-      return;
+    const ok = await confirm({
+      message: t('イベントと、すべての回答を削除します。元に戻せません。よろしいですか?'),
+      confirmLabel: t('イベントを削除'),
+    });
+    if (!ok) return;
     return run(async () => {
       await deleteEvent(eventId, manageToken);
       forgetEventKeys(eventId);

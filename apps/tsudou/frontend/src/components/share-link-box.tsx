@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { cx } from '../lib/cx';
 import { t, useLanguage } from '../lib/i18n';
 import { useFlash } from '../lib/use-flash';
+import { ModalDialog } from './modal-dialog';
 import { QrCodeDialog } from './qr-code-dialog';
 import { Button, buttonClassName } from './ui';
 
@@ -31,6 +32,7 @@ export function ShareLinkBox({
   useLanguage();
   const [copied, flashCopied] = useFlash(2000);
   const [qrOpen, setQrOpen] = useState(false);
+  const [manualCopyOpen, setManualCopyOpen] = useState(false);
   // QrCodeDialog のタイマーが再描画のたびに作り直されないよう、同じ関数を渡す
   const closeQr = useCallback(() => setQrOpen(false), []);
 
@@ -41,7 +43,7 @@ export function ShareLinkBox({
     } catch {
       // クリップボード API が使えない環境 (http, 権限拒否など)。
       // URL は画面に出ているので手動でコピーしてもらう。
-      window.prompt(t('この URL をコピーしてください'), url);
+      setManualCopyOpen(true);
     }
   };
 
@@ -103,6 +105,46 @@ export function ShareLinkBox({
       </div>
 
       {qrCode && qrOpen && <QrCodeDialog label={label} url={url} onClose={closeQr} />}
+      {manualCopyOpen && (
+        <ManualCopyDialog label={label} url={url} onClose={() => setManualCopyOpen(false)} />
+      )}
     </div>
+  );
+}
+
+/** クリップボードに書き込めないときに、URL を選択した状態で出して手でコピーしてもらう */
+function ManualCopyDialog({
+  label,
+  url,
+  onClose,
+}: {
+  label: string;
+  url: string;
+  onClose: () => void;
+}) {
+  useLanguage();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <ModalDialog
+      title={t('この URL をコピーしてください')}
+      onClose={onClose}
+      initialFocus={inputRef}
+    >
+      <input
+        ref={inputRef}
+        type="text"
+        readOnly
+        value={url}
+        aria-label={label}
+        onFocus={(e) => e.currentTarget.select()}
+        className="mt-4 block w-full rounded-lg border-0 bg-slate-50 px-3 py-2.5 text-xs text-slate-900 ring-1 ring-slate-300 ring-inset focus:ring-2 focus:ring-indigo-600 focus:ring-inset dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700 dark:focus:ring-indigo-400"
+      />
+      <div className="mt-4 flex justify-end">
+        <Button type="button" size="sm" variant="secondary" onClick={onClose}>
+          {t('閉じる')}
+        </Button>
+      </div>
+    </ModalDialog>
   );
 }

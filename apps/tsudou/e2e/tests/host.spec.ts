@@ -44,8 +44,11 @@ test.describe('主催者', () => {
 
     const host = await newUser();
     await host.goto(manageUrl);
-    host.once('dialog', (dialog) => void dialog.accept());
     await host.getByRole('button', { name: text('イベントを削除') }).click();
+    await host
+      .getByRole('dialog')
+      .getByRole('button', { name: text('イベントを削除'), exact: true })
+      .click();
     await expect(host).toHaveURL('/');
 
     const guest = await newUser();

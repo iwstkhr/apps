@@ -2,6 +2,7 @@ import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
   ReactNode,
+  Ref,
   TextareaHTMLAttributes,
 } from 'react';
 import { cx } from '../../lib/cx';
@@ -13,6 +14,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md';
   loading?: boolean;
+  ref?: Ref<HTMLButtonElement>;
 };
 
 const BUTTON_VARIANTS = {
