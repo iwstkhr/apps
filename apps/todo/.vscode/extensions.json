@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "bradlc.vscode-tailwindcss",
+    "hverlin.mise-vscode",
+    "github.vscode-github-actions"
+  ],
+  "unwantedRecommendations": [
+    "dbaeumer.vscode-eslint",
+    "oxc.oxc-vscode"
+  ]
+}

@@ -1,0 +1,23 @@
+// todo を Cloudflare Workers の静的アセットとして配信する (Worker のスクリプトは持たない)。
+// データはブラウザの IndexedDB にだけ保存し、サーバーには送らない。
+// デプロイ前に `pnpm run build` で build/client/ を作っておく。
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "todo",
+  "compatibility_date": "2026-09-01",
+  // 独自ドメインで公開する。DNS レコードと証明書は wrangler deploy が作る (wasabee.dev のゾーンが同じアカウントにあること)
+  "routes": [{ "pattern": "todo.wasabee.dev", "custom_domain": true }],
+  // 本番の公開 URL は独自ドメインに一本化するため、本番の workers.dev は無効にする
+  "workers_dev": false,
+  // PR ごとのプレビュー (wrangler preview) は workers.dev で配信する。noindex ヘッダーが自動で付く。
+  // この設定は wrangler deploy で反映される
+  "preview_urls": true,
+  "assets": {
+    "directory": "./build/client",
+    // 未知のパスへのナビゲーションには index.html を 200 で返し、SPA のルーティングに任せる
+    "not_found_handling": "single-page-application"
+  },
+  "observability": { "enabled": true },
+  // プレビューは本番と同じ設定で良いので空にしておく (wrangler preview に必要)
+  "previews": {}
+}

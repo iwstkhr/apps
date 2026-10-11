@@ -1,0 +1,138 @@
+# Architecture
+
+Structure, data flow, module responsibilities, and delivery pipeline for the TODO app.
+
+See [specification.md](./specification.md) for features, screens, and data specifications.
+
+## Overview
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│ Cloudflare Workers (static asset delivery only)          │
+│ build/client                                             │
+└──────────────────────────┬───────────────────────────────┘
+                           │ HTML / JS / CSS
+                           ▼
+┌──────────────────────────────────────────────────────────┐
+│ Browser SPA (React Router / Vite, ssr: false)            │
+│                                                          │
+│ Home (routes/home.tsx)                                   │
+│   ├─ useTodos ──► todo-db ──► IndexedDB ("todo" DB)      │
+│   │      │           (stores: todos, folders)            │
+│   │      └─ BroadcastChannel ("todo-changes") ◄─► tabs   │
+│   ├─ folder-tree ──► FolderSidebar / FolderSelect        │
+│   ├─ filterByFolder → applyFilters ──► TodoList / Item   │
+│   └─ export-import ──► JSON file download / upload       │
+└──────────────────────────────────────────────────────────┘
+```
+
+There is no backend API or database. The Worker has no script and only serves the build output. A service worker (`sw.js`) stores the build output in the browser so the app opens offline.
+
+## Technology stack
+
+| Layer | Technology |
+| --- | --- |
+| UI | React 19, TypeScript |
+| Routing / Build | React Router 8 (SPA), Vite 8 |
+| Storage | IndexedDB (native API) |
+| Styling | Tailwind CSS 4 |
+| Quality | Biome, Vitest, Testing Library, fake-indexeddb, Playwright, pre-commit |
+| Delivery | Cloudflare Workers static assets (wrangler) |
+
+## Directory structure
+
+```text
+app/
+  root.tsx                      HTML layout and error boundary
+  routes/home.tsx               The only screen; wires state, filters, and import/export
+  hooks/use-todos.ts            Todo state, persistence, and cross-tab sync
+  hooks/use-view-state.ts       Sort mode, selected and collapsed folders, and the folder list width, kept in localStorage
+  lib/todo-db.ts                IndexedDB access (open, read, put, delete, replace)
+  lib/sample-data.ts            Sample todos and folders added when the database is created
+  lib/folder-tree.ts            Folder tree helpers: ordering, paths, subtrees, repair, counts
+  lib/todo-drag.ts              Drag data for moving a todo onto a folder
+  lib/todo-order.ts             Custom comparator and reordering visible slots without moving hidden tasks; once every todo has a unique order, only the moved todos get new orders, so hidden and trashed todos keep their `updatedAt` for merge imports
+  lib/export-import.ts          Export file creation, import parsing, and merging
+  lib/todo-filters.ts           Filtering and sorting (pure functions)
+  lib/styles.ts                 Shared Tailwind class strings
+  lib/i18n.ts                   Language selection (browser default, saved choice) and t()
+  lib/translations.ts           English text for each Japanese UI string
+  lib/service-worker.ts         Registers sw.js in production builds
+  types/todo.ts                 Todo type, factories, validation, and date helpers
+  types/folder.ts               Folder type, factories, and validation
+  components/layout/            Header and its ⋯ menu (language, theme dialog, export, import), the shared modal, the confirmation dialog, responsive sidebar panel, and folder list resizer
+  components/folder/            Folder list, create/edit dialog, and folder selector
+  components/todo/status-tabs.tsx    Status segmented control above the list, with icons and counts for the selected folder
+  components/todo/status-icon.tsx    Icon shape and color for each status
+  components/todo/trash-list.tsx     Trash view with restore, delete forever, and empty actions
+  components/todo/tag-input.tsx      Tag field with chips and a suggestion list (combobox)
+  components/todo/              Add/edit form, toolbar, list, and item
+  components/data/              Import confirmation dialog
+public/                         favicon, PWA manifest, and PNG icons
+scripts/service-worker.js       Service worker source: precaching, network-first pages, cache-first assets
+scripts/write-service-worker.ts Writes build/client/sw.js with the build version and the precache list
+scripts/generate-icons.mjs      Renders the PNG icons from the favicon design with Chrome (run by hand)
+e2e/                            Playwright tests against wrangler dev
+```
+
+## Data flow
+
+1. On mount, `useTodos` reads every record from the `todos` and `folders` object stores (key path `id`) and normalizes them with `toTodo()` and `toFolder()`. The database is at version 2; version 1 had only the `todos` store, and the upgrade adds `folders`. When the upgrade starts from version 0 (the database did not exist), the same upgrade transaction also writes the sample data from `createSampleData()` in the current language.
+   `toFolder()` normalizes icon colors to lowercase `#rrggbb` and defaults missing or invalid colors to amber. This additive field keeps existing database and export versions readable without a migration.
+2. Each change updates React state first and then writes to IndexedDB, so the UI responds immediately. If the write fails, an error is shown and the state is reloaded from IndexedDB.
+3. After a successful write, `useTodos` posts a message on the `todo-changes` BroadcastChannel; other tabs reload from IndexedDB when they receive it.
+4. Filters live in `routes/home.tsx` state and are not persisted. The sort mode, selected and collapsed folders, and folder list width come from `useViewState`, which reads `localStorage` (`todo:view`) after the first render, so the prerendered HTML still matches, and writes it 200 ms after the last change (and immediately on unmount or `pagehide`), so dragging the folder list edge does not write on every pointer move. `filterByFolder()` narrows the todos to the selected folder and its subfolders, then `applyFilters()` filters and sorts them. In custom mode, `TodoList` accepts todo drops with insertion feedback and provides up/down controls. `reorderTodos()` replaces visible slots in the global order and assigns integer `customOrder` ranks; `useTodos` saves changed records in one transaction and broadcasts the change. Missing or invalid ranks become null in `toTodo()`, so existing DB/export versions remain readable.
+5. Only the todo header (title and grip) is draggable; the memo and controls sit outside it. Dragging the header puts its id in the `DataTransfer` under the custom type `application/x-todo-id` and replaces the drag image with a small title label offset from the pointer (built off-screen for `setDragImage()` and removed right after). Folder rows accept the drop only for that type (so dragged files or text are ignored), and the drop calls `moveTodo()`, which saves only the moved todo.
+6. Completing a repeating todo in `changeStatus()` builds the next occurrence with `createNextOccurrence()` (which uses the pure `nextDueDate()`), moves the repeat from the completed todo to it, appends it like `addTodo()` does (sharing `appendTodo()` for the custom order), and saves both in one transaction. It returns the new todo so `Home` can offer undo; `undoRepeat()` deletes it and restores the previous status, `completedAt`, and repeat in one transaction (`putAndDeleteTodos()`). `toTodo()` reads a missing or invalid `repeat` as null, so existing DB and export versions stay readable.
+7. Deleting a folder removes its subtree and rewrites the affected todos to 未分類 in one IndexedDB transaction, so a failure leaves both unchanged.
+8. Export serializes the in-memory todos and folders to a Blob and triggers a download. Import reads the file with `File.text()`, validates and repairs it with `parseImport()`, and passes the result to `importData()` after the user picks merge or replace.
+
+## Module responsibilities
+
+| Module | Responsibility |
+| --- | --- |
+| `types/todo.ts` | `createTodo`, `updateTodo`, `setTodoStatus`, tag parsing, `toTodo` (validation and defaults for untrusted data), `getDueStatus` |
+| `types/folder.ts` | `createFolder`, `updateFolder`, `toFolder` (validation for untrusted data) |
+| `lib/folder-tree.ts` | `flattenFolderTree` (tree order with collapsing), `getSubtreeIds`, `formatFolderPath`, `wouldCreateCycle`, `sanitizeFolders` / `sanitizeTodoFolders` (repair missing parents, cycles, and dangling folder ids), `filterByFolder`, `countOpenByFolder` |
+| `lib/todo-db.ts` | A single cached connection; every write is one transaction over both stores, so multi-record and cross-store writes are atomic |
+| `lib/export-import.ts` | Export envelope (`app`, `version`, `exportedAt`, `folders`, `todos`), `parseImport` with Japanese error messages, `mergeData` by `updatedAt`, `sanitizeData` |
+| `lib/todo-filters.ts` | Status, tag, and keyword filters; per-status counts; due, priority, status, and creation sorts |
+| `lib/todo-drag.ts` | `setDraggedTodo` (also sets the drag image), `isDraggingTodo` (checks only the type, because data cannot be read during `dragover`), `getDraggedTodo` |
+| `hooks/use-todos.ts` | CRUD API for todos and folders (including `moveTodo`, `changePriority`, and `removeTag`), optimistic updates, error handling, and tab sync. `todos` excludes trashed todos, `trash` holds them, and `allTodos` (both) is used for export. `removeTodo` and `removeCompleted` (limited to the ids of the current view) set `deletedAt` instead of deleting; `restoreTodos`, `deleteTodosForever` (only trashed todos), and `emptyTrash` manage the trash, and loading drops todos that have been in the trash for 30 days from the state and deletes them in the background (a failed delete does not block loading and is retried on the next load). `restoreTodos` returns how many todos it restored, so a stale undo does not report a restore |
+| `hooks/use-view-state.ts` | Restores and saves the sort mode, selected and collapsed folders, and the folder list width (clamped to 180–480 px); ignores broken values and storage errors |
+| `lib/i18n.ts` / `lib/translations.ts` | As in tsudou, Japanese UI text is the key and `translations.ts` maps it to English. `t(text, values)` translates and fills `{0}`-style placeholders with values that are never translated; a key may carry context after `\|` (for example `フォルダ\|項目`) when one Japanese word needs different English words, and only the part before `\|` is shown in Japanese. `getLanguage()` returns the saved choice (`todo:language`, read from localStorage once and cached until `setLanguage()` or a `storage` event) or the first supported browser language; `setLanguage()` saves it, updates `lang` and the description, and notifies `useLanguage()` subscribers (also on `storage` events from other tabs). `Home` calls `useLanguage()` so the whole screen re-renders on a change; event handlers and errors call `t()` directly. The prerendered HTML contains only the app shell, so reading the language on the client causes no hydration mismatch |
+| `hooks/use-theme.ts` / `lib/themes.ts` | Validates and restores `todo:theme` and `todo:appearance` after mounting and sets `data-theme` and the resolved `data-mode` on the document root; storage failures do not prevent selection. `themes.css` preserves shared neutral tokens, maps the blue accent tokens to indigo for the default (also when `data-theme` is not set yet) or to shades of each preset's selected-row color, and styles the header and sidebar with a shared dark background and bright text, with accent shades derived from the selected-row color; dark variants follow `data-mode` through the custom variant in `app.css`, and automatic mode listens to OS color-scheme changes; semantic colors remain available |
+| `components/todo/status-icon.tsx` | Maps each status filter to a react-icons shape and a fixed color. Colors are set with an inline `style` because `themes.css` whitens sidebar icons without one under dark sidebars (the same mechanism keeps folder colors); すべて has no color and follows the text. Icons are `aria-hidden` because the label is next to them |
+| `components/todo/tag-input.tsx` | Follows the WAI-ARIA combobox pattern: focus stays in the text field, the suggestion `listbox` is linked with `aria-controls` and `aria-activedescendant`, and options do not take focus on mouse down, so the list stays open after a pick and the remaining tags can be picked in a row. Separators (`,`, `、`, `，`) turn the text before them into chips, except during IME composition. The text still being typed is held by the form and added to the tags on save instead of becoming a chip on blur, because adding a chip on blur could grow the field and move the button being clicked. The chips sit in a `div` that focuses the text field on pointer down; a wrapping `label` would activate the first chip's remove button when its empty space is clicked |
+| `components/layout/header-menu.tsx` | The メニュー button (⋯ plus text that is visible from the `lg` breakpoint and screen-reader-only below it, so the accessible name is always メニュー) and a WAI-ARIA menu (`menuitemradio` items for the language in a `group`, then `menuitem` items for the theme, export, and import). It focuses the first item on open, handles arrow keys, Home, End, Escape, and Tab, closes on outside pointer down, and returns focus to the button. Export uses `aria-disabled` so it stays focusable when unavailable. The import item clicks the hidden file input kept in `app-header.tsx` |
+| `components/layout/theme-dialog.tsx` | A native modal dialog with palette samples and radio inputs for six presets, opened from the header menu through a ref; it stays mounted so `useTheme()` applies the saved theme on load. Native dialog behavior traps focus, handles Escape, and returns focus to the menu button on close |
+| `components/todo/markdown-memo.tsx` | Renders memo strings with `react-markdown` and `remark-gfm`. React elements keep raw HTML inert and the default URL transform blocks unsafe schemes. Image references become links to avoid automatic remote requests; CSS in `app.css` styles the output and confines code/table scrolling to the memo. The stored source stays unchanged |
+| `components/layout/confirm-dialog.tsx` | Replaces `window.confirm()` for deleting a folder, deleting a todo forever, and emptying the trash. `Home` keeps the pending confirmation in state and mounts the dialog, which opens with `showModal()`. Both buttons submit a `method="dialog"` form, and the `close` event runs the action only when `returnValue` is `confirm`, so Escape and キャンセル both cancel. キャンセル is first, so the browser focuses it on open |
+| `components/layout/sidebar-panel.tsx` | A persistent sidebar at widths of 1024px and above; a modal drawer named フォルダ, opened from the ☰ button (フォルダを開く) below that breakpoint. The ☰ button has its own light color rule in `themes.css` for dark headers. Media query changes release the mobile focus trap and scroll lock. The drawer makes the header, main column, and menu button inert, restores focus on close, and closes on Escape, backdrop click, or folder selection |
+| `components/layout/sidebar-resizer.tsx` | A `separator` handle that resizes the folder list by pointer drag or keyboard and resets on double click. The width is applied through the `--sidebar-width` CSS variable on the layout grid. The folder list is `sticky` with a height of the window minus the fixed-height (`h-14`) header, and the footer is in the right column so the folder list stays in place down to the end of the page |
+
+## Offline support (PWA)
+
+- `root.tsx` links `manifest.webmanifest` and the Apple touch icon and sets `theme-color` for light and dark mode. The manifest uses relative URLs, so it also works under a sub-path. The icons are PNG files committed to `public/`; `scripts/generate-icons.mjs` renders them from the same design as `favicon.svg` (a maskable and an Apple icon fill the whole square and keep the check inside the safe zone).
+- The `buildEnd` hook in `react-router.config.ts` runs after the SPA `index.html` is generated and calls `writeServiceWorker()`. It lists every file in `build/client` (except `sw.js`, source maps, and Cloudflare config files), hashes their contents into a version, and writes `sw.js` as `VERSION` and `PRECACHE` constants followed by `scripts/service-worker.js`. `index.html` is listed as `./` because Cloudflare redirects `/index.html` to `/`.
+- `registerServiceWorker()` (`lib/service-worker.ts`) registers `sw.js` from `App` in production builds only, since the development server has no `sw.js`.
+- The worker precaches the list into `todo-<version>` on install and calls `skipWaiting()`; on activate it deletes other `todo-` caches and claims open pages. Navigations go to the network first and fall back to the cached `./`, so online users always get the latest `index.html`; other same-origin GET requests are served from the cache first, because asset file names contain content hashes. Open tabs are not reloaded on an update. All routes load at startup (there are no lazy chunks), so deleting the old cache does not break an open page.
+
+## Testing
+
+| Level | Tool | Scope |
+| --- | --- | --- |
+| Unit | Vitest | The precache list and version written into `sw.js`, types (including next due dates for each repeat, month ends, and leap days), filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb), language selection, and a check that every `t()` string and label literal has an English translation with the same placeholders. `app/test/setup.ts` selects Japanese before each test, because most tests assert Japanese UI text, and creates an empty version 1 database so the app's upgrade adds no samples; the sample tests delete it first |
+| Component | Vitest, Testing Library, happy-dom | `useTodos`, the header menu (items, keyboard navigation, closing, and disabled export), the confirmation dialog (its name and description, confirming, and cancelling), and the whole `Home` screen. Initial focus and Escape in the confirmation dialog are native dialog behavior that happy-dom does not implement, so the E2E tests check them |
+| E2E | Playwright | Production build served by `wrangler dev`: the default language in Japanese and English browsers, switching the language and keeping it after a reload, persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, the mobile drawer, including focus trapping, close controls, background scroll locking, and switching back to the desktop sidebar, the PWA manifest and icons, reopening the app with its todos while offline, completing a weekly todo and keeping its next occurrence after a reload, the in-app confirmation dialog for deleting forever and emptying the trash (initial focus on キャンセル, Escape, returning focus), and the sample data on the first visit only, in Japanese and English. The `page` fixture in `e2e/fixtures.ts` creates an empty database before the app loads, unless a test sets `sampleData: true` |
+
+## CI / CD
+
+| Workflow | Trigger | Job |
+| --- | --- | --- |
+| `todo-test.yml` | PR and push to `main` touching `apps/todo/` | Type check, unit tests, E2E tests |
+| `todo-preview.yml` | PR opened / updated / closed | Create a `wrangler preview` per PR and comment its URL; delete it when the PR closes |
+| `todo-deploy.yml` | Push to `main` touching `apps/todo/`, or manual | Build and `wrangler deploy` to `todo.wasabee.dev` |
+| `pre-commit.yml` | All PRs and pushes | Biome, markdownlint, actionlint, gitleaks, and other hooks |
+
+`wrangler.jsonc` serves `build/client` with `not_found_handling: "single-page-application"`, disables `workers.dev` for production, and enables preview URLs. The custom domain `todo.wasabee.dev` is created by `wrangler deploy` because the `wasabee.dev` zone is in the same Cloudflare account.
