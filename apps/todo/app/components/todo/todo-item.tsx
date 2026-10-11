@@ -145,6 +145,35 @@ export function TodoItem({
             {todo.title}
           </p>
         </section>
+        {/* Tags classify the task, so they sit right under the title where they are read together with it */}
+        {todo.tags.length > 0 && (
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+            {todo.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center overflow-hidden rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+              >
+                <button
+                  type="button"
+                  className="cursor-pointer py-0.5 pl-2 pr-1 hover:bg-blue-100 dark:hover:bg-blue-900"
+                  onClick={() => onTagClick(tag)}
+                  title={t('タグ「{0}」で絞り込む', [tag])}
+                >
+                  #{tag}
+                </button>
+                <button
+                  type="button"
+                  className="cursor-pointer py-1 pl-1 pr-2 hover:bg-blue-100 dark:hover:bg-blue-900"
+                  onClick={() => onRemoveTag(todo.id, tag)}
+                  aria-label={t('「{0}」からタグ「{1}」を削除', [todo.title, tag])}
+                  title={t('タグ「{0}」を削除', [tag])}
+                >
+                  <FaTimes className="h-2.5 w-2.5" aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         {todo.memo && <MarkdownMemo>{todo.memo}</MarkdownMemo>}
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
           <select
@@ -206,30 +235,6 @@ export function TodoItem({
               {folderPath}
             </span>
           )}
-          {todo.tags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center overflow-hidden rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-            >
-              <button
-                type="button"
-                className="cursor-pointer py-0.5 pl-2 pr-1 hover:bg-blue-100 dark:hover:bg-blue-900"
-                onClick={() => onTagClick(tag)}
-                title={t('タグ「{0}」で絞り込む', [tag])}
-              >
-                #{tag}
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer py-1 pl-1 pr-2 hover:bg-blue-100 dark:hover:bg-blue-900"
-                onClick={() => onRemoveTag(todo.id, tag)}
-                aria-label={t('「{0}」からタグ「{1}」を削除', [todo.title, tag])}
-                title={t('タグ「{0}」を削除', [tag])}
-              >
-                <FaTimes className="h-2.5 w-2.5" aria-hidden="true" />
-              </button>
-            </span>
-          ))}
         </div>
       </div>
 

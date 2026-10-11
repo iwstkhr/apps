@@ -80,6 +80,23 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: '#家' })).toBeInTheDocument();
   });
 
+  it('shows the tags right under the title, before the memo and the status', async () => {
+    await putTodos([createTodoFixture({ title: '資料を作る', memo: 'メモ', tags: ['仕事'] })]);
+    await renderHome();
+    const item = items()[0];
+    const order = [
+      within(item).getByText('資料を作る'),
+      within(item).getByRole('button', { name: '#仕事' }),
+      within(item).getByText('メモ'),
+      within(item).getByRole('combobox', { name: '「資料を作る」のステータス' }),
+    ];
+    for (const [index, element] of order.slice(1).entries()) {
+      expect(
+        order[index].compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  });
+
   it('labels the sort and tag filters and clears an active tag filter', async () => {
     await putAll({
       folders: [],
