@@ -19,8 +19,8 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Status | Each todo has one of 未着手 (not started), 進行中 (in progress), 保留 (on hold), or 完了 (done). Change it with the status selector on the item. The checkbox is a shortcut: checking it sets 完了 and unchecking it returns to 未着手. New todos start as 未着手 |
 | Delete | The trash button moves one todo to the trash without asking, and 完了済みをゴミ箱に移動 moves all completed todos in the current view there. A notice with 元に戻す (undo) appears; see [Trash](#trash) |
 | Folders | See [Folders](#folders) |
-| Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive). In the status control each status has an icon with its own shape and color: すべて a stack in the text color, 未着手 an empty gray circle, 進行中 a blue play icon, 保留 a purple pause icon, and 完了 a green check. The colors stay the same in every theme and keep at least 3:1 contrast against white and dark mode |
-| Sort | 期限順 (default), 優先度順, ステータス順, 新しい順, カスタム. Completed todos are listed after the others except in カスタム |
+| Filter | Status (すべて / 未着手 / 進行中 / 保留 / 完了, each with a count), tag, and keyword (title, memo, and tags, case-insensitive). The keyword field, 並び順, and タグ sit on one row and wrap on narrow screens; 並び順 and タグ show visible captions. While a tag is selected its selector is highlighted and an × button next to it clears the tag filter. The タグ selector is hidden while no todo has tags. In the status control each status has an icon with its own shape and color: すべて a stack in the text color, 未着手 an empty gray circle, 進行中 a blue play icon, 保留 a purple pause icon, and 完了 a green check. The colors stay the same in every theme and keep at least 3:1 contrast against white and dark mode |
+| Sort | 期限順 (default), 優先度順, ステータス順, 新しい順, カスタム. Chosen from the 並び順 selector. Completed todos are listed after the others except in カスタム |
 | Header menu | See [Header menu](#header-menu) |
 | Export | Saves every todo and folder to `todo-export-YYYYMMDD.json` |
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
@@ -28,7 +28,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 ### Tags
 
-Click a tag name in the task list to filter by it. The adjacent × button removes only that tag from that task and saves immediately; it does not activate the tag filter. Other tasks with the same tag are unchanged. If a removed tag no longer matches the current filter, the task leaves the filtered list.
+Click a tag name in the task list to filter by it. The タグ selector in the toolbar then shows the tag highlighted, with an × button to clear the filter. The adjacent × button removes only that tag from that task and saves immediately; it does not activate the tag filter. Other tasks with the same tag are unchanged. If a removed tag no longer matches the current filter, the task leaves the filtered list.
 
 ### Priority
 
@@ -111,13 +111,13 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 ├────────────────┬─────────────────────────────────────────────┤
 │ フォルダ   [+] │ 仕事 / 案件 A                               │
 │   すべて     5 │ Add form: [+ 新しいタスク ] [詳細] [+ 追加] │
-│   未分類     2 │ Filters: [並び順] [タグ]                    │
-│ ▾ 仕事       2 │ [キーワードで検索                         ] │
-│   ▾ 案件 A   1 │ すべて 5 | 未着手 2 | 進行中 1 | 保留 1 | … │
-│       資料   1 │ ┌─────────────────────────────────────────┐ │
-│     会議       │ │ ☐ Title                        ✎  🗑    │ │
-│   家         1 │ │   [進行中▾] 優先度: 高  📁 仕事 / 案件 A │ │
-│                │ └─────────────────────────────────────────┘ │
+│   未分類     2 │ [🔍 キーワード ] 並び順[期限順▾] タグ[#家▾]×│
+│ ▾ 仕事       2 │ すべて 5 | 未着手 2 | 進行中 1 | 保留 1 | … │
+│   ▾ 案件 A   1 │ ┌─────────────────────────────────────────┐ │
+│       資料   1 │ │ ☐ Title                        ✎  🗑    │ │
+│     会議       │ │   [進行中▾] 優先度: 高  📁 仕事 / 案件 A │ │
+│   家         1 │ └─────────────────────────────────────────┘ │
+│                │                                             │
 │ ゴミ箱         │                       [完了済みを削除 (n)]  │
 ├────────────────┴─────────────────────────────────────────────┤
 │ Footer: note on local storage and backups                    │

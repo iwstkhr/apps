@@ -65,6 +65,36 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: '#家' })).toBeInTheDocument();
   });
 
+  it('labels the sort and tag filters and clears an active tag filter', async () => {
+    await putAll({
+      folders: [],
+      todos: [
+        createTodoFixture({ title: '資料を作る', tags: ['仕事'] }),
+        createTodoFixture({ title: '掃除', tags: [] }),
+      ],
+    });
+    const user = await renderHome();
+    expect(screen.getByRole('combobox', { name: '並び順' })).toHaveValue('due');
+    const tagFilter = screen.getByRole('combobox', { name: 'タグで絞り込み' });
+    expect(screen.getByText('タグ', { selector: 'label' })).toHaveAttribute('for', tagFilter.id);
+    expect(screen.queryByRole('button', { name: 'タグの絞り込みを解除' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '#仕事' }));
+    expect(tagFilter).toHaveValue('仕事');
+    expect(items()).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'タグの絞り込みを解除' }));
+    expect(tagFilter).toHaveValue('');
+    expect(items()).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: 'タグの絞り込みを解除' })).not.toBeInTheDocument();
+  });
+
+  it('hides the tag filter when no todo has tags', async () => {
+    await putAll({ folders: [], todos: [createTodoFixture({ title: '掃除', tags: [] })] });
+    await renderHome();
+    expect(screen.getByRole('combobox', { name: '並び順' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'タグで絞り込み' })).not.toBeInTheDocument();
+  });
+
   it('shows the copyright notice with the current year in the footer', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2031-06-01T00:00:00'));
