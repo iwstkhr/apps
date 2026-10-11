@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { HeaderMenu } from '~/components/layout/header-menu';
@@ -10,6 +10,9 @@ beforeAll(() => {
   // happy-dom の dialog は showModal を持たないことがあるので用意する
   HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
     this.open = true;
+  };
+  HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+    this.open = false;
   };
 });
 
@@ -108,6 +111,25 @@ describe('HeaderMenu', () => {
     await user.click(button);
     await user.click(screen.getByRole('menuitem', { name: 'テーマ…' }));
     expect(screen.getByRole('dialog', { name: 'テーマ' })).toHaveAttribute('open');
+  });
+
+  it('closes the theme dialog when its backdrop is clicked, but not from inside', async () => {
+    const { user, button } = renderMenu();
+    await user.click(button);
+    await user.click(screen.getByRole('menuitem', { name: 'テーマ…' }));
+    const dialog = screen.getByRole('dialog', { name: 'テーマ' });
+
+    // 中で押して背景で離した (文字の選択など) ときは閉じない
+    fireEvent.pointerDown(screen.getByRole('heading', { name: 'テーマ' }));
+    fireEvent.click(dialog);
+    expect(dialog).toHaveAttribute('open');
+    await user.click(screen.getByRole('radio', { name: 'ダーク' }));
+    expect(dialog).toHaveAttribute('open');
+
+    // 背景のクリックは dialog 要素そのものに届く
+    fireEvent.pointerDown(dialog);
+    fireEvent.click(dialog);
+    expect(dialog).not.toHaveAttribute('open');
   });
 
   it('runs export and import, and ignores a disabled export', async () => {

@@ -141,6 +141,12 @@ test('keeps content neutral with readable sidebar palettes, restores it, and sup
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(button).toBeFocused();
+  // 背景をクリックしても閉じる
+  await openTheme();
+  await dialog.getByRole('heading', { name: 'テーマ' }).click();
+  await expect(dialog).toBeVisible();
+  await page.mouse.click(5, 5);
+  await expect(dialog).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });
 
