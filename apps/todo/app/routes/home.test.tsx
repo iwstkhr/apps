@@ -95,6 +95,13 @@ describe('Home', () => {
     expect(screen.queryByRole('combobox', { name: 'タグで絞り込み' })).not.toBeInTheDocument();
   });
 
+  it('describes local-only storage next to the title without changing the heading', async () => {
+    await renderHome();
+    const tagline = screen.getByText('データはブラウザだけに保存');
+    expect(tagline.closest('header')).not.toBeNull();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^TODO$/);
+  });
+
   it('shows the copyright notice with the current year in the footer', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2031-06-01T00:00:00'));

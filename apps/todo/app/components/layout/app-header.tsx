@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { FaBars, FaCheckSquare } from 'react-icons/fa';
+import { FaBars, FaCheckSquare, FaLock } from 'react-icons/fa';
 import { HeaderMenu } from '~/components/layout/header-menu';
 import { t } from '~/lib/i18n';
 
@@ -43,6 +43,11 @@ export function AppHeader({
             <FaCheckSquare className="app-logo h-7 w-7 shrink-0 text-blue-600" aria-hidden="true" />
             <span className="truncate">TODO</span>
           </h1>
+          {/* 一番の特徴をタイトルの横で伝える。見出しには入れず、狭い画面ではフッターの注意書きに任せる */}
+          <p className="app-tagline hidden shrink-0 items-center gap-1.5 border-l border-slate-300 pl-2 text-xs text-slate-500 sm:flex dark:border-slate-600 dark:text-slate-400">
+            <FaLock aria-hidden="true" />
+            {t('データはブラウザだけに保存')}
+          </p>
         </div>
 
         <div className="flex shrink-0 items-center">

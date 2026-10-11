@@ -41,3 +41,21 @@ test('keeps both header buttons readable on dark headers', async ({ page }) => {
     );
   }
 });
+
+test('describes local-only storage next to the title on wide screens', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page);
+  const tagline = page.locator('header').getByText('データはブラウザだけに保存');
+  await expect(tagline).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('TODO');
+
+  // 濃いヘッダーでも読めるよう、白に寄せた色になる
+  await page.evaluate(() => localStorage.setItem('todo:theme', 'mint'));
+  await page.reload();
+  await expect(tagline).toHaveCSS('color', 'rgba(255, 255, 255, 0.7)');
+
+  // 狭い画面では ☰ とメニューの場所を空けるため隠す
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expect(tagline).toBeHidden();
+});

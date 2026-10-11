@@ -164,3 +164,9 @@
 :root[data-theme]:not([data-theme="indigo"]) .theme-header .app-logo {
   color: #f8fafc;
 }
+
+/* タイトル横の説明は、濃いヘッダーの上で白より一段控えめにする */
+:root[data-theme]:not([data-theme="indigo"]) .theme-header .app-tagline {
+  color: #ffffffb3;
+  border-color: #ffffff40;
+}

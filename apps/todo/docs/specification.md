@@ -42,6 +42,8 @@ The selection is stored separately in localStorage (`todo:theme`) and restored a
 
 ### Header menu
 
+Next to the TODO title, a lock icon and データはブラウザだけに保存 ("Data stays in your browser") state the app's main trait at widths of 640px and above. It is not part of the page heading, and narrower screens leave it to the footer note to keep room for the ☰ and メニュー buttons. On the dark headers of non-default themes it is a translucent white that keeps at least 4.5:1 contrast.
+
 The メニュー button at the right of the header (⋯ followed by the text メニュー at widths of 1024px and above; only ⋯ on narrower screens, where its accessible name is still メニュー) opens a menu with, from top to bottom: 言語 (English and 日本語, in that order, with a check mark on the current language), テーマ…, エクスポート, and インポート. These are occasional actions, so they share one button and keep the header uncluttered on narrow screens; the ☰ button on the left stays reserved for the folder navigation and is named for it (フォルダを開く), so the two buttons are never both called メニュー. Choosing an item closes the menu and runs it: a language applies immediately, テーマ… opens the theme dialog, エクスポート downloads the file, and インポート opens the file picker. エクスポート is shown but unavailable while there are no todos and no folders.
 
 The menu follows the WAI-ARIA menu pattern: the button announces the popup and its state, opening it (by click, Enter, Space, ↓, or ↑) focuses the first item, ↑ / ↓ move between items and wrap around, Home and End jump to the first and last item, and Escape closes the menu and returns focus to the button. Tab or a click outside closes it as well. The menu fits within narrow screens.
@@ -107,7 +109,7 @@ Open todos whose due date is before today are marked 期限切れ in red, and to
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ Header: TODO                                     [⋯ メニュー] │
+│ Header: TODO │ 🔒 データはブラウザだけに保存     [⋯ メニュー] │
 ├────────────────┬─────────────────────────────────────────────┤
 │ フォルダ   [+] │ 仕事 / 案件 A                               │
 │   すべて     5 │ Add form: [+ 新しいタスク ] [詳細] [+ 追加] │
