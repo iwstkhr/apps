@@ -96,6 +96,23 @@ describe('useTodos', () => {
     expect((await getAll()).todos).toEqual([saved]);
   });
 
+  it('changes and removes the due date of a todo without touching other fields', async () => {
+    const todo = createTodoFixture({ dueDate: null, memo: '内容を保持' });
+    await putAll({ folders: [], todos: [todo] });
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.changeDueDate(todo.id, '2026-10-20'));
+    const saved = (await getAll()).todos[0];
+    expect(saved).toEqual({ ...todo, dueDate: '2026-10-20', updatedAt: expect.any(String) });
+    expect(result.current.todos).toEqual([saved]);
+    // The same date saves nothing
+    await act(() => result.current.changeDueDate(todo.id, '2026-10-20'));
+    expect((await getAll()).todos).toEqual([saved]);
+
+    await act(() => result.current.changeDueDate(todo.id, null));
+    expect((await getAll()).todos[0].dueDate).toBeNull();
+  });
+
   it('moves a todo to a folder and back to unfiled', async () => {
     const folder = createFolderFixture();
     const todo = createTodoFixture();

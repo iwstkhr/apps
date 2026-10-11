@@ -71,6 +71,7 @@ export default function Home() {
     changeStatus,
     undoRepeat,
     changePriority,
+    changeDueDate,
     removeTag,
     moveTodo,
     reorderTodo,
@@ -514,6 +515,7 @@ export default function Home() {
                         : undefined
                     }
                     onPriorityChange={(id, priority) => void changePriority(id, priority)}
+                    onDueDateChange={(id, dueDate) => void changeDueDate(id, dueDate)}
                     onStatusChange={(id, status) => void handleStatusChange(id, status)}
                     onEdit={editTodo}
                     onRemove={(id) => void handleRemove(id)}

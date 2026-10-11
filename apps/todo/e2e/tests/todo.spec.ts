@@ -57,7 +57,7 @@ test('keeps todos after reloading', async ({ page }) => {
   await page.getByRole('button', { name: '詳細' }).click();
   await page.getByRole('textbox', { name: 'メモ' }).fill('低脂肪');
   await page.getByRole('combobox', { name: 'タグ', exact: true }).fill('家, 買い物');
-  await page.getByLabel('期限').fill('2000-01-01');
+  await page.getByLabel('期限', { exact: true }).fill('2000-01-01');
   await page.getByRole('combobox', { name: '優先度' }).selectOption('高');
   await page.getByRole('button', { name: '追加', exact: true }).click();
 
@@ -249,10 +249,21 @@ test('changes task priority from the list and persists it after reloading', asyn
   await expect(priority).toHaveValue('low');
 });
 
+test('changes the due date from the list and persists it after reloading', async ({ page }) => {
+  await addTodo(page, '期限を変更');
+  const due = page.getByLabel('「期限を変更」の期限');
+  await due.fill('2000-01-01');
+  await expect(todoItems(page)).toHaveText([/期限: 2000\/01\/01 \(期限切れ\)/]);
+  await page.reload();
+  await expect(due).toHaveValue('2000-01-01');
+  await due.fill('');
+  await expect(todoItems(page)).not.toContainText('期限:');
+});
+
 test('adds the next occurrence of a weekly todo when it is completed', async ({ page }) => {
   await page.getByRole('textbox', { name: 'タイトル' }).fill('ゴミ出し');
   await page.getByRole('button', { name: '詳細' }).click();
-  await page.getByLabel('期限').fill('2026-10-09');
+  await page.getByLabel('期限', { exact: true }).fill('2026-10-09');
   await page.getByRole('combobox', { name: '繰り返し' }).selectOption({ label: '毎週' });
   await page.getByRole('button', { name: '追加', exact: true }).click();
   await expect(todoItems(page)).toHaveText([/繰り返し: 毎週/]);

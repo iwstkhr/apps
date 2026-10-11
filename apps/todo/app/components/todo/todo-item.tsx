@@ -59,6 +59,8 @@ interface TodoItemProps {
   folderPath: string | null;
   onStatusChange: (id: string, status: TodoStatus) => void;
   onPriorityChange: (id: string, priority: Priority) => void;
+  /** A null dueDate removes the due date */
+  onDueDateChange: (id: string, dueDate: string | null) => void;
   onEdit: (id: string, input: TodoInput) => Promise<void>;
   onRemove: (id: string) => void;
   onTagClick: (tag: string) => void;
@@ -76,6 +78,7 @@ export function TodoItem({
   folderPath,
   onStatusChange,
   onPriorityChange,
+  onDueDateChange,
   onEdit,
   onRemove,
   onTagClick,
@@ -230,23 +233,51 @@ export function TodoItem({
               ))}
             </select>
           </span>
-          {todo.dueDate && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 whitespace-nowrap rounded px-1.5 py-0.5',
-                dueStatus === 'overdue' && 'bg-red-600 font-semibold text-white',
-                dueStatus === 'today' && 'bg-orange-500 font-semibold text-white',
+          {/*
+            A date input laid invisibly over the chip, so tapping it opens the browser's date picker.
+            Clearing the date in the picker removes the due date. Without a due date it shows 期限なし
+            in a dashed outline, so it reads as an empty slot that can be filled
+          */}
+          <span
+            className={cn(
+              'relative inline-flex items-center gap-1 whitespace-nowrap rounded px-1.5 py-0.5 focus-within:ring-2 focus-within:ring-blue-500/40',
+              dueStatus === 'overdue' && 'bg-red-600 font-semibold text-white',
+              dueStatus === 'today' && 'bg-orange-500 font-semibold text-white',
+              todo.dueDate &&
                 (dueStatus === 'upcoming' || dueStatus === 'none') &&
-                  'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-              )}
-            >
-              <FaCalendarAlt className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
-              <span className="sr-only">{t('期限: ')}</span>
-              {todo.dueDate.replaceAll('-', '/')}
-              {dueStatus === 'overdue' && t(' (期限切れ)')}
-              {dueStatus === 'today' && t(' (今日)')}
-            </span>
-          )}
+                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+              !todo.dueDate &&
+                'border border-dashed border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
+            )}
+            title={todo.dueDate ? t('期限') : t('期限を設定')}
+          >
+            <FaCalendarAlt className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+            {todo.dueDate ? (
+              <span>
+                <span className="sr-only">{t('期限: ')}</span>
+                {todo.dueDate.replaceAll('-', '/')}
+                {dueStatus === 'overdue' && t(' (期限切れ)')}
+                {dueStatus === 'today' && t(' (今日)')}
+              </span>
+            ) : (
+              <span>{t('期限なし')}</span>
+            )}
+            <input
+              type="date"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              value={todo.dueDate ?? ''}
+              onChange={(event) => onDueDateChange(todo.id, event.target.value || null)}
+              onClick={(event) => {
+                // Some browsers open the picker only from the small icon, so open it from anywhere on the chip
+                try {
+                  event.currentTarget.showPicker();
+                } catch {
+                  // Not supported or already open; the input still works by keyboard
+                }
+              }}
+              aria-label={t('「{0}」の期限', [todo.title])}
+            />
+          </span>
           {todo.repeat && (
             <span className="inline-flex items-center gap-1 rounded bg-teal-50 px-1.5 py-0.5 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
               <FaRedo className="h-2.5 w-2.5" aria-hidden="true" />
@@ -255,9 +286,9 @@ export function TodoItem({
             </span>
           )}
           {folderPath && (
-            // Wraps only when less than about 5rem is left; otherwise it stays on the line and cuts the path to fit
+            // Wraps only when less than about 4rem is left; otherwise it stays on the line and cuts the path to fit
             <span
-              className="inline-flex min-w-0 max-w-fit grow basis-20 items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+              className="inline-flex min-w-0 max-w-fit grow basis-16 items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
               title={folderPath}
             >
               <FaFolder className="shrink-0" aria-hidden="true" />

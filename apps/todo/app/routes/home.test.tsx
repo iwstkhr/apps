@@ -102,6 +102,27 @@ describe('Home', () => {
     ).toHaveDisplayValue('中');
   });
 
+  it('changes and removes the due date from the list', async () => {
+    const todo = createTodoFixture({ title: '資料を作る', dueDate: null });
+    await putTodos([todo]);
+    await renderHome();
+    const dueInput = () => screen.getByLabelText('「資料を作る」の期限');
+    // Without a due date it says so, offering to set one
+    expect(dueInput().closest('span')).toHaveAttribute('title', '期限を設定');
+    expect(dueInput().closest('span')).toHaveTextContent('期限なし');
+    expect(dueInput()).toHaveValue('');
+
+    fireEvent.change(dueInput(), { target: { value: '2000-01-01' } });
+    await waitFor(() => expect(items()[0]).toHaveTextContent('期限: 2000/01/01 (期限切れ)'));
+    await waitFor(async () => expect((await getAll()).todos[0].dueDate).toBe('2000-01-01'));
+
+    // Clearing the date in the picker removes the due date
+    fireEvent.change(dueInput(), { target: { value: '' } });
+    await waitFor(() => expect(items()[0]).not.toHaveTextContent('期限:'));
+    expect(items()[0]).toHaveTextContent('期限なし');
+    await waitFor(async () => expect((await getAll()).todos[0].dueDate).toBeNull());
+  });
+
   it('labels the sort and tag filters and clears an active tag filter', async () => {
     await putAll({
       folders: [],

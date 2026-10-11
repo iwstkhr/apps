@@ -52,6 +52,8 @@ export interface UseTodos {
   /** Undo completing a repeating task. previous is the task before completion, nextId the created next occurrence */
   undoRepeat: (previous: Todo, nextId: string) => Promise<void>;
   changePriority: (id: string, priority: Priority) => Promise<void>;
+  /** A null dueDate removes the due date */
+  changeDueDate: (id: string, dueDate: string | null) => Promise<void>;
   removeTag: (id: string, tag: string) => Promise<void>;
   /** A null folderId moves it to 未分類 */
   moveTodo: (id: string, folderId: string | null) => Promise<void>;
@@ -264,6 +266,14 @@ export function useTodos(): UseTodos {
     [replaceOne],
   );
 
+  const changeDueDate = useCallback(
+    (id: string, dueDate: string | null) =>
+      replaceOne(id, (todo) =>
+        todo.dueDate === dueDate ? todo : { ...todo, dueDate, updatedAt: new Date().toISOString() },
+      ),
+    [replaceOne],
+  );
+
   const removeTag = useCallback(
     (id: string, tag: string) =>
       replaceOne(id, (todo) =>
@@ -437,6 +447,7 @@ export function useTodos(): UseTodos {
     changeStatus,
     undoRepeat,
     changePriority,
+    changeDueDate,
     removeTag,
     moveTodo,
     reorderTodo,

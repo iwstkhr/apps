@@ -31,7 +31,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 
 ### Tags
 
-In the task list, a task's card shows its title, then a row with the status, priority, due date, repeat, and folder, then its tags on their own row, then the memo. Tasks without tags have no tag row. The status row stays in the same place whatever the memo's length, and it uses the full card width under the edit and delete buttons. To keep it on one line on narrow screens, the priority shows a flag and only its level (高 / 中 / 低), the due date shows a calendar icon instead of 期限:, and a long folder path is cut with … (the full path appears on hover).
+In the task list, a task's card shows its title, then a row with the status, priority, due date, repeat, and folder, then its tags on their own row, then the memo. Tasks without tags have no tag row. The status row stays in the same place whatever the memo's length, and it uses the full card width under the edit and delete buttons. To keep it on one line on narrow screens, the priority shows a flag and only its level (高 / 中 / 低), the due date shows a calendar icon instead of 期限:, and a long folder path is cut with … (the full path appears on hover). The folder wraps to the next line only when less than about 4rem is left.
 
 Click a tag name in the task list to filter by it. The タグ selector in the toolbar then shows the tag highlighted, with an × button to clear the filter. The adjacent × button removes only that tag from that task and saves immediately; it does not activate the tag filter. Other tasks with the same tag are unchanged. If a removed tag no longer matches the current filter, the task leaves the filtered list.
 
@@ -126,6 +126,8 @@ A todo can repeat 毎日 (daily), 平日 (weekdays, Monday to Friday), 毎週 (w
 In カスタム, drag a task header onto the upper or lower half of another task to insert it before or after that task. A blue line marks the insertion point. Up/down buttons also reorder tasks on narrow screens and by keyboard. The order is shared across folders and filters; reordering a filtered list changes only the slots of its visible tasks, keeping hidden tasks in place. Before the first reorder, tasks appear newest first. New tasks are appended once a custom order has been established. The order is saved in IndexedDB and included in exports; the selected sort mode is restored from localStorage after a reload. Other sort modes retain their existing behavior.
 
 ### Due date display
+
+Change the due date directly from the task list: tapping the date on a task opens the browser's date picker, and clearing the date there removes it. Tasks without a due date show a calendar icon and 期限なし in a dashed outline in its place; tapping it sets a due date. Changes are saved immediately and reflected in due-date sorting, without altering other fields.
 
 Open todos whose due date is before today are marked 期限切れ in red, and todos due today are marked 今日 in orange. Dates are compared in the browser's local time zone.
 
