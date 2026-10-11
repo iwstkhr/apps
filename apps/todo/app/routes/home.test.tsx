@@ -11,11 +11,25 @@ import { createDataTransfer } from '~/test/drag';
 import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
 
 beforeEach(() => {
+  // 確認はアプリ内のダイアログで行う。ブラウザ標準の確認が出ていないことを確かめるために置き換える
   vi.stubGlobal(
     'confirm',
     vi.fn(() => true),
   );
 });
+
+/** アプリ内の確認ダイアログを確かめて、ボタンを押す。 */
+async function answerConfirmation(
+  user: ReturnType<typeof userEvent.setup>,
+  title: string,
+  button: string,
+  description?: string,
+): Promise<void> {
+  const dialog = screen.getByRole('dialog', { name: title });
+  if (description !== undefined) expect(dialog).toHaveAccessibleDescription(description);
+  await user.click(within(dialog).getByRole('button', { name: button }));
+  expect(screen.queryByRole('dialog', { name: title })).not.toBeInTheDocument();
+}
 
 afterEach(async () => {
   // 画面を閉じると表示の状態を保存するので、localStorage を消す前に閉じる
@@ -414,6 +428,7 @@ describe('Home', () => {
 
       await user.click(trashRow());
       await user.click(screen.getByRole('button', { name: '「洗濯」を完全に削除' }));
+      await answerConfirmation(user, '「洗濯」を完全に削除しますか？', '完全に削除');
       // 削除した後に残っていた通知の「元に戻す」を押しても、戻したとは言わない
       await user.click(undo);
       await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
@@ -455,16 +470,23 @@ describe('Home', () => {
       expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('洗濯')]);
 
       await user.click(trashRow());
+      // キャンセルすれば残る
       await user.click(screen.getByRole('button', { name: '「掃除」を完全に削除' }));
-      expect(window.confirm).toHaveBeenCalledWith(
-        '「掃除」を完全に削除しますか？この操作は元に戻せません。',
+      await answerConfirmation(
+        user,
+        '「掃除」を完全に削除しますか？',
+        'キャンセル',
+        'この操作は元に戻せません。',
       );
+      expect(trashItems()).toHaveLength(2);
+
+      await user.click(screen.getByRole('button', { name: '「掃除」を完全に削除' }));
+      await answerConfirmation(user, '「掃除」を完全に削除しますか？', '完全に削除');
       expect(trashItems()).toHaveLength(1);
 
       await user.click(screen.getByRole('button', { name: 'ゴミ箱を空にする' }));
-      expect(window.confirm).toHaveBeenLastCalledWith(
-        'ゴミ箱の 1 件を完全に削除しますか？この操作は元に戻せません。',
-      );
+      await answerConfirmation(user, 'ゴミ箱の 1 件を完全に削除しますか？', '空にする');
+      expect(window.confirm).not.toHaveBeenCalled();
       expect(screen.getByText('ゴミ箱は空です。')).toBeInTheDocument();
       await waitFor(async () =>
         expect((await getAll()).todos.map((t) => t.title).sort()).toEqual(['残す', '洗濯']),
@@ -618,8 +640,11 @@ describe('Home', () => {
       await user.click(within(folderNav()).getByRole('button', { name: /^仕事/ }));
 
       await user.click(within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を削除' }));
-      expect(window.confirm).toHaveBeenCalledWith(
-        'フォルダ「仕事」を削除しますか？\n中のフォルダ 1 件も削除されます。\n中の TODO 1 件は未分類に移ります。',
+      await answerConfirmation(
+        user,
+        'フォルダ「仕事」を削除しますか？',
+        '削除',
+        '中のフォルダ 1 件も削除されます。 中の TODO 1 件は未分類に移ります。',
       );
 
       // 選んでいたフォルダが消えたらすべてに戻る

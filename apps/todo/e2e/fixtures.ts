@@ -41,6 +41,13 @@ export async function chooseFromHeaderMenu(page: Page, item: string): Promise<vo
   await page.getByRole('menu').getByRole('menuitem', { name: item, exact: true }).click();
 }
 
+/** アプリ内の確認ダイアログでボタンを押し、閉じるまで待つ。 */
+export async function answerConfirmation(page: Page, title: string, button: string): Promise<void> {
+  const dialog = page.getByRole('dialog', { name: title });
+  await dialog.getByRole('button', { name: button, exact: true }).click();
+  await expect(dialog).toBeHidden();
+}
+
 export function todoItems(page: Page) {
   return page.getByRole('list', { name: 'TODO 一覧' }).locator(':scope > li');
 }

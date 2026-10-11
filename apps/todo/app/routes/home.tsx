@@ -4,6 +4,7 @@ import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
 import { AppHeader } from '~/components/layout/app-header';
+import { type Confirmation, ConfirmDialog } from '~/components/layout/confirm-dialog';
 import { SidebarPanel } from '~/components/layout/sidebar-panel';
 import { SidebarResizer } from '~/components/layout/sidebar-resizer';
 import { StatusTabs } from '~/components/todo/status-tabs';
@@ -97,6 +98,9 @@ export default function Home() {
   const closeMenu = useCallback(() => setShowFolders(false), []);
   const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
+  // 取り消せない操作の前に出す確認
+  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  const closeConfirmation = useCallback(() => setConfirmation(null), []);
   // undo があれば通知に「元に戻す」を出す (ゴミ箱に移した直後など)
   const [notice, setNotice] = useState<{
     kind: 'info' | 'error';
@@ -190,10 +194,16 @@ export default function Home() {
     const ids = getSubtreeIds(folders, folder.id);
     const subfolderCount = ids.size - 1;
     const todoCount = todos.filter((t) => t.folderId !== null && ids.has(t.folderId)).length;
-    const lines = [t('フォルダ「{0}」を削除しますか？', [folder.name])];
-    if (subfolderCount > 0) lines.push(t('中のフォルダ {0} 件も削除されます。', [subfolderCount]));
-    if (todoCount > 0) lines.push(t('中の TODO {0} 件は未分類に移ります。', [todoCount]));
-    if (window.confirm(lines.join('\n'))) void removeFolder(folder.id);
+    const details: string[] = [];
+    if (subfolderCount > 0)
+      details.push(t('中のフォルダ {0} 件も削除されます。', [subfolderCount]));
+    if (todoCount > 0) details.push(t('中の TODO {0} 件は未分類に移ります。', [todoCount]));
+    setConfirmation({
+      title: t('フォルダ「{0}」を削除しますか？', [folder.name]),
+      details,
+      confirmLabel: t('削除'),
+      onConfirm: () => void removeFolder(folder.id),
+    });
   };
 
   const handleImportFile = async (file: File) => {
@@ -270,21 +280,21 @@ export default function Home() {
 
   // 完全に削除すると戻せないので、こちらは確認する
   const handleDeleteForever = (todo: Todo) => {
-    if (
-      window.confirm(t('「{0}」を完全に削除しますか？この操作は元に戻せません。', [todo.title]))
-    ) {
-      void deleteTodosForever([todo.id]);
-    }
+    setConfirmation({
+      title: t('「{0}」を完全に削除しますか？', [todo.title]),
+      details: [t('この操作は元に戻せません。')],
+      confirmLabel: t('完全に削除'),
+      onConfirm: () => void deleteTodosForever([todo.id]),
+    });
   };
 
   const handleEmptyTrash = () => {
-    if (
-      window.confirm(
-        t('ゴミ箱の {0} 件を完全に削除しますか？この操作は元に戻せません。', [trash.length]),
-      )
-    ) {
-      void emptyTrash();
-    }
+    setConfirmation({
+      title: t('ゴミ箱の {0} 件を完全に削除しますか？', [trash.length]),
+      details: [t('この操作は元に戻せません。')],
+      confirmLabel: t('空にする'),
+      onConfirm: () => void emptyTrash(),
+    });
   };
 
   const isFiltered =
@@ -541,6 +551,8 @@ export default function Home() {
           onCancel={cancelImport}
         />
       )}
+
+      {confirmation && <ConfirmDialog {...confirmation} onClose={closeConfirmation} />}
     </div>
   );
 }

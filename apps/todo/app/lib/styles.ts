@@ -16,3 +16,6 @@ export const secondaryButtonClass = `${buttonBaseClass} border border-slate-300 
 
 /** 元に戻せない操作 (置き換え・完全に削除) のボタン */
 export const dangerButtonClass = `${buttonBaseClass} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950`;
+
+/** 確認ダイアログで、元に戻せない操作を確定するボタン */
+export const dangerPrimaryButtonClass = `${buttonBaseClass} bg-red-600 text-white hover:bg-red-700`;

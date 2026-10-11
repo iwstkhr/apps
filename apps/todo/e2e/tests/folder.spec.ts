@@ -1,8 +1,15 @@
 import type { Page } from '@playwright/test';
-import { addTodo, chooseFromHeaderMenu, expect, openApp, test, todoItems } from '../fixtures';
+import {
+  addTodo,
+  answerConfirmation,
+  chooseFromHeaderMenu,
+  expect,
+  openApp,
+  test,
+  todoItems,
+} from '../fixtures';
 
 test.beforeEach(async ({ page }) => {
-  page.on('dialog', (dialog) => dialog.accept());
   await openApp(page);
 });
 
@@ -99,6 +106,7 @@ test('moves todos to unfiled when their folder is deleted', async ({ page }) => 
   await addTodo(page, '切符を取る');
 
   await folderNav(page).getByRole('button', { name: 'フォルダ「旅行」を削除' }).click();
+  await answerConfirmation(page, 'フォルダ「旅行」を削除しますか？', '削除');
   await expect(folderNav(page).getByText('フォルダはまだありません。')).toBeVisible();
   await folderNav(page)
     .getByRole('button', { name: /^未分類/ })
@@ -115,6 +123,7 @@ test('exports and imports folders', async ({ page }) => {
   const path = await (await downloadPromise).path();
 
   await folderNav(page).getByRole('button', { name: 'フォルダ「家」を削除' }).click();
+  await answerConfirmation(page, 'フォルダ「家」を削除しますか？', '削除');
   await page.getByLabel('インポートするファイル').setInputFiles(path);
   const dialog = page.getByRole('dialog', { name: 'インポート' });
   await expect(dialog).toContainText('TODO 1 件とフォルダ 1 件を読み込みます');
@@ -166,6 +175,7 @@ test('creates and edits folder colors and preserves them after reload and import
   await chooseFromHeaderMenu(page, 'エクスポート');
   const path = await (await download).path();
   await folderNav(page).getByRole('button', { name: 'フォルダ「仕事」を削除' }).click();
+  await answerConfirmation(page, 'フォルダ「仕事」を削除しますか？', '削除');
   await page.getByLabel('インポートするファイル').setInputFiles(path);
   await page
     .getByRole('dialog', { name: 'インポート' })

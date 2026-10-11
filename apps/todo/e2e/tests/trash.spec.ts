@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { addTodo, expect, openApp, test, todoItems } from '../fixtures';
+import { addTodo, answerConfirmation, expect, openApp, test, todoItems } from '../fixtures';
 
 function trashRow(page: Page) {
   return page
@@ -54,7 +54,6 @@ test('undoes moving to the trash from the notice', async ({ page }) => {
 });
 
 test('drops a todo on the trash and deletes it forever after confirming', async ({ page }) => {
-  page.on('dialog', (dialog) => void dialog.accept());
   await addTodo(page, '洗濯');
 
   await todoItems(page)
@@ -64,9 +63,41 @@ test('drops a todo on the trash and deletes it forever after confirming', async 
   await expect(page.getByRole('status')).toHaveText(/「洗濯」をゴミ箱に移動しました。/);
 
   await trashRow(page).click();
-  await page.getByRole('button', { name: '「洗濯」を完全に削除' }).click();
+  const deleteForever = page.getByRole('button', { name: '「洗濯」を完全に削除' });
+  await deleteForever.click();
+  // 誤って確定しないよう、最初はキャンセルにフォーカスがあり、Escape で取り消せる
+  const dialog = page.getByRole('dialog', { name: '「洗濯」を完全に削除しますか？' });
+  await expect(dialog).toContainText('この操作は元に戻せません。');
+  await expect(dialog.getByRole('button', { name: 'キャンセル' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(trashItems(page)).toHaveCount(1);
+  // 閉じるとフォーカスは押したボタンに戻る
+  await expect(deleteForever).toBeFocused();
+
+  await deleteForever.click();
+  await answerConfirmation(page, '「洗濯」を完全に削除しますか？', '完全に削除');
   await expect(page.getByText('ゴミ箱は空です。')).toBeVisible();
   await page.reload();
   await trashRow(page).click();
   await expect(page.getByText('ゴミ箱は空です。')).toBeVisible();
+});
+
+test('empties the trash after confirming in the app dialog', async ({ page }) => {
+  let dialogs = 0;
+  page.on('dialog', (dialog) => {
+    dialogs++;
+    void dialog.dismiss();
+  });
+  await addTodo(page, '洗濯');
+  await addTodo(page, '掃除');
+  await page.getByRole('button', { name: '「洗濯」をゴミ箱に移動' }).click();
+  await page.getByRole('button', { name: '「掃除」をゴミ箱に移動' }).click();
+
+  await trashRow(page).click();
+  await page.getByRole('button', { name: 'ゴミ箱を空にする' }).click();
+  await answerConfirmation(page, 'ゴミ箱の 2 件を完全に削除しますか？', '空にする');
+  await expect(page.getByText('ゴミ箱は空です。')).toBeVisible();
+  // ブラウザ標準の確認ダイアログは出さない
+  expect(dialogs).toBe(0);
 });

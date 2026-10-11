@@ -169,11 +169,11 @@ export const english: Record<string, string> = {
   '{0} 件を元に戻しました。': 'Restored {0} todos.',
   完全に削除: 'Delete forever',
   '「{0}」を完全に削除': 'Delete "{0}" forever',
-  '「{0}」を完全に削除しますか？この操作は元に戻せません。':
-    'Delete "{0}" forever? This cannot be undone.',
+  '「{0}」を完全に削除しますか？': 'Delete "{0}" forever?',
+  'この操作は元に戻せません。': 'This cannot be undone.',
   ゴミ箱を空にする: 'Empty trash',
-  'ゴミ箱の {0} 件を完全に削除しますか？この操作は元に戻せません。':
-    'Delete all {0} todos in the trash forever? This cannot be undone.',
+  'ゴミ箱の {0} 件を完全に削除しますか？': 'Delete all {0} todos in the trash forever?',
+  空にする: 'Empty',
   'ゴミ箱は空です。': 'The trash is empty.',
   'ゴミ箱のタスクは {0} 日たつと自動で完全に削除されます。':
     'Todos in the trash are deleted forever after {0} days.',
