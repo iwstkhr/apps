@@ -93,8 +93,7 @@ Colors follow the selected disaster types:
 | Style | Condition | Color |
 | --- | --- | --- |
 | default | No disaster type is selected | Blue |
-| match | Designated for every selected type | The type's color with one type selected, dark slate with several; white outline, drawn on top |
-| dim | Misses a selected type (shown only with "非該当も表示") | Gray, smaller |
+| match | A disaster type is selected (only sites designated for every selected type are shown) | The type's color with one type selected, dark slate with several; white outline |
 
 Layers are synchronized incrementally after panning or zooming ends to avoid unnecessary recreation.
 
@@ -123,7 +122,6 @@ Strings from the data are HTML-escaped before insertion. The site whose popup is
 - Between `sm` and `lg`, use a minimum width of approximately 58rem with horizontal scrolling
 - Selecting a row (click, Enter, or Space) flies the map to the site (zoom 16 or more) and opens its popup; on phones it also switches to the map tab
 - The row of the site whose popup is open is highlighted and scrolled into view below the sticky header (on phones, when the list tab is opened)
-- With "非該当も表示" on, rows that miss a selected disaster type are grayed out
 - On phones and beside the map from `lg`, each site is shown as a card (name, address, and designated disaster types) without horizontal scrolling
 
 ## Filter behavior
@@ -142,9 +140,8 @@ The map and table share the filters in the filter bar above the map.
 - Each chip toggles one disaster type (`aria-pressed`); a selected chip takes the type's color as its outline and tint
 - A site matches when it is designated for every selected type (AND)
 - Chip changes apply immediately
-- With "非該当も表示" (shown while a type is selected), non-matching sites are kept and shown dimmed instead of hidden
 
-"条件をクリア" (shown while a keyword or a type is set) clears the keyword, the types, and "非該当も表示", and keeps "地図の表示範囲のみ".
+"条件をクリア" (shown while a keyword or a type is set) clears the keyword and the types, and keeps "地図の表示範囲のみ".
 
 ## Data model
 

@@ -6,7 +6,6 @@ import { useElementHeight } from '~/hooks/use-element-height';
 import { LG_MEDIA_QUERY, SM_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query';
 import { cn } from '~/lib/cn';
 import type { Shelter } from '~/types/shelter';
-import type { ShelterTypeKey } from '~/types/shelter-type';
 
 const DATASET_SOURCE_URL = 'https://www.gsi.go.jp/bousaichiri/hinanbasho.html';
 const DATASET_SOURCE_LABEL = '国土地理院 指定緊急避難場所データ';
@@ -20,7 +19,6 @@ interface MapTableProps {
   onWithinMapOnlyChange?: (withinMapOnly: boolean) => void;
   selectedShelterId?: Shelter['id'] | null;
   onSelect?: (shelter: Shelter) => void;
-  highlightTypes?: readonly ShelterTypeKey[];
   /** False while the list is hidden (the map tab on phones, or collapsed beside the map). */
   visible?: boolean;
 }
@@ -32,7 +30,6 @@ export function MapTable({
   onWithinMapOnlyChange,
   selectedShelterId,
   onSelect,
-  highlightTypes,
   visible = true,
 }: MapTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -98,7 +95,6 @@ export function MapTable({
               // Ignore a height measured just before the header was removed (card layout).
               stickyHeaderHeight={layout === 'table' ? headerHeight : 0}
               visible={visible}
-              highlightTypes={highlightTypes}
             />
           </div>
         </div>

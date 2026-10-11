@@ -127,8 +127,8 @@ The layer whose popup is open is kept during viewport synchronization even when 
 On `moveend` / `zoomlevelschange`, the app:
 
 1. Extracts evacuation sites within the viewport using `map.getBounds()`
-1. Chooses pins or circle markers based on zoom and result count, and a style (default, match, or dim) based on the selected disaster types
-1. Uses `ShelterLayerRegistry` to apply only additions, removals, and changes in layer type or style, resizes existing circles when the zoom changes their scale, and adds dimmed layers before matching ones so matches are drawn on top
+1. Chooses pins or circle markers based on zoom and result count, and a style (default or match, with the match color) based on the selected disaster types
+1. Uses `ShelterLayerRegistry` to apply only additions, removals, and changes in layer type, style, or color, and resizes existing circles when the zoom changes their scale
 
 ## Module responsibilities
 

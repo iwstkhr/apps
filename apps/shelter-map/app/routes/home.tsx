@@ -110,7 +110,6 @@ export default function Home() {
             onWithinMapOnlyChange={(withinMapOnly) => setFilters({ ...filters, withinMapOnly })}
             selectedShelterId={selectedShelterId}
             onSelect={selectShelter}
-            highlightTypes={appliedFilters.showNonMatching ? appliedFilters.types : undefined}
             visible={listVisible}
           />
         </div>

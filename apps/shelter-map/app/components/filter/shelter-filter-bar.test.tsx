@@ -39,13 +39,12 @@ describe('ShelterFilterBar', () => {
     expect(onChange).toHaveBeenLastCalledWith(emptyShelterFilters);
   });
 
-  it('shows the non-matching option and the clear button only when filters are active', () => {
+  it('shows the clear button only when filters are active and keeps the viewport option', () => {
     const onChange = vi.fn();
     const { rerender } = render(
       <ShelterFilterBar filters={emptyShelterFilters} onChange={onChange} />,
     );
 
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '条件をクリア' })).not.toBeInTheDocument();
 
     rerender(
@@ -53,11 +52,6 @@ describe('ShelterFilterBar', () => {
         filters={{ ...emptyShelterFilters, keyword: '横浜', types: ['flood'], withinMapOnly: true }}
         onChange={onChange}
       />,
-    );
-
-    fireEvent.click(screen.getByRole('checkbox'));
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ types: ['flood'], showNonMatching: true }),
     );
 
     fireEvent.click(screen.getByRole('button', { name: '条件をクリア' }));

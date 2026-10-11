@@ -58,13 +58,9 @@ describe('shouldRenderShelterMarkers', () => {
 });
 
 describe('getShelterLayerStyle', () => {
-  it('uses the default style when no disaster type is selected', () => {
-    expect(getShelterLayerStyle(createShelter(), [])).toBe('default');
-  });
-
-  it('distinguishes shelters that match every selected type', () => {
-    expect(getShelterLayerStyle(createShelter(), ['flood', 'earthquake'])).toBe('match');
-    expect(getShelterLayerStyle(createShelter(), ['flood', 'tsunami'])).toBe('dim');
+  it('uses the match style while a disaster type is selected', () => {
+    expect(getShelterLayerStyle([])).toBe('default');
+    expect(getShelterLayerStyle(['flood', 'earthquake'])).toBe('match');
   });
 });
 
@@ -131,21 +127,6 @@ describe('syncShelterLayers', () => {
     expect(registry.has(third.id)).toBe(true);
   });
 
-  it('renders pins colored by the selected disaster types', () => {
-    const group = createGroup();
-    const registry = createShelterLayerRegistry();
-
-    syncShelterLayers(group, registry, [createShelter()], 15, ['tsunami']);
-
-    expect(L.marker).toHaveBeenCalledWith(
-      expect.any(Array),
-      expect.objectContaining({
-        icon: expect.objectContaining({ html: expect.stringContaining('shelter-pin-dim') }),
-      }),
-    );
-    expect(registry.get('test-id')?.style).toBe('dim');
-  });
-
   it('recreates a layer when its style changes', () => {
     const group = createGroup();
     const registry = createShelterLayerRegistry();
@@ -175,20 +156,6 @@ describe('syncShelterLayers', () => {
 
     expect(setRadius).toHaveBeenCalledWith(6);
     expect(registry.get(shelter.id)?.radiusScale).toBe(1);
-  });
-
-  it('adds dimmed shelters before matching ones so matches are drawn on top', () => {
-    const group = createGroup();
-    const registry = createShelterLayerRegistry();
-    const matching = createShelter({
-      id: 'matching',
-      type: { ...createShelter().type, tsunami: true },
-    });
-    const dimmed = createShelter({ id: 'dimmed' });
-
-    syncShelterLayers(group, registry, [matching, dimmed], 15, ['tsunami']);
-
-    expect([...registry.keys()]).toEqual(['dimmed', 'matching']);
   });
 
   it('fills matching pins with the selected type color and recolors them when it changes', () => {

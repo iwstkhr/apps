@@ -2,17 +2,14 @@ import { L } from '~/lib/leaflet';
 import {
   getShelterCircleRadiusScale,
   SHELTER_CIRCLE_STYLES,
-  SHELTER_LAYER_STYLE_ORDER,
   SHELTER_MARKER_LIMIT_BELOW_MIN_ZOOM,
   SHELTER_MARKER_MIN_ZOOM,
-  SHELTER_MARKER_Z_INDEX_OFFSETS,
   SHELTER_MULTI_TYPE_MATCH_COLOR,
   SHELTER_POPUP_OPTIONS,
   type ShelterLayerStyle,
 } from '~/lib/map/constants';
 import { getPopupContent } from '~/lib/map/shelter-popup';
 import type { Shelter } from '~/types/shelter';
-import { matchesShelterTypes } from '~/types/shelter-filters';
 import { SHELTER_TYPE_COLORS, type ShelterTypeKey } from '~/types/shelter-type';
 
 type ShelterLayerKind = 'circle' | 'marker';
@@ -37,14 +34,9 @@ export function shouldRenderShelterMarkers(zoom: number, count: number): boolean
   return zoom >= SHELTER_MARKER_MIN_ZOOM || count <= SHELTER_MARKER_LIMIT_BELOW_MIN_ZOOM;
 }
 
-export function getShelterLayerStyle(
-  shelter: Shelter,
-  selectedTypes: readonly ShelterTypeKey[],
-): ShelterLayerStyle {
-  if (selectedTypes.length === 0) {
-    return 'default';
-  }
-  return matchesShelterTypes(shelter, selectedTypes) ? 'match' : 'dim';
+// Shelters missing a selected type are filtered out, so every visible shelter shares one style.
+export function getShelterLayerStyle(selectedTypes: readonly ShelterTypeKey[]): ShelterLayerStyle {
+  return selectedTypes.length === 0 ? 'default' : 'match';
 }
 
 /** One selected type colors its matches; several selected types use a neutral color. */
@@ -93,7 +85,6 @@ function createShelterLayer(
     kind === 'marker'
       ? L.marker(latLng, {
           icon: getShelterPinIcon(style, matchColor),
-          zIndexOffset: SHELTER_MARKER_Z_INDEX_OFFSETS[style],
           title: shelter.name,
         })
       : L.circleMarker(latLng, {
@@ -116,15 +107,17 @@ export function syncShelterLayers(
     ? 'marker'
     : 'circle';
   const radiusScale = getShelterCircleRadiusScale(zoom);
-  const matchColor = getShelterMatchColor(selectedTypes);
-  const nextStyles = new Map(
-    shelters.map((shelter) => [shelter.id, getShelterLayerStyle(shelter, selectedTypes)]),
-  );
+  const style = getShelterLayerStyle(selectedTypes);
+  const matchColor = style === 'match' ? getShelterMatchColor(selectedTypes) : undefined;
+  const nextShelterIds = new Set(shelters.map((shelter) => shelter.id));
 
   for (const [shelterId, entry] of registry) {
-    const nextStyle = nextStyles.get(shelterId);
-    const nextMatchColor = nextStyle === 'match' ? matchColor : undefined;
-    if (entry.kind !== kind || entry.style !== nextStyle || entry.matchColor !== nextMatchColor) {
+    if (
+      !nextShelterIds.has(shelterId) ||
+      entry.kind !== kind ||
+      entry.style !== style ||
+      entry.matchColor !== matchColor
+    ) {
       group.removeLayer(entry.layer);
       registry.delete(shelterId);
     } else if (entry.kind === 'circle' && entry.radiusScale !== radiusScale) {
@@ -133,21 +126,18 @@ export function syncShelterLayers(
     }
   }
 
-  // Canvas draws in insertion order, so add dimmed shelters first and matching ones last.
-  const added = shelters
-    .filter((shelter) => !registry.has(shelter.id))
-    .map((shelter) => ({ shelter, style: nextStyles.get(shelter.id) ?? 'default' }))
-    .sort((a, b) => SHELTER_LAYER_STYLE_ORDER[a.style] - SHELTER_LAYER_STYLE_ORDER[b.style]);
+  for (const shelter of shelters) {
+    if (registry.has(shelter.id)) {
+      continue;
+    }
 
-  for (const { shelter, style } of added) {
-    const shelterMatchColor = style === 'match' ? matchColor : undefined;
-    const layer = createShelterLayer(shelter, kind, style, radiusScale, shelterMatchColor);
+    const layer = createShelterLayer(shelter, kind, style, radiusScale, matchColor);
     layer.addTo(group);
     registry.set(shelter.id, {
       kind,
       style,
       layer,
-      matchColor: shelterMatchColor,
+      matchColor,
       radiusScale: kind === 'circle' ? radiusScale : undefined,
     });
   }

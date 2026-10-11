@@ -24,7 +24,6 @@ describe('hasActiveShelterFilters', () => {
       hasActiveShelterFilters({
         ...emptyShelterFilters,
         keyword: '  ',
-        showNonMatching: true,
         withinMapOnly: true,
       }),
     ).toBe(false);
@@ -73,15 +72,5 @@ describe('filterShelters', () => {
     expect(
       filterShelters(shelters, { ...emptyShelterFilters, types: ['earthquake', 'tsunami'] }),
     ).toEqual([kawasaki]);
-  });
-
-  it('keeps shelters that miss a selected type when showNonMatching is on', () => {
-    expect(
-      filterShelters(shelters, {
-        ...emptyShelterFilters,
-        types: ['tsunami'],
-        showNonMatching: true,
-      }),
-    ).toEqual(shelters);
   });
 });

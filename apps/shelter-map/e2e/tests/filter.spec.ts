@@ -45,19 +45,17 @@ test.describe('絞り込み', () => {
     await typeChip(page, '地震').click();
     await expect(typeChip(page, '地震')).toHaveAttribute('aria-pressed', 'true');
     await expect(resultCount(page)).toHaveText('3 件');
+    // Pins of a single selected type are filled with that type's color
+    await expect(page.locator('.shelter-pin-match')).toHaveCount(3);
+    await expect(page.locator('.shelter-pin-match').first()).toHaveAttribute(
+      'style',
+      /--pin-fill: #eb6834/,
+    );
 
     await typeChip(page, '津波').click();
     await expect(resultCount(page)).toHaveText('1 件');
     await expect(tableRows(page).first()).toContainText('川崎テスト公園');
     await expect(mapMarkers(page)).toHaveCount(1);
-
-    // Non-matching shelters can be kept on the map and in the table
-    await page.getByRole('checkbox', { name: /非該当も/ }).check();
-    await expect(resultCount(page)).toHaveText('4 件');
-    await expect(mapMarkers(page)).toHaveCount(4);
-    // Matching pins are green and the others are gray
-    await expect(page.locator('.shelter-pin-match')).toHaveCount(1);
-    await expect(page.locator('.shelter-pin-dim')).toHaveCount(3);
   });
 
   test('「条件をクリア」で検索語と災害種別をまとめて解除する', async ({ page }) => {

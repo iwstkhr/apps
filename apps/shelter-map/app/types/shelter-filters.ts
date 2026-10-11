@@ -6,8 +6,6 @@ export interface ShelterFilters {
   keyword: string;
   /** Disaster types a shelter must be designated for (all of them). */
   types: readonly ShelterTypeKey[];
-  /** Keep shelters that miss a selected type, so the map can show them dimmed. */
-  showNonMatching: boolean;
   /** Limit the table to shelters inside the map viewport. */
   withinMapOnly: boolean;
 }
@@ -15,7 +13,6 @@ export interface ShelterFilters {
 export const emptyShelterFilters: ShelterFilters = {
   keyword: '',
   types: [],
-  showNonMatching: false,
   withinMapOnly: false,
 };
 
@@ -43,15 +40,13 @@ export function matchesShelterTypes(shelter: Shelter, types: readonly ShelterTyp
 
 export function filterShelters(shelters: Shelter[], filters: ShelterFilters): Shelter[] {
   const terms = filters.keyword.trim().split(/\s+/).filter(Boolean);
-  const filterByTypes = filters.types.length > 0 && !filters.showNonMatching;
-
-  if (terms.length === 0 && !filterByTypes) {
+  if (terms.length === 0 && filters.types.length === 0) {
     return shelters;
   }
 
   return shelters.filter(
     (shelter) =>
       terms.every((term) => shelter.name.includes(term) || shelter.address.includes(term)) &&
-      (!filterByTypes || matchesShelterTypes(shelter, filters.types)),
+      matchesShelterTypes(shelter, filters.types),
   );
 }

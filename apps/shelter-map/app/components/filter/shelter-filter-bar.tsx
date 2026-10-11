@@ -20,8 +20,6 @@ export function ShelterFilterBar({
   filters: ShelterFilters;
   onChange: (filters: ShelterFilters) => void;
 }) {
-  const hasTypes = filters.types.length > 0;
-
   return (
     <search className="flex shrink-0 flex-col gap-2" aria-label="避難場所の絞り込み">
       <div className="flex items-center gap-2">
@@ -91,19 +89,6 @@ export function ShelterFilterBar({
             })}
           </div>
         </fieldset>
-        {hasTypes && (
-          <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-slate-700 sm:text-sm">
-            <input
-              type="checkbox"
-              checked={filters.showNonMatching}
-              onChange={(event) => onChange({ ...filters, showNonMatching: event.target.checked })}
-              className="size-3.5"
-            />
-            <span>
-              非該当も<span className="hidden sm:inline">灰色で</span>表示
-            </span>
-          </label>
-        )}
       </div>
     </search>
   );

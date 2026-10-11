@@ -12,16 +12,14 @@ export const SHELTER_POPUP_OPTIONS: PopupOptions = {
 
 /**
  * default: no disaster type is selected
- * match: designated for every selected disaster type
- * dim: misses a selected type (shown only when non-matching shelters are kept)
+ * match: a disaster type is selected (only shelters designated for every selected type are shown)
  */
-export type ShelterLayerStyle = 'default' | 'match' | 'dim';
+export type ShelterLayerStyle = 'default' | 'match';
 
 export const SHELTER_CIRCLE_STYLES = {
   default: { radius: 6, color: '#1e40af', fillColor: '#3b82f6', fillOpacity: 0.85, weight: 1.5 },
   // fillColor is replaced by the match color (see getShelterMatchColor).
   match: { radius: 7, color: '#ffffff', fillColor: '#1e293b', fillOpacity: 0.95, weight: 1.5 },
-  dim: { radius: 4, color: '#64748b', fillColor: '#cbd5e1', fillOpacity: 0.7, weight: 1 },
 } as const satisfies Record<ShelterLayerStyle, CircleMarkerOptions>;
 
 // With several types selected no single type color fits, so matches use a neutral dark ink.
@@ -34,20 +32,6 @@ export function getShelterCircleRadiusScale(zoom: number): number {
   }
   return zoom < 13 ? 0.75 : 1;
 }
-
-// Drawing order from bottom to top, so matching shelters stay visible where they overlap.
-export const SHELTER_LAYER_STYLE_ORDER: Record<ShelterLayerStyle, number> = {
-  dim: 0,
-  default: 1,
-  match: 2,
-};
-
-// Matching pins are drawn above dimmed ones where they overlap.
-export const SHELTER_MARKER_Z_INDEX_OFFSETS: Record<ShelterLayerStyle, number> = {
-  default: 0,
-  match: 1000,
-  dim: -1000,
-};
 
 // Below this zoom, markers are drawn only when few shelters are in view to keep panning responsive.
 export const SHELTER_MARKER_MIN_ZOOM = 15;

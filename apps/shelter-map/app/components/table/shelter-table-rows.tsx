@@ -3,11 +3,9 @@ import { useEffect, useRef } from 'react';
 import { ShelterTypeDot } from '~/components/shelter/shelter-type-dot';
 import { cn } from '~/lib/cn';
 import type { Shelter } from '~/types/shelter';
-import { matchesShelterTypes } from '~/types/shelter-filters';
 import {
   getShelterTypeTableLabel,
   SHELTER_TYPE_COLORS,
-  type ShelterTypeKey,
   shelterTypeKeys,
 } from '~/types/shelter-type';
 import { SHELTER_TABLE_GRID_TEMPLATE, SHELTER_TYPE_COLUMN_CLASS } from './shelter-table-layout';
@@ -32,7 +30,6 @@ export function ShelterTableRows({
   layout = 'table',
   stickyHeaderHeight = 0,
   visible = true,
-  highlightTypes = [],
 }: {
   shelters: Shelter[];
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -43,8 +40,6 @@ export function ShelterTableRows({
   stickyHeaderHeight?: number;
   /** False while the list is hidden (the map tab on phones); it scrolls once shown again. */
   visible?: boolean;
-  /** Rows that miss any of these types are grayed out, like the dimmed markers. */
-  highlightTypes?: readonly ShelterTypeKey[];
 }) {
   const rowVirtualizer = useVirtualizer({
     count: shelters.length,
@@ -82,7 +77,6 @@ export function ShelterTableRows({
         }
 
         const selected = shelter.id === selectedShelterId;
-        const dimmed = highlightTypes.length > 0 && !matchesShelterTypes(shelter, highlightTypes);
 
         return (
           <div
@@ -93,7 +87,6 @@ export function ShelterTableRows({
               ROW_CLASS,
               layout === 'table' ? 'grid' : 'px-3 py-2.5',
               selected ? 'bg-blue-100' : ROW_BACKGROUND_CLASS,
-              dimmed && 'text-slate-400',
             )}
             style={{
               gridTemplateColumns: layout === 'table' ? SHELTER_TABLE_GRID_TEMPLATE : undefined,
@@ -114,7 +107,7 @@ export function ShelterTableRows({
             {layout === 'table' ? (
               <ShelterTableCells shelter={shelter} selected={selected} />
             ) : (
-              <ShelterCardCells shelter={shelter} dimmed={dimmed} />
+              <ShelterCardCells shelter={shelter} />
             )}
           </div>
         );
@@ -151,15 +144,15 @@ function ShelterTableCells({ shelter, selected }: { shelter: Shelter; selected: 
   );
 }
 
-function ShelterCardCells({ shelter, dimmed }: { shelter: Shelter; dimmed: boolean }) {
+function ShelterCardCells({ shelter }: { shelter: Shelter }) {
   const designatedTypes = shelterTypeKeys.filter((key) => shelter.type[key]);
 
   return (
     <>
-      <div className={cn('font-medium leading-snug', !dimmed && 'text-slate-900')} role="cell">
+      <div className="font-medium leading-snug text-slate-900" role="cell">
         {shelter.name}
       </div>
-      <div className={cn('mt-0.5 text-xs leading-snug', !dimmed && 'text-slate-600')} role="cell">
+      <div className="mt-0.5 text-xs leading-snug text-slate-600" role="cell">
         {shelter.address}
       </div>
       <div className="mt-1.5 flex flex-wrap gap-1" role="cell">

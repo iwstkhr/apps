@@ -116,9 +116,3 @@ a:link {
   --pin-fill: #1e293b;
   --pin-stroke: #ffffff;
 }
-
-.shelter-pin-dim {
-  --pin-fill: #cbd5e1;
-  --pin-stroke: #64748b;
-  transform: rotate(-45deg) scale(0.8);
-}
