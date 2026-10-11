@@ -1,4 +1,4 @@
-import type { LatLngExpression, PopupOptions } from 'leaflet';
+import type { CircleMarkerOptions, LatLngExpression, PopupOptions } from 'leaflet';
 
 export const MAP_CENTER: LatLngExpression = [35.4122, 139.413];
 export const INITIAL_ZOOM = 8;
@@ -10,14 +10,50 @@ export const SHELTER_POPUP_OPTIONS: PopupOptions = {
   keepInView: true,
 };
 
-export const SHELTER_CIRCLE_STYLE = {
-  radius: 20,
-  color: '#1e40af',
-  fillColor: '#3b82f6',
-  fillOpacity: 0.8,
-  weight: 2,
-} as const;
+/**
+ * default: no disaster type is selected
+ * match: a disaster type is selected (only shelters designated for every selected type are shown)
+ */
+export type ShelterLayerStyle = 'default' | 'match';
+
+export const SHELTER_CIRCLE_STYLES = {
+  default: { radius: 6, color: '#1e40af', fillColor: '#3b82f6', fillOpacity: 0.85, weight: 1.5 },
+  // fillColor is replaced by the match color (see getShelterMatchColor).
+  match: { radius: 7, color: '#ffffff', fillColor: '#1e293b', fillOpacity: 0.95, weight: 1.5 },
+} as const satisfies Record<ShelterLayerStyle, CircleMarkerOptions>;
+
+// With several types selected no single type color fits, so matches use a neutral dark ink.
+export const SHELTER_MULTI_TYPE_MATCH_COLOR = '#1e293b';
+
+// Circles shrink when zoomed out so thousands of them do not cover the map.
+export function getShelterCircleRadiusScale(zoom: number): number {
+  if (zoom < 10) {
+    return 0.5;
+  }
+  return zoom < 13 ? 0.75 : 1;
+}
 
 // Below this zoom, markers are drawn only when few shelters are in view to keep panning responsive.
 export const SHELTER_MARKER_MIN_ZOOM = 15;
 export const SHELTER_MARKER_LIMIT_BELOW_MIN_ZOOM = 100;
+
+// Selecting a shelter in the table zooms in at least this far, where it is drawn as a pin.
+export const SHELTER_FOCUS_MIN_ZOOM = 16;
+
+export const CURRENT_LOCATION_ZOOM = 15;
+
+export const CURRENT_LOCATION_MARKER_STYLE = {
+  radius: 8,
+  color: '#ffffff',
+  fillColor: '#2563eb',
+  fillOpacity: 1,
+  weight: 3,
+} as const satisfies CircleMarkerOptions;
+
+export const CURRENT_LOCATION_ACCURACY_STYLE = {
+  color: '#2563eb',
+  fillColor: '#60a5fa',
+  fillOpacity: 0.15,
+  weight: 1,
+  interactive: false,
+} as const satisfies CircleMarkerOptions;

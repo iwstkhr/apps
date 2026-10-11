@@ -16,7 +16,7 @@ a:link {
 
 .app-content-ready::before {
   content: "●";
-  color: #059669;
+  color: var(--type-color, #059669);
   font-size: 1.125rem;
   line-height: 1;
 }
@@ -58,11 +58,77 @@ a:link {
   margin: 0.5rem 0;
 }
 
+.shelter-popup .shelter-popup-types {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 0.125rem 1rem;
+}
+
 .shelter-popup .shelter-type-ready {
-  color: #047857;
+  color: #0f172a;
   font-weight: 500;
 }
 
 .shelter-popup .shelter-type-not-ready {
   color: #94a3b8;
+}
+
+.shelter-popup a.shelter-popup-directions {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.shelter-popup a.shelter-popup-directions:hover {
+  text-decoration: underline;
+}
+
+.shelter-popup .shelter-popup-note {
+  margin: 0.375rem 0 0;
+  color: #64748b;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+
+/* Narrow enough to stay clear of the map help at the lower left; it wraps into two lines. */
+.leaflet-control-attribution {
+  max-width: 16rem;
+}
+
+.dataset-attribution {
+  white-space: nowrap;
+}
+
+.shelter-pin-icon {
+  background: transparent;
+  border: 0;
+}
+
+.shelter-pin {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--pin-stroke);
+  border-radius: 50% 50% 50% 0;
+  background: var(--pin-fill);
+  box-shadow: 0 1px 4px rgb(15 23 42 / 0.35);
+  transform: rotate(-45deg);
+}
+
+.shelter-pin::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.shelter-pin-default {
+  --pin-fill: #3b82f6;
+  --pin-stroke: #1e40af;
+}
+
+.shelter-pin-match {
+  /* --pin-fill is set per icon from the selected disaster type. */
+  --pin-fill: #1e293b;
+  --pin-stroke: #ffffff;
 }

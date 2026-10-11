@@ -1,5 +1,5 @@
 import type { Shelter } from '~/types/shelter';
-import { ShelterTypeJapanese, shelterTypeKeys } from '~/types/shelter-type';
+import { SHELTER_TYPE_COLORS, ShelterTypeJapanese, shelterTypeKeys } from '~/types/shelter-type';
 
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -14,16 +14,25 @@ function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char] ?? char);
 }
 
+// Opens directions in Google Maps; the starting point is left to Google Maps itself.
+export function getDirectionsUrl(shelter: Shelter): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${shelter.latitude},${shelter.longitude}`;
+}
+
 export function getPopupContent(shelter: Shelter): string {
   let popup = `<strong>${escapeHtml(shelter.name)}</strong><br/>${escapeHtml(shelter.address)}<hr class="shelter-popup-divider"/>`;
 
-  popup += shelterTypeKeys
+  const types = shelterTypeKeys
     .map((key) => {
       const status = shelter.type[key] ? 'ready' : 'not-ready';
       const name = escapeHtml(ShelterTypeJapanese[key]);
-      return `<span class="app-content-${status} shelter-type-${status}">${name}</span>`;
+      const style = shelter.type[key] ? ` style="--type-color: ${SHELTER_TYPE_COLORS[key]}"` : '';
+      return `<span class="app-content-${status} shelter-type-${status}"${style}>${name}</span>`;
     })
-    .join('<br/>');
+    .join('');
+  popup += `<div class="shelter-popup-types">${types}</div>`;
+
+  popup += `<hr class="shelter-popup-divider"/><a class="shelter-popup-directions" href="${escapeHtml(getDirectionsUrl(shelter))}" target="_blank" rel="noreferrer">経路を開く (Google マップ)</a><p class="shelter-popup-note">最新の指定状況は各市町村の情報をご確認ください。</p>`;
 
   return popup;
 }

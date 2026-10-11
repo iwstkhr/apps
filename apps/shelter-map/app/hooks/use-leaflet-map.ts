@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { bindModifierScrollWheelZoom, L } from '~/lib/leaflet';
+import { bindModifierScrollWheelZoom, L, openAttributionPrefixInNewTab } from '~/lib/leaflet';
 import { INITIAL_ZOOM, MAP_CENTER } from '~/lib/map/constants';
 import {
   DEFAULT_TILE_LAYER,
@@ -47,6 +47,7 @@ export function useLeafletMap(mapContainerRef: React.RefObject<HTMLDivElement | 
     mapRef.current = map;
     setMapReady(true);
     const unbindModifierScrollWheelZoom = bindModifierScrollWheelZoom(map);
+    openAttributionPrefixInNewTab(map);
 
     const tileLayers = createTileLayers();
     tileLayersRef.current = tileLayers;

@@ -7,7 +7,22 @@ test.describe('データの読み込み', () => {
     test('リポジトリの GeoJSON (gzip) を読み込み、表に並べる', async ({ page }) => {
       await openApp(page);
 
-      await expect(page.getByText('国土地理院 指定緊急避難場所データ')).toBeVisible();
+      const source = page
+        .locator('.leaflet-control-attribution')
+        .getByRole('link', { name: '国土地理院' });
+      await expect(source).toHaveAttribute(
+        'href',
+        'https://www.gsi.go.jp/bousaichiri/hinanbasho.html',
+      );
+      // Every attribution link opens in a new tab so following one does not leave the map
+      const attributionLinks = page.locator('.leaflet-control-attribution a');
+      await expect(attributionLinks).toHaveCount(2);
+      for (const link of await attributionLinks.all()) {
+        await expect(link).toHaveAttribute('target', '_blank');
+      }
+      await expect(page.locator('.leaflet-control-attribution')).toContainText(
+        /避難場所: 国土地理院 \(\d{4}-\d{2}-\d{2} 時点\)/,
+      );
       const count = Number((await resultCount(page).textContent())?.replace(/[^\d]/g, ''));
       expect(count).toBeGreaterThan(10_000);
       await expect(tableRows(page).first()).toBeVisible();

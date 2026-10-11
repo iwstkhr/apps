@@ -1,78 +1,76 @@
 import { describe, expect, it } from 'vitest';
 import { createShelter } from '~/test/fixtures';
 import {
-  emptyShelterColumnFilters,
-  filterSheltersByColumns,
-  isColumnFilterActive,
+  emptyShelterFilters,
+  filterShelters,
+  hasActiveShelterFilters,
+  matchesShelterTypes,
+  toggleShelterType,
 } from '~/types/shelter-filters';
 
-const sampleShelter = createShelter();
+const yokohama = createShelter({ id: 'yokohama', name: '横浜小学校', address: '神奈川県横浜市' });
+const kawasaki = createShelter({
+  id: 'kawasaki',
+  name: '川崎公園',
+  address: '神奈川県川崎市',
+  type: { ...createShelter().type, flood: false, tsunami: true },
+});
+const shelters = [yokohama, kawasaki];
 
-describe('isColumnFilterActive', () => {
-  it('ignores whitespace-only text filters', () => {
-    expect(isColumnFilterActive('address', { ...emptyShelterColumnFilters, address: '  ' })).toBe(
-      false,
-    );
-  });
-
-  it('returns false when no filters are set', () => {
-    expect(isColumnFilterActive('name', emptyShelterColumnFilters)).toBe(false);
-    expect(isColumnFilterActive('flood', emptyShelterColumnFilters)).toBe(false);
-  });
-
-  it('returns true when a text or type filter is active', () => {
-    expect(isColumnFilterActive('name', { ...emptyShelterColumnFilters, name: 'テスト' })).toBe(
-      true,
-    );
-    expect(isColumnFilterActive('address', { ...emptyShelterColumnFilters, address: '横浜' })).toBe(
-      true,
-    );
+describe('hasActiveShelterFilters', () => {
+  it('ignores whitespace-only keywords and display options', () => {
+    expect(hasActiveShelterFilters(emptyShelterFilters)).toBe(false);
     expect(
-      isColumnFilterActive('flood', {
-        ...emptyShelterColumnFilters,
-        types: { ...emptyShelterColumnFilters.types, flood: 'yes' },
+      hasActiveShelterFilters({
+        ...emptyShelterFilters,
+        keyword: '  ',
+        withinMapOnly: true,
       }),
-    ).toBe(true);
+    ).toBe(false);
+  });
+
+  it('returns true when a keyword or a disaster type is set', () => {
+    expect(hasActiveShelterFilters({ ...emptyShelterFilters, keyword: '横浜' })).toBe(true);
+    expect(hasActiveShelterFilters({ ...emptyShelterFilters, types: ['flood'] })).toBe(true);
   });
 });
 
-describe('filterSheltersByColumns', () => {
-  const shelters = [sampleShelter];
+describe('toggleShelterType', () => {
+  it('adds and removes a type in the canonical order', () => {
+    expect(toggleShelterType(['tsunami'], 'flood')).toEqual(['flood', 'tsunami']);
+    expect(toggleShelterType(['flood', 'tsunami'], 'flood')).toEqual(['tsunami']);
+  });
+});
 
-  it('returns all shelters when filters are empty', () => {
-    expect(filterSheltersByColumns(shelters, emptyShelterColumnFilters)).toEqual(shelters);
+describe('matchesShelterTypes', () => {
+  it('requires every selected type', () => {
+    expect(matchesShelterTypes(yokohama, [])).toBe(true);
+    expect(matchesShelterTypes(yokohama, ['flood', 'earthquake'])).toBe(true);
+    expect(matchesShelterTypes(yokohama, ['flood', 'tsunami'])).toBe(false);
+  });
+});
+
+describe('filterShelters', () => {
+  it('returns the same array when no filter is set', () => {
+    expect(filterShelters(shelters, emptyShelterFilters)).toBe(shelters);
   });
 
-  it('filters by name, address, and disaster type', () => {
+  it('matches every keyword term against the name or the address', () => {
+    expect(filterShelters(shelters, { ...emptyShelterFilters, keyword: ' 川崎 ' })).toEqual([
+      kawasaki,
+    ]);
     expect(
-      filterSheltersByColumns(shelters, { ...emptyShelterColumnFilters, name: 'テスト' }),
-    ).toEqual(shelters);
+      filterShelters(shelters, { ...emptyShelterFilters, keyword: '神奈川県 小学校' }),
+    ).toEqual([yokohama]);
+    expect(filterShelters(shelters, { ...emptyShelterFilters, keyword: '存在しない' })).toEqual([]);
+  });
+
+  it('filters by disaster types with AND', () => {
+    expect(filterShelters(shelters, { ...emptyShelterFilters, types: ['earthquake'] })).toEqual(
+      shelters,
+    );
     expect(
-      filterSheltersByColumns(shelters, { ...emptyShelterColumnFilters, name: '存在しない' }),
-    ).toEqual([]);
-    expect(
-      filterSheltersByColumns(shelters, {
-        ...emptyShelterColumnFilters,
-        types: { ...emptyShelterColumnFilters.types, flood: 'yes' },
-      }),
-    ).toEqual(shelters);
-    expect(
-      filterSheltersByColumns(shelters, {
-        ...emptyShelterColumnFilters,
-        types: { ...emptyShelterColumnFilters.types, landslide: 'yes' },
-      }),
-    ).toEqual([]);
-    expect(
-      filterSheltersByColumns(shelters, {
-        ...emptyShelterColumnFilters,
-        address: '横浜',
-      }),
-    ).toEqual(shelters);
-    expect(
-      filterSheltersByColumns(shelters, {
-        ...emptyShelterColumnFilters,
-        types: { ...emptyShelterColumnFilters.types, earthquake: 'no' },
-      }),
-    ).toEqual([]);
+      filterShelters(shelters, { ...emptyShelterFilters, types: ['earthquake', 'tsunami'] }),
+    ).toEqual([kawasaki]);
   });
 });

@@ -14,14 +14,17 @@ const mockMarker = {
 
 vi.mock('~/lib/leaflet', () => ({
   L: {
-    circle: vi.fn(() => mockCircle),
+    circleMarker: vi.fn(() => mockCircle),
     marker: vi.fn(() => mockMarker),
+    divIcon: vi.fn((options: { html: string }) => options),
   },
 }));
 
 import { L } from '~/lib/leaflet';
 import {
   createShelterLayerRegistry,
+  getShelterLayerStyle,
+  getShelterMatchColor,
   shouldRenderShelterMarkers,
   syncShelterLayers,
 } from '~/lib/map/shelter-renderer';
@@ -54,6 +57,20 @@ describe('shouldRenderShelterMarkers', () => {
   });
 });
 
+describe('getShelterLayerStyle', () => {
+  it('uses the match style while a disaster type is selected', () => {
+    expect(getShelterLayerStyle([])).toBe('default');
+    expect(getShelterLayerStyle(['flood', 'earthquake'])).toBe('match');
+  });
+});
+
+describe('getShelterMatchColor', () => {
+  it('uses the color of a single selected type and a neutral color for several', () => {
+    expect(getShelterMatchColor(['tsunami'])).toBe('#1baf7a');
+    expect(getShelterMatchColor(['flood', 'tsunami'])).toBe('#1e293b');
+  });
+});
+
 describe('syncShelterLayers', () => {
   it('renders circles for visible shelters when many are shown below the minimum zoom', () => {
     const group = createGroup();
@@ -63,12 +80,12 @@ describe('syncShelterLayers', () => {
     syncShelterLayers(group, registry, shelters, 14);
 
     expect(group.removeLayer).not.toHaveBeenCalled();
-    expect(L.circle).toHaveBeenCalledTimes(101);
-    expect(L.circle).toHaveBeenCalledWith(
+    expect(L.circleMarker).toHaveBeenCalledTimes(101);
+    expect(L.circleMarker).toHaveBeenCalledWith(
       [first?.latitude, first?.longitude],
-      expect.objectContaining({ radius: 20 }),
+      expect.objectContaining({ fillColor: '#3b82f6' }),
     );
-    expect(L.circle).toHaveBeenCalledWith(
+    expect(L.circleMarker).toHaveBeenCalledWith(
       [second?.latitude, second?.longitude],
       expect.any(Object),
     );
@@ -97,8 +114,8 @@ describe('syncShelterLayers', () => {
     const firstLayer = {} as Layer;
     const secondLayer = {} as Layer;
 
-    registry.set(first.id, { kind: 'marker', layer: firstLayer });
-    registry.set(second.id, { kind: 'marker', layer: secondLayer });
+    registry.set(first.id, { kind: 'marker', style: 'default', layer: firstLayer });
+    registry.set(second.id, { kind: 'marker', style: 'default', layer: secondLayer });
 
     syncShelterLayers(group, registry, [firstCopy, third], 15);
 
@@ -108,5 +125,55 @@ describe('syncShelterLayers', () => {
     expect(registry.get(first.id)?.layer).toBe(firstLayer);
     expect(registry.has(second.id)).toBe(false);
     expect(registry.has(third.id)).toBe(true);
+  });
+
+  it('recreates a layer when its style changes', () => {
+    const group = createGroup();
+    const registry = createShelterLayerRegistry();
+    const shelter = createShelter();
+    const oldLayer = {} as Layer;
+    registry.set(shelter.id, { kind: 'marker', style: 'default', layer: oldLayer });
+
+    syncShelterLayers(group, registry, [shelter], 15, ['flood']);
+
+    expect(group.removeLayer).toHaveBeenCalledWith(oldLayer);
+    expect(registry.get(shelter.id)?.style).toBe('match');
+  });
+
+  it('resizes existing circles when the zoom changes their scale', () => {
+    const group = createGroup();
+    const registry = createShelterLayerRegistry();
+    const setRadius = vi.fn();
+    const shelter = createShelter();
+    registry.set(shelter.id, {
+      kind: 'circle',
+      style: 'default',
+      layer: { setRadius } as unknown as Layer,
+      radiusScale: 0.5,
+    });
+
+    syncShelterLayers(group, registry, shelters.slice(0, 101).concat(shelter), 13);
+
+    expect(setRadius).toHaveBeenCalledWith(6);
+    expect(registry.get(shelter.id)?.radiusScale).toBe(1);
+  });
+
+  it('fills matching pins with the selected type color and recolors them when it changes', () => {
+    const group = createGroup();
+    const registry = createShelterLayerRegistry();
+    const shelter = createShelter();
+
+    syncShelterLayers(group, registry, [shelter], 15, ['flood']);
+    expect(L.marker).toHaveBeenLastCalledWith(
+      expect.any(Array),
+      expect.objectContaining({
+        icon: expect.objectContaining({ html: expect.stringContaining('--pin-fill: #2a78d6') }),
+      }),
+    );
+    const floodLayer = registry.get(shelter.id)?.layer;
+
+    syncShelterLayers(group, registry, [shelter], 15, ['earthquake']);
+    expect(group.removeLayer).toHaveBeenCalledWith(floodLayer);
+    expect(registry.get(shelter.id)?.matchColor).toBe('#eb6834');
   });
 });

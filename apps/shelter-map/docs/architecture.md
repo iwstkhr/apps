@@ -16,13 +16,15 @@ See [specification.md](./specification.md) for features, screens, and data speci
 ┌──────────────────────────────────────────────────────────────┐
 │ Browser SPA (React Router / Vite, ssr: false)                  │
 │                                                              │
-│ Home (routes/home.tsx)                                       │
-│   ├─ useShelterData ──► fetchShelters → Shelter[]              │
-│   ├─ useLeafletMap  ──► Leaflet Map + tiles                    │
-│   └─ useShelterMap  ──► filters + viewport sync                │
+│ Home (routes/home.tsx) ── filters, mobile view tab           │
+│   └─ useShelterMap  ──► filters + viewport sync + selection    │
+│          ├─ useShelterData ──► fetchShelters → Shelter[]       │
+│          ├─ useLeafletMap  ──► Leaflet Map + tiles             │
+│          ├─ useCurrentLocation ──► Geolocation + marker        │
 │          │                                                   │
 │          ├─ displayedShelters ──► MapTable (virtualized list)  │
-│          └─ visible subset ──► Leaflet layers (map)            │
+│          ├─ visibleShelters ──► Leaflet layers / MapTable      │
+│          └─ selectedShelterId ◄──► table rows / popups         │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -46,9 +48,10 @@ There is no backend API or database. Evacuation site data is delivered as static
 ```text
 app/
   components/
-    layout/     # Header and app shell
-    map/        # Tile switching, interaction hints, loading spinner
-    table/      # Table header, rows, column filters, virtual scrolling
+    filter/     # Filter bar (keyword search and disaster type chips)
+    layout/     # Header, app shell, and map/list tabs for phones
+    map/        # Tile switching, help, current location, alerts, loading spinner
+    table/      # Table header, rows (table or card layout), virtual scrolling
   data/         # Fetch gzip GeoJSON
   generated/    # Data update date metadata (generated)
   hooks/        # Data loading, map, and shared state
@@ -93,29 +96,39 @@ Home
 ### 2. Shared filters
 
 ```text
-MapTable
-  draftFilters (immediate)
-       │ 200ms debounce
+ShelterFilterBar
+  filters (Home state, immediate)
+       │ keyword: 200ms debounce (useDebouncedValue); chips and checkboxes: immediate
        ▼
-  updateColumnFilters
+  appliedFilters ──► useShelterMap(mapContainerRef, appliedFilters)
        ▼
-  useShelterMap.columnFilters
-       ▼
-  filterSheltersByColumns(shelters, columnFilters)
+  filterShelters(shelters, appliedFilters)
        ▼
   displayedShelters ──┬──► MapTable (all results, virtual scrolling)
-                      └──► filterSheltersWithinMap ──► syncShelterLayers
+                      └──► filterSheltersWithinMap ──► visibleShelters
+                                 ├──► syncShelterLayers (map)
+                                 └──► MapTable when "地図の表示範囲のみ" is on
 ```
 
-The table displays all filtered results, while the map creates layers only for results within the current viewport.
+The table displays all filtered results by default, while the map creates layers only for results within the current viewport. When the map is hidden (the list tab on phones) it has no size, so the last viewport is kept.
 
-### 3. Map layer synchronization
+### 3. Selection between the table and the map
+
+```text
+row click ──► focusShelter ──► map.flyTo ──► moveend ──► openPopup (pending id)
+popupopen on a shelter layer (feature group) ──► selectedShelterId ──► row highlight + scroll
+popupclose on the map ──► clear selectedShelterId
+```
+
+The layer whose popup is open is kept during viewport synchronization even when the popup's auto-pan moves it out of view, because removing the layer would close the popup.
+
+### 4. Map layer synchronization
 
 On `moveend` / `zoomlevelschange`, the app:
 
 1. Extracts evacuation sites within the viewport using `map.getBounds()`
-1. Chooses markers or circles based on zoom and result count
-1. Uses `ShelterLayerRegistry` to apply only additions, removals, and changes in layer type
+1. Chooses pins or circle markers based on zoom and result count, and a style (default or match, with the match color) based on the selected disaster types
+1. Uses `ShelterLayerRegistry` to apply only additions, removals, and changes in layer type, style, or color, and resizes existing circles when the zoom changes their scale
 
 ## Module responsibilities
 
@@ -123,10 +136,13 @@ On `moveend` / `zoomlevelschange`, the app:
 
 | Module | Responsibility |
 | --- | --- |
-| `useShelterMap` | Integrate data, filters, and viewport synchronization |
+| `useShelterMap` | Integrate data, filters, viewport synchronization, selection, and the current location |
 | `useShelterData` | Manage the GeoJSON loading lifecycle |
 | `useLeafletMap` | Initialize Leaflet, switch tiles, and handle resizing |
-| `useShelterTableFilters` | Manage draft filters and debounced updates |
+| `useCurrentLocation` | Read the Geolocation API, draw the current location, and report errors |
+| `useDebouncedValue` | Delay keyword updates |
+| `useMediaQuery` | Switch layouts at the `sm` and `lg` breakpoints |
+| `useMapControlContainer` | Add an empty Leaflet control for React to portal into (the current location button) |
 
 ### Data / Types
 
@@ -134,29 +150,32 @@ On `moveend` / `zoomlevelschange`, the app:
 | --- | --- |
 | `fetch-shelters` | Fetch, decompress, parse, and cache assets |
 | `types/shelter` | Convert GeoJSON to `Shelter` and validate it |
-| `types/shelter-type` | Define disaster type keys and Japanese labels |
-| `types/shelter-filters` | Define column filter types and filtering logic |
+| `types/shelter-type` | Define disaster type keys, Japanese labels, and colors |
+| `types/shelter-filters` | Define the filter state, keyword and disaster type matching |
 | `types/tile-layer` | Define tile layers and defaults |
 | `generated/dataset-meta` | Provide the data update date displayed in the UI |
+| `lib/dataset` | The source URL and the dataset attribution shown on the map |
 
 ### Map helpers (`app/lib/map/`)
 
 | Module | Responsibility |
 | --- | --- |
-| `constants` | Initial view, circle styling, and marker thresholds |
+| `constants` | Initial view, marker styles, zoom-dependent circle size, and marker thresholds |
 | `viewport-filter` | Filter by bounds |
 | `shelter-renderer` | Layer registry and incremental synchronization |
-| `shelter-popup` | Popup HTML, including escaping |
+| `shelter-popup` | Popup HTML (including escaping) and the directions link |
+| `fly-options` | Map flight options: a fixed short duration, or no animation for reduced motion |
 
 ### UI Components
 
 | Area | Main components |
 | --- | --- |
-| layout | `AppShell`, `AppHeader` |
-| map | `MapTileLayerControl`, `MapHelpHint`, loading overlay |
-| table | `MapTable`, header, rows, column filters |
+| filter | `ShelterFilterBar` |
+| layout | `AppShell`, `AppHeader`, `ViewTabs` |
+| map | `MapTileLayerControl`, `MapHelpHint`, `CurrentLocationButton`, `ListPanelToggle`, `MapAlert`, loading overlay |
+| table | `MapTable`, header, rows |
 
-`routes/home.tsx` owns the map container ref, calls `useShelterMap`, and passes its state to the map and table as props.
+`routes/home.tsx` owns the map container ref, the filter state, the mobile view tab, and whether the list beside the map is collapsed, calls `useShelterMap`, and passes its state to the map and table as props.
 
 ## Routing and build
 
@@ -206,7 +225,7 @@ push to main (only for changes under apps/shelter-map/) / manual run
        └─ pnpm run deploy (wrangler deploy publishes build/client to Workers)
 ```
 
-The E2E job builds the app and serves `build/client/` with `wrangler dev`, then runs Playwright with the runner's preinstalled Google Chrome. Map tiles are stubbed so tests never reach OpenStreetMap or GSI, and most scenarios replace the GeoJSON with a small fixture so assertions do not depend on the monthly data update. They cover what unit tests cannot: gzip delivery and decoding through Workers, SPA fallback for unknown paths, filters reflected in both the table and the map, popups (including HTML escaping), tile switching, modifier-key zoom, and the mobile layout.
+The E2E job builds the app and serves `build/client/` with `wrangler dev`, then runs Playwright with the runner's preinstalled Google Chrome. Map tiles are stubbed so tests never reach OpenStreetMap or GSI, and most scenarios replace the GeoJSON with a small fixture so assertions do not depend on the monthly data update. They cover what unit tests cannot: gzip delivery and decoding through Workers, SPA fallback for unknown paths, filters reflected in both the table and the map, marker colors, selection between the table and the map, the current location (with a mocked position and with permission denied), popups (including HTML escaping and the directions link), tile switching, modifier-key zoom, and the side-by-side layout and its collapsible list, the sticky table header at tablet width, and the mobile tabs and card list.
 
 Test and Deploy run independently, as in tsudou. Deploy runs only on pushes to `main` and manual runs, so pull requests (including those from forks) never reach it. The Cloudflare secrets are passed only to the deploy step, not to dependency installation or the build. Navigation to unknown paths returns `index.html` (`not_found_handling: single-page-application`).
 
@@ -215,7 +234,7 @@ Preview serves each PR at `https://pr-<number>-shelter-map.<subdomain>.workers.d
 ## Design considerations
 
 1. **Single source of state** — Pass filtered results from `useShelterMap` to keep the map and table consistent
-1. **Reduced rendering cost** — Render only the map viewport, use circles at low zoom, and update layers incrementally
+1. **Reduced rendering cost** — Render only the map viewport, use canvas circle markers at low zoom, and update layers incrementally
 1. **Large result sets** — Use virtual scrolling to handle all rows in the table
 1. **Simple delivery** — Serve a static SPA and gzip assets on Cloudflare Workers without an API or Worker script
 1. **Data safety** — Validate GeoJSON at runtime, skip invalid Features, and fail only when the collection itself is invalid

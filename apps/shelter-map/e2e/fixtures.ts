@@ -21,7 +21,7 @@ type Designations = Partial<
   >
 >;
 
-function feature(
+export function feature(
   id: string,
   name: string,
   address: string,
@@ -132,9 +132,14 @@ export function mapMarkers(page: Page) {
   return page.locator('.leaflet-marker-pane .leaflet-marker-icon');
 }
 
-/** Open a column header filter. */
-export async function openColumnFilter(page: Page, label: string): Promise<void> {
-  await page.getByRole('button', { name: `${label}のフィルター` }).click();
+/** The keyword box of the filter bar (matches the name or the address). */
+export function searchBox(page: Page) {
+  return page.getByRole('searchbox', { name: '名前・住所で検索' });
+}
+
+/** A disaster type chip of the filter bar. */
+export function typeChip(page: Page, label: string) {
+  return page.getByRole('button', { name: label, exact: true });
 }
 
 /** The current zoom level of the map, read from the URL ({z}/{x}/{y}) of the front tile layer. */

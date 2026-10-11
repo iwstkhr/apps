@@ -1,0 +1,95 @@
+import { FaMagnifyingGlass, FaXmark } from 'react-icons/fa6';
+import { ShelterTypeDot } from '~/components/shelter/shelter-type-dot';
+import { cn } from '~/lib/cn';
+import {
+  emptyShelterFilters,
+  hasActiveShelterFilters,
+  type ShelterFilters,
+  toggleShelterType,
+} from '~/types/shelter-filters';
+import {
+  getShelterTypeTableLabel,
+  SHELTER_TYPE_COLORS,
+  shelterTypeKeys,
+} from '~/types/shelter-type';
+
+export function ShelterFilterBar({
+  filters,
+  onChange,
+}: {
+  filters: ShelterFilters;
+  onChange: (filters: ShelterFilters) => void;
+}) {
+  return (
+    <search className="flex shrink-0 flex-col gap-2" aria-label="避難場所の絞り込み">
+      <div className="flex items-center gap-2">
+        <label className="relative min-w-0 flex-1">
+          <span className="sr-only">名前・住所で検索</span>
+          <FaMagnifyingGlass
+            className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={filters.keyword}
+            placeholder="名前・住所で検索（スペース区切りで AND）"
+            onChange={(event) => onChange({ ...filters, keyword: event.target.value })}
+            className="w-full rounded-md border border-slate-300 bg-white py-1.5 pr-2 pl-8 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          />
+        </label>
+        {hasActiveShelterFilters(filters) && (
+          <button
+            type="button"
+            onClick={() =>
+              onChange({ ...emptyShelterFilters, withinMapOnly: filters.withinMapOnly })
+            }
+            className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
+          >
+            <FaXmark className="h-3.5 w-3.5" aria-hidden="true" />
+            条件をクリア
+          </button>
+        )}
+      </div>
+
+      <div className="flex min-w-0 items-center gap-2">
+        <fieldset className="m-0 min-w-0 flex-1 border-0 p-0">
+          <legend className="sr-only">災害種別（選択した種別すべてに対応する避難場所）</legend>
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible">
+            {shelterTypeKeys.map((key) => {
+              const selected = filters.types.includes(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() =>
+                    onChange({ ...filters, types: toggleShelterType(filters.types, key) })
+                  }
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap text-slate-800 transition-colors sm:text-sm',
+                    selected
+                      ? 'bg-white'
+                      : 'border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-100',
+                  )}
+                  // A selected chip takes its type's color as a thick outline and a light tint.
+                  style={
+                    selected
+                      ? {
+                          borderColor: SHELTER_TYPE_COLORS[key],
+                          boxShadow: `inset 0 0 0 1px ${SHELTER_TYPE_COLORS[key]}`,
+                          backgroundColor: `${SHELTER_TYPE_COLORS[key]}1f`,
+                        }
+                      : undefined
+                  }
+                >
+                  <ShelterTypeDot typeKey={key} className={selected ? 'size-2.5' : undefined} />
+                  {getShelterTypeTableLabel(key)}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      </div>
+    </search>
+  );
+}
