@@ -40,7 +40,13 @@ export function useShelterMap(
 
     const updateVisibleShelters = () => {
       const visible = filterSheltersWithinMap(map, displayedShelters);
-      syncShelterLayers(shelterLayers.group, shelterLayers.registry, visible, map.getZoom());
+      syncShelterLayers(
+        shelterLayers.group,
+        shelterLayers.registry,
+        visible,
+        map.getZoom(),
+        filters.types,
+      );
     };
 
     updateVisibleShelters();
@@ -51,7 +57,7 @@ export function useShelterMap(
       map.off('zoomlevelschange', updateVisibleShelters);
       map.off('moveend', updateVisibleShelters);
     };
-  }, [displayedShelters, mapReady, mapRef, shelterLayers]);
+  }, [displayedShelters, filters.types, mapReady, mapRef, shelterLayers]);
 
   return {
     displayedShelters,

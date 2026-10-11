@@ -55,6 +55,9 @@ test.describe('絞り込み', () => {
     await page.getByRole('checkbox', { name: /非該当も/ }).check();
     await expect(resultCount(page)).toHaveText('4 件');
     await expect(mapMarkers(page)).toHaveCount(4);
+    // Matching pins are green and the others are gray
+    await expect(page.locator('.shelter-pin-match')).toHaveCount(1);
+    await expect(page.locator('.shelter-pin-dim')).toHaveCount(3);
   });
 
   test('「条件をクリア」で検索語と災害種別をまとめて解除する', async ({ page }) => {

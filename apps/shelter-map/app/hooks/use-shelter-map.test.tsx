@@ -83,6 +83,7 @@ describe('useShelterMap', () => {
       expect.any(Map),
       [yokohama],
       15,
+      [],
     );
   });
 
@@ -114,6 +115,7 @@ describe('useShelterMap', () => {
       expect.any(Map),
       [yokohama],
       15,
+      [],
     );
   });
 
@@ -146,6 +148,7 @@ describe('useShelterMap', () => {
       expect.any(Map),
       [yokohama],
       15,
+      [],
     );
   });
 
@@ -169,6 +172,7 @@ describe('useShelterMap', () => {
       expect.any(Map),
       shelters,
       15,
+      [],
     );
 
     removeSpy.mockClear();
