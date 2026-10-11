@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   isRouteErrorResponse,
   Links,
@@ -10,9 +11,12 @@ import { publicUrl } from '~/lib/public-url';
 import type { Route } from './+types/root';
 import './app.css';
 import { t } from '~/lib/i18n';
+import { registerServiceWorker } from '~/lib/service-worker';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', href: publicUrl('favicon.svg'), type: 'image/svg+xml' },
+  { rel: 'apple-touch-icon', href: publicUrl('apple-touch-icon.png') },
+  { rel: 'manifest', href: publicUrl('manifest.webmanifest') },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -21,6 +25,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* インストールしたアプリのタイトルバーを、既定テーマのヘッダー (白、ダークは slate-900) に合わせる */}
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
         <Meta />
         <Links />
       </head>
@@ -34,6 +41,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useEffect(registerServiceWorker, []);
+
   return <Outlet />;
 }
 

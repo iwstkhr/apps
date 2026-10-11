@@ -19,6 +19,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Export all todos and folders to a JSON file, and import a file by merging it with or replacing the current data
 - Find language, theme, export, and import in the メニュー (⋯) at the right of the header
 - Sync changes across tabs of the same browser
+- Install the app to the home screen or desktop as a PWA, and open it offline
 - Use the app on mobile screens and in dark mode
 - Use the app in English or Japanese; it follows the browser language until you choose one
 - Choose from six color themes; choose ライト, ダーク, or 自動 for the display mode; selections are saved in this browser

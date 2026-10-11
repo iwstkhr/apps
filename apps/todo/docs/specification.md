@@ -25,6 +25,7 @@ Specifications for a TODO management web app that keeps all data in the browser.
 | Export | Saves every todo and folder to `todo-export-YYYYMMDD.json` |
 | Import | Reads an exported file, then asks whether to merge it with or replace the current todos and folders |
 | Tab sync | Changes made in another tab of the same browser are reloaded automatically |
+| Install and offline | See [Install and offline use](#install-and-offline-use) |
 
 ### Tags
 
@@ -47,6 +48,12 @@ Next to the TODO title, a lock icon and ブラウザで完結 ("Runs entirely in
 The メニュー button at the right of the header (⋯ followed by the text メニュー at widths of 1024px and above; only ⋯ on narrower screens, where its accessible name is still メニュー) opens a menu with, from top to bottom: 言語 (English and 日本語, in that order, with a check mark on the current language), テーマ…, エクスポート, and インポート. These are occasional actions, so they share one button and keep the header uncluttered on narrow screens; the ☰ button on the left stays reserved for the folder navigation and is named for it (フォルダを開く), so the two buttons are never both called メニュー. Choosing an item closes the menu and runs it: a language applies immediately, テーマ… opens the theme dialog, エクスポート downloads the file, and インポート opens the file picker. エクスポート is shown but unavailable while there are no todos and no folders.
 
 The menu follows the WAI-ARIA menu pattern: the button announces the popup and its state, opening it (by click, Enter, Space, ↓, or ↑) focuses the first item, ↑ / ↓ move between items and wrap around, Home and End jump to the first and last item, and Escape closes the menu and returns focus to the button. Tab or a click outside closes it as well. The menu fits within narrow screens.
+
+### Install and offline use
+
+The app is a PWA. Browsers that support installation offer to add it to the home screen or desktop, where it opens in its own window named TODO with the check-mark icon. The window title bar is white, or dark slate in dark mode, to match the default header.
+
+After the first visit, the app opens without a network connection. All the files of the app are stored in the browser when it is first opened, and the todos are already in IndexedDB, so every feature works offline. When online, opening the app always loads the latest version; a newly deployed version replaces the stored files in the background and is used from the next time the app is opened, without reloading open tabs.
 
 ### Language
 

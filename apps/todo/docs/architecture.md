@@ -26,7 +26,7 @@ See [specification.md](./specification.md) for features, screens, and data speci
 └──────────────────────────────────────────────────────────┘
 ```
 
-There is no backend API or database. The Worker has no script and only serves the build output.
+There is no backend API or database. The Worker has no script and only serves the build output. A service worker (`sw.js`) stores the build output in the browser so the app opens offline.
 
 ## Technology stack
 
@@ -56,6 +56,7 @@ app/
   lib/styles.ts                 Shared Tailwind class strings
   lib/i18n.ts                   Language selection (browser default, saved choice) and t()
   lib/translations.ts           English text for each Japanese UI string
+  lib/service-worker.ts         Registers sw.js in production builds
   types/todo.ts                 Todo type, factories, validation, and date helpers
   types/folder.ts               Folder type, factories, and validation
   components/layout/            Header and its ⋯ menu (language, theme dialog, export, import), the shared modal, responsive sidebar panel, and folder list resizer
@@ -65,6 +66,10 @@ app/
   components/todo/trash-list.tsx     Trash view with restore, delete forever, and empty actions
   components/todo/              Add/edit form, toolbar, list, and item
   components/data/              Import confirmation dialog
+public/                         favicon, PWA manifest, and PNG icons
+scripts/service-worker.js       Service worker source: precaching, network-first pages, cache-first assets
+scripts/write-service-worker.ts Writes build/client/sw.js with the build version and the precache list
+scripts/generate-icons.mjs      Renders the PNG icons from the favicon design with Chrome (run by hand)
 e2e/                            Playwright tests against wrangler dev
 ```
 
@@ -101,13 +106,20 @@ e2e/                            Playwright tests against wrangler dev
 | `components/layout/sidebar-panel.tsx` | A persistent sidebar at widths of 1024px and above; a modal drawer named フォルダ, opened from the ☰ button (フォルダを開く) below that breakpoint. The ☰ button has its own light color rule in `themes.css` for dark headers. Media query changes release the mobile focus trap and scroll lock. The drawer makes the header, main column, and menu button inert, restores focus on close, and closes on Escape, backdrop click, or folder selection |
 | `components/layout/sidebar-resizer.tsx` | A `separator` handle that resizes the folder list by pointer drag or keyboard and resets on double click. The width is applied through the `--sidebar-width` CSS variable on the layout grid. The folder list is `sticky` with a height of the window minus the fixed-height (`h-14`) header, and the footer is in the right column so the folder list stays in place down to the end of the page |
 
+## Offline support (PWA)
+
+- `root.tsx` links `manifest.webmanifest` and the Apple touch icon and sets `theme-color` for light and dark mode. The manifest uses relative URLs, so it also works under a sub-path. The icons are PNG files committed to `public/`; `scripts/generate-icons.mjs` renders them from the same design as `favicon.svg` (a maskable and an Apple icon fill the whole square and keep the check inside the safe zone).
+- The `buildEnd` hook in `react-router.config.ts` runs after the SPA `index.html` is generated and calls `writeServiceWorker()`. It lists every file in `build/client` (except `sw.js`, source maps, and Cloudflare config files), hashes their contents into a version, and writes `sw.js` as `VERSION` and `PRECACHE` constants followed by `scripts/service-worker.js`. `index.html` is listed as `./` because Cloudflare redirects `/index.html` to `/`.
+- `registerServiceWorker()` (`lib/service-worker.ts`) registers `sw.js` from `App` in production builds only, since the development server has no `sw.js`.
+- The worker precaches the list into `todo-<version>` on install and calls `skipWaiting()`; on activate it deletes other `todo-` caches and claims open pages. Navigations go to the network first and fall back to the cached `./`, so online users always get the latest `index.html`; other same-origin GET requests are served from the cache first, because asset file names contain content hashes. Open tabs are not reloaded on an update. All routes load at startup (there are no lazy chunks), so deleting the old cache does not break an open page.
+
 ## Testing
 
 | Level | Tool | Scope |
 | --- | --- | --- |
-| Unit | Vitest | Types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb), language selection, and a check that every `t()` string and label literal has an English translation with the same placeholders. `app/test/setup.ts` selects Japanese before each test, because most tests assert Japanese UI text |
+| Unit | Vitest | The precache list and version written into `sw.js`, types, filters, folder tree helpers, export/import, IndexedDB access (fake-indexeddb), language selection, and a check that every `t()` string and label literal has an English translation with the same placeholders. `app/test/setup.ts` selects Japanese before each test, because most tests assert Japanese UI text |
 | Component | Vitest, Testing Library, happy-dom | `useTodos`, the header menu (items, keyboard navigation, closing, and disabled export), and the whole `Home` screen |
-| E2E | Playwright | Production build served by `wrangler dev`: the default language in Japanese and English browsers, switching the language and keeping it after a reload, persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, and the mobile drawer, including focus trapping, close controls, background scroll locking, and switching back to the desktop sidebar |
+| E2E | Playwright | Production build served by `wrangler dev`: the default language in Japanese and English browsers, switching the language and keeping it after a reload, persistence across reloads, editing, nested folders, moving a todo by drag and drop, folder deletion, export → delete → import, restoring the folder view after a reload, resizing the folder list, keeping the folder list as tall as the window while scrolling, the mobile drawer, including focus trapping, close controls, background scroll locking, and switching back to the desktop sidebar, the PWA manifest and icons, and reopening the app with its todos while offline |
 
 ## CI / CD
 
