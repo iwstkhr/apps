@@ -308,7 +308,7 @@ describe('Home', () => {
 
     await user.click(screen.getByRole('checkbox', { name: '「ゴミ出し」を完了にする' }));
     const nextDue = format(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7));
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(await screen.findByRole('status')).toHaveTextContent(
       `「ゴミ出し」の次の回を ${nextDue} に追加しました。`,
     );
     expect(items()).toHaveLength(2);
@@ -514,7 +514,9 @@ describe('Home', () => {
 
       await user.click(screen.getByRole('button', { name: '「洗濯」をゴミ箱に移動' }));
       expect(window.confirm).not.toHaveBeenCalled();
-      expect(screen.getByRole('status')).toHaveTextContent('「洗濯」をゴミ箱に移動しました。');
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        '「洗濯」をゴミ箱に移動しました。',
+      );
       expect(items().map((li) => li.textContent)).toEqual([expect.stringContaining('掃除')]);
       expect(trashRow()).toHaveTextContent('ゴミ箱1');
 
@@ -533,7 +535,7 @@ describe('Home', () => {
       const user = await renderHome();
 
       await user.click(screen.getByRole('button', { name: '完了済みをゴミ箱に移動 (2)' }));
-      expect(screen.getByRole('status')).toHaveTextContent(
+      expect(await screen.findByRole('status')).toHaveTextContent(
         '完了済みの 2 件をゴミ箱に移動しました。',
       );
       expect(items()).toHaveLength(1);
@@ -557,7 +559,7 @@ describe('Home', () => {
       await user.click(within(nav()).getByRole('button', { name: /^仕事/ }));
 
       await user.click(screen.getByRole('button', { name: '完了済みをゴミ箱に移動 (1)' }));
-      expect(screen.getByRole('status')).toHaveTextContent(
+      expect(await screen.findByRole('status')).toHaveTextContent(
         '完了済みの 1 件をゴミ箱に移動しました。',
       );
       await user.click(within(nav()).getByRole('button', { name: /^家/ }));

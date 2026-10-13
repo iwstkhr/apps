@@ -1,4 +1,12 @@
-import { addTodo, chooseFromHeaderMenu, expect, openApp, test, todoItems } from '../fixtures';
+import {
+  addTodo,
+  chooseFromHeaderMenu,
+  expect,
+  openApp,
+  test,
+  todoItems,
+  waitForSavedMemo,
+} from '../fixtures';
 
 test('removes a tag using its close button without filtering and saves the change', async ({
   page,
@@ -235,6 +243,62 @@ test('renders Markdown memos and preserves their source when editing and reloadi
   await expect(page.getByRole('textbox', { name: 'メモ' })).toHaveValue(memo);
 });
 
+test('edits the memo in place by clicking it, keeping links working', async ({ page }) => {
+  await addTodo(page, 'メモを編集');
+  await page.getByRole('button', { name: '「メモを編集」を編集' }).click();
+  await page
+    .getByRole('textbox', { name: 'メモ' })
+    .fill('元のメモ\n\n[資料](https://example.com/docs)');
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  const card = todoItems(page).filter({ hasText: 'メモを編集' });
+  const input = card.getByRole('textbox', { name: 'メモ', exact: true });
+
+  // A link opens in a new tab without starting to edit
+  const popup = page.waitForEvent('popup');
+  await card.getByRole('link', { name: '資料' }).click();
+  await (await popup).close();
+  await expect(input).toBeHidden();
+
+  await card.getByText('元のメモ').click();
+  await input.fill('**新しいメモ**');
+  await input.press('ControlOrMeta+Enter');
+  await expect(card.locator('strong')).toHaveText('新しいメモ');
+  await waitForSavedMemo(page, '**新しいメモ**');
+  await page.reload();
+  await expect(card.locator('strong')).toHaveText('新しいメモ');
+
+  // Escape keeps the current memo, and leaving the field saves
+  await card.getByText('新しいメモ').click();
+  await input.fill('取り消す');
+  await input.press('Escape');
+  await expect(card.locator('strong')).toHaveText('新しいメモ');
+  await card.getByText('新しいメモ').click();
+  await input.fill('行1\n行2');
+  await input.blur();
+  await expect(card.locator('.todo-memo')).toContainText('行1');
+});
+
+test('adds a memo from the button shown when a task has none', async ({ page }) => {
+  await addTodo(page, 'メモなし');
+  const card = todoItems(page).filter({ hasText: 'メモなし' });
+  const add = card.getByRole('button', { name: '「メモなし」にメモを追加' });
+  const input = card.getByRole('textbox', { name: 'メモ', exact: true });
+
+  // Leaving it empty adds nothing and shows the button again
+  await add.click();
+  await input.blur();
+  await expect(add).toBeVisible();
+
+  await add.click();
+  await input.fill('追加したメモ');
+  await input.press('ControlOrMeta+Enter');
+  await expect(card.locator('.todo-memo')).toHaveText('追加したメモ');
+  await expect(add).toBeHidden();
+  await waitForSavedMemo(page, '追加したメモ');
+  await page.reload();
+  await expect(card.locator('.todo-memo')).toHaveText('追加したメモ');
+});
+
 test('changes task priority from the list and persists it after reloading', async ({ page }) => {
   await addTodo(page, '優先度を変更');
   const priority = page.getByRole('combobox', { name: '「優先度を変更」の優先度' });
@@ -247,6 +311,29 @@ test('changes task priority from the list and persists it after reloading', asyn
   await expect(priority).toHaveValue('low');
   await page.reload();
   await expect(priority).toHaveValue('low');
+});
+
+test('edits the title in place by clicking it and persists it after reloading', async ({
+  page,
+}) => {
+  await addTodo(page, '元のタイトル');
+  const list = page.getByRole('list', { name: 'TODO 一覧' });
+  await list.getByRole('button', { name: '元のタイトル', exact: true }).click();
+  const input = list.getByRole('textbox', { name: 'タイトル', exact: true });
+  await input.fill('新しいタイトル');
+  await input.press('Enter');
+  await expect(list.getByRole('button', { name: '新しいタイトル', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(list.getByRole('button', { name: '新しいタイトル', exact: true })).toBeVisible();
+
+  // Escape and a blank title keep the current one
+  await list.getByRole('button', { name: '新しいタイトル', exact: true }).click();
+  await input.fill('取り消す');
+  await input.press('Escape');
+  await list.getByRole('button', { name: '新しいタイトル', exact: true }).click();
+  await input.fill('');
+  await input.blur();
+  await expect(list.getByRole('button', { name: '新しいタイトル', exact: true })).toBeVisible();
 });
 
 test('changes the due date from the list and persists it after reloading', async ({ page }) => {

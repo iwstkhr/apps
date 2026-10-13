@@ -16,6 +16,8 @@ interface TodoListProps {
   tagSuggestions: string[];
   emptyMessage: string;
   onStatusChange: (id: string, status: TodoStatus) => void;
+  onTitleChange: (id: string, title: string) => void;
+  onMemoChange: (id: string, memo: string) => void;
   onPriorityChange: (id: string, priority: Priority) => void;
   onDueDateChange: (id: string, dueDate: string | null) => void;
   onEdit: (id: string, input: TodoInput) => Promise<void>;

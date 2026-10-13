@@ -48,6 +48,33 @@ export async function answerConfirmation(page: Page, title: string, button: stri
   await expect(dialog).toBeHidden();
 }
 
+/**
+ * Wait until the memos saved in IndexedDB include memo. The list updates before the save finishes,
+ * so reloading right after a change could otherwise show the old memo.
+ */
+export async function waitForSavedMemo(page: Page, memo: string): Promise<void> {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<string[]>((resolve, reject) => {
+            const request = indexedDB.open('todo');
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+              const db = request.result;
+              const all = db.transaction('todos').objectStore('todos').getAll();
+              all.onerror = () => reject(all.error);
+              all.onsuccess = () => {
+                db.close();
+                resolve(all.result.map((todo: { memo: string }) => todo.memo));
+              };
+            };
+          }),
+      ),
+    )
+    .toContain(memo);
+}
+
 export function todoItems(page: Page) {
   return page.getByRole('list', { name: 'TODO 一覧' }).locator(':scope > li');
 }

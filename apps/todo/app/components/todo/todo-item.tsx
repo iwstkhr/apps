@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   FaArrowDown,
   FaArrowUp,
@@ -10,6 +10,7 @@ import {
   FaGripVertical,
   FaPen,
   FaRedo,
+  FaRegStickyNote,
   FaTimes,
   FaTrash,
 } from 'react-icons/fa';
@@ -60,6 +61,10 @@ interface TodoItemProps {
   /** The folder path to show. null when it is the folder being viewed */
   folderPath: string | null;
   onStatusChange: (id: string, status: TodoStatus) => void;
+  /** Blank titles are ignored */
+  onTitleChange: (id: string, title: string) => void;
+  /** An empty memo removes it */
+  onMemoChange: (id: string, memo: string) => void;
   onPriorityChange: (id: string, priority: Priority) => void;
   /** A null dueDate removes the due date */
   onDueDateChange: (id: string, dueDate: string | null) => void;
@@ -79,6 +84,8 @@ export function TodoItem({
   folders,
   folderPath,
   onStatusChange,
+  onTitleChange,
+  onMemoChange,
   onPriorityChange,
   onDueDateChange,
   onEdit,
@@ -90,6 +97,8 @@ export function TodoItem({
   onMoveDown,
 }: TodoItemProps) {
   const [editing, setEditing] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editingMemo, setEditingMemo] = useState(false);
   const [dragging, setDragging] = useState(false);
   const dueStatus = getDueStatus(todo, today);
   const done = todo.status === 'done';
@@ -154,7 +163,8 @@ export function TodoItem({
 
       <section
         aria-label={t('「{0}」のヘッダー', [todo.title])}
-        draggable
+        // Not draggable while the title is being edited, so text in the input can be selected with the mouse
+        draggable={!editingTitle}
         onDragStart={(event) => {
           setDraggedTodo(event.dataTransfer, todo.id, todo.title);
           setDragging(true);
@@ -166,9 +176,30 @@ export function TodoItem({
           className="mt-1 hidden shrink-0 text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
           aria-hidden="true"
         />
-        <p className={cn('min-w-0 break-words font-medium', done && 'line-through')}>
-          {todo.title}
-        </p>
+        {editingTitle ? (
+          <TitleInput
+            title={todo.title}
+            onSave={(title) => {
+              onTitleChange(todo.id, title);
+              setEditingTitle(false);
+            }}
+            onCancel={() => setEditingTitle(false)}
+          />
+        ) : (
+          // A button rather than a clickable text, so the title can also be edited by keyboard.
+          // The same outline as the memo on hover, and on keyboard focus. The negative margin keeps the text in place
+          <button
+            type="button"
+            className={cn(
+              '-mx-1 min-w-0 cursor-text break-words rounded px-1 text-left font-medium transition-colors hover:bg-slate-50 hover:ring-1 hover:ring-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:hover:bg-white/5 dark:hover:ring-slate-700',
+              done && 'line-through',
+            )}
+            onClick={() => setEditingTitle(true)}
+            title={t('クリックしてタイトルを編集')}
+          >
+            {todo.title}
+          </button>
+        )}
       </section>
 
       <div className="flex shrink-0">
@@ -345,8 +376,122 @@ export function TodoItem({
             ))}
           </div>
         )}
-        {todo.memo && <MarkdownMemo>{todo.memo}</MarkdownMemo>}
+        {editingMemo ? (
+          <MemoInput
+            memo={todo.memo}
+            onSave={(memo) => {
+              onMemoChange(todo.id, memo);
+              setEditingMemo(false);
+            }}
+            onCancel={() => setEditingMemo(false)}
+          />
+        ) : !todo.memo ? (
+          // Shown where the memo goes, so it reads as an empty memo that can be filled
+          <button
+            type="button"
+            className="flex w-full cursor-text items-center gap-1.5 rounded border border-dashed border-slate-300 px-2 py-1 text-left text-sm text-slate-400 hover:border-slate-400 hover:text-slate-600 dark:border-slate-700 dark:text-slate-500 dark:hover:border-slate-500 dark:hover:text-slate-300"
+            onClick={() => setEditingMemo(true)}
+            aria-label={t('「{0}」にメモを追加', [todo.title])}
+          >
+            <FaRegStickyNote className="h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{t('メモを追加')}</span>
+          </button>
+        ) : (
+          // The memo can hold links, so it cannot be a button. Keyboard users edit it with the edit button.
+          // On hover a solid outline shows it can be edited. A ring keeps the text from moving, and solid rather than
+          // dashed, since a dashed outline marks an empty slot such as メモを追加. Touch screens have no hover
+          // biome-ignore lint/a11y/useKeyWithClickEvents: the edit button offers the same by keyboard
+          // biome-ignore lint/a11y/noStaticElementInteractions: see above
+          <div
+            className="-mx-1.5 cursor-text rounded px-1.5 pb-1 transition-colors hover:bg-slate-50 hover:ring-1 hover:ring-slate-300 dark:hover:bg-white/5 dark:hover:ring-slate-700"
+            title={t('クリックしてメモを編集')}
+            onClick={(event) => {
+              // Links and 続きを読む keep working, and selecting text to copy it does not start editing
+              if ((event.target as Element).closest('a, button')) return;
+              if (window.getSelection()?.toString()) return;
+              setEditingMemo(true);
+            }}
+          >
+            <MarkdownMemo>{todo.memo}</MarkdownMemo>
+          </div>
+        )}
       </div>
     </li>
+  );
+}
+
+interface TitleInputProps {
+  title: string;
+  onSave: (title: string) => void;
+  onCancel: () => void;
+}
+
+/** Edits the title in place. Enter or leaving the field saves it, and Escape cancels */
+function TitleInput({ title, onSave, onCancel }: TitleInputProps) {
+  const [value, setValue] = useState(title);
+  // Escape and Enter end editing before the blur that follows, so the blur must not save again
+  const finished = useRef(false);
+  const finish = (save: boolean) => {
+    if (finished.current) return;
+    finished.current = true;
+    // A blank title keeps the current one, since a task needs a title
+    if (save && value.trim()) onSave(value);
+    else onCancel();
+  };
+
+  return (
+    <input
+      className="-mx-1 min-w-0 flex-1 rounded border border-blue-400 bg-white px-1 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+      onKeyDown={(event) => {
+        // Ignore Enter while an IME is composing, so confirming a conversion does not save
+        if (event.key === 'Enter' && !event.nativeEvent.isComposing) finish(true);
+        else if (event.key === 'Escape') finish(false);
+      }}
+      onBlur={() => finish(true)}
+      onFocus={(event) => event.currentTarget.select()}
+      aria-label={t('タイトル')}
+      maxLength={200}
+      // biome-ignore lint/a11y/noAutofocus: editing starts from a click on the title, so focus moves to it
+      autoFocus
+    />
+  );
+}
+
+interface MemoInputProps {
+  memo: string;
+  onSave: (memo: string) => void;
+  onCancel: () => void;
+}
+
+/** Edits the memo in place. Enter adds a line, Ctrl/Cmd+Enter or leaving the field saves it, and Escape cancels */
+function MemoInput({ memo, onSave, onCancel }: MemoInputProps) {
+  const [value, setValue] = useState(memo);
+  // Escape and Ctrl/Cmd+Enter end editing before the blur that follows, so the blur must not save again
+  const finished = useRef(false);
+  const finish = (save: boolean) => {
+    if (finished.current) return;
+    finished.current = true;
+    if (save) onSave(value);
+    else onCancel();
+  };
+
+  return (
+    <textarea
+      className="mt-1 w-full rounded border border-blue-400 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
+      value={value}
+      // Grows with the memo up to a limit, then scrolls
+      rows={Math.min(Math.max(value.split('\n').length, 3), 15)}
+      onChange={(event) => setValue(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) finish(true);
+        else if (event.key === 'Escape') finish(false);
+      }}
+      onBlur={() => finish(true)}
+      aria-label={t('メモ')}
+      // biome-ignore lint/a11y/noAutofocus: editing starts from a click on the memo, so focus moves to it
+      autoFocus
+    />
   );
 }
