@@ -57,7 +57,7 @@ app/
   lib/styles.ts                 Shared Tailwind class strings
   lib/i18n.ts                   Language selection (browser default, saved choice) and t()
   lib/translations.ts           English text for each Japanese UI string
-  lib/service-worker.ts         Registers sw.js in production builds
+  lib/service-worker.ts         Registers sw.js in production builds and applies updates
   types/todo.ts                 Todo type, factories, validation, and date helpers
   types/folder.ts               Folder type, factories, and validation
   components/layout/            Header and its ⋯ menu (language, theme dialog, export, import), the shared modal, the confirmation dialog, responsive sidebar panel, and folder list resizer
@@ -116,8 +116,8 @@ e2e/                            Playwright tests against wrangler dev
 
 - `root.tsx` links `manifest.webmanifest` and the Apple touch icon and sets `theme-color` for light and dark mode. The manifest uses relative URLs, so it also works under a sub-path. The icons are PNG files committed to `public/`; `scripts/generate-icons.mjs` renders them from the same design as `favicon.svg` (a maskable and an Apple icon fill the whole square and keep the check inside the safe zone).
 - The `buildEnd` hook in `react-router.config.ts` runs after the SPA `index.html` is generated and calls `writeServiceWorker()`. It lists every file in `build/client` (except `sw.js`, source maps, and Cloudflare config files), hashes their contents into a version, and writes `sw.js` as `VERSION` and `PRECACHE` constants followed by `scripts/service-worker.js`. `index.html` is listed as `./` because Cloudflare redirects `/index.html` to `/`.
-- `registerServiceWorker()` (`lib/service-worker.ts`) registers `sw.js` from `App` in production builds only, since the development server has no `sw.js`.
-- The worker precaches the list into `todo-<version>` on install and calls `skipWaiting()`; on activate it deletes other `todo-` caches and claims open pages. Navigations go to the network first and fall back to the cached `./`, so online users always get the latest `index.html`; other same-origin GET requests are served from the cache first, because asset file names contain content hashes. Open tabs are not reloaded on an update. All routes load at startup (there are no lazy chunks), so deleting the old cache does not break an open page.
+- `registerServiceWorker()` (`lib/service-worker.ts`) registers `sw.js` from `App` in production builds only, since the development server has no `sw.js`. Each time the page becomes visible it calls `registration.update()`, because an installed PWA can stay open for days and the browser otherwise checks only on navigation. When a new worker takes control of a page that already had one (`controllerchange`; the first install is skipped), the page reloads the next time it is hidden, or right away if it is already hidden. The reload waits while a text field is focused or a `<dialog>` is open, so unsaved input is not lost.
+- The worker precaches the list into `todo-<version>` on install and calls `skipWaiting()`; on activate it deletes other `todo-` caches and claims open pages. Navigations go to the network first and fall back to the cached `./`, so online users always get the latest `index.html`; other same-origin GET requests are served from the cache first, because asset file names contain content hashes. Open tabs pick up an update through the hidden-page reload above. All routes load at startup (there are no lazy chunks), so deleting the old cache does not break an open page.
 
 ## Testing
 

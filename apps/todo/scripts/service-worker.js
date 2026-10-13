@@ -12,7 +12,7 @@ self.addEventListener('install', (event) => {
     caches
       .open(CACHE)
       .then((cache) => cache.addAll(PRECACHE))
-      // Make open tabs use the new version right away. The page is not reloaded
+      // Take control of open tabs right away. registerServiceWorker() reloads them the next time they are hidden
       .then(() => self.skipWaiting()),
   );
 });
