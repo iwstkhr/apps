@@ -1,4 +1,12 @@
-import { addTodo, chooseFromHeaderMenu, expect, openApp, test, todoItems } from '../fixtures';
+import {
+  addTodo,
+  chooseFromHeaderMenu,
+  expect,
+  openApp,
+  test,
+  todoItems,
+  waitForSavedMemo,
+} from '../fixtures';
 
 test('removes a tag using its close button without filtering and saves the change', async ({
   page,
@@ -255,6 +263,7 @@ test('edits the memo in place by clicking it, keeping links working', async ({ p
   await input.fill('**新しいメモ**');
   await input.press('ControlOrMeta+Enter');
   await expect(card.locator('strong')).toHaveText('新しいメモ');
+  await waitForSavedMemo(page, '**新しいメモ**');
   await page.reload();
   await expect(card.locator('strong')).toHaveText('新しいメモ');
 
@@ -267,6 +276,27 @@ test('edits the memo in place by clicking it, keeping links working', async ({ p
   await input.fill('行1\n行2');
   await input.blur();
   await expect(card.locator('.todo-memo')).toContainText('行1');
+});
+
+test('adds a memo from the button shown when a task has none', async ({ page }) => {
+  await addTodo(page, 'メモなし');
+  const card = todoItems(page).filter({ hasText: 'メモなし' });
+  const add = card.getByRole('button', { name: '「メモなし」にメモを追加' });
+  const input = card.getByRole('textbox', { name: 'メモ', exact: true });
+
+  // Leaving it empty adds nothing and shows the button again
+  await add.click();
+  await input.blur();
+  await expect(add).toBeVisible();
+
+  await add.click();
+  await input.fill('追加したメモ');
+  await input.press('ControlOrMeta+Enter');
+  await expect(card.locator('.todo-memo')).toHaveText('追加したメモ');
+  await expect(add).toBeHidden();
+  await waitForSavedMemo(page, '追加したメモ');
+  await page.reload();
+  await expect(card.locator('.todo-memo')).toHaveText('追加したメモ');
 });
 
 test('changes task priority from the list and persists it after reloading', async ({ page }) => {

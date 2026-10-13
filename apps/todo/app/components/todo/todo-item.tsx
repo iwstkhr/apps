@@ -10,6 +10,7 @@ import {
   FaGripVertical,
   FaPen,
   FaRedo,
+  FaRegStickyNote,
   FaTimes,
   FaTrash,
 } from 'react-icons/fa';
@@ -383,24 +384,33 @@ export function TodoItem({
             }}
             onCancel={() => setEditingMemo(false)}
           />
+        ) : !todo.memo ? (
+          // Shown where the memo goes, so it reads as an empty memo that can be filled
+          <button
+            type="button"
+            className="flex w-full cursor-text items-center gap-1.5 rounded border border-dashed border-slate-300 px-2 py-1 text-left text-sm text-slate-400 hover:border-slate-400 hover:text-slate-600 dark:border-slate-700 dark:text-slate-500 dark:hover:border-slate-500 dark:hover:text-slate-300"
+            onClick={() => setEditingMemo(true)}
+            aria-label={t('「{0}」にメモを追加', [todo.title])}
+          >
+            <FaRegStickyNote className="h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{t('メモを追加')}</span>
+          </button>
         ) : (
-          todo.memo && (
-            // The memo can hold links, so it cannot be a button. Keyboard users edit it with the edit button
-            // biome-ignore lint/a11y/useKeyWithClickEvents: the edit button offers the same by keyboard
-            // biome-ignore lint/a11y/noStaticElementInteractions: see above
-            <div
-              className="cursor-text"
-              title={t('クリックしてメモを編集')}
-              onClick={(event) => {
-                // Links and 続きを読む keep working, and selecting text to copy it does not start editing
-                if ((event.target as Element).closest('a, button')) return;
-                if (window.getSelection()?.toString()) return;
-                setEditingMemo(true);
-              }}
-            >
-              <MarkdownMemo>{todo.memo}</MarkdownMemo>
-            </div>
-          )
+          // The memo can hold links, so it cannot be a button. Keyboard users edit it with the edit button
+          // biome-ignore lint/a11y/useKeyWithClickEvents: the edit button offers the same by keyboard
+          // biome-ignore lint/a11y/noStaticElementInteractions: see above
+          <div
+            className="cursor-text"
+            title={t('クリックしてメモを編集')}
+            onClick={(event) => {
+              // Links and 続きを読む keep working, and selecting text to copy it does not start editing
+              if ((event.target as Element).closest('a, button')) return;
+              if (window.getSelection()?.toString()) return;
+              setEditingMemo(true);
+            }}
+          >
+            <MarkdownMemo>{todo.memo}</MarkdownMemo>
+          </div>
         )}
       </div>
     </li>
