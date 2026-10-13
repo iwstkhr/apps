@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   FaArrowDown,
   FaArrowUp,
@@ -60,6 +60,8 @@ interface TodoItemProps {
   /** The folder path to show. null when it is the folder being viewed */
   folderPath: string | null;
   onStatusChange: (id: string, status: TodoStatus) => void;
+  /** Blank titles are ignored */
+  onTitleChange: (id: string, title: string) => void;
   onPriorityChange: (id: string, priority: Priority) => void;
   /** A null dueDate removes the due date */
   onDueDateChange: (id: string, dueDate: string | null) => void;
@@ -79,6 +81,7 @@ export function TodoItem({
   folders,
   folderPath,
   onStatusChange,
+  onTitleChange,
   onPriorityChange,
   onDueDateChange,
   onEdit,
@@ -90,6 +93,7 @@ export function TodoItem({
   onMoveDown,
 }: TodoItemProps) {
   const [editing, setEditing] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
   const [dragging, setDragging] = useState(false);
   const dueStatus = getDueStatus(todo, today);
   const done = todo.status === 'done';
@@ -154,7 +158,8 @@ export function TodoItem({
 
       <section
         aria-label={t('「{0}」のヘッダー', [todo.title])}
-        draggable
+        // Not draggable while the title is being edited, so text in the input can be selected with the mouse
+        draggable={!editingTitle}
         onDragStart={(event) => {
           setDraggedTodo(event.dataTransfer, todo.id, todo.title);
           setDragging(true);
@@ -166,9 +171,29 @@ export function TodoItem({
           className="mt-1 hidden shrink-0 text-slate-300 group-hover/item:text-slate-500 lg:block dark:text-slate-600 dark:group-hover/item:text-slate-400"
           aria-hidden="true"
         />
-        <p className={cn('min-w-0 break-words font-medium', done && 'line-through')}>
-          {todo.title}
-        </p>
+        {editingTitle ? (
+          <TitleInput
+            title={todo.title}
+            onSave={(title) => {
+              onTitleChange(todo.id, title);
+              setEditingTitle(false);
+            }}
+            onCancel={() => setEditingTitle(false)}
+          />
+        ) : (
+          // A button rather than a clickable text, so the title can also be edited by keyboard
+          <button
+            type="button"
+            className={cn(
+              'min-w-0 cursor-text break-words rounded text-left font-medium hover:bg-slate-100 dark:hover:bg-slate-800',
+              done && 'line-through',
+            )}
+            onClick={() => setEditingTitle(true)}
+            title={t('クリックしてタイトルを編集')}
+          >
+            {todo.title}
+          </button>
+        )}
       </section>
 
       <div className="flex shrink-0">
@@ -348,5 +373,44 @@ export function TodoItem({
         {todo.memo && <MarkdownMemo>{todo.memo}</MarkdownMemo>}
       </div>
     </li>
+  );
+}
+
+interface TitleInputProps {
+  title: string;
+  onSave: (title: string) => void;
+  onCancel: () => void;
+}
+
+/** Edits the title in place. Enter or leaving the field saves it, and Escape cancels */
+function TitleInput({ title, onSave, onCancel }: TitleInputProps) {
+  const [value, setValue] = useState(title);
+  // Escape and Enter end editing before the blur that follows, so the blur must not save again
+  const finished = useRef(false);
+  const finish = (save: boolean) => {
+    if (finished.current) return;
+    finished.current = true;
+    // A blank title keeps the current one, since a task needs a title
+    if (save && value.trim()) onSave(value);
+    else onCancel();
+  };
+
+  return (
+    <input
+      className="min-w-0 flex-1 rounded border border-blue-400 bg-white px-1 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+      onKeyDown={(event) => {
+        // Ignore Enter while an IME is composing, so confirming a conversion does not save
+        if (event.key === 'Enter' && !event.nativeEvent.isComposing) finish(true);
+        else if (event.key === 'Escape') finish(false);
+      }}
+      onBlur={() => finish(true)}
+      onFocus={(event) => event.currentTarget.select()}
+      aria-label={t('タイトル')}
+      maxLength={200}
+      // biome-ignore lint/a11y/noAutofocus: editing starts from a click on the title, so focus moves to it
+      autoFocus
+    />
   );
 }

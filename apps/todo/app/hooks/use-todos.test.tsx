@@ -96,6 +96,21 @@ describe('useTodos', () => {
     expect((await getAll()).todos).toEqual([saved]);
   });
 
+  it('changes the title of a todo, trimming it and ignoring blank titles', async () => {
+    const todo = createTodoFixture({ title: '元のタイトル', memo: '内容を保持' });
+    await putAll({ folders: [], todos: [todo] });
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.changeTitle(todo.id, '  新しいタイトル  '));
+    const saved = (await getAll()).todos[0];
+    expect(saved).toEqual({ ...todo, title: '新しいタイトル', updatedAt: expect.any(String) });
+    expect(result.current.todos).toEqual([saved]);
+    // The same title and a blank title save nothing
+    await act(() => result.current.changeTitle(todo.id, '新しいタイトル'));
+    await act(() => result.current.changeTitle(todo.id, '   '));
+    expect((await getAll()).todos).toEqual([saved]);
+  });
+
   it('changes and removes the due date of a todo without touching other fields', async () => {
     const todo = createTodoFixture({ dueDate: null, memo: '内容を保持' });
     await putAll({ folders: [], todos: [todo] });

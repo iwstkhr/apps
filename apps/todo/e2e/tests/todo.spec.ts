@@ -249,6 +249,29 @@ test('changes task priority from the list and persists it after reloading', asyn
   await expect(priority).toHaveValue('low');
 });
 
+test('edits the title in place by clicking it and persists it after reloading', async ({
+  page,
+}) => {
+  await addTodo(page, '元のタイトル');
+  const list = page.getByRole('list', { name: 'TODO 一覧' });
+  await list.getByRole('button', { name: '元のタイトル', exact: true }).click();
+  const input = list.getByRole('textbox', { name: 'タイトル', exact: true });
+  await input.fill('新しいタイトル');
+  await input.press('Enter');
+  await expect(list.getByRole('button', { name: '新しいタイトル', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(list.getByRole('button', { name: '新しいタイトル', exact: true })).toBeVisible();
+
+  // Escape and a blank title keep the current one
+  await list.getByRole('button', { name: '新しいタイトル', exact: true }).click();
+  await input.fill('取り消す');
+  await input.press('Escape');
+  await list.getByRole('button', { name: '新しいタイトル', exact: true }).click();
+  await input.fill('');
+  await input.blur();
+  await expect(list.getByRole('button', { name: '新しいタイトル', exact: true })).toBeVisible();
+});
+
 test('changes the due date from the list and persists it after reloading', async ({ page }) => {
   await addTodo(page, '期限を変更');
   const due = page.getByLabel('「期限を変更」の期限');
