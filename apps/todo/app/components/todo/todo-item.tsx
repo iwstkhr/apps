@@ -186,11 +186,12 @@ export function TodoItem({
             onCancel={() => setEditingTitle(false)}
           />
         ) : (
-          // A button rather than a clickable text, so the title can also be edited by keyboard
+          // A button rather than a clickable text, so the title can also be edited by keyboard.
+          // The same outline as the memo on hover, and on keyboard focus. The negative margin keeps the text in place
           <button
             type="button"
             className={cn(
-              'min-w-0 cursor-text break-words rounded text-left font-medium hover:bg-slate-100 dark:hover:bg-slate-800',
+              '-mx-1 min-w-0 cursor-text break-words rounded px-1 text-left font-medium transition-colors hover:bg-slate-50 hover:ring-1 hover:ring-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:hover:bg-white/5 dark:hover:ring-slate-700',
               done && 'line-through',
             )}
             onClick={() => setEditingTitle(true)}
@@ -440,7 +441,7 @@ function TitleInput({ title, onSave, onCancel }: TitleInputProps) {
 
   return (
     <input
-      className="min-w-0 flex-1 rounded border border-blue-400 bg-white px-1 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
+      className="-mx-1 min-w-0 flex-1 rounded border border-blue-400 bg-white px-1 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
       value={value}
       onChange={(event) => setValue(event.target.value)}
       onKeyDown={(event) => {
