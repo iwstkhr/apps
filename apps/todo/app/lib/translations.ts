@@ -82,6 +82,7 @@ export const english: Record<string, string> = {
   色: 'Color',
   親フォルダ: 'Parent folder',
   'なし (最上位)': 'None (top level)',
+  最上位: 'Top level',
   黄色: 'Yellow',
   オレンジ: 'Orange',
   赤: 'Red',

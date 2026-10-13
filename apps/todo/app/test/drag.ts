@@ -10,5 +10,7 @@ export function createDataTransfer(): DataTransfer {
     setData: (type: string, value: string) => data.set(type, value),
     getData: (type: string) => data.get(type) ?? '',
     clearData: () => data.clear(),
+    // testing-library copies these properties onto happy-dom's DataTransfer, whose setDragImage throws
+    setDragImage: () => {},
   } as unknown as DataTransfer;
 }

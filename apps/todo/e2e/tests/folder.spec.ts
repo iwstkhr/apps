@@ -101,6 +101,41 @@ test('moves a todo to another folder by drag and drop', async ({ page }) => {
   await expect(page.getByText('ここに TODO はありません。')).toBeVisible();
 });
 
+test('reorders and nests folders by drag and drop and keeps them after reloading', async ({
+  page,
+}) => {
+  await createFolder(page, 'あ仕事');
+  await createFolder(page, 'い家');
+  await createFolder(page, 'う趣味');
+  const rows = folderNav(page).locator('li[draggable="true"]');
+  const row = (name: string) => rows.filter({ hasText: name });
+  await expect(rows).toHaveText([/^あ仕事/, /^い家/, /^う趣味/]);
+
+  // The top edge of a row places the folder before it
+  await row('う趣味').dragTo(row('あ仕事'), { targetPosition: { x: 40, y: 2 } });
+  await expect(rows).toHaveText([/^う趣味/, /^あ仕事/, /^い家/]);
+
+  // The middle of a row puts the folder inside it
+  const target = await row('あ仕事').boundingBox();
+  if (!target) throw new Error('folder row not found');
+  await row('い家').dragTo(row('あ仕事'), { targetPosition: { x: 40, y: target.height / 2 } });
+  await expect(page.getByRole('status')).toHaveText('「い家」を「あ仕事」に移動しました。');
+
+  await page.reload();
+  await expect(rows).toHaveText([/^う趣味/, /^あ仕事/, /^い家/]);
+  await expect(
+    folderNav(page).getByRole('button', { name: 'フォルダ「あ仕事」を閉じる' }),
+  ).toBeVisible();
+
+  // 未分類 moves it back to the end of the top level
+  await row('い家').dragTo(folderNav(page).getByRole('button', { name: /^未分類/ }));
+  await expect(page.getByRole('status')).toHaveText('「い家」を「最上位」に移動しました。');
+  await expect(rows).toHaveText([/^う趣味/, /^あ仕事/, /^い家/]);
+  await expect(
+    folderNav(page).getByRole('button', { name: /フォルダ「あ仕事」を(開く|閉じる)/ }),
+  ).toBeHidden();
+});
+
 test('moves todos to unfiled when their folder is deleted', async ({ page }) => {
   await createFolder(page, '旅行');
   await addTodo(page, '切符を取る');

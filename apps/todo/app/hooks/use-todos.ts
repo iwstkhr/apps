@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { mergeData } from '~/lib/export-import';
-import { getSubtreeIds, wouldCreateCycle } from '~/lib/folder-tree';
+import {
+  type FolderDropPosition,
+  getSubtreeIds,
+  moveFolder as moveFolderInTree,
+  wouldCreateCycle,
+} from '~/lib/folder-tree';
 import { t } from '~/lib/i18n';
 import {
   deleteFolders,
@@ -78,6 +83,8 @@ export interface UseTodos {
   /** Returns the created folder */
   addFolder: (input: FolderInput) => Promise<Folder>;
   editFolder: (id: string, input: FolderInput) => Promise<void>;
+  /** Move a folder next to or into the target folder (null targetId moves it to the end of the top level) */
+  moveFolder: (id: string, targetId: string | null, position: FolderDropPosition) => Promise<void>;
   /** Delete a folder and its descendants, moving the todos inside to 未分類 */
   removeFolder: (id: string) => Promise<void>;
   importData: (incoming: StoredData, mode: ImportMode) => Promise<void>;
@@ -400,6 +407,17 @@ export function useTodos(): UseTodos {
     [commit],
   );
 
+  const moveFolder = useCallback(
+    async (id: string, targetId: string | null, position: FolderDropPosition) => {
+      const current = dataRef.current.folders;
+      const next = moveFolderInTree(current, id, targetId, position);
+      const changed = next.filter((folder, index) => folder !== current[index]);
+      if (changed.length === 0) return;
+      await commit({ ...dataRef.current, folders: next }, () => putAll({ folders: changed }));
+    },
+    [commit],
+  );
+
   const removeFolder = useCallback(
     async (id: string) => {
       const { todos, folders } = dataRef.current;
@@ -458,6 +476,7 @@ export function useTodos(): UseTodos {
     emptyTrash,
     addFolder,
     editFolder,
+    moveFolder,
     removeFolder,
     importData,
   };

@@ -133,6 +133,7 @@ export function createSampleData(language: Language, now: Date = new Date()): St
     name: folder.name[language],
     parentId: folderId(folder.parent),
     color: folder.color,
+    order: null,
     createdAt: timestamp,
     updatedAt: timestamp,
   }));

@@ -12,9 +12,20 @@ import {
 } from 'react-icons/fa';
 import { MdDeleteForever } from 'react-icons/md';
 import { cn } from '~/lib/cn';
-import { type FolderSelection, flattenFolderTree } from '~/lib/folder-tree';
+import {
+  type FolderDropPosition,
+  type FolderSelection,
+  flattenFolderTree,
+  getSubtreeIds,
+} from '~/lib/folder-tree';
 import { t } from '~/lib/i18n';
-import { getDraggedTodo, isDraggingTodo } from '~/lib/todo-drag';
+import {
+  getDraggedFolder,
+  getDraggedTodo,
+  isDraggingFolder,
+  isDraggingTodo,
+  setDraggedFolder,
+} from '~/lib/todo-drag';
 import type { Folder } from '~/types/folder';
 
 interface FolderSidebarProps {
@@ -30,6 +41,8 @@ interface FolderSidebarProps {
   onRemove: (folder: Folder) => void;
   /** A task was dropped on a folder (null means 未分類) */
   onDropTodo: (todoId: string, folderId: string | null) => void;
+  /** A folder was dropped next to or into another folder (null targetId means the top level, via 未分類) */
+  onMoveFolder: (folderId: string, targetId: string | null, position: FolderDropPosition) => void;
   /** Number of items in the trash */
   trashCount: number;
   /** A task was dropped on the trash */
@@ -43,6 +56,9 @@ type DropTarget = 'unfiled' | 'trash' | string;
 
 // Hovering over a collapsed folder for this long expands it so tasks can be dropped on its subfolders
 const EXPAND_ON_HOVER_MS = 700;
+// When dragging a folder, the top and bottom parts of a row (as a share of its height) place it before or after that row.
+// The middle puts it inside
+const EDGE_DROP_RATIO = 0.25;
 
 const rowClass =
   'group flex min-w-0 items-center gap-1 rounded-md text-sm transition-colors hover:bg-slate-100 dark:hover:bg-slate-800';
@@ -50,6 +66,10 @@ const rowClass =
 // Use the same color in dark mode, and make the name and count white
 const dropTargetRowClass =
   'bg-blue-600 text-white ring-2 ring-blue-300 hover:bg-blue-600 dark:bg-blue-500 dark:ring-blue-200 dark:hover:bg-blue-500 [&_span]:text-white';
+// A line on the side where a dragged folder will go. A shadow instead of a border keeps the row height,
+// so the drop position under the pointer does not shift
+const dropBeforeRowClass = 'shadow-[inset_0_3px_0_0_var(--color-blue-500)]';
+const dropAfterRowClass = 'shadow-[inset_0_-3px_0_0_var(--color-blue-500)]';
 const selectedRowClass =
   'bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-200 dark:hover:bg-blue-900';
 const actionClass =
@@ -75,41 +95,88 @@ export function FolderSidebar({
   onEdit,
   onRemove,
   onDropTodo,
+  onMoveFolder,
   trashCount,
   onDropTodoToTrash,
   onEmptyTrash,
 }: FolderSidebarProps) {
   const entries = useMemo(() => flattenFolderTree(folders, collapsed), [folders, collapsed]);
-  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    target: DropTarget;
+    position: FolderDropPosition;
+  } | null>(null);
+  // The folder being dragged. Its id cannot be read from DataTransfer during dragover, and the drag starts in this pane
+  const [draggingFolderId, setDraggingFolderId] = useState<string | null>(null);
+  // A folder cannot go into itself or its descendants
+  const blockedIds = useMemo(
+    () => (draggingFolderId === null ? null : getSubtreeIds(folders, draggingFolderId)),
+    [folders, draggingFolderId],
+  );
 
+  const expandTarget = dropTarget?.position === 'inside' ? dropTarget.target : null;
   useEffect(() => {
-    if (dropTarget === null || !collapsed.has(dropTarget)) return;
-    const timer = setTimeout(() => onToggleCollapsed(dropTarget), EXPAND_ON_HOVER_MS);
+    if (expandTarget === null || !collapsed.has(expandTarget)) return;
+    const timer = setTimeout(() => onToggleCollapsed(expandTarget), EXPAND_ON_HOVER_MS);
     return () => clearTimeout(timer);
-  }, [dropTarget, collapsed, onToggleCollapsed]);
+  }, [expandTarget, collapsed, onToggleCollapsed]);
 
-  /** Handlers for rows that accept dropped tasks. */
+  /** Where the dragged item would go on the target row, or null if it cannot be dropped there. */
+  const getDropPosition = (event: DragEvent, target: DropTarget): FolderDropPosition | null => {
+    if (isDraggingTodo(event.dataTransfer)) return 'inside';
+    if (!isDraggingFolder(event.dataTransfer) || blockedIds === null) return null;
+    // 未分類 moves the folder to the top level. A folder cannot be put in the trash
+    if (target === 'unfiled') return 'inside';
+    if (target === 'trash' || blockedIds.has(target)) return null;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const offset = event.clientY - rect.top;
+    if (offset < rect.height * EDGE_DROP_RATIO) return 'before';
+    if (offset > rect.height * (1 - EDGE_DROP_RATIO)) return 'after';
+    return 'inside';
+  };
+
+  const endFolderDrag = () => {
+    setDraggingFolderId(null);
+    setDropTarget(null);
+  };
+
+  /** Handlers for rows that accept dropped tasks and folders. */
   const dropHandlers = (target: DropTarget) => ({
     onDragOver: (event: DragEvent) => {
-      if (!isDraggingTodo(event.dataTransfer)) return;
+      const position = getDropPosition(event, target);
+      if (position === null) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = 'move';
-      if (dropTarget !== target) setDropTarget(target);
+      if (dropTarget?.target !== target || dropTarget.position !== position)
+        setDropTarget({ target, position });
     },
     onDragLeave: (event: DragEvent) => {
       // Moving onto an element inside the row does not count as leaving
       if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
-      setDropTarget((current) => (current === target ? null : current));
+      setDropTarget((current) => (current?.target === target ? null : current));
     },
     onDrop: (event: DragEvent) => {
+      const position = getDropPosition(event, target);
       const todoId = getDraggedTodo(event.dataTransfer);
-      setDropTarget(null);
-      if (!todoId) return;
+      const folderId = getDraggedFolder(event.dataTransfer);
+      endFolderDrag();
+      if (position === null || (!todoId && !folderId)) return;
       event.preventDefault();
-      if (target === 'trash') onDropTodoToTrash(todoId);
-      else onDropTodo(todoId, target === 'unfiled' ? null : target);
+      if (todoId) {
+        if (target === 'trash') onDropTodoToTrash(todoId);
+        else onDropTodo(todoId, target === 'unfiled' ? null : target);
+      } else if (folderId) {
+        onMoveFolder(folderId, target === 'unfiled' ? null : target, position);
+      }
     },
   });
+
+  /** Class for a row while something is dragged over it. */
+  const dropRowClass = (target: DropTarget) => {
+    if (dropTarget?.target !== target) return null;
+    if (dropTarget.position === 'before') return dropBeforeRowClass;
+    if (dropTarget.position === 'after') return dropAfterRowClass;
+    return dropTargetRowClass;
+  };
 
   const fixedItem = (
     value: FolderSelection,
@@ -121,7 +188,7 @@ export function FolderSidebar({
       className={cn(
         rowClass,
         // Prefer the drop target color (with both, whichever comes later in the CSS wins)
-        dropTarget === value ? dropTargetRowClass : selection === value && selectedRowClass,
+        dropTarget?.target === value ? dropTargetRowClass : selection === value && selectedRowClass,
       )}
       {...(value === 'unfiled' || value === 'trash' ? dropHandlers(value) : {})}
     >
@@ -181,14 +248,25 @@ export function FolderSidebar({
         {entries.map(({ folder, depth, hasChildren }) => {
           const isSelected = selection === folder.id;
           const isCollapsed = collapsed.has(folder.id);
+          const dropClass = dropRowClass(folder.id);
           return (
             <li
               key={folder.id}
               className={cn(
                 rowClass,
-                dropTarget === folder.id ? dropTargetRowClass : isSelected && selectedRowClass,
+                // A before or after line keeps the selected color; only dropping inside replaces it
+                dropClass !== dropTargetRowClass && isSelected && selectedRowClass,
+                dropClass,
+                draggingFolderId === folder.id && 'opacity-50',
               )}
               style={{ paddingLeft: `${depth * 0.875}rem` }}
+              // The row rather than the button is draggable, since Firefox does not start drags from buttons
+              draggable
+              onDragStart={(event) => {
+                setDraggingFolderId(folder.id);
+                setDraggedFolder(event.dataTransfer, folder.id, folder.name);
+              }}
+              onDragEnd={endFolderDrag}
               {...dropHandlers(folder.id)}
             >
               {hasChildren ? (

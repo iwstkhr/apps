@@ -1,12 +1,14 @@
 // The DataTransfer type used when dragging a task onto the folder pane. A custom type distinguishes it from other drags (files or text)
 export const TODO_DRAG_TYPE = 'application/x-todo-id';
+// The DataTransfer type used when dragging a folder within the folder pane
+export const FOLDER_DRAG_TYPE = 'application/x-folder-id';
 
 // How far (px) the drag image (a small label with only the task name) is offset from the pointer.
 // Without the offset, the browser's default translucent image of the whole card covers the folder pane and hides the target's name
 const DRAG_IMAGE_OFFSET = { x: 16, y: 20 };
 
 /**
- * Create the label with only the task name that appears at the lower right of the pointer while dragging.
+ * Create the label with only the task (or folder) name that appears at the lower right of the pointer while dragging.
  * setDragImage captures the appearance at that moment, so it is placed off screen, captured, and removed right away.
  */
 function createDragImage(title: string): HTMLElement {
@@ -37,8 +39,8 @@ function createDragImage(title: string): HTMLElement {
   return wrapper;
 }
 
-export function setDraggedTodo(dataTransfer: DataTransfer, todoId: string, title: string): void {
-  dataTransfer.setData(TODO_DRAG_TYPE, todoId);
+function setDragData(dataTransfer: DataTransfer, type: string, id: string, title: string): void {
+  dataTransfer.setData(type, id);
   dataTransfer.effectAllowed = 'move';
   // Keep the default appearance where setDragImage is missing (e.g. the test DOM)
   if (typeof dataTransfer.setDragImage !== 'function') return;
@@ -48,6 +50,10 @@ export function setDraggedTodo(dataTransfer: DataTransfer, todoId: string, title
   setTimeout(() => image.remove(), 0);
 }
 
+export function setDraggedTodo(dataTransfer: DataTransfer, todoId: string, title: string): void {
+  setDragData(dataTransfer, TODO_DRAG_TYPE, todoId, title);
+}
+
 /** Whether the item being dragged is a task. Its data cannot be read during dragover, so only the type is checked. */
 export function isDraggingTodo(dataTransfer: DataTransfer | null): boolean {
   return dataTransfer !== null && [...dataTransfer.types].includes(TODO_DRAG_TYPE);
@@ -55,4 +61,17 @@ export function isDraggingTodo(dataTransfer: DataTransfer | null): boolean {
 
 export function getDraggedTodo(dataTransfer: DataTransfer | null): string | null {
   return dataTransfer?.getData(TODO_DRAG_TYPE) || null;
+}
+
+export function setDraggedFolder(dataTransfer: DataTransfer, folderId: string, name: string): void {
+  setDragData(dataTransfer, FOLDER_DRAG_TYPE, folderId, name);
+}
+
+/** Whether the item being dragged is a folder. Like isDraggingTodo, only the type is checked. */
+export function isDraggingFolder(dataTransfer: DataTransfer | null): boolean {
+  return dataTransfer !== null && [...dataTransfer.types].includes(FOLDER_DRAG_TYPE);
+}
+
+export function getDraggedFolder(dataTransfer: DataTransfer | null): string | null {
+  return dataTransfer?.getData(FOLDER_DRAG_TYPE) || null;
 }

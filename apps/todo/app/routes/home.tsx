@@ -18,10 +18,12 @@ import { cn } from '~/lib/cn';
 import { downloadExport, ImportError, type ParsedImport, parseImport } from '~/lib/export-import';
 import {
   countOpenByFolder,
+  type FolderDropPosition,
   type FolderSelection,
   filterByFolder,
   formatFolderPath,
   getSubtreeIds,
+  wouldCreateCycle,
 } from '~/lib/folder-tree';
 import { APP_DESCRIPTION, applyLanguage, appTitle, t, useLanguage } from '~/lib/i18n';
 import { secondaryButtonClass } from '~/lib/styles';
@@ -82,6 +84,7 @@ export default function Home() {
     emptyTrash,
     addFolder,
     editFolder,
+    moveFolder,
     removeFolder,
     importData,
   } = useTodos();
@@ -170,6 +173,35 @@ export default function Home() {
     setNotice({
       kind: 'info',
       text: t('「{0}」を「{1}」に移動しました。', [todo.title, destination]),
+    });
+  };
+
+  const handleMoveFolder = async (
+    folderId: string,
+    targetId: string | null,
+    position: FolderDropPosition,
+  ) => {
+    const folder = folders.find((f) => f.id === folderId);
+    const target = targetId === null ? null : folders.find((f) => f.id === targetId);
+    if (!folder || target === undefined) return;
+    const parentId = target === null ? null : position === 'inside' ? target.id : target.parentId;
+    // A folder cannot go under itself or its descendants (moveFolder ignores it, and nothing is announced)
+    if (wouldCreateCycle(folders, folderId, parentId)) return;
+    await moveFolder(folderId, targetId, position);
+    // Reordering among the same siblings is visible as it is, so only a move to another parent is announced
+    if (parentId === folder.parentId) return;
+    if (parentId !== null) {
+      // Expand the new parent so the moved folder stays visible
+      setCollapsedFolders((current) => {
+        const next = new Set(current);
+        next.delete(parentId);
+        return next;
+      });
+    }
+    const destination = parentId === null ? t('最上位') : formatFolderPath(folders, parentId);
+    setNotice({
+      kind: 'info',
+      text: t('「{0}」を「{1}」に移動しました。', [folder.name, destination]),
     });
   };
 
@@ -364,6 +396,9 @@ export default function Home() {
               }}
               onRemove={handleRemoveFolder}
               onDropTodo={(todoId, folderId) => void handleDropTodo(todoId, folderId)}
+              onMoveFolder={(folderId, targetId, position) =>
+                void handleMoveFolder(folderId, targetId, position)
+              }
               trashCount={trash.length}
               onDropTodoToTrash={(todoId) => void handleRemove(todoId)}
               onEmptyTrash={() => {

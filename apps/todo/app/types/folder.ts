@@ -5,6 +5,8 @@ export interface Folder {
   parentId: string | null;
   /** Color of the folder icon (#rrggbb) */
   color: string;
+  /** Display order among siblings, set by drag and drop. null if unset (sorted after the ordered ones, by name) */
+  order: number | null;
   /** ISO 8601 */
   createdAt: string;
   updatedAt: string;
@@ -33,6 +35,7 @@ export function createFolder(input: FolderInput, now: Date = new Date()): Folder
     name: input.name.trim(),
     parentId: input.parentId,
     color: normalizeFolderColor(input.color),
+    order: null,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -44,6 +47,8 @@ export function updateFolder(folder: Folder, input: FolderInput, now: Date = new
     name: input.name.trim(),
     parentId: input.parentId,
     color: normalizeFolderColor(input.color ?? folder.color),
+    // The order belongs to the old siblings, so a moved folder goes after the ordered ones in its new place
+    order: input.parentId === folder.parentId ? folder.order : null,
     updatedAt: now.toISOString(),
   };
 }
@@ -69,6 +74,8 @@ export function toFolder(value: unknown): Folder | null {
     name: v.name.trim(),
     parentId: typeof v.parentId === 'string' && v.parentId !== '' ? v.parentId : null,
     color: normalizeFolderColor(v.color),
+    order:
+      typeof v.order === 'number' && Number.isSafeInteger(v.order) && v.order >= 0 ? v.order : null,
     createdAt: v.createdAt,
     updatedAt: v.updatedAt,
   };

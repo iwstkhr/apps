@@ -1,6 +1,15 @@
 // @vitest-environment happy-dom
 
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createExport } from '~/lib/export-import';
@@ -941,6 +950,144 @@ describe('Home', () => {
         });
         vi.useRealTimers();
         expect(within(folderNav()).getByRole('button', { name: /^案件/ })).toBeInTheDocument();
+      });
+    });
+
+    describe('folder drag and drop', () => {
+      /** Folder names in the order shown in the folder pane. */
+      const folderOrder = () =>
+        [...folderNav().querySelectorAll('li[draggable="true"]')].map(
+          (row) => row.querySelector('.truncate')?.textContent,
+        );
+      const folderRow = (name: RegExp) => {
+        const row = within(folderNav()).getByRole('button', { name }).closest('li');
+        if (!row) throw new Error('folder row not found');
+        return row;
+      };
+
+      /**
+       * Drag a folder row onto another row. offset is where on the 40px-high target row the pointer is
+       * (top edge = before, middle = inside, bottom edge = after). Returns whether dragover was accepted.
+       */
+      function dragFolderTo(name: RegExp, targetName: RegExp, offset = 20) {
+        const dataTransfer = createDataTransfer();
+        const source = folderRow(name);
+        const row = folderRow(targetName);
+        // happy-dom does not lay out, so give the target row a size
+        vi.spyOn(row, 'getBoundingClientRect').mockReturnValue({
+          top: 100,
+          bottom: 140,
+          height: 40,
+          left: 0,
+          right: 200,
+          width: 200,
+          x: 0,
+          y: 100,
+          toJSON: () => ({}),
+        });
+        // happy-dom has no DragEvent, so testing-library creates a plain Event and drops clientY
+        const fireAt = (type: 'dragOver' | 'drop') => {
+          const event = createEvent[type](row, { dataTransfer });
+          Object.defineProperty(event, 'clientY', { value: 100 + offset });
+          return fireEvent(row, event);
+        };
+        fireEvent.dragStart(source, { dataTransfer });
+        const accepted = !fireAt('dragOver');
+        return {
+          accepted,
+          row,
+          drop: () => {
+            fireAt('drop');
+            fireEvent.dragEnd(source, { dataTransfer });
+          },
+          cancel: () => fireEvent.dragEnd(source, { dataTransfer }),
+        };
+      }
+
+      it('reorders folders by dropping them on the top or bottom edge of a row', async () => {
+        await putAll({
+          folders: [
+            createFolderFixture({ name: 'あ' }),
+            createFolderFixture({ name: 'い' }),
+            createFolderFixture({ name: 'う' }),
+          ],
+        });
+        await renderHome();
+        expect(folderOrder()).toEqual(['あ', 'い', 'う']);
+
+        const before = dragFolderTo(/^う/, /^あ/, 2);
+        expect(before.accepted).toBe(true);
+        expect(before.row).toHaveClass('shadow-[inset_0_3px_0_0_var(--color-blue-500)]');
+        before.drop();
+        await waitFor(() => expect(folderOrder()).toEqual(['う', 'あ', 'い']));
+
+        dragFolderTo(/^う/, /^い/, 38).drop();
+        await waitFor(() => expect(folderOrder()).toEqual(['あ', 'い', 'う']));
+        // Reordering among siblings is not announced
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+        await waitFor(async () =>
+          expect(
+            (await getAll()).folders
+              .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+              .map((folder) => folder.name),
+          ).toEqual(['あ', 'い', 'う']),
+        );
+      });
+
+      it('moves a folder into another folder and back to the top level via 未分類', async () => {
+        const work = createFolderFixture({ name: '仕事' });
+        const home = createFolderFixture({ name: '家' });
+        await putAll({ folders: [work, home] });
+        await renderHome();
+
+        const inside = dragFolderTo(/^家/, /^仕事/);
+        expect(inside.row).toHaveClass('bg-blue-600');
+        inside.drop();
+        expect(await screen.findByText('「家」を「仕事」に移動しました。')).toBeInTheDocument();
+        await waitFor(async () =>
+          expect((await getAll()).folders.find((f) => f.id === home.id)?.parentId).toBe(work.id),
+        );
+
+        const unfiled = dragFolderTo(/^家/, /^未分類/);
+        expect(unfiled.accepted).toBe(true);
+        unfiled.drop();
+        expect(await screen.findByText('「家」を「最上位」に移動しました。')).toBeInTheDocument();
+        await waitFor(async () =>
+          expect((await getAll()).folders.find((f) => f.id === home.id)?.parentId).toBeNull(),
+        );
+        expect(folderOrder()).toEqual(['仕事', '家']);
+      });
+
+      it('does not accept a folder on itself, its descendants, すべて or the trash', async () => {
+        const parent = createFolderFixture({ name: '仕事' });
+        const child = createFolderFixture({ name: '案件', parentId: parent.id });
+        await putAll({ folders: [parent, child] });
+        await renderHome();
+
+        for (const [target, offset] of [
+          [/^仕事/, 20],
+          [/^案件/, 20],
+          [/^案件/, 2],
+          [/^すべて/, 20],
+          [/^ゴミ箱/, 20],
+        ] as const) {
+          const drag = dragFolderTo(/^仕事/, target, offset);
+          expect(drag.accepted).toBe(false);
+          drag.cancel();
+        }
+        // The child can still be moved out
+        expect(dragFolderTo(/^案件/, /^仕事/, 2).accepted).toBe(true);
+      });
+
+      it('dims the dragged folder until the drag ends', async () => {
+        await putAll({ folders: [createFolderFixture({ name: '仕事' })] });
+        await renderHome();
+        const dataTransfer = createDataTransfer();
+        const row = folderRow(/^仕事/);
+        fireEvent.dragStart(row, { dataTransfer });
+        expect(row).toHaveClass('opacity-50');
+        fireEvent.dragEnd(row, { dataTransfer });
+        expect(row).not.toHaveClass('opacity-50');
       });
     });
 

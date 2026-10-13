@@ -228,6 +228,28 @@ describe('useTodos', () => {
     expect(result.current.folders.find((f) => f.id === parent.id)).toEqual(parent);
   });
 
+  it('moves folders by drag and drop and saves only the changed ones', async () => {
+    const work = createFolderFixture({ name: 'あ仕事' });
+    const home = createFolderFixture({ name: 'い家' });
+    const child = createFolderFixture({ name: 'う案件', parentId: work.id });
+    await putAll({ folders: [work, home, child] });
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.moveFolder(home.id, work.id, 'before'));
+    expect(result.current.folders.find((f) => f.id === home.id)?.order).toBe(0);
+    expect(result.current.folders.find((f) => f.id === work.id)?.order).toBe(1);
+    // The folder under another parent is left as it is
+    expect(result.current.folders.find((f) => f.id === child.id)).toEqual(child);
+
+    await act(() => result.current.moveFolder(child.id, null, 'inside'));
+    expect(result.current.folders.find((f) => f.id === child.id)).toMatchObject({
+      parentId: null,
+      order: 2,
+    });
+    const stored = (await getAll()).folders;
+    expect(stored).toEqual(expect.arrayContaining(result.current.folders));
+  });
+
   it('removes a folder with its subfolders and moves their todos to unfiled', async () => {
     const parent = createFolderFixture();
     const child = createFolderFixture({ parentId: parent.id });

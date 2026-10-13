@@ -1,7 +1,15 @@
 // @vitest-environment happy-dom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getDraggedTodo, isDraggingTodo, setDraggedTodo, TODO_DRAG_TYPE } from '~/lib/todo-drag';
+import {
+  getDraggedFolder,
+  getDraggedTodo,
+  isDraggingFolder,
+  isDraggingTodo,
+  setDraggedFolder,
+  setDraggedTodo,
+  TODO_DRAG_TYPE,
+} from '~/lib/todo-drag';
 import { createDataTransfer } from '~/test/drag';
 
 afterEach(() => {
@@ -48,5 +56,25 @@ describe('todo drag data', () => {
 
   it('uses its own MIME type', () => {
     expect(TODO_DRAG_TYPE).toBe('application/x-todo-id');
+  });
+});
+
+describe('folder drag data', () => {
+  it('stores the folder id under a type separate from todos', () => {
+    const dataTransfer = createDataTransfer();
+    setDraggedFolder(dataTransfer, 'folder-1', '仕事');
+    expect(dataTransfer.effectAllowed).toBe('move');
+    expect(isDraggingFolder(dataTransfer)).toBe(true);
+    expect(getDraggedFolder(dataTransfer)).toBe('folder-1');
+    expect(isDraggingTodo(dataTransfer)).toBe(false);
+    expect(getDraggedTodo(dataTransfer)).toBeNull();
+  });
+
+  it('ignores drags of other things', () => {
+    const dataTransfer = createDataTransfer();
+    setDraggedTodo(dataTransfer, 'todo-1', '洗濯');
+    expect(isDraggingFolder(dataTransfer)).toBe(false);
+    expect(getDraggedFolder(dataTransfer)).toBeNull();
+    expect(isDraggingFolder(null)).toBe(false);
   });
 });

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  compareFolders,
   countOpenByFolder,
   filterByFolder,
   flattenFolderTree,
   formatFolderPath,
   getSubtreeIds,
+  moveFolder,
   sanitizeFolders,
   sanitizeTodoFolders,
   wouldCreateCycle,
@@ -41,6 +43,82 @@ describe('flattenFolderTree', () => {
     const entries = flattenFolderTree(folders, new Set(['work']));
     expect(names(entries)).toEqual(['あ仕事', 'な家']);
     expect(entries.map((entry) => entry.hasChildren)).toEqual([true, false]);
+  });
+});
+
+describe('compareFolders', () => {
+  it('puts ordered folders first, then the rest by name', () => {
+    const sorted = [
+      createFolderFixture({ name: 'あ', order: null }),
+      createFolderFixture({ name: 'い', order: 1 }),
+      createFolderFixture({ name: 'う', order: 0 }),
+      createFolderFixture({ name: 'え', order: null }),
+    ].sort(compareFolders);
+    expect(sorted.map((folder) => folder.name)).toEqual(['う', 'い', 'あ', 'え']);
+  });
+});
+
+describe('moveFolder', () => {
+  const NOW = new Date('2026-10-10T03:00:00.000Z');
+  const tree = (result: readonly Parameters<typeof flattenFolderTree>[0][number][]) =>
+    names(flattenFolderTree(result));
+
+  it('places a folder before or after a sibling and numbers the siblings', () => {
+    const before = moveFolder(folders, 'meeting', 'a', 'before', NOW);
+    expect(tree(before)).toEqual(['あ仕事', '-た会議', '-か案件', '--さ資料', 'な家']);
+    expect(before.find((folder) => folder.id === 'meeting')).toMatchObject({
+      order: 0,
+      updatedAt: NOW.toISOString(),
+    });
+    expect(before.find((folder) => folder.id === 'a')?.order).toBe(1);
+
+    const after = moveFolder(folders, 'work', 'home', 'after', NOW);
+    expect(tree(after)).toEqual(['な家', 'あ仕事', '-か案件', '--さ資料', '-た会議']);
+  });
+
+  it('moves a folder next to a folder under another parent', () => {
+    const result = moveFolder(folders, 'home', 'docs', 'after', NOW);
+    expect(tree(result)).toEqual(['あ仕事', '-か案件', '--さ資料', '--な家', '-た会議']);
+    expect(result.find((folder) => folder.id === 'home')?.parentId).toBe('a');
+  });
+
+  it('puts a folder at the end inside the target', () => {
+    const result = moveFolder(folders, 'home', 'work', 'inside', NOW);
+    expect(tree(result)).toEqual(['あ仕事', '-か案件', '--さ資料', '-た会議', '-な家']);
+  });
+
+  it('moves a folder to the end of the top level when there is no target', () => {
+    const result = moveFolder(folders, 'docs', null, 'inside', NOW);
+    expect(tree(result)).toEqual(['あ仕事', '-か案件', '-た会議', 'な家', 'さ資料']);
+    expect(result.find((folder) => folder.id === 'docs')?.parentId).toBeNull();
+  });
+
+  it('rewrites only the folders whose parent or order changed', () => {
+    const ordered = moveFolder(folders, 'meeting', 'a', 'before', NOW);
+    const result = moveFolder(ordered, 'a', 'meeting', 'before', new Date('2026-10-11T00:00:00Z'));
+    // The siblings were swapped back, and the folders elsewhere are the same objects
+    expect(result.find((folder) => folder.id === 'docs')).toBe(
+      ordered.find((folder) => folder.id === 'docs'),
+    );
+    expect(result.find((folder) => folder.id === 'home')).toBe(
+      ordered.find((folder) => folder.id === 'home'),
+    );
+  });
+
+  it.each([
+    ['onto itself', 'work', 'work', 'inside'],
+    ['into a descendant', 'work', 'docs', 'inside'],
+    ['next to a descendant', 'work', 'a', 'after'],
+    ['to a missing folder', 'home', 'missing', 'inside'],
+    ['a missing folder', 'missing', 'home', 'inside'],
+  ] as const)('ignores moving %s', (_label, movedId, targetId, position) => {
+    expect(moveFolder(folders, movedId, targetId, position, NOW)).toEqual(folders);
+  });
+
+  it('changes nothing when the folder is already there', () => {
+    const ordered = moveFolder(folders, 'meeting', 'a', 'before', NOW);
+    const again = moveFolder(ordered, 'meeting', 'a', 'before', NOW);
+    expect(again.every((folder, index) => folder === ordered[index])).toBe(true);
   });
 });
 

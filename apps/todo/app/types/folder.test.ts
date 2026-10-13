@@ -11,6 +11,7 @@ describe('createFolder / updateFolder', () => {
       name: '仕事',
       parentId: 'p',
       color: DEFAULT_FOLDER_COLOR,
+      order: null,
       createdAt: NOW.toISOString(),
       updatedAt: NOW.toISOString(),
     });
@@ -25,6 +26,12 @@ describe('createFolder / updateFolder', () => {
       parentId: 'p',
       updatedAt: NOW.toISOString(),
     });
+  });
+
+  it('keeps the order when the parent stays, and clears it when the parent changes', () => {
+    const folder = createFolderFixture({ parentId: 'p', order: 2 });
+    expect(updateFolder(folder, { name: '改名', parentId: 'p' }).order).toBe(2);
+    expect(updateFolder(folder, { name: '改名', parentId: null }).order).toBeNull();
   });
 
   it('sets and changes the color, preserving it when omitted from an edit', () => {
@@ -54,6 +61,15 @@ describe('toFolder', () => {
       expect(toFolder({ ...createFolderFixture(), color })?.color).toBe(DEFAULT_FOLDER_COLOR);
     },
   );
+
+  it.each([undefined, null, -1, 1.5, '1', Number.NaN])('treats order %s as unset', (order) => {
+    expect(toFolder({ ...createFolderFixture(), order })?.order).toBeNull();
+  });
+
+  it('keeps a valid order', () => {
+    expect(toFolder({ ...createFolderFixture(), order: 0 })?.order).toBe(0);
+    expect(toFolder({ ...createFolderFixture(), order: 3 })?.order).toBe(3);
+  });
 
   it.each([
     ['null', null],

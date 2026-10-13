@@ -1,3 +1,4 @@
+import type { DropPosition } from '~/lib/todo-order';
 import type { Folder } from '~/types/folder';
 import type { Todo } from '~/types/todo';
 
@@ -13,8 +14,15 @@ export interface FolderTreeEntry {
   hasChildren: boolean;
 }
 
-const byName = (a: Folder, b: Folder) =>
-  a.name.localeCompare(b.name, 'ja') || a.id.localeCompare(b.id);
+/** Where a dragged folder goes relative to the target: next to it ('before' / 'after') or into it ('inside'). */
+export type FolderDropPosition = DropPosition | 'inside';
+
+/** Siblings in the order set by drag and drop. Those without an order come after, by name. */
+export function compareFolders(a: Folder, b: Folder): number {
+  const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
+  const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
+  return aOrder - bOrder || a.name.localeCompare(b.name, 'ja') || a.id.localeCompare(b.id);
+}
 
 function childrenMap(folders: readonly Folder[]): Map<string | null, Folder[]> {
   const map = new Map<string | null, Folder[]>();
@@ -23,7 +31,7 @@ function childrenMap(folders: readonly Folder[]): Map<string | null, Folder[]> {
     siblings.push(folder);
     map.set(folder.parentId, siblings);
   }
-  for (const siblings of map.values()) siblings.sort(byName);
+  for (const siblings of map.values()) siblings.sort(compareFolders);
   return map;
 }
 
@@ -89,6 +97,45 @@ export function wouldCreateCycle(
   newParentId: string | null,
 ): boolean {
   return newParentId !== null && getSubtreeIds(folders, folderId).has(newParentId);
+}
+
+/**
+ * Move a folder next to the target folder or into it. A null targetId moves it to the end of the top level.
+ * The siblings at the destination are numbered again from 0, and only folders whose parent or order changed are rewritten.
+ * Moves under itself or a descendant are ignored.
+ */
+export function moveFolder(
+  folders: readonly Folder[],
+  movedId: string,
+  targetId: string | null,
+  position: FolderDropPosition,
+  now: Date = new Date(),
+): Folder[] {
+  const moved = folders.find((folder) => folder.id === movedId);
+  const target = targetId === null ? null : folders.find((folder) => folder.id === targetId);
+  if (!moved || target === undefined || targetId === movedId) return [...folders];
+  const parentId = target === null ? null : position === 'inside' ? target.id : target.parentId;
+  if (wouldCreateCycle(folders, movedId, parentId)) return [...folders];
+
+  const siblings = folders
+    .filter((folder) => folder.parentId === parentId && folder.id !== movedId)
+    .sort(compareFolders);
+  const index =
+    target === null || position === 'inside'
+      ? siblings.length
+      : siblings.indexOf(target) + Number(position === 'after');
+  siblings.splice(index, 0, moved);
+
+  const orders = new Map(siblings.map((folder, order) => [folder.id, order]));
+  const updatedAt = now.toISOString();
+  return folders.map((folder) => {
+    const order = orders.get(folder.id);
+    if (order === undefined) return folder;
+    const nextParentId = folder.id === movedId ? parentId : folder.parentId;
+    return folder.order === order && folder.parentId === nextParentId
+      ? folder
+      : { ...folder, parentId: nextParentId, order, updatedAt };
+  });
 }
 
 /**
