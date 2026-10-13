@@ -111,6 +111,23 @@ describe('useTodos', () => {
     expect((await getAll()).todos).toEqual([saved]);
   });
 
+  it('changes and removes the memo of a todo without touching other fields', async () => {
+    const todo = createTodoFixture({ title: 'タイトルを保持', memo: '元のメモ' });
+    await putAll({ folders: [], todos: [todo] });
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.changeMemo(todo.id, '- 新しい\n- メモ'));
+    const saved = (await getAll()).todos[0];
+    expect(saved).toEqual({ ...todo, memo: '- 新しい\n- メモ', updatedAt: expect.any(String) });
+    expect(result.current.todos).toEqual([saved]);
+    // The same memo saves nothing
+    await act(() => result.current.changeMemo(todo.id, '- 新しい\n- メモ'));
+    expect((await getAll()).todos).toEqual([saved]);
+
+    await act(() => result.current.changeMemo(todo.id, ''));
+    expect((await getAll()).todos[0].memo).toBe('');
+  });
+
   it('changes and removes the due date of a todo without touching other fields', async () => {
     const todo = createTodoFixture({ dueDate: null, memo: '内容を保持' });
     await putAll({ folders: [], todos: [todo] });

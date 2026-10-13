@@ -132,6 +132,7 @@ export const english: Record<string, string> = {
   '「{0}」の期限': 'Due date of "{0}"',
   期限を設定: 'Set due date',
   クリックしてタイトルを編集: 'Click to edit the title',
+  クリックしてメモを編集: 'Click to edit the memo',
   期限なし: 'No due date',
   '期限: ': 'Due: ',
   ' (期限切れ)': ' (overdue)',

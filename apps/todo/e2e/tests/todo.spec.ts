@@ -235,6 +235,40 @@ test('renders Markdown memos and preserves their source when editing and reloadi
   await expect(page.getByRole('textbox', { name: 'メモ' })).toHaveValue(memo);
 });
 
+test('edits the memo in place by clicking it, keeping links working', async ({ page }) => {
+  await addTodo(page, 'メモを編集');
+  await page.getByRole('button', { name: '「メモを編集」を編集' }).click();
+  await page
+    .getByRole('textbox', { name: 'メモ' })
+    .fill('元のメモ\n\n[資料](https://example.com/docs)');
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  const card = todoItems(page).filter({ hasText: 'メモを編集' });
+  const input = card.getByRole('textbox', { name: 'メモ', exact: true });
+
+  // A link opens in a new tab without starting to edit
+  const popup = page.waitForEvent('popup');
+  await card.getByRole('link', { name: '資料' }).click();
+  await (await popup).close();
+  await expect(input).toBeHidden();
+
+  await card.getByText('元のメモ').click();
+  await input.fill('**新しいメモ**');
+  await input.press('ControlOrMeta+Enter');
+  await expect(card.locator('strong')).toHaveText('新しいメモ');
+  await page.reload();
+  await expect(card.locator('strong')).toHaveText('新しいメモ');
+
+  // Escape keeps the current memo, and leaving the field saves
+  await card.getByText('新しいメモ').click();
+  await input.fill('取り消す');
+  await input.press('Escape');
+  await expect(card.locator('strong')).toHaveText('新しいメモ');
+  await card.getByText('新しいメモ').click();
+  await input.fill('行1\n行2');
+  await input.blur();
+  await expect(card.locator('.todo-memo')).toContainText('行1');
+});
+
 test('changes task priority from the list and persists it after reloading', async ({ page }) => {
   await addTodo(page, '優先度を変更');
   const priority = page.getByRole('combobox', { name: '「優先度を変更」の優先度' });

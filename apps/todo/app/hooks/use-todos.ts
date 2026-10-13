@@ -58,6 +58,8 @@ export interface UseTodos {
   undoRepeat: (previous: Todo, nextId: string) => Promise<void>;
   /** Blank titles are ignored, since a task needs a title */
   changeTitle: (id: string, title: string) => Promise<void>;
+  /** An empty memo removes it */
+  changeMemo: (id: string, memo: string) => Promise<void>;
   changePriority: (id: string, priority: Priority) => Promise<void>;
   /** A null dueDate removes the due date */
   changeDueDate: (id: string, dueDate: string | null) => Promise<void>;
@@ -277,6 +279,14 @@ export function useTodos(): UseTodos {
     [replaceOne],
   );
 
+  const changeMemo = useCallback(
+    (id: string, memo: string) =>
+      replaceOne(id, (todo) =>
+        todo.memo === memo ? todo : { ...todo, memo, updatedAt: new Date().toISOString() },
+      ),
+    [replaceOne],
+  );
+
   const changePriority = useCallback(
     (id: string, priority: Priority) =>
       replaceOne(id, (todo) =>
@@ -479,6 +489,7 @@ export function useTodos(): UseTodos {
     changeStatus,
     undoRepeat,
     changeTitle,
+    changeMemo,
     changePriority,
     changeDueDate,
     removeTag,

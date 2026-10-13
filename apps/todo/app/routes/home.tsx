@@ -73,6 +73,7 @@ export default function Home() {
     changeStatus,
     undoRepeat,
     changeTitle,
+    changeMemo,
     changePriority,
     changeDueDate,
     removeTag,
@@ -551,6 +552,7 @@ export default function Home() {
                         : undefined
                     }
                     onTitleChange={(id, title) => void changeTitle(id, title)}
+                    onMemoChange={(id, memo) => void changeMemo(id, memo)}
                     onPriorityChange={(id, priority) => void changePriority(id, priority)}
                     onDueDateChange={(id, dueDate) => void changeDueDate(id, dueDate)}
                     onStatusChange={(id, status) => void handleStatusChange(id, status)}
