@@ -396,11 +396,13 @@ export function TodoItem({
             <span className="truncate">{t('メモを追加')}</span>
           </button>
         ) : (
-          // The memo can hold links, so it cannot be a button. Keyboard users edit it with the edit button
+          // The memo can hold links, so it cannot be a button. Keyboard users edit it with the edit button.
+          // On hover a solid outline shows it can be edited. A ring keeps the text from moving, and solid rather than
+          // dashed, since a dashed outline marks an empty slot such as メモを追加. Touch screens have no hover
           // biome-ignore lint/a11y/useKeyWithClickEvents: the edit button offers the same by keyboard
           // biome-ignore lint/a11y/noStaticElementInteractions: see above
           <div
-            className="cursor-text"
+            className="-mx-1.5 cursor-text rounded px-1.5 pb-1 transition-colors hover:bg-slate-50 hover:ring-1 hover:ring-slate-300 dark:hover:bg-white/5 dark:hover:ring-slate-700"
             title={t('クリックしてメモを編集')}
             onClick={(event) => {
               // Links and 続きを読む keep working, and selecting text to copy it does not start editing
