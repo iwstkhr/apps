@@ -78,6 +78,7 @@ Editing shows the original Markdown source. Storage, keyword search, and JSON ex
 ### Trash
 
 - Deleting a todo moves it to the trash instead of removing it. No confirmation is shown; instead the notice that confirms the move has a 元に戻す button that restores the todo (or all the completed todos moved together). The notice sticks below the header so the button stays visible after deleting a todo further down the list.
+- While a notice shows 元に戻す, Ctrl+Z (⌘Z on Mac) does the same as pressing it. This also applies to the notice for completing a repeating todo. It is ignored while typing in a text field, which keeps its own undo, and while a dialog is open. Only the action in the current notice can be undone, so pressing it again does nothing.
 - A todo can also be dragged onto ゴミ箱 in the folder list.
 - ゴミ箱 is shown below the folders in the left pane with the number of todos in it. Selecting it shows the trashed todos, newest first, with their original folder (or 未分類) and how many days remain before they are deleted automatically. The add form, status tabs, and toolbar are not shown there.
 - Each trashed todo has 元に戻す, which returns it to its original folder with its status and other fields unchanged, and 完全に削除, which deletes it forever after a confirmation. ゴミ箱を空にする deletes all trashed todos forever after a confirmation. The same ゴミ箱を空にする button also appears on the ゴミ箱 row in the left pane while the trash has todos (on wide screens only on hover or focus), so the trash can be emptied without opening it.

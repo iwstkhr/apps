@@ -53,6 +53,10 @@ interface PendingImport extends ParsedImport {
   fileName: string;
 }
 
+// Shown on hover over 「元に戻す」 so the shortcut can be found
+const UNDO_SHORTCUT =
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘Z' : 'Ctrl+Z';
+
 type FolderDialogState =
   | { mode: 'create'; parentId: string | null }
   | { mode: 'edit'; folder: Folder };
@@ -114,6 +118,29 @@ export default function Home() {
     text: string;
     undo?: () => void;
   } | null>(null);
+
+  // Ctrl+Z (⌘Z on Mac) presses the notification's 「元に戻す」. Text fields keep their own undo, and an open dialog comes first
+  const noticeUndo = error ? undefined : notice?.undo;
+  useEffect(() => {
+    if (!noticeUndo) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== 'z' || !(event.ctrlKey || event.metaKey)) return;
+      if (event.shiftKey || event.altKey || event.isComposing || event.defaultPrevented) return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest(
+          'input, textarea, select, [contenteditable]:not([contenteditable="false"])',
+        )
+      ) {
+        return;
+      }
+      if (document.querySelector('[aria-modal="true"]')) return;
+      event.preventDefault();
+      noticeUndo();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [noticeUndo]);
 
   // When the selected folder is deleted (including from another tab), return to すべて
   const selection: FolderSelection =
@@ -439,6 +466,8 @@ export default function Home() {
                     type="button"
                     className="shrink-0 rounded px-2 py-0.5 font-semibold underline underline-offset-2 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:bg-white/10"
                     onClick={notice.undo}
+                    aria-keyshortcuts="Control+Z Meta+Z"
+                    title={UNDO_SHORTCUT}
                   >
                     {t('元に戻す')}
                   </button>

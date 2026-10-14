@@ -526,6 +526,49 @@ describe('Home', () => {
       expect(trashRow()).toHaveTextContent(/^ゴミ箱$/);
     });
 
+    it('undoes moving to the trash with Ctrl+Z or ⌘Z, but not while typing', async () => {
+      await putTodos([createTodoFixture({ title: '洗濯' }), createTodoFixture({ title: '掃除' })]);
+      const user = await renderHome();
+
+      await user.click(screen.getByRole('button', { name: '「洗濯」をゴミ箱に移動' }));
+      await screen.findByText('「洗濯」をゴミ箱に移動しました。');
+      expect(screen.getByRole('button', { name: '元に戻す' })).toHaveAttribute(
+        'aria-keyshortcuts',
+        'Control+Z Meta+Z',
+      );
+
+      // In a text field, Ctrl+Z is left to the field
+      await user.click(screen.getByRole('textbox', { name: 'タイトル' }));
+      await user.keyboard('{Control>}z{/Control}');
+      expect(screen.getByText('「洗濯」をゴミ箱に移動しました。')).toBeInTheDocument();
+      expect(items()).toHaveLength(1);
+
+      await user.click(document.body);
+      await user.keyboard('{Control>}z{/Control}');
+      expect(await screen.findByText('「洗濯」を元に戻しました。')).toBeInTheDocument();
+      expect(items()).toHaveLength(2);
+
+      await user.click(screen.getByRole('button', { name: '「掃除」をゴミ箱に移動' }));
+      await screen.findByText('「掃除」をゴミ箱に移動しました。');
+      await user.keyboard('{Meta>}z{/Meta}');
+      expect(await screen.findByText('「掃除」を元に戻しました。')).toBeInTheDocument();
+      expect(items()).toHaveLength(2);
+    });
+
+    it('does not undo with Ctrl+Z while a dialog is open', async () => {
+      await putTodos([createTodoFixture({ title: '洗濯' })]);
+      const user = await renderHome();
+      await user.click(screen.getByRole('button', { name: '「洗濯」をゴミ箱に移動' }));
+      await screen.findByText('「洗濯」をゴミ箱に移動しました。');
+
+      await user.click(within(nav()).getByRole('button', { name: '新しいフォルダ' }));
+      expect(screen.getByRole('dialog', { name: '新しいフォルダ' })).toBeInTheDocument();
+      // Sent outside the dialog's name field, so only the open dialog stops it
+      fireEvent.keyDown(document.body, { key: 'z', ctrlKey: true });
+      expect(screen.getByText('「洗濯」をゴミ箱に移動しました。')).toBeInTheDocument();
+      expect(trashRow()).toHaveTextContent('ゴミ箱1');
+    });
+
     it('moves completed todos to the trash and can undo them together', async () => {
       await putTodos([
         createTodoFixture({ title: '完了1', status: 'done' }),
