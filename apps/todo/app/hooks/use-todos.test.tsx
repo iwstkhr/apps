@@ -314,6 +314,22 @@ describe('useTodos', () => {
     expect(await getAll()).toEqual(incoming);
   });
 
+  it('deletes all todos, including the trash, and all folders', async () => {
+    const folder = createFolderFixture();
+    const a = createTodoFixture({ folderId: folder.id });
+    const b = createTodoFixture();
+    await putAll({ folders: [folder], todos: [a, b] });
+    const { result } = await renderLoaded();
+    await act(() => result.current.removeTodo(b.id));
+    expect(result.current.trash).toHaveLength(1);
+
+    await act(() => result.current.clearAllData());
+    expect(result.current.todos).toEqual([]);
+    expect(result.current.trash).toEqual([]);
+    expect(result.current.folders).toEqual([]);
+    expect(await getAll()).toEqual({ todos: [], folders: [] });
+  });
+
   describe('repeat', () => {
     const weekly = () =>
       createTodoFixture({

@@ -6,6 +6,7 @@ import {
   FaFileImport,
   FaGlobe,
   FaPalette,
+  FaTrashAlt,
 } from 'react-icons/fa';
 import { ThemeDialog } from '~/components/layout/theme-dialog';
 import { cn } from '~/lib/cn';
@@ -15,17 +16,25 @@ interface HeaderMenuProps {
   onExport: () => void;
   exportDisabled: boolean;
   onImport: () => void;
+  onClearAll: () => void;
+  clearAllDisabled: boolean;
 }
 
 const itemClass =
   'flex w-full items-center gap-2.5 rounded px-2.5 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800';
 
 /**
- * The 「メニュー」 at the right end of the header, grouping language, theme, export, and import.
+ * The 「メニュー」 at the right end of the header, grouping language, theme, export, import, and deleting all data.
  * Following the WAI-ARIA menu pattern, opening it focuses the first item, ↑↓ / Home / End move,
  * and Escape closes it and returns focus to the button. Tab and outside clicks also close it.
  */
-export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuProps) {
+export function HeaderMenu({
+  onExport,
+  exportDisabled,
+  onImport,
+  onClearAll,
+  clearAllDisabled,
+}: HeaderMenuProps) {
   const language = useLanguage();
   const [open, setOpen] = useState(false);
   const menuId = useId();
@@ -180,6 +189,21 @@ export function HeaderMenu({ onExport, exportDisabled, onImport }: HeaderMenuPro
           >
             <FaFileImport className="shrink-0" aria-hidden="true" />
             {t('インポート')}
+          </button>
+          <hr className="my-1.5 border-slate-200 dark:border-slate-700" />
+          <button
+            type="button"
+            role="menuitem"
+            // Red, because it deletes everything (after a confirmation)
+            className={cn(itemClass, 'text-red-700 dark:text-red-400')}
+            aria-disabled={clearAllDisabled || undefined}
+            title={t('すべての TODO とフォルダを削除します')}
+            onClick={() => {
+              if (!clearAllDisabled) choose(onClearAll);
+            }}
+          >
+            <FaTrashAlt className="shrink-0" aria-hidden="true" />
+            {t('すべてのデータを削除…')}
           </button>
         </div>
       )}

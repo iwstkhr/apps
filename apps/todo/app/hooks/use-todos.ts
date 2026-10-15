@@ -8,6 +8,7 @@ import {
 } from '~/lib/folder-tree';
 import { t } from '~/lib/i18n';
 import {
+  clearAll,
   deleteFolders,
   deleteTodos,
   getAll,
@@ -92,6 +93,8 @@ export interface UseTodos {
   /** Delete a folder and its descendants, moving the todos inside to 未分類 */
   removeFolder: (id: string) => Promise<void>;
   importData: (incoming: StoredData, mode: ImportMode) => Promise<void>;
+  /** Delete every todo (including the trash) and folder. Settings in localStorage are kept */
+  clearAllData: () => Promise<void>;
 }
 
 const EMPTY: StoredData = { todos: [], folders: [] };
@@ -474,6 +477,8 @@ export function useTodos(): UseTodos {
     [commit],
   );
 
+  const clearAllData = useCallback(() => commit(EMPTY, clearAll), [commit]);
+
   const todos = useMemo(() => data.todos.filter((todo) => !isTrashed(todo)), [data.todos]);
   const trash = useMemo(() => data.todos.filter(isTrashed), [data.todos]);
 
@@ -505,5 +510,6 @@ export function useTodos(): UseTodos {
     moveFolder,
     removeFolder,
     importData,
+    clearAllData,
   };
 }

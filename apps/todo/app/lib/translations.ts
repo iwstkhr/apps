@@ -31,6 +31,15 @@ export const english: Record<string, string> = {
   'すべての TODO を JSON ファイルに保存します': 'Save all todos to a JSON file',
   'エクスポートした JSON ファイルを読み込みます': 'Load an exported JSON file',
   インポートするファイル: 'File to import',
+  'すべてのデータを削除…': 'Delete all data…',
+  'すべての TODO とフォルダを削除します': 'Delete all todos and folders',
+  'すべてのデータを削除しますか？': 'Delete all data?',
+  'TODO {0} 件（ゴミ箱を含む）とフォルダ {1} 件が削除されます。':
+    '{0} todos (including the trash) and {1} folders will be deleted.',
+  'この操作は元に戻せません。必要なら先にエクスポートしてください。':
+    'This cannot be undone. Export first if you need a backup.',
+  すべて削除: 'Delete all',
+  'すべてのデータを削除しました。': 'Deleted all data.',
 
   // Header menu
   'テーマ…': 'Theme…',

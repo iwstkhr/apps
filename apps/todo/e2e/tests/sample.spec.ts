@@ -1,4 +1,11 @@
-import { expect, openApp, test, todoItems } from '../fixtures';
+import {
+  answerConfirmation,
+  chooseFromHeaderMenu,
+  expect,
+  openApp,
+  test,
+  todoItems,
+} from '../fixtures';
 
 test.use({ sampleData: true });
 
@@ -18,22 +25,11 @@ test('shows sample todos and folders on the first visit only', async ({ page }) 
   await expect(page.getByText('読み込み中…')).toBeHidden();
   await expect(todoItems(page)).toHaveCount(count);
 
-  // Even after moving everything to the trash and deleting it forever, samples are not added again
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        const request = indexedDB.open('todo');
-        request.onsuccess = () => {
-          const tx = request.result.transaction(['todos', 'folders'], 'readwrite');
-          tx.objectStore('todos').clear();
-          tx.objectStore('folders').clear();
-          tx.oncomplete = () => {
-            request.result.close();
-            resolve();
-          };
-        };
-      }),
-  );
+  // Even after deleting all data from the menu, samples are not added again
+  await chooseFromHeaderMenu(page, 'すべてのデータを削除…');
+  await answerConfirmation(page, 'すべてのデータを削除しますか？', 'すべて削除');
+  await expect(page.getByRole('status')).toHaveText(/すべてのデータを削除しました。/);
+  await expect(todoItems(page)).toHaveCount(0);
   await page.reload();
   await expect(page.getByText('読み込み中…')).toBeHidden();
   await expect(todoItems(page)).toHaveCount(0);

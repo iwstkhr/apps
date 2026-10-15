@@ -93,6 +93,7 @@ export default function Home() {
     moveFolder,
     removeFolder,
     importData,
+    clearAllData,
   } = useTodos();
   const [filters, setFilters] = useState<TodoFilters>(DEFAULT_FILTERS);
   const {
@@ -378,6 +379,26 @@ export default function Home() {
     });
   };
 
+  // Deletes every todo (including the trash) and folder; settings such as language and theme are kept
+  const handleClearAll = () => {
+    setConfirmation({
+      title: t('すべてのデータを削除しますか？'),
+      details: [
+        t('TODO {0} 件（ゴミ箱を含む）とフォルダ {1} 件が削除されます。', [
+          allTodos.length,
+          folders.length,
+        ]),
+        t('この操作は元に戻せません。必要なら先にエクスポートしてください。'),
+      ],
+      confirmLabel: t('すべて削除'),
+      onConfirm: () =>
+        void clearAllData().then(() => {
+          setSelectedFolder('all');
+          setNotice({ kind: 'info', text: t('すべてのデータを削除しました。') });
+        }),
+    });
+  };
+
   const isFiltered =
     filters.keyword.trim() !== '' || filters.status !== 'all' || filters.tag !== null;
   const emptyMessage = isFiltered
@@ -395,6 +416,7 @@ export default function Home() {
         onExport={() => downloadExport({ todos: allTodos, folders })}
         onImportFile={(file) => void handleImportFile(file)}
         exportDisabled={allTodos.length === 0 && folders.length === 0}
+        onClearAll={handleClearAll}
       />
 
       <div

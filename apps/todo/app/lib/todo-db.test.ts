@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { setLanguage } from '~/lib/i18n';
 import {
+  clearAll,
   closeDbForTesting,
   deleteFolders,
   deleteTodos,
@@ -50,6 +51,12 @@ describe('todo-db', () => {
     const todo = createTodoFixture();
     await replaceAll({ folders: [folder], todos: [todo] });
     expect(await getAll()).toEqual({ folders: [folder], todos: [todo] });
+  });
+
+  it('deletes every todo and folder', async () => {
+    await putAll({ folders: [createFolderFixture()], todos: [createTodoFixture()] });
+    await clearAll();
+    expect(await getAll()).toEqual({ folders: [], todos: [] });
   });
 
   it('normalizes stored records and drops broken ones', async () => {

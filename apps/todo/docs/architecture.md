@@ -47,7 +47,7 @@ app/
   routes/home.tsx               The only screen; wires state, filters, and import/export
   hooks/use-todos.ts            Todo state, persistence, and cross-tab sync
   hooks/use-view-state.ts       Sort mode, selected and collapsed folders, and the folder list width, kept in localStorage
-  lib/todo-db.ts                IndexedDB access (open, read, put, delete, replace)
+  lib/todo-db.ts                IndexedDB access (open, read, put, delete, replace, clear)
   lib/sample-data.ts            Sample todos and folders added when the database is created
   lib/folder-tree.ts            Folder tree helpers: ordering, paths, subtrees, repair, counts
   lib/todo-drag.ts              Drag data for moving a todo onto a folder and for moving a folder within the folder list

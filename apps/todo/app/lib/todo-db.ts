@@ -130,6 +130,14 @@ export function replaceAll({ todos, folders }: StoredData): Promise<void> {
   });
 }
 
+/** Delete every todo and folder (メニューの「すべてのデータを削除」). */
+export function clearAll(): Promise<void> {
+  return write((stores) => {
+    stores.todos.clear();
+    stores.folders.clear();
+  });
+}
+
 /** For tests: close and forget the open connection. */
 export async function closeDbForTesting(): Promise<void> {
   if (!dbPromise) return;

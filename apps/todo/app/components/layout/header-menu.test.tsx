@@ -20,22 +20,29 @@ afterEach(() => {
   localStorage.clear();
 });
 
-function renderMenu({ exportDisabled = false } = {}) {
+function renderMenu({ exportDisabled = false, clearAllDisabled = false } = {}) {
   const onExport = vi.fn();
   const onImport = vi.fn();
+  const onClearAll = vi.fn();
   const user = userEvent.setup();
   render(
     <>
-      <HeaderMenu onExport={onExport} exportDisabled={exportDisabled} onImport={onImport} />
+      <HeaderMenu
+        onExport={onExport}
+        exportDisabled={exportDisabled}
+        onImport={onImport}
+        onClearAll={onClearAll}
+        clearAllDisabled={clearAllDisabled}
+      />
       <button type="button">ページの次の要素</button>
     </>,
   );
   const button = screen.getByRole('button', { name: 'メニュー' });
-  return { user, button, onExport, onImport };
+  return { user, button, onExport, onImport, onClearAll };
 }
 
 describe('HeaderMenu', () => {
-  it('opens a menu with language, theme, export, and import, focusing the first item', async () => {
+  it('opens a menu with language, theme, export, import, and delete all, focusing the first item', async () => {
     const { user, button } = renderMenu();
     expect(button).toHaveAttribute('aria-haspopup', 'menu');
     expect(button).toHaveAttribute('aria-expanded', 'false');
@@ -54,6 +61,7 @@ describe('HeaderMenu', () => {
       'テーマ…',
       'エクスポート',
       'インポート',
+      'すべてのデータを削除…',
     ]);
     // Focus goes to the first item (English), and the current language (日本語) is marked
     expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveFocus();
@@ -68,11 +76,11 @@ describe('HeaderMenu', () => {
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('menuitemradio', { name: '日本語' })).toHaveFocus();
     await user.keyboard('{End}');
-    expect(screen.getByRole('menuitem', { name: 'インポート' })).toHaveFocus();
+    expect(screen.getByRole('menuitem', { name: 'すべてのデータを削除…' })).toHaveFocus();
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveFocus();
     await user.keyboard('{ArrowUp}');
-    expect(screen.getByRole('menuitem', { name: 'インポート' })).toHaveFocus();
+    expect(screen.getByRole('menuitem', { name: 'すべてのデータを削除…' })).toHaveFocus();
     await user.keyboard('{Home}');
     expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveFocus();
   });
@@ -149,6 +157,24 @@ describe('HeaderMenu', () => {
     expect(item).toHaveAttribute('aria-disabled', 'true');
     await user.click(item);
     expect(onExport).not.toHaveBeenCalled();
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+  });
+
+  it('runs delete all, and ignores it while disabled', async () => {
+    const enabled = renderMenu();
+    await enabled.user.click(enabled.button);
+    await enabled.user.click(screen.getByRole('menuitem', { name: 'すべてのデータを削除…' }));
+    expect(enabled.onClearAll).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('keeps a disabled delete all focusable but does nothing', async () => {
+    const { user, button, onClearAll } = renderMenu({ clearAllDisabled: true });
+    await user.click(button);
+    const item = screen.getByRole('menuitem', { name: 'すべてのデータを削除…' });
+    expect(item).toHaveAttribute('aria-disabled', 'true');
+    await user.click(item);
+    expect(onClearAll).not.toHaveBeenCalled();
     expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 });

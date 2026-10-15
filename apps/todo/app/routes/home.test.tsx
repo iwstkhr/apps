@@ -526,6 +526,44 @@ describe('Home', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('JSON として読み込めませんでした。');
   });
 
+  it('deletes all data from the menu after confirmation, and keeps it when canceled', async () => {
+    const folder = createFolderFixture({ name: '仕事' });
+    await putAll({
+      folders: [folder],
+      todos: [
+        createTodoFixture({ title: '残す', folderId: folder.id }),
+        createTodoFixture({ title: '捨てた', deletedAt: new Date().toISOString() }),
+      ],
+    });
+    const user = await renderHome();
+    const openDeleteAll = async () => {
+      await user.click(screen.getByRole('button', { name: 'メニュー' }));
+      await user.click(screen.getByRole('menuitem', { name: 'すべてのデータを削除…' }));
+    };
+
+    await openDeleteAll();
+    expect(
+      screen.getByRole('dialog', { name: 'すべてのデータを削除しますか？' }),
+    ).toHaveTextContent('TODO 2 件（ゴミ箱を含む）とフォルダ 1 件が削除されます。');
+    await answerConfirmation(user, 'すべてのデータを削除しますか？', 'キャンセル');
+    expect(items()).toHaveLength(1);
+
+    await openDeleteAll();
+    await answerConfirmation(user, 'すべてのデータを削除しますか？', 'すべて削除');
+    expect(await screen.findByText('すべてのデータを削除しました。')).toBeInTheDocument();
+    expect(await getAll()).toEqual({ todos: [], folders: [] });
+    expect(
+      within(screen.getByRole('navigation', { name: 'フォルダ' })).queryByText('仕事'),
+    ).not.toBeInTheDocument();
+
+    // With nothing left, the item stays in the menu but is unavailable
+    await user.click(screen.getByRole('button', { name: 'メニュー' }));
+    expect(screen.getByRole('menuitem', { name: 'すべてのデータを削除…' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+
   describe('trash', () => {
     const nav = () => screen.getByRole('navigation', { name: 'フォルダ' });
     const trashRow = () => within(nav()).getByRole('button', { name: /^ゴミ箱(\s*\d+)?$/ });

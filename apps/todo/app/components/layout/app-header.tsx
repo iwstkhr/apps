@@ -9,6 +9,7 @@ interface AppHeaderProps {
   onExport: () => void;
   onImportFile: (file: File) => void;
   exportDisabled: boolean;
+  onClearAll: () => void;
 }
 
 export function AppHeader({
@@ -17,6 +18,7 @@ export function AppHeader({
   onExport,
   onImportFile,
   exportDisabled,
+  onClearAll,
 }: AppHeaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,6 +57,9 @@ export function AppHeader({
             onExport={onExport}
             exportDisabled={exportDisabled}
             onImport={() => fileInputRef.current?.click()}
+            onClearAll={onClearAll}
+            // Same condition as export: nothing to delete when there are no todos and no folders
+            clearAllDisabled={exportDisabled}
           />
           <input
             ref={fileInputRef}
