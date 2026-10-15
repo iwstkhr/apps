@@ -12,7 +12,7 @@ self.addEventListener('install', (event) => {
     caches
       .open(CACHE)
       .then((cache) => cache.addAll(PRECACHE))
-      // Take control of open tabs right away. registerServiceWorker() reloads them the next time they are hidden
+      // Take control of open tabs right away. registerServiceWorker() reloads them the next time the user looks away
       .then(() => self.skipWaiting()),
   );
 });

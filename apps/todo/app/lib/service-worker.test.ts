@@ -21,6 +21,12 @@ function setVisibility(state: DocumentVisibilityState) {
   document.dispatchEvent(new Event('visibilitychange'));
 }
 
+// Another window becomes active (blur) or this one does again (focus), while the page stays visible
+function setWindowFocus(focused: boolean) {
+  vi.spyOn(document, 'hasFocus').mockReturnValue(focused);
+  window.dispatchEvent(new Event(focused ? 'focus' : 'blur'));
+}
+
 beforeEach(() => {
   vi.stubEnv('PROD', true);
   Object.defineProperty(window, 'location', {
@@ -28,6 +34,7 @@ beforeEach(() => {
     configurable: true,
   });
   Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  vi.spyOn(document, 'hasFocus').mockReturnValue(true);
 });
 
 afterEach(() => {
@@ -36,6 +43,7 @@ afterEach(() => {
   document.body.innerHTML = '';
   vi.unstubAllEnvs();
   vi.clearAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe('registerServiceWorker', () => {
@@ -90,9 +98,58 @@ describe('registerServiceWorker', () => {
   it('checks for a new version each time the page becomes visible', async () => {
     setUp({ controlled: true });
 
-    setVisibility('hidden');
     setVisibility('visible');
     await vi.waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('checks for a new version when the page is hidden, so the update can apply while away', async () => {
+    const serviceWorker = setUp({ controlled: true });
+
+    setVisibility('hidden');
+    await vi.waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+
+    // The new worker takes control while the page is still hidden
+    serviceWorker.dispatchEvent(new Event('controllerchange'));
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('checks for a new version when the window gains or loses focus', async () => {
+    setUp({ controlled: true });
+
+    setWindowFocus(false);
+    await vi.waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+    setWindowFocus(true);
+    await vi.waitFor(() => expect(update).toHaveBeenCalledTimes(2));
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('reloads when the window loses focus after an update takes control', () => {
+    const serviceWorker = setUp({ controlled: true });
+
+    serviceWorker.dispatchEvent(new Event('controllerchange'));
+    expect(reload).not.toHaveBeenCalled();
+
+    setWindowFocus(false);
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('reloads right away when the update arrives while another window is active', () => {
+    const serviceWorker = setUp({ controlled: true });
+    vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+
+    serviceWorker.dispatchEvent(new Event('controllerchange'));
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits on blur while the user is typing', () => {
+    const serviceWorker = setUp({ controlled: true });
+    serviceWorker.dispatchEvent(new Event('controllerchange'));
+
+    const textarea = document.createElement('textarea');
+    document.body.append(textarea);
+    textarea.focus();
+    setWindowFocus(false);
     expect(reload).not.toHaveBeenCalled();
   });
 });
