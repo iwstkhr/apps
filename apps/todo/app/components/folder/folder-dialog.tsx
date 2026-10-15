@@ -45,7 +45,11 @@ export function FolderDialog({
   const canSubmit = name.trim() !== '';
 
   return (
-    <Modal title={t(folder ? 'フォルダを編集' : '新しいフォルダ')} onClose={onCancel}>
+    <Modal
+      title={t(folder ? 'フォルダを編集' : '新しいフォルダ')}
+      onClose={onCancel}
+      closeOnBackdropClick
+    >
       <form
         className="mt-4 flex flex-col gap-3"
         onSubmit={(event) => {

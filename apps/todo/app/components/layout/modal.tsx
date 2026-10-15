@@ -3,13 +3,17 @@ import { type ReactNode, useEffect, useId, useRef } from 'react';
 interface ModalProps {
   title: string;
   onClose: () => void;
+  /** Also close when the backdrop is clicked */
+  closeOnBackdropClick?: boolean;
   children: ReactNode;
 }
 
 /** A dialog overlaid on the page. When opened, it focuses the first input inside (or the last button if none). */
-export function Modal({ title, onClose, children }: ModalProps) {
+export function Modal({ title, onClose, closeOnBackdropClick = false, children }: ModalProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  // Do not close when pressed inside and released on the backdrop (e.g. while selecting text)
+  const pressedBackdrop = useRef(false);
 
   useEffect(() => {
     const panel = panelRef.current;
@@ -26,7 +30,25 @@ export function Modal({ title, onClose, children }: ModalProps) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+    // Escape also closes it, so a backdrop click is treated as a mouse shortcut
+    // biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes the modal
+    // biome-ignore lint/a11y/noStaticElementInteractions: the backdrop is not a control
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+      onPointerDown={(event) => {
+        pressedBackdrop.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (
+          closeOnBackdropClick &&
+          pressedBackdrop.current &&
+          event.target === event.currentTarget
+        ) {
+          onClose();
+        }
+        pressedBackdrop.current = false;
+      }}
+    >
       <div
         ref={panelRef}
         role="dialog"

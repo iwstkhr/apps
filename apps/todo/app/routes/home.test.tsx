@@ -821,6 +821,30 @@ describe('Home', () => {
       );
     });
 
+    it('cancels the folder dialog when its backdrop is clicked, but not from inside', async () => {
+      await putAll({ folders: [createFolderFixture({ name: '仕事' })] });
+      const user = await renderHome();
+
+      await user.click(within(folderNav()).getByRole('button', { name: 'フォルダ「仕事」を編集' }));
+      const dialog = screen.getByRole('dialog', { name: 'フォルダを編集' });
+      const name = within(dialog).getByRole('textbox', { name: 'フォルダ名' });
+      await user.type(name, ' 2');
+      // biome-ignore lint/style/noNonNullAssertion: the dialog sits on the backdrop
+      const backdrop = dialog.parentElement!;
+
+      // Do not close when pressed inside and released on the backdrop (e.g. while selecting text)
+      fireEvent.pointerDown(name);
+      fireEvent.click(backdrop);
+      expect(dialog).toBeInTheDocument();
+
+      // A click on the backdrop cancels without saving
+      fireEvent.pointerDown(backdrop);
+      fireEvent.click(backdrop);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(within(folderNav()).getByRole('button', { name: /^仕事/ })).toBeInTheDocument();
+      expect((await getAll()).folders[0]?.name).toBe('仕事');
+    });
+
     it('renames and moves a folder but not under itself', async () => {
       const parent = createFolderFixture({ name: '仕事' });
       const child = createFolderFixture({ name: '案件', parentId: parent.id });
