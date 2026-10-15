@@ -74,6 +74,12 @@ test('drops a todo on the trash and deletes it forever after confirming', async 
   await expect(trashItems(page)).toHaveCount(1);
   // Closing returns focus to the pressed button
   await expect(deleteForever).toBeFocused();
+  // Clicking the backdrop also cancels
+  await deleteForever.click();
+  await expect(dialog).toBeVisible();
+  await page.mouse.click(5, 5);
+  await expect(dialog).toBeHidden();
+  await expect(trashItems(page)).toHaveCount(1);
 
   await deleteForever.click();
   await answerConfirmation(page, '「洗濯」を完全に削除しますか？', '完全に削除');

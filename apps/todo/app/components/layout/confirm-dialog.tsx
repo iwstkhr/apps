@@ -19,6 +19,7 @@ interface ConfirmDialogProps extends Confirmation {
 /**
  * A confirmation dialog shown before irreversible actions, in place of window.confirm.
  * It opens with showModal(), so focus is trapped inside and Escape cancels.
+ * Clicking the backdrop also cancels. Padding is on the form, so clicks on the dialog element itself count as backdrop clicks.
  * To prevent accidental confirmation, initial focus goes to the leading 「キャンセル」 button.
  */
 export function ConfirmDialog({
@@ -31,6 +32,8 @@ export function ConfirmDialog({
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const detailsId = useId();
+  // Do not cancel when pressed inside and released on the backdrop (e.g. while selecting text)
+  const pressedBackdrop = useRef(false);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -38,6 +41,8 @@ export function ConfirmDialog({
   }, []);
 
   return (
+    // Escape also cancels, so a backdrop click is treated as a mouse shortcut
+    // biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes the dialog natively
     <dialog
       ref={ref}
       aria-labelledby={titleId}
@@ -47,6 +52,15 @@ export function ConfirmDialog({
       onClose={(event) => {
         if (event.currentTarget.returnValue === 'confirm') onConfirm();
         onClose();
+      }}
+      onPointerDown={(event) => {
+        pressedBackdrop.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (pressedBackdrop.current && event.target === event.currentTarget) {
+          event.currentTarget.close('cancel');
+        }
+        pressedBackdrop.current = false;
       }}
     >
       <form method="dialog" className="p-5">
