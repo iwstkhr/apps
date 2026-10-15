@@ -165,7 +165,14 @@ export function TodoForm({
             className={inputClass}
             value={memo}
             onChange={(event) => setMemo(event.target.value)}
-            onKeyDown={handleListEnter}
+            onKeyDown={(event) => {
+              // Ctrl/Cmd+Enter submits the form, as in the in-place memo editor
+              if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                if (event.nativeEvent.isComposing) return;
+                event.preventDefault();
+                event.currentTarget.form?.requestSubmit();
+              } else handleListEnter(event);
+            }}
             placeholder={t('メモ')}
             aria-label={t('メモ')}
             rows={3}

@@ -272,6 +272,28 @@ describe('Home', () => {
     await waitFor(async () => expect((await getAll()).todos).toHaveLength(1));
   });
 
+  it('adds a todo with Ctrl+Enter or ⌘Enter in the memo field', async () => {
+    const user = await renderHome();
+    await user.click(screen.getByRole('button', { name: '詳細' }));
+    const title = screen.getByRole('textbox', { name: 'タイトル' });
+    const memo = screen.getByRole('textbox', { name: 'メモ' });
+
+    await user.type(title, '牛乳を買う');
+    await user.type(memo, '低脂肪');
+    await user.keyboard('{Control>}{Enter}{/Control}');
+    expect(items()).toHaveLength(1);
+    expect(screen.getByText('低脂肪')).toBeInTheDocument();
+    expect(title).toHaveValue('');
+    expect(memo).toHaveValue('');
+
+    await user.type(title, 'パンを買う');
+    await user.type(memo, '食パン');
+    await user.keyboard('{Meta>}{Enter}{/Meta}');
+    expect(items()).toHaveLength(2);
+    expect(screen.getByText('食パン')).toBeInTheDocument();
+    await waitFor(async () => expect((await getAll()).todos).toHaveLength(2));
+  });
+
   it('edits tags as chips and keeps suggesting the remaining tags after picking one', async () => {
     const todo = createTodoFixture({ title: '資料を作る', tags: ['仕事'] });
     const other = createTodoFixture({ title: '買い出し', tags: ['家', '買い物'] });
