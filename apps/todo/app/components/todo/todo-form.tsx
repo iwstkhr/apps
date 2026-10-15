@@ -3,6 +3,7 @@ import { FaPlus } from 'react-icons/fa';
 import { FolderSelect } from '~/components/folder/folder-select';
 import { TagInput } from '~/components/todo/tag-input';
 import { t } from '~/lib/i18n';
+import { handleListEnter } from '~/lib/markdown-list';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
 import type { Folder } from '~/types/folder';
 import {
@@ -164,6 +165,7 @@ export function TodoForm({
             className={inputClass}
             value={memo}
             onChange={(event) => setMemo(event.target.value)}
+            onKeyDown={handleListEnter}
             placeholder={t('メモ')}
             aria-label={t('メモ')}
             rows={3}

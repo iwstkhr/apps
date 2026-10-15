@@ -18,6 +18,7 @@ import { MarkdownMemo } from '~/components/todo/markdown-memo';
 import { TodoForm } from '~/components/todo/todo-form';
 import { cn } from '~/lib/cn';
 import { t } from '~/lib/i18n';
+import { handleListEnter } from '~/lib/markdown-list';
 import { setDraggedTodo } from '~/lib/todo-drag';
 import type { DropPosition } from '~/lib/todo-order';
 import type { Folder } from '~/types/folder';
@@ -406,13 +407,15 @@ export function TodoItem({
             className="-mx-1.5 cursor-text rounded px-1.5 pb-1 transition-colors hover:bg-slate-50 hover:ring-1 hover:ring-slate-300 dark:hover:bg-white/5 dark:hover:ring-slate-700"
             title={t('クリックしてメモを編集')}
             onClick={(event) => {
-              // Links and 続きを読む keep working, and selecting text to copy it does not start editing
-              if ((event.target as Element).closest('a, button')) return;
+              // Links, task boxes, and 続きを読む keep working, and selecting text to copy it does not start editing
+              if ((event.target as Element).closest('a, button, input')) return;
               if (window.getSelection()?.toString()) return;
               setEditingMemo(true);
             }}
           >
-            <MarkdownMemo>{todo.memo}</MarkdownMemo>
+            <MarkdownMemo onChange={(memo) => onMemoChange(todo.id, memo)}>
+              {todo.memo}
+            </MarkdownMemo>
           </div>
         )}
       </div>
@@ -465,7 +468,7 @@ interface MemoInputProps {
   onCancel: () => void;
 }
 
-/** Edits the memo in place. Enter adds a line, Ctrl/Cmd+Enter or leaving the field saves it, and Escape cancels */
+/** Edits the memo in place. Enter adds a line (continuing a list), Ctrl/Cmd+Enter or leaving the field saves it, and Escape cancels */
 function MemoInput({ memo, onSave, onCancel }: MemoInputProps) {
   const [value, setValue] = useState(memo);
   // Escape and Ctrl/Cmd+Enter end editing before the blur that follows, so the blur must not save again
@@ -487,6 +490,7 @@ function MemoInput({ memo, onSave, onCancel }: MemoInputProps) {
       onKeyDown={(event) => {
         if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) finish(true);
         else if (event.key === 'Escape') finish(false);
+        else handleListEnter(event);
       }}
       onBlur={() => finish(true)}
       aria-label={t('メモ')}

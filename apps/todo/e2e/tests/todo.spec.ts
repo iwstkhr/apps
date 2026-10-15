@@ -367,3 +367,28 @@ test('adds the next occurrence of a weekly todo when it is completed', async ({ 
   await expect(todoItems(page).filter({ hasText: '繰り返し: 毎週' })).toHaveCount(1);
   await expect(page.getByRole('checkbox', { name: '「ゴミ出し」を完了にする' })).toHaveCount(1);
 });
+
+test('continues memo lists on Enter and saves task boxes checked in the list', async ({ page }) => {
+  await addTodo(page, 'チェックリスト');
+  const card = todoItems(page).filter({ hasText: 'チェックリスト' });
+  const input = card.getByRole('textbox', { name: 'メモ', exact: true });
+
+  await card.getByRole('button', { name: '「チェックリスト」にメモを追加' }).click();
+  await input.pressSequentially('- [ ] 机');
+  await input.press('Enter');
+  await input.pressSequentially('床');
+  await input.press('Enter');
+  await input.press('Enter');
+  await input.pressSequentially('以上');
+  await expect(input).toHaveValue('- [ ] 机\n- [ ] 床\n以上');
+  await input.press('ControlOrMeta+Enter');
+
+  // Checking a box saves it without starting to edit the memo
+  const boxes = card.locator('.todo-memo').getByRole('checkbox');
+  await boxes.nth(1).check();
+  await expect(input).toBeHidden();
+  await waitForSavedMemo(page, '- [ ] 机\n- [x] 床\n以上');
+  await page.reload();
+  await expect(boxes.nth(0)).not.toBeChecked();
+  await expect(boxes.nth(1)).toBeChecked();
+});

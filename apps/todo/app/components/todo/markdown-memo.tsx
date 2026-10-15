@@ -1,10 +1,28 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { createContext, use, useEffect, useId, useRef, useState } from 'react';
 import Markdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '~/lib/cn';
 import { t } from '~/lib/i18n';
+import { toggleTask } from '~/lib/markdown-list';
+
+/** Checks or unchecks the task item at a source offset, when the memo can be changed */
+const ToggleTaskContext = createContext<((offset: number) => void) | null>(null);
+/** The source offset of the task item a checkbox belongs to */
+const TaskItemContext = createContext<number | null>(null);
 
 const components: Components = {
+  li: ({ node, ...props }) => {
+    const item = <li {...props} />;
+    const offset = node?.position?.start.offset;
+    if (offset === undefined || !props.className?.includes('task-list-item')) return item;
+    return <TaskItemContext value={offset}>{item}</TaskItemContext>;
+  },
+  input: function TaskBox({ node: _node, ...props }) {
+    const toggle = use(ToggleTaskContext);
+    const offset = use(TaskItemContext);
+    if (props.type !== 'checkbox' || !toggle || offset === null) return <input {...props} />;
+    return <input {...props} disabled={false} onChange={() => toggle(offset)} />;
+  },
   a: ({ node: _node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
   // Only displays the memo and never fetches images from external servers.
   img: ({ src, alt }) => (
@@ -17,8 +35,16 @@ const components: Components = {
 /**
  * A memo in the task list. A long memo is cut to about six lines and fades out at the bottom,
  * and 続きを読む expands it in place, so one long memo does not push the rest of the list far down.
+ * With onChange, clicking a task box (- [ ]) checks or unchecks it in the memo.
  */
-export function MarkdownMemo({ children }: { children: string }) {
+export function MarkdownMemo({
+  children,
+  onChange,
+}: {
+  children: string;
+  /** Makes task boxes clickable, receiving the memo with the box checked or unchecked */
+  onChange?: (memo: string) => void;
+}) {
   const contentId = useId();
   const clipRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -61,9 +87,13 @@ export function MarkdownMemo({ children }: { children: string }) {
         )}
       >
         <div ref={contentRef}>
-          <Markdown remarkPlugins={[remarkGfm]} components={components}>
-            {children}
-          </Markdown>
+          <ToggleTaskContext
+            value={onChange ? (offset) => onChange(toggleTask(children, offset)) : null}
+          >
+            <Markdown remarkPlugins={[remarkGfm]} components={components}>
+              {children}
+            </Markdown>
+          </ToggleTaskContext>
         </div>
       </div>
       {long && (

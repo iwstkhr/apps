@@ -71,6 +71,10 @@ body {
   margin-right: 0.375rem;
 }
 
+.todo-memo input[type="checkbox"]:enabled {
+  cursor: pointer;
+}
+
 .todo-memo a {
   color: light-dark(var(--color-blue-600), var(--color-blue-300));
   text-decoration: underline;

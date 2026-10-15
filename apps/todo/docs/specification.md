@@ -71,9 +71,9 @@ Content entered by the user (todo titles, memos, tags, and folder names) is neve
 
 ### Memos
 
-Memos render as Markdown (CommonMark with GitHub-flavored Markdown), including headings, emphasis, lists, links, quotes, code blocks, tables, strikethrough, and read-only task lists. Plain text keeps its line breaks. Links open in a new tab. Raw HTML is displayed as text, and unsafe URL schemes are blocked. Image references appear as links using their alt text instead of loading remote images automatically. Code blocks and wide tables scroll horizontally within the memo on small screens. In the task list, a memo taller than about six lines is cut there and fades out at the bottom, with 続きを読む below it to show the whole memo in place and 折りたたむ to cut it again. Moving keyboard focus into the cut-off part, such as to a link, also shows the whole memo.
+Memos render as Markdown (CommonMark with GitHub-flavored Markdown), including headings, emphasis, lists, links, quotes, code blocks, tables, strikethrough, and task lists. Clicking a task list box in the task list checks or unchecks it and saves the memo with `[x]` or `[ ]`, without starting to edit the memo. Plain text keeps its line breaks. Links open in a new tab. Raw HTML is displayed as text, and unsafe URL schemes are blocked. Image references appear as links using their alt text instead of loading remote images automatically. Code blocks and wide tables scroll horizontally within the memo on small screens. In the task list, a memo taller than about six lines is cut there and fades out at the bottom, with 続きを読む below it to show the whole memo in place and 折りたたむ to cut it again. Moving keyboard focus into the cut-off part, such as to a link, also shows the whole memo.
 
-Editing shows the original Markdown source. Storage, keyword search, and JSON export/import continue to use that source without conversion.
+Editing shows the original Markdown source. In the memo field (in place and in the add and edit forms), Enter on a list item starts the next item with the same bullet, the next number in a numbered list, or an unchecked box in a task list; Enter on an empty item removes its bullet to end the list. Shift+Enter adds a plain line. Storage, keyword search, and JSON export/import continue to use that source without conversion.
 
 ### Trash
 

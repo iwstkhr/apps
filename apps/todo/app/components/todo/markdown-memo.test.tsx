@@ -66,6 +66,40 @@ const value = 1;
     expect(container.querySelector('img')).toBeNull();
   });
 
+  it('checks and unchecks task boxes in the memo when it can be changed', async () => {
+    const onChange = vi.fn();
+    render(
+      <MarkdownMemo onChange={onChange}>{`- [ ] 準備
+  - [x] 入れ子
+- 箇条書き
+
+> 1. [ ] 引用`}</MarkdownMemo>,
+    );
+    const user = userEvent.setup();
+    const boxes = screen.getAllByRole('checkbox');
+    expect(boxes).toHaveLength(3);
+    for (const box of boxes) expect(box).toBeEnabled();
+
+    await user.click(boxes[0]);
+    expect(onChange).toHaveBeenLastCalledWith(`- [x] 準備
+  - [x] 入れ子
+- 箇条書き
+
+> 1. [ ] 引用`);
+    await user.click(boxes[1]);
+    expect(onChange).toHaveBeenLastCalledWith(`- [ ] 準備
+  - [ ] 入れ子
+- 箇条書き
+
+> 1. [ ] 引用`);
+    await user.click(boxes[2]);
+    expect(onChange).toHaveBeenLastCalledWith(`- [ ] 準備
+  - [x] 入れ子
+- 箇条書き
+
+> 1. [x] 引用`);
+  });
+
   describe('long memos', () => {
     afterEach(() => vi.restoreAllMocks());
 
