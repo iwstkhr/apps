@@ -10,6 +10,7 @@ import {
   VIEW_STATE_KEY,
   writeViewState,
 } from '~/hooks/use-view-state';
+import { setResetting } from '~/lib/app-reset';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -117,6 +118,18 @@ describe('useViewState', () => {
     act(() => result.current.setSidebarWidth(300));
     unmount();
     expect(readViewState()?.sidebarWidth).toBe(300);
+  });
+
+  it('does not write the pending state back while the app is being reset', async () => {
+    const { result, unmount } = renderHook(() => useViewState());
+    await waitFor(() => expect(readViewState()).not.toBeNull());
+    act(() => result.current.setSidebarWidth(300));
+    setResetting(true);
+    localStorage.clear();
+    window.dispatchEvent(new Event('pagehide'));
+    unmount();
+    expect(localStorage.getItem(VIEW_STATE_KEY)).toBeNull();
+    setResetting(false);
   });
 
   it('does not overwrite the saved state with the defaults before restoring', async () => {

@@ -1,4 +1,5 @@
 import {
+  addTodo,
   answerConfirmation,
   chooseFromHeaderMenu,
   expect,
@@ -33,6 +34,36 @@ test('shows sample todos and folders on the first visit only', async ({ page }) 
   await page.reload();
   await expect(page.getByText('読み込み中…')).toBeHidden();
   await expect(todoItems(page)).toHaveCount(0);
+});
+
+test('resets the app to the first visit, including settings and other tabs', async ({ page }) => {
+  await openApp(page);
+  const other = await page.context().newPage();
+  await openApp(other);
+
+  // Change the data and the settings
+  await addTodo(page, '自分の TODO');
+  await chooseFromHeaderMenu(page, 'テーマ…');
+  await page.getByRole('dialog', { name: 'テーマ', exact: true }).getByText('オーシャン').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'ocean');
+  await page.locator('header').getByRole('button', { name: 'メニュー', exact: true }).click();
+  await page.getByRole('menuitemradio', { name: 'English' }).click();
+
+  await page.locator('header').getByRole('button', { name: 'Menu', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Reset app…' }).click();
+  await answerConfirmation(page, 'Reset the app?', 'Reset');
+
+  // The page reloads with the samples, the browser language, and the default theme
+  for (const tab of [page, other]) {
+    await expect(todoItems(tab).filter({ hasText: 'TODO へようこそ' })).toHaveCount(1);
+    await expect(todoItems(tab).filter({ hasText: '自分の TODO' })).toHaveCount(0);
+    await expect(
+      tab.locator('header').getByRole('button', { name: 'メニュー', exact: true }),
+    ).toBeVisible();
+  }
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'indigo');
+  await other.close();
 });
 
 test('writes the samples in English for English browsers', async ({ browser }) => {

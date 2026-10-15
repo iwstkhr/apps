@@ -3,6 +3,7 @@ import { setLanguage } from '~/lib/i18n';
 import {
   clearAll,
   closeDbForTesting,
+  deleteDatabase,
   deleteFolders,
   deleteTodos,
   getAll,
@@ -57,6 +58,16 @@ describe('todo-db', () => {
     await putAll({ folders: [createFolderFixture()], todos: [createTodoFixture()] });
     await clearAll();
     expect(await getAll()).toEqual({ folders: [], todos: [] });
+  });
+
+  it('deletes the database so that it is created again with the samples', async () => {
+    const todo = createTodoFixture({ title: '自分の TODO' });
+    await putTodos([todo]);
+    await deleteDatabase();
+    const { todos, folders } = await getAll();
+    expect(todos.map((t) => t.id)).not.toContain(todo.id);
+    expect(todos.length).toBeGreaterThan(0);
+    expect(folders.length).toBeGreaterThan(0);
   });
 
   it('normalizes stored records and drops broken ones', async () => {

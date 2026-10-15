@@ -12,6 +12,7 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { reloadPage, setResetting } from '~/lib/app-reset';
 import { createExport } from '~/lib/export-import';
 import { forgetSavedLanguageForTesting, LANGUAGE_KEY } from '~/lib/i18n';
 import { closeDbForTesting, getAll, putAll, putTodos } from '~/lib/todo-db';
@@ -19,6 +20,11 @@ import Home from '~/routes/home';
 import { createDataTransfer } from '~/test/drag';
 import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
 import { toLocalDateString } from '~/types/todo';
+
+vi.mock('~/lib/app-reset', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~/lib/app-reset')>()),
+  reloadPage: vi.fn(),
+}));
 
 beforeEach(() => {
   // Confirmations use in-app dialogs. Replaced to check that the browser's native confirm is not shown
@@ -562,6 +568,27 @@ describe('Home', () => {
       'aria-disabled',
       'true',
     );
+  });
+
+  it('resets the app from the menu after confirmation, and does nothing when canceled', async () => {
+    await putTodos([createTodoFixture({ title: '自分の TODO' })]);
+    localStorage.setItem('todo:theme', 'ocean');
+    const user = await renderHome();
+    const openReset = async () => {
+      await user.click(screen.getByRole('button', { name: 'メニュー' }));
+      await user.click(screen.getByRole('menuitem', { name: 'アプリを初期化…' }));
+    };
+
+    await openReset();
+    await answerConfirmation(user, 'アプリを初期化しますか？', 'キャンセル');
+    expect(reloadPage).not.toHaveBeenCalled();
+    expect(localStorage.getItem('todo:theme')).toBe('ocean');
+
+    await openReset();
+    await answerConfirmation(user, 'アプリを初期化しますか？', '初期化');
+    await waitFor(() => expect(reloadPage).toHaveBeenCalledTimes(1));
+    expect(localStorage.getItem('todo:theme')).toBeNull();
+    setResetting(false);
   });
 
   describe('trash', () => {

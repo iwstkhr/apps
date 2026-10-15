@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { clearSettings, reloadPage, setResetting } from '~/lib/app-reset';
 import { mergeData } from '~/lib/export-import';
 import {
   type FolderDropPosition,
@@ -9,6 +10,7 @@ import {
 import { t } from '~/lib/i18n';
 import {
   clearAll,
+  deleteDatabase,
   deleteFolders,
   deleteTodos,
   getAll,
@@ -95,6 +97,8 @@ export interface UseTodos {
   importData: (incoming: StoredData, mode: ImportMode) => Promise<void>;
   /** Delete every todo (including the trash) and folder. Settings in localStorage are kept */
   clearAllData: () => Promise<void>;
+  /** Delete the database and every setting, then reload as on the first visit (with the samples). Other tabs reload too */
+  resetApp: () => Promise<void>;
 }
 
 const EMPTY: StoredData = { todos: [], folders: [] };
@@ -163,7 +167,8 @@ export function useTodos(): UseTodos {
 
     if (typeof BroadcastChannel === 'undefined') return;
     const channel = new BroadcastChannel(CHANNEL_NAME);
-    channel.onmessage = () => void reload();
+    // After another tab resets the app, reopen with the reset settings as well as the data
+    channel.onmessage = (event) => (event.data === 'reset' ? reloadPage() : void reload());
     channelRef.current = channel;
     return () => {
       channel.close();
@@ -479,6 +484,21 @@ export function useTodos(): UseTodos {
 
   const clearAllData = useCallback(() => commit(EMPTY, clearAll), [commit]);
 
+  const resetApp = useCallback(async () => {
+    setResetting(true);
+    try {
+      await deleteDatabase();
+    } catch {
+      setResetting(false);
+      setError(t('初期化できませんでした。もう一度お試しください。'));
+      await reload();
+      return;
+    }
+    clearSettings();
+    channelRef.current?.postMessage('reset');
+    reloadPage();
+  }, [reload]);
+
   const todos = useMemo(() => data.todos.filter((todo) => !isTrashed(todo)), [data.todos]);
   const trash = useMemo(() => data.todos.filter(isTrashed), [data.todos]);
 
@@ -511,5 +531,6 @@ export function useTodos(): UseTodos {
     removeFolder,
     importData,
     clearAllData,
+    resetApp,
   };
 }

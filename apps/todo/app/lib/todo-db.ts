@@ -138,10 +138,28 @@ export function clearAll(): Promise<void> {
   });
 }
 
-/** For tests: close and forget the open connection. */
-export async function closeDbForTesting(): Promise<void> {
+/** Close and forget the open connection. The next call opens it again. */
+async function closeDb(): Promise<void> {
   if (!dbPromise) return;
-  const db = await dbPromise;
-  db.close();
+  const db = await dbPromise.catch(() => null);
+  db?.close();
   dbPromise = null;
+}
+
+/**
+ * Delete the whole database (メニューの「アプリを初期化」). Other tabs close their connections in onversionchange.
+ * The next open creates it again as on the first visit, with the samples.
+ */
+export async function deleteDatabase(): Promise<void> {
+  await closeDb();
+  await new Promise<void>((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(DB_NAME);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/** For tests: close and forget the open connection. */
+export function closeDbForTesting(): Promise<void> {
+  return closeDb();
 }

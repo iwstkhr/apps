@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useTodos } from '~/hooks/use-todos';
+import { isResetting, reloadPage, setResetting } from '~/lib/app-reset';
 import { getAll, putAll, putTodos } from '~/lib/todo-db';
 import { createFolderFixture, createTodoFixture } from '~/test/fixtures';
 import { resetDb } from '~/test/indexed-db';
@@ -17,7 +18,17 @@ const input = (title: string, folderId: string | null = null): TodoInput => ({
   folderId,
 });
 
-afterEach(resetDb);
+vi.mock('~/lib/app-reset', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~/lib/app-reset')>()),
+  reloadPage: vi.fn(),
+}));
+
+afterEach(async () => {
+  vi.mocked(reloadPage).mockClear();
+  setResetting(false);
+  localStorage.clear();
+  await resetDb();
+});
 
 async function renderLoaded() {
   const hook = renderHook(() => useTodos());
@@ -328,6 +339,22 @@ describe('useTodos', () => {
     expect(result.current.trash).toEqual([]);
     expect(result.current.folders).toEqual([]);
     expect(await getAll()).toEqual({ todos: [], folders: [] });
+  });
+
+  it('resets the app: deletes the database and settings, then reloads', async () => {
+    const todo = createTodoFixture({ title: '自分の TODO' });
+    await putTodos([todo]);
+    localStorage.setItem('todo:theme', 'ocean');
+    const { result } = await renderLoaded();
+
+    await act(() => result.current.resetApp());
+    expect(isResetting()).toBe(true);
+    expect(localStorage.getItem('todo:theme')).toBeNull();
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+    // The database was deleted, so opening it again adds the samples instead of the old data
+    const { todos } = await getAll();
+    expect(todos.map((t) => t.id)).not.toContain(todo.id);
+    expect(todos.length).toBeGreaterThan(0);
   });
 
   describe('repeat', () => {

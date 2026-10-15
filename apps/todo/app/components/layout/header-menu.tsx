@@ -7,6 +7,7 @@ import {
   FaGlobe,
   FaPalette,
   FaTrashAlt,
+  FaUndoAlt,
 } from 'react-icons/fa';
 import { ThemeDialog } from '~/components/layout/theme-dialog';
 import { cn } from '~/lib/cn';
@@ -18,13 +19,14 @@ interface HeaderMenuProps {
   onImport: () => void;
   onClearAll: () => void;
   clearAllDisabled: boolean;
+  onResetApp: () => void;
 }
 
 const itemClass =
   'flex w-full items-center gap-2.5 rounded px-2.5 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800';
 
 /**
- * The 「メニュー」 at the right end of the header, grouping language, theme, export, import, and deleting all data.
+ * The 「メニュー」 at the right end of the header, grouping language, theme, export, import, deleting all data, and resetting the app.
  * Following the WAI-ARIA menu pattern, opening it focuses the first item, ↑↓ / Home / End move,
  * and Escape closes it and returns focus to the button. Tab and outside clicks also close it.
  */
@@ -34,6 +36,7 @@ export function HeaderMenu({
   onImport,
   onClearAll,
   clearAllDisabled,
+  onResetApp,
 }: HeaderMenuProps) {
   const language = useLanguage();
   const [open, setOpen] = useState(false);
@@ -204,6 +207,17 @@ export function HeaderMenu({
           >
             <FaTrashAlt className="shrink-0" aria-hidden="true" />
             {t('すべてのデータを削除…')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            // Always available: settings can remain even when there are no todos or folders
+            className={cn(itemClass, 'text-red-700 dark:text-red-400')}
+            title={t('データと設定をすべて消して最初の状態に戻します')}
+            onClick={() => choose(onResetApp)}
+          >
+            <FaUndoAlt className="shrink-0" aria-hidden="true" />
+            {t('アプリを初期化…')}
           </button>
         </div>
       )}

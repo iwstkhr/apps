@@ -40,6 +40,13 @@ export const english: Record<string, string> = {
     'This cannot be undone. Export first if you need a backup.',
   すべて削除: 'Delete all',
   'すべてのデータを削除しました。': 'Deleted all data.',
+  'アプリを初期化…': 'Reset app…',
+  データと設定をすべて消して最初の状態に戻します: 'Delete all data and settings and start over',
+  'アプリを初期化しますか？': 'Reset the app?',
+  'TODO とフォルダ、言語・テーマ・表示の設定がすべて削除され、最初に開いたときの状態（サンプル入り）に戻ります。':
+    'All todos, folders, and language, theme, and display settings will be deleted, and the app will return to how it was when first opened (with the samples).',
+  初期化: 'Reset',
+  '初期化できませんでした。もう一度お試しください。': 'Could not reset the app. Please try again.',
 
   // Header menu
   'テーマ…': 'Theme…',

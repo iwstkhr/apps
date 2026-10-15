@@ -94,6 +94,7 @@ export default function Home() {
     removeFolder,
     importData,
     clearAllData,
+    resetApp,
   } = useTodos();
   const [filters, setFilters] = useState<TodoFilters>(DEFAULT_FILTERS);
   const {
@@ -399,6 +400,21 @@ export default function Home() {
     });
   };
 
+  // Returns to the first visit: data and settings are deleted and the page reloads with the samples
+  const handleResetApp = () => {
+    setConfirmation({
+      title: t('アプリを初期化しますか？'),
+      details: [
+        t(
+          'TODO とフォルダ、言語・テーマ・表示の設定がすべて削除され、最初に開いたときの状態（サンプル入り）に戻ります。',
+        ),
+        t('この操作は元に戻せません。必要なら先にエクスポートしてください。'),
+      ],
+      confirmLabel: t('初期化'),
+      onConfirm: () => void resetApp(),
+    });
+  };
+
   const isFiltered =
     filters.keyword.trim() !== '' || filters.status !== 'all' || filters.tag !== null;
   const emptyMessage = isFiltered
@@ -417,6 +433,7 @@ export default function Home() {
         onImportFile={(file) => void handleImportFile(file)}
         exportDisabled={allTodos.length === 0 && folders.length === 0}
         onClearAll={handleClearAll}
+        onResetApp={handleResetApp}
       />
 
       <div

@@ -19,7 +19,8 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Move deleted todos to a trash where they can be restored for 30 days, with undo right after deleting (also with Ctrl+Z or ⌘Z); move all completed todos there at once
 - Export all todos and folders to a JSON file, and import a file by merging it with or replacing the current data
 - Delete all todos and folders at once from the メニュー, after a confirmation
-- Find language, theme, export, import, and delete all data in the メニュー (⋯) at the right of the header
+- Reset the app from the メニュー to how it was on the first visit, deleting all data and settings and adding the samples again
+- Find language, theme, export, import, delete all data, and reset the app in the メニュー (⋯) at the right of the header
 - Sync changes across tabs of the same browser
 - Start with sample todos and folders on the first visit
 - Install the app to the home screen or desktop as a PWA, and open it offline; a new version applies on its own while you are in another tab, window, or app

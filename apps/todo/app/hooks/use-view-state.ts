@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isResetting } from '~/lib/app-reset';
 import type { FolderSelection } from '~/lib/folder-tree';
 import { DEFAULT_FILTERS, type SortKey } from '~/lib/todo-filters';
 
@@ -54,6 +55,8 @@ export function readViewState(): ViewState | null {
 }
 
 export function writeViewState(state: ViewState): void {
+  // While resetting, do not write the pending state back when the page reloads
+  if (isResetting()) return;
   try {
     localStorage.setItem(VIEW_STATE_KEY, JSON.stringify(state));
   } catch {
