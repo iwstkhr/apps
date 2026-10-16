@@ -1,6 +1,7 @@
 import { createContext, use, useEffect, useId, useRef, useState } from 'react';
 import Markdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { CodeBlock } from '~/components/todo/code-block';
 import { cn } from '~/lib/cn';
 import { t } from '~/lib/i18n';
 import { toggleTask } from '~/lib/markdown-list';
@@ -22,6 +23,20 @@ const components: Components = {
     const offset = use(TaskItemContext);
     if (props.type !== 'checkbox' || !toggle || offset === null) return <input {...props} />;
     return <input {...props} disabled={false} onChange={() => toggle(offset)} />;
+  },
+  // A fenced code block with a language (```ts) is highlighted; others keep the plain <pre>
+  pre: ({ node, ...props }) => {
+    const code = node?.children[0];
+    if (code?.type !== 'element' || code.tagName !== 'code') return <pre {...props} />;
+    const className = code.properties.className;
+    const lang = Array.isArray(className)
+      ? className.find((name) => String(name).startsWith('language-'))
+      : undefined;
+    if (lang === undefined) return <pre {...props} />;
+    const text = code.children.map((child) => (child.type === 'text' ? child.value : '')).join('');
+    return (
+      <CodeBlock code={text.replace(/\n$/, '')} lang={String(lang).slice('language-'.length)} />
+    );
   },
   a: ({ node: _node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
   // Only displays the memo and never fetches images from external servers.

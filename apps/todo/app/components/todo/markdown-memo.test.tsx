@@ -100,6 +100,46 @@ const value = 1;
 > 1. [x] 引用`);
   });
 
+  describe('code blocks', () => {
+    it('highlights a fenced code block with a supported language and labels it', async () => {
+      const { container } = render(
+        <MarkdownMemo>{'```ts\nconst a = 1;\nconsole.log(a);\n```'}</MarkdownMemo>,
+      );
+      expect(container.querySelector('.todo-code-lang')).toHaveTextContent('ts');
+      // The plain code shows before the highlighter loads
+      expect(container.querySelector('pre')).toHaveTextContent('const a = 1;');
+
+      const pre = await vi.waitFor(
+        () => {
+          const highlighted = container.querySelector('pre[data-highlighted]');
+          if (!highlighted) throw new Error('not highlighted yet');
+          return highlighted;
+        },
+        { timeout: 5000 },
+      );
+      expect(pre.textContent).toBe('const a = 1;\nconsole.log(a);');
+      const keyword = [...pre.querySelectorAll('span')].find(
+        (span) => span.textContent === 'const',
+      );
+      expect(keyword?.style.getPropertyValue('--shiki-light')).toMatch(/^#/);
+      expect(keyword?.style.getPropertyValue('--shiki-dark')).toMatch(/^#/);
+    });
+
+    it('keeps code blocks without a supported language and inline code plain', async () => {
+      const { container } = render(
+        <MarkdownMemo>{'```\nplain\n```\n\n```nosuchlang\nother\n```\n\n`inline`'}</MarkdownMemo>,
+      );
+      const [plain, unknown] = container.querySelectorAll('pre');
+      expect(plain.parentElement).not.toHaveClass('todo-code');
+      expect(plain).toHaveTextContent('plain');
+      expect(container.querySelector('.todo-code-lang')).toHaveTextContent('nosuchlang');
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(unknown).not.toHaveAttribute('data-highlighted');
+      expect(unknown.querySelector('span')).toBeNull();
+      expect(screen.getByText('inline').tagName).toBe('CODE');
+    });
+  });
+
   describe('long memos', () => {
     afterEach(() => vi.restoreAllMocks());
 
