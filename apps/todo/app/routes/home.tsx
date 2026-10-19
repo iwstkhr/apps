@@ -437,7 +437,7 @@ export default function Home() {
       />
 
       <div
-        className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3 py-4 sm:px-4 lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:items-start lg:gap-6"
+        className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 py-4 sm:px-4 lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:items-start lg:gap-6"
         style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
       >
         {/* On wide screens, span from below the header to the bottom of the viewport so it stays put while the list scrolls

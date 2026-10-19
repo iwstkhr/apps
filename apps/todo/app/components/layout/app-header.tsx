@@ -30,7 +30,7 @@ export function AppHeader({
       className="theme-header sticky top-0 z-20 border-b border-slate-300 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
     >
       {/* The folder pane's height is derived from the header's, so the header is fixed at h-14 */}
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-2 px-3 sm:px-4">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
           <button
             id="menu-toggle"
