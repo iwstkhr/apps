@@ -299,6 +299,26 @@ test('adds a memo from the button shown when a task has none', async ({ page }) 
   await expect(card.locator('.todo-memo')).toHaveText('追加したメモ');
 });
 
+test('saves or cancels a memo edited in place with its buttons', async ({ page }) => {
+  await addTodo(page, 'ボタンで編集');
+  const card = todoItems(page).filter({ hasText: 'ボタンで編集' });
+  const add = card.getByRole('button', { name: '「ボタンで編集」にメモを追加' });
+  const input = card.getByRole('textbox', { name: 'メモ', exact: true });
+
+  // Pressing キャンセル must not save on the blur that comes first
+  await add.click();
+  await input.fill('取り消すメモ');
+  await card.getByRole('button', { name: 'キャンセル' }).click();
+  await expect(input).toBeHidden();
+  await expect(add).toBeVisible();
+
+  await add.click();
+  await input.fill('ボタンで保存');
+  await card.getByRole('button', { name: '保存' }).click();
+  await expect(card.locator('.todo-memo')).toHaveText('ボタンで保存');
+  await waitForSavedMemo(page, 'ボタンで保存');
+});
+
 test('changes task priority from the list and persists it after reloading', async ({ page }) => {
   await addTodo(page, '優先度を変更');
   const priority = page.getByRole('combobox', { name: '「優先度を変更」の優先度' });

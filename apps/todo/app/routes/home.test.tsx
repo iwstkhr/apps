@@ -395,6 +395,46 @@ describe('Home', () => {
     expect((await getAll()).todos).toHaveLength(0);
   });
 
+  it('saves or cancels the title edited in place with its buttons', async () => {
+    await putTodos([createTodoFixture({ title: '洗濯' })]);
+    const user = await renderHome();
+
+    await user.click(screen.getByRole('button', { name: '洗濯' }));
+    await user.clear(within(items()[0]).getByRole('textbox', { name: 'タイトル' }));
+    await user.type(within(items()[0]).getByRole('textbox', { name: 'タイトル' }), '掃除');
+    await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+    expect(within(items()[0]).queryByRole('textbox', { name: 'タイトル' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '洗濯' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '洗濯' }));
+    await user.clear(within(items()[0]).getByRole('textbox', { name: 'タイトル' }));
+    await user.type(within(items()[0]).getByRole('textbox', { name: 'タイトル' }), '掃除');
+    // Moving to the buttons by keyboard keeps editing
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'キャンセル' })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: '保存' }));
+    expect(screen.getByRole('button', { name: '掃除' })).toBeInTheDocument();
+    await waitFor(async () => expect((await getAll()).todos[0].title).toBe('掃除'));
+  });
+
+  it('saves or cancels the memo edited in place with its buttons', async () => {
+    await putTodos([createTodoFixture({ title: '洗濯' })]);
+    const user = await renderHome();
+
+    await user.click(screen.getByRole('button', { name: '「洗濯」にメモを追加' }));
+    await user.type(screen.getByRole('textbox', { name: 'メモ' }), '柔軟剤');
+    await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+    expect(screen.queryByRole('textbox', { name: 'メモ' })).not.toBeInTheDocument();
+    expect(screen.queryByText('柔軟剤')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '「洗濯」にメモを追加' }));
+    await user.type(screen.getByRole('textbox', { name: 'メモ' }), '柔軟剤');
+    await user.click(screen.getByRole('button', { name: '保存' }));
+    expect(screen.queryByRole('textbox', { name: 'メモ' })).not.toBeInTheDocument();
+    expect(screen.getByText('柔軟剤')).toBeInTheDocument();
+    await waitFor(async () => expect((await getAll()).todos[0].memo).toBe('柔軟剤'));
+  });
+
   it('changes the status, edits and deletes a todo', async () => {
     await putTodos([createTodoFixture({ title: '洗濯' })]);
     const user = await renderHome();

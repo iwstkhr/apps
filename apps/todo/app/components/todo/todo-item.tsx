@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { type FocusEvent, type MouseEvent, useRef, useState } from 'react';
 import {
   FaArrowDown,
   FaArrowUp,
   FaCalendarAlt,
+  FaCheck,
   FaClock,
   FaExclamationCircle,
   FaFlag,
@@ -19,6 +20,7 @@ import { TodoForm } from '~/components/todo/todo-form';
 import { cn } from '~/lib/cn';
 import { t } from '~/lib/i18n';
 import { handleListEnter } from '~/lib/markdown-list';
+import { primaryButtonClass, secondaryButtonClass } from '~/lib/styles';
 import { setDraggedTodo } from '~/lib/todo-drag';
 import type { DropPosition } from '~/lib/todo-order';
 import type { Folder } from '~/types/folder';
@@ -423,42 +425,87 @@ export function TodoItem({
   );
 }
 
+/**
+ * Ends an in-place edit once, by a key, a button, or focus leaving the field and its buttons.
+ * Escape, Enter, and the buttons end editing before the blur that follows, so the blur must not save again
+ */
+function useInlineEdit(save: () => void, cancel: () => void) {
+  const finished = useRef(false);
+  const finish = (shouldSave: boolean) => {
+    if (finished.current) return;
+    finished.current = true;
+    if (shouldSave) save();
+    else cancel();
+  };
+  return {
+    finish,
+    // Moving focus to the save and cancel buttons (by Tab) keeps editing; leaving them as well saves
+    onBlur: (event: FocusEvent<HTMLElement>) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) finish(true);
+    },
+  };
+}
+
+// Pressing a button would move focus out of the field and save before the click. Keeping focus in the field lets
+// キャンセル discard the changes, also in browsers that do not focus buttons on click
+const keepFieldFocus = (event: MouseEvent) => event.preventDefault();
+
+const inlineIconButtonClass =
+  'shrink-0 cursor-pointer rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100';
+
 interface TitleInputProps {
   title: string;
   onSave: (title: string) => void;
   onCancel: () => void;
 }
 
-/** Edits the title in place. Enter or leaving the field saves it, and Escape cancels */
+/** Edits the title in place. Enter, ✓, or leaving the field saves it, and Escape or × cancels */
 function TitleInput({ title, onSave, onCancel }: TitleInputProps) {
   const [value, setValue] = useState(title);
-  // Escape and Enter end editing before the blur that follows, so the blur must not save again
-  const finished = useRef(false);
-  const finish = (save: boolean) => {
-    if (finished.current) return;
-    finished.current = true;
-    // A blank title keeps the current one, since a task needs a title
-    if (save && value.trim()) onSave(value);
-    else onCancel();
-  };
+  // A blank title keeps the current one, since a task needs a title
+  const { finish, onBlur } = useInlineEdit(
+    () => (value.trim() ? onSave(value) : onCancel()),
+    onCancel,
+  );
 
   return (
-    <input
-      className="-mx-1 min-w-0 flex-1 rounded border border-blue-400 bg-white px-1 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
-      value={value}
-      onChange={(event) => setValue(event.target.value)}
-      onKeyDown={(event) => {
-        // Ignore Enter while an IME is composing, so confirming a conversion does not save
-        if (event.key === 'Enter' && !event.nativeEvent.isComposing) finish(true);
-        else if (event.key === 'Escape') finish(false);
-      }}
-      onBlur={() => finish(true)}
-      onFocus={(event) => event.currentTarget.select()}
-      aria-label={t('タイトル')}
-      maxLength={200}
-      // biome-ignore lint/a11y/noAutofocus: editing starts from a click on the title, so focus moves to it
-      autoFocus
-    />
+    <fieldset className="-mx-1 flex min-w-0 flex-1 items-center gap-0.5" onBlur={onBlur}>
+      <input
+        className="min-w-0 flex-1 rounded border border-blue-400 bg-white px-1 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          // Ignore Enter while an IME is composing, so confirming a conversion does not save
+          if (event.key === 'Enter' && !event.nativeEvent.isComposing) finish(true);
+          else if (event.key === 'Escape') finish(false);
+        }}
+        onFocus={(event) => event.currentTarget.select()}
+        aria-label={t('タイトル')}
+        maxLength={200}
+        // biome-ignore lint/a11y/noAutofocus: editing starts from a click on the title, so focus moves to it
+        autoFocus
+      />
+      <button
+        type="button"
+        className={inlineIconButtonClass}
+        onMouseDown={keepFieldFocus}
+        onClick={() => finish(false)}
+        aria-label={t('キャンセル')}
+        title={`${t('キャンセル')} (Esc)`}
+      >
+        <FaTimes className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className={cn(inlineIconButtonClass, 'text-blue-600 dark:text-blue-400')}
+        onMouseDown={keepFieldFocus}
+        onClick={() => finish(true)}
+        aria-label={t('保存')}
+        title={`${t('保存')} (Enter)`}
+      >
+        <FaCheck className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+    </fieldset>
   );
 }
 
@@ -468,34 +515,51 @@ interface MemoInputProps {
   onCancel: () => void;
 }
 
-/** Edits the memo in place. Enter adds a line (continuing a list), Ctrl/Cmd+Enter or leaving the field saves it, and Escape cancels */
+/**
+ * Edits the memo in place. Enter adds a line (continuing a list). Ctrl/Cmd+Enter, 保存, or leaving the field saves
+ * it, and Escape or キャンセル cancels
+ */
 function MemoInput({ memo, onSave, onCancel }: MemoInputProps) {
   const [value, setValue] = useState(memo);
-  // Escape and Ctrl/Cmd+Enter end editing before the blur that follows, so the blur must not save again
-  const finished = useRef(false);
-  const finish = (save: boolean) => {
-    if (finished.current) return;
-    finished.current = true;
-    if (save) onSave(value);
-    else onCancel();
-  };
+  const { finish, onBlur } = useInlineEdit(() => onSave(value), onCancel);
 
   return (
-    <textarea
-      className="mt-1 w-full rounded border border-blue-400 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
-      value={value}
-      // Grows with the memo up to a limit, then scrolls
-      rows={Math.min(Math.max(value.split('\n').length, 3), 15)}
-      onChange={(event) => setValue(event.target.value)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) finish(true);
-        else if (event.key === 'Escape') finish(false);
-        else handleListEnter(event);
-      }}
-      onBlur={() => finish(true)}
-      aria-label={t('メモ')}
-      // biome-ignore lint/a11y/noAutofocus: editing starts from a click on the memo, so focus moves to it
-      autoFocus
-    />
+    <fieldset className="mt-1 flex min-w-0 flex-col gap-1.5" onBlur={onBlur}>
+      <textarea
+        className="w-full rounded border border-blue-400 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-blue-700 dark:bg-slate-900"
+        value={value}
+        // Grows with the memo up to a limit, then scrolls
+        rows={Math.min(Math.max(value.split('\n').length, 3), 15)}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) finish(true);
+          else if (event.key === 'Escape') finish(false);
+          else handleListEnter(event);
+        }}
+        aria-label={t('メモ')}
+        // biome-ignore lint/a11y/noAutofocus: editing starts from a click on the memo, so focus moves to it
+        autoFocus
+      />
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          className={secondaryButtonClass}
+          onMouseDown={keepFieldFocus}
+          onClick={() => finish(false)}
+          title="Esc"
+        >
+          {t('キャンセル')}
+        </button>
+        <button
+          type="button"
+          className={primaryButtonClass}
+          onMouseDown={keepFieldFocus}
+          onClick={() => finish(true)}
+          title="Ctrl+Enter / ⌘Enter"
+        >
+          {t('保存')}
+        </button>
+      </div>
+    </fieldset>
   );
 }
