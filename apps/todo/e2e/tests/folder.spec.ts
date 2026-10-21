@@ -329,3 +329,58 @@ test('uses a modal slide-out menu without shifting tasks on narrow screens', asy
   await expect(main).not.toHaveAttribute('inert');
   await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');
 });
+
+test('filters priority across folders, updates open counts, and restores the selection', async ({
+  page,
+}) => {
+  await createFolder(page, '仕事');
+  await addTodo(page, '重要な仕事');
+  await page.getByRole('combobox', { name: '「重要な仕事」の優先度' }).selectOption('high');
+  await folderNav(page)
+    .getByRole('button', { name: /^未分類/ })
+    .click();
+  await addTodo(page, '重要な用事');
+  await page.getByRole('combobox', { name: '「重要な用事」の優先度' }).selectOption('high');
+  await addTodo(page, '普通の用事');
+  const priorities = page.getByRole('region', { name: '優先度', exact: true });
+  await expect(priorities.getByRole('button', { name: '高 2', exact: true })).toBeVisible();
+  await expect(priorities.getByRole('button', { name: '低 0', exact: true })).toBeVisible();
+  await priorities.getByRole('button', { name: '高 2', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText('優先度: 高');
+  await expect(todoItems(page)).toHaveCount(2);
+  await expect(todoItems(page).filter({ hasText: '普通の用事' })).toHaveCount(0);
+  await page.reload();
+  await expect(priorities.getByRole('button', { name: '高 2', exact: true })).toHaveAttribute(
+    'aria-current',
+    'true',
+  );
+  await expect(todoItems(page)).toHaveCount(2);
+  await page.getByRole('combobox', { name: '「重要な用事」の優先度' }).selectOption('low');
+  await expect(todoItems(page)).toHaveCount(1);
+  await expect(priorities.getByRole('button', { name: '高 1', exact: true })).toBeVisible();
+  await expect(priorities.getByRole('button', { name: '低 1', exact: true })).toBeVisible();
+  await page.getByRole('checkbox', { name: '「重要な仕事」を完了にする', exact: true }).check();
+  await expect(priorities.getByRole('button', { name: '高 0', exact: true })).toBeVisible();
+  await expect(todoItems(page)).toHaveCount(1);
+  await page.getByRole('searchbox', { name: 'キーワードで検索' }).fill('見つからない');
+  await expect(todoItems(page)).toHaveCount(0);
+  await page.getByRole('searchbox', { name: 'キーワードで検索' }).fill('');
+  await folderNav(page)
+    .getByRole('button', { name: /^未分類/ })
+    .click();
+  await expect(todoItems(page)).toHaveCount(2);
+  await expect(priorities.locator('[aria-current="true"]')).toHaveCount(0);
+});
+
+test('selects a priority from the mobile drawer and closes it', async ({ page }) => {
+  await addTodo(page, '確認する');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'フォルダを開く' }).click();
+  await page
+    .getByRole('region', { name: '優先度', exact: true })
+    .getByRole('button', { name: '中 1', exact: true })
+    .click();
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText('優先度: 中');
+  await expect(page.getByRole('button', { name: 'フォルダを閉じる' })).toBeHidden();
+  await expect(todoItems(page)).toHaveCount(1);
+});

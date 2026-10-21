@@ -121,6 +121,7 @@ export const english: Record<string, string> = {
   タグ: 'Tags',
   期限: 'Due',
   優先度: 'Priority',
+  '優先度: {0}': 'Priority: {0}',
   'ヘッダーをドラッグするか、上下ボタンで順序を変更できます。':
     'Drag a card by its header or use the up and down buttons to reorder.',
   並び順: 'Sort order',

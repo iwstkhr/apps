@@ -2,6 +2,7 @@ import { type DragEvent, useEffect, useMemo, useState } from 'react';
 import {
   FaChevronDown,
   FaChevronRight,
+  FaFlag,
   FaFolder,
   FaFolderOpen,
   FaFolderPlus,
@@ -27,11 +28,15 @@ import {
   setDraggedFolder,
 } from '~/lib/todo-drag';
 import type { Folder } from '~/types/folder';
+import { PRIORITIES, PRIORITY_LABELS, type Priority } from '~/types/todo';
 
 interface FolderSidebarProps {
   folders: Folder[];
   /** Number of incomplete todos (including descendants) */
   openCounts: Map<FolderSelection, number>;
+  selectedPriority: Priority | null;
+  priorityCounts: Record<Priority, number>;
+  onSelectPriority: (priority: Priority) => void;
   selection: FolderSelection;
   onSelect: (selection: FolderSelection) => void;
   collapsed: ReadonlySet<string>;
@@ -87,6 +92,9 @@ function Count({ value }: { value: number | undefined }) {
 export function FolderSidebar({
   folders,
   openCounts,
+  selectedPriority,
+  priorityCounts,
+  onSelectPriority,
   selection,
   onSelect,
   collapsed,
@@ -188,7 +196,9 @@ export function FolderSidebar({
       className={cn(
         rowClass,
         // Prefer the drop target color (with both, whichever comes later in the CSS wins)
-        dropTarget?.target === value ? dropTargetRowClass : selection === value && selectedRowClass,
+        dropTarget?.target === value
+          ? dropTargetRowClass
+          : selectedPriority === null && selection === value && selectedRowClass,
       )}
       {...(value === 'unfiled' || value === 'trash' ? dropHandlers(value) : {})}
     >
@@ -201,7 +211,7 @@ export function FolderSidebar({
           value === 'trash' ? 'px-2' : 'pr-1',
         )}
         onClick={() => onSelect(value)}
-        aria-current={selection === value ? 'true' : undefined}
+        aria-current={selectedPriority === null && selection === value ? 'true' : undefined}
       >
         <Icon className="shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
         <span className="truncate">{t(label)}</span>
@@ -245,8 +255,47 @@ export function FolderSidebar({
       <ul className="flex flex-col gap-0.5">
         {fixedItem('all', 'すべて', FaLayerGroup)}
         {fixedItem('unfiled', '未分類', FaInbox)}
+      </ul>
+      <section aria-label={t('優先度')} className="flex flex-col gap-1">
+        <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {t('優先度')}
+        </h3>
+        <ul className="flex flex-col gap-0.5">
+          {PRIORITIES.map((priority) => (
+            <li
+              key={priority}
+              className={cn(rowClass, selectedPriority === priority && selectedRowClass)}
+            >
+              <span className="w-5 shrink-0" />
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-1 text-left"
+                onClick={() => onSelectPriority(priority)}
+                aria-current={selectedPriority === priority ? 'true' : undefined}
+              >
+                <FaFlag
+                  aria-hidden="true"
+                  className={cn(
+                    'shrink-0',
+                    priority === 'high'
+                      ? 'text-red-600 dark:text-red-400'
+                      : priority === 'medium'
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-sky-600 dark:text-sky-400',
+                  )}
+                />
+                <span>{t(PRIORITY_LABELS[priority])}</span>
+                <span className="ml-auto shrink-0 pl-1 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                  {priorityCounts[priority]}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <ul className="flex flex-col gap-0.5 border-t border-slate-200 pt-2 dark:border-slate-800">
         {entries.map(({ folder, depth, hasChildren }) => {
-          const isSelected = selection === folder.id;
+          const isSelected = selectedPriority === null && selection === folder.id;
           const isCollapsed = collapsed.has(folder.id);
           const dropClass = dropRowClass(folder.id);
           return (

@@ -22,10 +22,24 @@ describe('readViewState / writeViewState', () => {
     writeViewState({ folder: 'f1', collapsed: ['f2'], sidebarWidth: 300, sort: 'custom' });
     expect(readViewState()).toEqual({
       folder: 'f1',
+      priority: null,
       collapsed: ['f2'],
       sidebarWidth: 300,
       sort: 'custom',
     });
+  });
+
+  it('restores priority selection and ignores invalid or older values', async () => {
+    writeViewState({ folder: 'all', collapsed: [], sidebarWidth: 240, priority: 'high' });
+    const { result, unmount } = renderHook(() => useViewState());
+    await waitFor(() => expect(result.current.selectedPriority).toBe('high'));
+    act(() => result.current.setSelectedPriority('low'));
+    unmount();
+    expect(readViewState()?.priority).toBe('low');
+    localStorage.setItem(VIEW_STATE_KEY, JSON.stringify({ priority: 'urgent' }));
+    expect(readViewState()?.priority).toBeNull();
+    localStorage.setItem(VIEW_STATE_KEY, JSON.stringify({ folder: 'all' }));
+    expect(readViewState()?.priority).toBeNull();
   });
 
   it('returns null when nothing is saved or the value is broken', () => {
@@ -41,6 +55,7 @@ describe('readViewState / writeViewState', () => {
     );
     expect(readViewState()).toEqual({
       folder: 'all',
+      priority: null,
       collapsed: ['a'],
       sidebarWidth: SIDEBAR_WIDTH.default,
       sort: 'created',
@@ -96,6 +111,7 @@ describe('useViewState', () => {
     await waitFor(() =>
       expect(readViewState()).toEqual({
         folder: 'unfiled',
+        priority: null,
         collapsed: [],
         sidebarWidth: SIDEBAR_WIDTH.max,
         sort: 'custom',

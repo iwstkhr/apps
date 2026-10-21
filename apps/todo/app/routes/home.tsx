@@ -1,5 +1,5 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
-import { FaFolder, FaPen, FaTimes, FaTrash } from 'react-icons/fa';
+import { FaFlag, FaFolder, FaPen, FaTimes, FaTrash } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
@@ -35,7 +35,13 @@ import {
   type TodoFilters,
 } from '~/lib/todo-filters';
 import { DEFAULT_FOLDER_COLOR, type Folder, type FolderInput } from '~/types/folder';
-import { type Todo, type TodoStatus, toLocalDateString } from '~/types/todo';
+import {
+  PRIORITIES,
+  PRIORITY_LABELS,
+  type Todo,
+  type TodoStatus,
+  toLocalDateString,
+} from '~/types/todo';
 import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
@@ -98,6 +104,8 @@ export default function Home() {
   } = useTodos();
   const [filters, setFilters] = useState<TodoFilters>(DEFAULT_FILTERS);
   const {
+    selectedPriority,
+    setSelectedPriority,
     selectedFolder,
     setSelectedFolder,
     collapsedFolders,
@@ -153,15 +161,18 @@ export default function Home() {
       ? selectedFolder
       : 'all';
   const selectionLabel =
-    selection === 'all'
-      ? t('すべて')
-      : selection === 'unfiled'
-        ? t('未分類')
-        : selection === 'trash'
-          ? t('ゴミ箱')
-          : formatFolderPath(folders, selection);
-  const isTrash = selection === 'trash';
-  const isRealFolder = selection !== 'all' && selection !== 'unfiled' && !isTrash;
+    selectedPriority !== null
+      ? t('優先度: {0}', [t(PRIORITY_LABELS[selectedPriority])])
+      : selection === 'all'
+        ? t('すべて')
+        : selection === 'unfiled'
+          ? t('未分類')
+          : selection === 'trash'
+            ? t('ゴミ箱')
+            : formatFolderPath(folders, selection);
+  const isTrash = selectedPriority === null && selection === 'trash';
+  const isRealFolder =
+    selectedPriority === null && selection !== 'all' && selection !== 'unfiled' && !isTrash;
   const selectedFolderObject = isRealFolder
     ? folders.find((folder) => folder.id === selection)
     : undefined;
@@ -170,9 +181,22 @@ export default function Home() {
   const today = toLocalDateString(new Date());
   const tags = useMemo(() => collectTags(todos), [todos]);
   const openCounts = useMemo(() => countOpenByFolder(todos, folders), [todos, folders]);
+  const priorityCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        PRIORITIES.map((priority) => [
+          priority,
+          todos.filter((todo) => todo.priority === priority && todo.status !== 'done').length,
+        ]),
+      ) as Record<(typeof PRIORITIES)[number], number>,
+    [todos],
+  );
   const folderTodos = useMemo(
-    () => filterByFolder(todos, folders, selection),
-    [todos, folders, selection],
+    () =>
+      selectedPriority === null
+        ? filterByFolder(todos, folders, selection)
+        : todos.filter((todo) => todo.priority === selectedPriority),
+    [todos, folders, selection, selectedPriority],
   );
   const visibleTodos = useMemo(
     () => applyFilters(folderTodos, { ...filters, sort }),
@@ -182,6 +206,7 @@ export default function Home() {
   const doneCount = counts.done;
 
   const selectFolder = (next: FolderSelection) => {
+    setSelectedPriority(null);
     setSelectedFolder(next);
     setShowFolders(false);
   };
@@ -394,6 +419,7 @@ export default function Home() {
       confirmLabel: t('すべて削除'),
       onConfirm: () =>
         void clearAllData().then(() => {
+          setSelectedPriority(null);
           setSelectedFolder('all');
           setNotice({ kind: 'info', text: t('すべてのデータを削除しました。') });
         }),
@@ -450,6 +476,13 @@ export default function Home() {
             <FolderSidebar
               folders={folders}
               openCounts={openCounts}
+              selectedPriority={selectedPriority}
+              priorityCounts={priorityCounts}
+              onSelectPriority={(priority) => {
+                setSelectedFolder('all');
+                setSelectedPriority(priority);
+                closeMenu();
+              }}
               selection={selection}
               onSelect={selectFolder}
               collapsed={collapsedFolders}
@@ -526,6 +559,7 @@ export default function Home() {
 
             <div className="flex min-w-0 items-center gap-1">
               <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
+                {selectedPriority !== null && <FaFlag className="shrink-0" aria-hidden="true" />}
                 {isTrash && (
                   <FaTrash
                     className="shrink-0 text-slate-500 dark:text-slate-400"
