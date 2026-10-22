@@ -869,6 +869,11 @@ describe('Home', () => {
       const dialog = screen.getByRole('dialog', { name: '新しいフォルダ' });
       await user.type(within(dialog).getByRole('textbox', { name: 'フォルダ名' }), name);
       await user.click(within(dialog).getByRole('button', { name: '作成' }));
+      // The folder is saved asynchronously, so wait until it is created and selected
+      await within(folderNav()).findByRole('button', {
+        name: (accessibleName) => accessibleName.startsWith(name),
+        current: true,
+      });
     }
 
     it('creates nested folders and adds todos to the selected folder', async () => {
