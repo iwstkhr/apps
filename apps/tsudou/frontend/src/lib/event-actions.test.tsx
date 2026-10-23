@@ -240,7 +240,7 @@ describe('managed event actions', () => {
     await act(async () => {
       await result.current.toggleClosed();
     });
-    expect(result.current.event?.closed).toBe(true);
+    await waitFor(() => expect(result.current.event?.closed).toBe(true));
     await act(async () => {
       await result.current.toggleClosed();
     });
