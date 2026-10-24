@@ -2,8 +2,10 @@ name: "shelter-map - Update GeoJSON"
 
 on:
   schedule:
-    # 00:00 UTC on the 1st of every month (09:00 JST)
-    - cron: '0 0 1 * *'
+    # 00:17 UTC on the 1st of every month (09:17 JST)
+    # Avoid minute 0: "High load times include the start of every hour", which can delay or drop scheduled runs.
+    # https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+    - cron: '17 0 1 * *'
   workflow_dispatch:
 
 permissions:
