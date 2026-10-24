@@ -1,0 +1,45 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "todo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "apps/todo", "dev", "--port", "5173", "--strictPort"],
+      "port": 5173
+    },
+    {
+      "name": "shelter-map",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "apps/shelter-map", "dev", "--port", "5174", "--strictPort"],
+      "port": 5174
+    },
+    {
+      "name": "tsudou-frontend",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "apps/tsudou", "--filter", "@tsudou/frontend", "run", "dev", "--port", "5175", "--strictPort"],
+      "port": 5175
+    },
+    {
+      "name": "tsudou-api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "apps/tsudou", "run", "dev:api"],
+      "port": 8080
+    },
+    {
+      "name": "tsudou-frontend-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "apps/tsudou",
+        "--filter",
+        "@tsudou/frontend",
+        "run",
+        "preview",
+        "--port",
+        "4173",
+        "--strictPort"
+      ],
+      "port": 4173
+    }
+  ]
+}
