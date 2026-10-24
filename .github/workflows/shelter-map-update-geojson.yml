@@ -28,6 +28,8 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca  # v5
         with:
+          # Only Node is needed; skip pre-commit, shellcheck, and trivy from mise.toml
+          install_args: node
           cache: true
 
       - name: Download and compress GeoJSON

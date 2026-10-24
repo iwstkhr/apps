@@ -38,6 +38,8 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca  # v5
         with:
+          # Only Node and pnpm are needed; skip pre-commit, shellcheck, and trivy from mise.toml
+          install_args: node pnpm
           cache: true
 
       - name: Install dependencies
