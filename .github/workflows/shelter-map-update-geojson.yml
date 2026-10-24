@@ -17,7 +17,7 @@ defaults:
 jobs:
   update-geojson:
     name: Update GeoJSON
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Checkout

@@ -34,7 +34,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       # Job-level if conditions cannot read secrets, so pass only whether Slack is configured
       slack-enabled: ${{ secrets.SLACK_BOT_TOKEN != '' && secrets.SLACK_CHANNEL_ID != '' }}
@@ -60,6 +60,7 @@ jobs:
   # Use the Google Chrome already installed on the runner
   e2e:
     name: E2E
+    # Not ubuntu-slim: it has no Google Chrome
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

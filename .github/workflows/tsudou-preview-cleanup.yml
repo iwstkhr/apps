@@ -23,7 +23,7 @@ defaults:
 
 jobs:
   cleanup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     # Pass secrets only to the steps that call Cloudflare so that dependency scripts cannot read them
     steps:
       - name: Checkout

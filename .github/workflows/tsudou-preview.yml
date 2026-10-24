@@ -33,7 +33,7 @@ jobs:
   preview:
     # Skip PRs from forks because they cannot read secrets
     if: ${{ github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       contents: read
       pull-requests: write
@@ -99,7 +99,7 @@ jobs:
 
   cleanup:
     if: ${{ github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
