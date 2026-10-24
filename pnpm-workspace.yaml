@@ -18,6 +18,8 @@ minimumReleaseAge: 10080
 # Allowed before the 7-day wait because it fixes CVE-2026-111181 (HIGH) in body-parser 2.3.0
 minimumReleaseAgeExclude:
   - body-parser@2.4.0
+  # Renovate security update: happy-dom@21.0.4
+  - happy-dom@21.0.4
 # Reject versions whose trust level (provenance, etc.) is lower than earlier versions
 trustPolicy: no-downgrade
 # Excluded because the maintainers published these legitimate releases manually without CI
