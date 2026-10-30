@@ -184,7 +184,7 @@ components:
       enum:
         - "YES"
         - "NO"
-        - "MAYBE"
+        - MAYBE
       description: "YES: attending / NO: not attending / MAYBE: undecided"
     UpdateEventBody:
       type: object

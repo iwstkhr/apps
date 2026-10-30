@@ -177,6 +177,7 @@ export function generateOpenApiDocument() {
 /** Where the output goes: docs/ at the app root (apps/tsudou/docs/), next to the specification. */
 export const OPENAPI_PATH = fileURLToPath(new URL('../../docs/openapi.yaml', import.meta.url));
 
+/** Emitted as YAML 1.1 so strings such as YES / NO that 1.1 parsers read as booleans get quoted (yamllint truthy). */
 export function renderOpenApiYaml(): string {
-  return `# Generated file; do not edit directly. Update backend/src/openapi.ts or backend/src/schemas.ts and run pnpm run openapi.\n${stringify(generateOpenApiDocument())}`;
+  return `# Generated file; do not edit directly. Update backend/src/openapi.ts or backend/src/schemas.ts and run pnpm run openapi.\n${stringify(generateOpenApiDocument(), { version: '1.1' })}`;
 }
