@@ -6,15 +6,20 @@ import { ConfirmProvider } from './confirm-dialog';
 
 const options = { message: '削除します。よろしいですか?', confirmLabel: '削除' };
 
+function Capture({ onCapture }: { onCapture: (confirm: Confirm) => void }) {
+  onCapture(useConfirm());
+  return <button type="button">開く</button>;
+}
+
 function renderConfirm() {
   let confirm!: Confirm;
-  function Capture() {
-    confirm = useConfirm();
-    return <button type="button">開く</button>;
-  }
   render(
     <ConfirmProvider>
-      <Capture />
+      <Capture
+        onCapture={(captured) => {
+          confirm = captured;
+        }}
+      />
     </ConfirmProvider>,
   );
   return () => confirm;

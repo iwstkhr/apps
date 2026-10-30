@@ -71,19 +71,19 @@ describe('toggleTask', () => {
   });
 });
 
-describe('handleListEnter', () => {
-  function Memo() {
-    const [value, setValue] = useState('');
-    return (
-      <textarea
-        aria-label="メモ"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={handleListEnter}
-      />
-    );
-  }
+function Memo() {
+  const [value, setValue] = useState('');
+  return (
+    <textarea
+      aria-label="メモ"
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+      onKeyDown={handleListEnter}
+    />
+  );
+}
 
+describe('handleListEnter', () => {
   it('continues and ends lists while typing, and leaves Shift+Enter as a plain line', async () => {
     render(<Memo />);
     const user = userEvent.setup();
