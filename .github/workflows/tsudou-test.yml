@@ -1,7 +1,7 @@
 name: "tsudou - Test"
 
 # Run type checks and unit tests (Vitest) in every package, then e2e tests (Playwright).
-# Lint and formatting are checked by pre-commit.yml at the repository root.
+# Lint and formatting are checked by lefthook.yml at the repository root.
 # The backend tests (openapi.test.ts) also catch a forgotten regeneration of apps/tsudou/docs/openapi.yaml.
 on:
   pull_request:
@@ -46,7 +46,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5
         with:
-          # Only Node and pnpm are needed; skip pre-commit, shellcheck, and trivy from mise.toml
+          # Only Node and pnpm are needed; skip lefthook and the hook tools from mise.toml
           install_args: node pnpm
           cache: true
 
@@ -74,7 +74,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5
         with:
-          # Only Node and pnpm are needed; skip pre-commit, shellcheck, and trivy from mise.toml
+          # Only Node and pnpm are needed; skip lefthook and the hook tools from mise.toml
           install_args: node pnpm
           cache: true
 

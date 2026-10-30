@@ -64,7 +64,7 @@ Authorization (token checks) and input validation always run on the server.
 | Scheduling | Workers Cron Trigger (expiry cleanup); the Preview D1 is cleaned up daily by GitHub Actions (`tsudou-preview-cleanup.yml`) because Cron Triggers do not run on Previews |
 | Configuration | `backend/wrangler.jsonc` (static assets, D1, Rate Limiting, Cron Trigger) |
 | Hosting | One Cloudflare Worker for UI and API on the custom domain `tsudou.wasabee.dev`, deployed with wrangler through GitHub Actions; pull requests get Worker Previews on `workers.dev` backed by the shared D1 `tsudou-preview` |
-| Quality | Vitest / Testing Library / Playwright / Biome / pre-commit |
+| Quality | Vitest / Testing Library / Playwright / Biome / lefthook |
 
 ## Repository structure
 

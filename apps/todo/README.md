@@ -39,11 +39,11 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - [Biome](https://biomejs.dev/) — linting and formatting
 - [Vitest](https://vitest.dev/), [Testing Library](https://testing-library.com/docs/react-testing-library/intro/), and [fake-indexeddb](https://github.com/dumbmatter/fakeIndexedDB) — testing
 - [Playwright](https://playwright.dev/) — E2E testing
-- [pre-commit](https://pre-commit.com/) — Git hooks and lint tools
+- [lefthook](https://lefthook.dev/) — Git hooks and lint tools
 
 ## Prerequisites
 
-- [mise](https://mise.jdx.dev/) (version management for Node.js, pnpm, and pre-commit)
+- [mise](https://mise.jdx.dev/) (version management for Node.js, pnpm, and lefthook)
 - Node.js (specified in [`mise.toml`](../../mise.toml) at the repository root and `engines.node` in `package.json`)
 - pnpm (dependencies are managed in a repository-wide pnpm workspace)
 - A Cloudflare account for deployment (sign in with `pnpm exec wrangler login`)
@@ -54,7 +54,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 git clone https://github.com/iwstkhr/apps.git
 cd apps
 mise install
-pre-commit install
+lefthook install
 pnpm install
 cd apps/todo
 pnpm run dev
@@ -79,7 +79,7 @@ The development server starts at <http://localhost:5173>.
 | `pnpm run test` | Run tests with Vitest |
 | `pnpm run test:watch` | Run Vitest in watch mode |
 | `pnpm run test:e2e` | Run E2E tests with Playwright (builds the app and serves it with `wrangler dev`) |
-| `pre-commit run --all-files` | Run pre-commit hooks on all files (from the repository root) |
+| `lefthook run pre-commit --all-files` | Run the pre-commit hooks on all files (from the repository root) |
 
 ## Documentation
 

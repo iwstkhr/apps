@@ -14,7 +14,7 @@ Tool versions are pinned in [`mise.toml`](mise.toml) at the repository root.
 
 ```sh
 mise install
-pre-commit install
+lefthook install
 pnpm install
 ```
 
@@ -39,9 +39,9 @@ These files live at the repository root and are shared by all apps.
 | `package.json` | Scripts that run across all apps and the pnpm version (`packageManager`) |
 | `pnpm-workspace.yaml` | Workspace packages and dependencies allowed to run installation scripts |
 | `pnpm-lock.yaml` | Shared lockfile for all apps |
-| `.pre-commit-config.yaml` | pre-commit hooks |
-| `.markdownlint-cli2.yaml` | markdownlint-cli2 configuration |
+| `lefthook.yml` | Git hooks, loaded from [shared-config](https://github.com/iwstkhr/shared-config) |
+| `.editorconfig` / `.yamllint.yml` / `.rumdl.toml` | Configurations for editorconfig-checker, yamllint, and rumdl, run by the Git hooks |
 | `biome.json` | Root Biome configuration (each app's `biome.json` is a nested configuration with `"root": false`) |
-| `mise.toml` | Node.js, pnpm, and pre-commit versions |
+| `mise.toml` | Node.js, pnpm, lefthook, and Git hook tool versions |
 | `renovate.json` | Renovate configuration |
-| `.github/workflows/` | CI / CD (filenames are prefixed with the app name; `pre-commit.yml` covers the entire repository) |
+| `.github/workflows/` | CI / CD (filenames are prefixed with the app name; `lefthook.yml` covers the entire repository) |

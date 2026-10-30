@@ -40,8 +40,8 @@ There is no backend API or database. Evacuation site data is delivered as static
 | Table | TanStack Virtual |
 | Styling | Tailwind CSS 4 |
 | Offline | Workbox (`workbox-build`, Service Worker generated after the build) |
-| Quality | Biome, Vitest, Testing Library, Playwright, pre-commit |
-| Runtime management | mise (Node.js / pnpm / pre-commit) |
+| Quality | Biome, Vitest, Testing Library, Playwright, lefthook |
+| Runtime management | mise (Node.js / pnpm / lefthook) |
 | Delivery | Cloudflare Workers (static assets only; custom domain `shelter-map.wasabee.dev`; configured in `wrangler.jsonc`) |
 
 ## Directory structure
@@ -213,8 +213,8 @@ Related files:
 
 ```text
 PR / push to main
-  ├─ repo - Pre-commit (entire repository)
-  │    └─ pre-commit run --all-files (including Biome lint and formatting)
+  ├─ repo - Lefthook (entire repository)
+  │    └─ lefthook run pre-commit --all-files (including Biome lint and formatting)
   └─ shelter-map - Test (only for changes under apps/shelter-map/)
        ├─ pnpm run typecheck
        ├─ pnpm run test

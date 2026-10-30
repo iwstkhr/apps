@@ -182,9 +182,9 @@ components:
     AnswerStatus:
       type: string
       enum:
-        - YES
-        - NO
-        - MAYBE
+        - "YES"
+        - "NO"
+        - "MAYBE"
       description: "YES: attending / NO: not attending / MAYBE: undecided"
     UpdateEventBody:
       type: object

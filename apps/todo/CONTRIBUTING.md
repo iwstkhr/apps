@@ -66,20 +66,20 @@ See [README.md](README.md) for setup, scripts, and deployment.
 
 ### Git hooks
 
-Run `pre-commit install` after `mise install` to enable the hooks in [`.pre-commit-config.yaml`](../../.pre-commit-config.yaml) at the repository root when committing.
+Run `lefthook install` after `mise install` to enable the hooks in [`lefthook.yml`](../../lefthook.yml) at the repository root when committing.
 
 To run them manually on all files (from the repository root):
 
 ```bash
-pre-commit run --all-files
+lefthook run pre-commit --all-files
 ```
 
 ### Checks
 
-To run the same checks as CI (run `pre-commit` from the repository root and `pnpm` from `apps/todo/`):
+To run the same checks as CI (run `lefthook` from the repository root and `pnpm` from `apps/todo/`):
 
 ```bash
-pre-commit run --all-files
+lefthook run pre-commit --all-files
 pnpm run check
 pnpm run typecheck
 pnpm run test
@@ -93,4 +93,4 @@ GitHub Actions runs the following on pull requests and pushes to `main` (workflo
 | Workflow | Checks |
 | --- | --- |
 | `.github/workflows/todo-test.yml` | Type checking (`pnpm run typecheck`), unit tests (`pnpm run test`), and E2E tests (`pnpm run test:e2e`) |
-| `.github/workflows/pre-commit.yml` | pre-commit hooks (Biome, markdownlint, actionlint, gitleaks, etc.) |
+| `.github/workflows/lefthook.yml` | Git hooks run by lefthook (Biome, rumdl, actionlint, gitleaks, etc.) |

@@ -37,7 +37,7 @@ There is no backend API or database. The Worker has no script and only serves th
 | Routing / Build | React Router 8 (SPA), Vite 8 |
 | Storage | IndexedDB (native API) |
 | Styling | Tailwind CSS 4 |
-| Quality | Biome, Vitest, Testing Library, fake-indexeddb, Playwright, pre-commit |
+| Quality | Biome, Vitest, Testing Library, fake-indexeddb, Playwright, lefthook |
 | Delivery | Cloudflare Workers static assets (wrangler) |
 
 ## Directory structure
@@ -139,6 +139,6 @@ e2e/                            Playwright tests against wrangler dev
 | `todo-test.yml` | PR and push to `main` touching `apps/todo/` | Type check, unit tests, E2E tests |
 | `todo-preview.yml` | PR opened / updated / closed | Create a `wrangler preview` per PR and comment its URL; delete it when the PR closes |
 | `todo-deploy.yml` | Push to `main` touching `apps/todo/`, or manual | Build and `wrangler deploy` to `todo.wasabee.dev` |
-| `pre-commit.yml` | All PRs and pushes | Biome, markdownlint, actionlint, gitleaks, and other hooks |
+| `lefthook.yml` | All PRs and pushes | Biome, rumdl, actionlint, gitleaks, and other hooks |
 
 `wrangler.jsonc` serves `build/client` with `not_found_handling: "single-page-application"`, disables `workers.dev` for production, and enables preview URLs. The custom domain `todo.wasabee.dev` is created by `wrangler deploy` because the `wasabee.dev` zone is in the same Cloudflare account.

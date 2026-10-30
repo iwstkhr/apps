@@ -91,4 +91,4 @@ GitHub Actions runs the following on pull requests and pushes to `main` (workflo
 | Workflow | Checks |
 | --- | --- |
 | `.github/workflows/tsudou-test.yml` | Type checking (`pnpm run typecheck`), unit tests (`pnpm test`), and E2E tests (`pnpm run test:e2e`) |
-| `.github/workflows/pre-commit.yml` | pre-commit hooks (Biome, markdownlint, actionlint, gitleaks, etc.) |
+| `.github/workflows/lefthook.yml` | Git hooks run by lefthook (Biome, rumdl, actionlint, gitleaks, etc.) |

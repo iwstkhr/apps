@@ -1,4 +1,4 @@
-name: "repo - Pre-commit"
+name: "repo - Lefthook"
 
 on:
   pull_request:
@@ -13,8 +13,8 @@ permissions:
   contents: read
 
 jobs:
-  pre-commit:
-    uses: iwstkhr/shared-config/.github/workflows/pre-commit.yml@main
+  lefthook:
+    uses: iwstkhr/shared-config/.github/workflows/lefthook.yml@main
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}

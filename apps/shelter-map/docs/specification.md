@@ -230,7 +230,7 @@ A new deployment activates on the next load without a prompt (`skipWaiting` / `c
 | Runtime | Modern browsers (uses `DecompressionStream` and Service Workers) |
 | Delivery | Cloudflare Workers static assets (served at the root of `https://shelter-map.wasabee.dev/`) |
 | Data updates | Actions creates a PR on the first day of each month |
-| Quality gates | pre-commit, Biome, TypeScript, Vitest, Playwright |
+| Quality gates | lefthook, Biome, TypeScript, Vitest, Playwright |
 
 ## Out of scope
 
