@@ -25,5 +25,15 @@
     "formatter": {
       "quoteStyle": "single"
     }
+  },
+  "yaml": {
+    "formatter": {
+      "enabled": false
+    }
+  },
+  "markdown": {
+    "formatter": {
+      "enabled": false
+    }
   }
 }
