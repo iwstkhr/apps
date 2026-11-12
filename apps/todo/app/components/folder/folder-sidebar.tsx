@@ -247,7 +247,10 @@ export function FolderSidebar({
   );
 
   return (
-    <nav aria-label={t('フォルダ')} className="flex flex-col gap-2">
+    <nav
+      aria-label={t('フォルダ')}
+      className="flex flex-col gap-2 [&_button:enabled]:cursor-pointer"
+    >
       <div className="flex items-center justify-between">
         <span className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
           {t('フォルダ')}
