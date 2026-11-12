@@ -2,6 +2,7 @@ import { type DragEvent, useEffect, useMemo, useState } from 'react';
 import {
   FaChevronDown,
   FaChevronRight,
+  FaExclamationCircle,
   FaFlag,
   FaFolder,
   FaFolderOpen,
@@ -12,6 +13,7 @@ import {
   FaTrash,
 } from 'react-icons/fa';
 import { MdDeleteForever } from 'react-icons/md';
+import type { SidebarSelection } from '~/hooks/use-view-state';
 import { cn } from '~/lib/cn';
 import {
   type FolderDropPosition,
@@ -34,11 +36,12 @@ interface FolderSidebarProps {
   folders: Folder[];
   /** Number of incomplete todos (including descendants) */
   openCounts: Map<FolderSelection, number>;
+  overdueCount: number;
   selectedPriority: Priority | null;
   priorityCounts: Record<Priority, number>;
   onSelectPriority: (priority: Priority) => void;
-  selection: FolderSelection;
-  onSelect: (selection: FolderSelection) => void;
+  selection: SidebarSelection;
+  onSelect: (selection: SidebarSelection) => void;
   collapsed: ReadonlySet<string>;
   onToggleCollapsed: (id: string) => void;
   onAdd: (parentId: string | null) => void;
@@ -56,7 +59,7 @@ interface FolderSidebarProps {
   onEmptyTrash: () => void;
 }
 
-/** Drop target. Nothing can be dropped on 'all' */
+/** Drop target for a todo or folder. */
 type DropTarget = 'unfiled' | 'trash' | string;
 
 // Hovering over a collapsed folder for this long expands it so tasks can be dropped on its subfolders
@@ -92,6 +95,7 @@ function Count({ value }: { value: number | undefined }) {
 export function FolderSidebar({
   folders,
   openCounts,
+  overdueCount,
   selectedPriority,
   priorityCounts,
   onSelectPriority,
@@ -187,10 +191,10 @@ export function FolderSidebar({
   };
 
   const fixedItem = (
-    value: FolderSelection,
+    value: SidebarSelection,
     label: string,
     Icon: typeof FaInbox,
-    count = openCounts.get(value),
+    count = value === null ? overdueCount : openCounts.get(value),
   ) => (
     <li
       className={cn(
@@ -213,7 +217,15 @@ export function FolderSidebar({
         onClick={() => onSelect(value)}
         aria-current={selectedPriority === null && selection === value ? 'true' : undefined}
       >
-        <Icon className="shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+        <Icon
+          className={cn(
+            'shrink-0',
+            value === null
+              ? 'text-red-600 dark:text-red-400'
+              : 'text-slate-500 dark:text-slate-400',
+          )}
+          aria-hidden="true"
+        />
         <span className="truncate">{t(label)}</span>
         <Count value={count} />
       </button>
@@ -251,10 +263,10 @@ export function FolderSidebar({
         </button>
       </div>
 
-      {/* すべて and 未分類 are not folders but filter by folder, so they go first under the same heading */}
       <ul className="flex flex-col gap-0.5">
         {fixedItem('all', 'すべて', FaLayerGroup)}
         {fixedItem('unfiled', '未分類', FaInbox)}
+        {fixedItem(null, '期限切れ', FaExclamationCircle)}
       </ul>
       <section aria-label={t('優先度')} className="flex flex-col gap-1">
         <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400">

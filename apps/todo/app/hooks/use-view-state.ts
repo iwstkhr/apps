@@ -4,8 +4,11 @@ import type { FolderSelection } from '~/lib/folder-tree';
 import { DEFAULT_FILTERS, type SortKey } from '~/lib/todo-filters';
 import { isPriority, type Priority } from '~/types/todo';
 
-// View state (folder, priority, collapsed folders, pane width, sort order) is a per-device preference, so it is stored apart from the todo data
+// View state is a per-device preference, so it is stored apart from the todo data
 export const VIEW_STATE_KEY = 'todo:view';
+
+/** A null selection opens the overdue view. */
+export type SidebarSelection = FolderSelection | null;
 
 /** Width of the folder pane (px). Used only on wide screens */
 export const SIDEBAR_WIDTH = { min: 180, max: 480, default: 240 } as const;
@@ -18,7 +21,7 @@ export function clampSidebarWidth(width: number): number {
 const SAVE_DELAY_MS = 200;
 
 export interface ViewState {
-  folder: FolderSelection;
+  folder: SidebarSelection;
   collapsed: string[];
   sidebarWidth: number;
   sort?: SortKey;
@@ -35,7 +38,7 @@ export function readViewState(): ViewState | null {
     const { folder, collapsed, sidebarWidth, sort, priority } = data as Record<string, unknown>;
     return {
       priority: isPriority(priority) ? priority : null,
-      folder: typeof folder === 'string' && folder !== '' ? folder : 'all',
+      folder: folder === null || (typeof folder === 'string' && folder !== '') ? folder : 'all',
       collapsed: Array.isArray(collapsed)
         ? collapsed.filter((id): id is string => typeof id === 'string')
         : [],
@@ -68,12 +71,12 @@ export function writeViewState(state: ViewState): void {
 }
 
 /**
- * Remember the selected folder or priority, collapsed folders, folder pane width, and sort order in localStorage.
+ * Remember the selected view, collapsed folders, folder pane width, and sort order in localStorage.
  * If it points to a deleted folder, the UI treats it as 「すべて」.
  */
 export function useViewState() {
   const [selectedPriority, setSelectedPriority] = useState<Priority | null>(null);
-  const [selectedFolder, setSelectedFolder] = useState<FolderSelection>('all');
+  const [selectedFolder, setSelectedFolder] = useState<SidebarSelection>('all');
   const [collapsedFolders, setCollapsedFolders] = useState<ReadonlySet<string>>(new Set());
   const [sidebarWidth, setSidebarWidthState] = useState<number>(SIDEBAR_WIDTH.default);
   const [sort, setSort] = useState<SortKey>(DEFAULT_FILTERS.sort);

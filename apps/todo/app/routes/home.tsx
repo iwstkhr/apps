@@ -1,5 +1,5 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
-import { FaFlag, FaFolder, FaPen, FaTimes, FaTrash } from 'react-icons/fa';
+import { FaExclamationCircle, FaFlag, FaFolder, FaPen, FaTimes, FaTrash } from 'react-icons/fa';
 import { ImportDialog } from '~/components/data/import-dialog';
 import { FolderDialog } from '~/components/folder/folder-dialog';
 import { FolderSidebar } from '~/components/folder/folder-sidebar';
@@ -13,13 +13,12 @@ import { TodoList } from '~/components/todo/todo-list';
 import { TodoToolbar } from '~/components/todo/todo-toolbar';
 import { TrashList } from '~/components/todo/trash-list';
 import { type ImportMode, useTodos } from '~/hooks/use-todos';
-import { SIDEBAR_WIDTH, useViewState } from '~/hooks/use-view-state';
+import { SIDEBAR_WIDTH, type SidebarSelection, useViewState } from '~/hooks/use-view-state';
 import { cn } from '~/lib/cn';
 import { downloadExport, ImportError, type ParsedImport, parseImport } from '~/lib/export-import';
 import {
   countOpenByFolder,
   type FolderDropPosition,
-  type FolderSelection,
   filterByFolder,
   formatFolderPath,
   getSubtreeIds,
@@ -36,6 +35,7 @@ import {
 } from '~/lib/todo-filters';
 import { DEFAULT_FOLDER_COLOR, type Folder, type FolderInput } from '~/types/folder';
 import {
+  getDueStatus,
   PRIORITIES,
   PRIORITY_LABELS,
   type Todo,
@@ -153,7 +153,8 @@ export default function Home() {
   }, [noticeUndo]);
 
   // When the selected folder is deleted (including from another tab), return to すべて
-  const selection: FolderSelection =
+  const selection =
+    selectedFolder === null ||
     selectedFolder === 'all' ||
     selectedFolder === 'unfiled' ||
     selectedFolder === 'trash' ||
@@ -169,10 +170,17 @@ export default function Home() {
           ? t('未分類')
           : selection === 'trash'
             ? t('ゴミ箱')
-            : formatFolderPath(folders, selection);
+            : selection === null
+              ? t('期限切れ')
+              : formatFolderPath(folders, selection);
   const isTrash = selectedPriority === null && selection === 'trash';
+  const isOverdue = selectedPriority === null && selection === null;
   const isRealFolder =
-    selectedPriority === null && selection !== 'all' && selection !== 'unfiled' && !isTrash;
+    selectedPriority === null &&
+    selection !== null &&
+    selection !== 'all' &&
+    selection !== 'unfiled' &&
+    !isTrash;
   const selectedFolderObject = isRealFolder
     ? folders.find((folder) => folder.id === selection)
     : undefined;
@@ -181,6 +189,10 @@ export default function Home() {
   const today = toLocalDateString(new Date());
   const tags = useMemo(() => collectTags(todos), [todos]);
   const openCounts = useMemo(() => countOpenByFolder(todos, folders), [todos, folders]);
+  const overdueTodos = useMemo(
+    () => todos.filter((todo) => getDueStatus(todo, today) === 'overdue'),
+    [todos, today],
+  );
   const priorityCounts = useMemo(
     () =>
       Object.fromEntries(
@@ -194,9 +206,11 @@ export default function Home() {
   const folderTodos = useMemo(
     () =>
       selectedPriority === null
-        ? filterByFolder(todos, folders, selection)
+        ? selection === null
+          ? overdueTodos
+          : filterByFolder(todos, folders, selection)
         : todos.filter((todo) => todo.priority === selectedPriority),
-    [todos, folders, selection, selectedPriority],
+    [todos, folders, selection, selectedPriority, overdueTodos],
   );
   const visibleTodos = useMemo(
     () => applyFilters(folderTodos, { ...filters, sort }),
@@ -205,7 +219,7 @@ export default function Home() {
   const counts = useMemo(() => countByStatus(folderTodos), [folderTodos]);
   const doneCount = counts.done;
 
-  const selectFolder = (next: FolderSelection) => {
+  const selectFolder = (next: SidebarSelection) => {
     setSelectedPriority(null);
     setSelectedFolder(next);
     setShowFolders(false);
@@ -476,6 +490,7 @@ export default function Home() {
             <FolderSidebar
               folders={folders}
               openCounts={openCounts}
+              overdueCount={overdueTodos.length}
               selectedPriority={selectedPriority}
               priorityCounts={priorityCounts}
               onSelectPriority={(priority) => {
@@ -560,6 +575,12 @@ export default function Home() {
             <div className="flex min-w-0 items-center gap-1">
               <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
                 {selectedPriority !== null && <FaFlag className="shrink-0" aria-hidden="true" />}
+                {isOverdue && (
+                  <FaExclamationCircle
+                    className="shrink-0 text-red-600 dark:text-red-400"
+                    aria-hidden="true"
+                  />
+                )}
                 {isTrash && (
                   <FaTrash
                     className="shrink-0 text-slate-500 dark:text-slate-400"
@@ -638,7 +659,7 @@ export default function Home() {
                   <TodoList
                     todos={visibleTodos}
                     folders={folders}
-                    folderSelection={selection}
+                    folderSelection={selection ?? 'all'}
                     today={today}
                     tagSuggestions={tags}
                     emptyMessage={emptyMessage}

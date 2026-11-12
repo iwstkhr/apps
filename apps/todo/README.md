@@ -14,6 +14,7 @@ A TODO management web app that runs entirely in the browser. Todos are stored on
 - Repeat a todo daily, on weekdays, weekly, monthly, or yearly; completing it adds the next one
 - Display memos as Markdown, including headings, lists, links, code blocks (syntax-highlighted when a language is given), tables, and task lists (check task list boxes with a click; Enter continues lists while typing)
 - Filter across all folders by high, medium, or low priority from the sidebar, with open-task counts and the selection remembered after reloading
+- View and count overdue todos across all folders from the sidebar
 - Filter by status, tag, and keyword (title, memo, tags), and sort by due date, priority, status, or creation date
 - Select a status from the segmented control above the list to filter the current folder, with counts for each status
 - Choose カスタム to reorder todos by dragging their headers or using up/down buttons; the order is saved and included in exports

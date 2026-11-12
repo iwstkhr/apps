@@ -856,6 +856,53 @@ describe('Home', () => {
   describe('folders', () => {
     const folderNav = () => screen.getByRole('navigation', { name: 'フォルダ' });
 
+    it('shows and counts only open overdue todos across folders', async () => {
+      const folder = createFolderFixture({ id: 'overdue', name: '仕事' });
+      const today = toLocalDateString(new Date());
+      const past = '2000-01-01';
+      await putAll({
+        folders: [folder],
+        todos: [
+          createTodoFixture({ title: '資料', folderId: folder.id, dueDate: past }),
+          createTodoFixture({ title: '洗濯', dueDate: past, status: 'on_hold' }),
+          createTodoFixture({ title: '今日の予定', dueDate: today }),
+          createTodoFixture({ title: '期限なしの予定', dueDate: null }),
+          createTodoFixture({ title: '完了済みの予定', dueDate: past, status: 'done' }),
+          createTodoFixture({
+            title: '削除済みの予定',
+            dueDate: past,
+            deletedAt: new Date().toISOString(),
+          }),
+        ],
+      });
+      const user = await renderHome();
+      const unfiled = within(folderNav()).getByRole('button', { name: /^未分類/ });
+      const overdue = within(folderNav()).getByRole('button', { name: '期限切れ 2' });
+      expect(unfiled.closest('li')?.nextElementSibling).toBe(overdue.closest('li'));
+
+      await user.click(overdue);
+      expect(overdue).toHaveAttribute('aria-current', 'true');
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('期限切れ');
+      expect(items()).toHaveLength(2);
+      const list = () => within(screen.getByRole('list', { name: 'TODO 一覧' }));
+      expect(list().getByText('資料')).toBeInTheDocument();
+      expect(list().getByText('洗濯')).toBeInTheDocument();
+
+      await user.click(list().getByRole('checkbox', { name: '「資料」を完了にする' }));
+      expect(await within(folderNav()).findByRole('button', { name: '期限切れ 1' })).toBe(overdue);
+      expect(items()).toHaveLength(1);
+      expect(items()[0]).toHaveTextContent('洗濯');
+
+      cleanup();
+      const reloadedUser = await renderHome();
+      expect(
+        within(folderNav()).getByRole('button', { name: '期限切れ 1', current: true }),
+      ).toBeInTheDocument();
+      await reloadedUser.click(within(folderNav()).getByRole('button', { name: '仕事' }));
+      expect(items()).toHaveLength(1);
+      expect(items()[0]).toHaveTextContent('資料');
+    });
+
     async function createFolder(
       user: ReturnType<typeof userEvent.setup>,
       name: string,
