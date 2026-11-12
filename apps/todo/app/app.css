@@ -12,6 +12,12 @@
   }
 }
 
+@layer base {
+  button:enabled:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
 html,
 body {
   margin: 0;
