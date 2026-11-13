@@ -33,10 +33,10 @@
     "shiki": "4.6.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.5",
+    "@biomejs/biome": "2.6.6",
     "@playwright/test": "1.65.0",
     "@react-router/dev": "8.5.1",
-    "@tailwindcss/vite": "4.3.4",
+    "@tailwindcss/vite": "4.3.5",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.8",
@@ -45,7 +45,7 @@
     "@types/react-dom": "19.3.0",
     "fake-indexeddb": "6.2.7",
     "happy-dom": "21.0.4",
-    "tailwindcss": "4.3.4",
+    "tailwindcss": "4.3.5",
     "typescript": "7.0.2",
     "vite": "8.3.6",
     "vitest": "5.1.0",
