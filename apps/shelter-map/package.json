@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "26.13.0"
+    "node": "26.13.1"
   },
   "scripts": {
     "build": "react-router build && node scripts/generate-sw.mjs",
@@ -26,7 +26,7 @@
     "@react-router/node": "8.5.1",
     "@react-router/serve": "8.5.1",
     "@tanstack/react-virtual": "3.14.26",
-    "isbot": "5.2.2",
+    "isbot": "5.2.3",
     "leaflet": "1.9.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -40,7 +40,7 @@
     "@tailwindcss/vite": "4.3.5",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
-    "@testing-library/user-event": "14.6.8",
+    "@testing-library/user-event": "14.6.9",
     "@types/leaflet": "1.9.22",
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
@@ -48,9 +48,9 @@
     "happy-dom": "21.0.4",
     "tailwindcss": "4.3.5",
     "typescript": "7.0.2",
-    "vite": "8.3.6",
+    "vite": "8.3.7",
     "vitest": "5.1.0",
     "workbox-build": "7.4.1",
-    "wrangler": "4.158.0"
+    "wrangler": "4.160.0"
   }
 }
