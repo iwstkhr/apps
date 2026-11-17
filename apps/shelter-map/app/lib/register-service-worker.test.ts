@@ -1,8 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { registerServiceWorker } from '~/lib/register-service-worker';
 
-function stubServiceWorker(register: ReturnType<typeof vi.fn>) {
-  vi.stubGlobal('navigator', { serviceWorker: { register } });
+function stubServiceWorker(register: ReturnType<typeof vi.fn>, controller: object | null = null) {
+  const listeners: Array<() => void> = [];
+  const addEventListener = vi.fn((_type: string, listener: () => void) => {
+    listeners.push(listener);
+  });
+  vi.stubGlobal('navigator', { serviceWorker: { register, controller, addEventListener } });
+  return {
+    addEventListener,
+    fireControllerChange: () => {
+      for (const listener of listeners) listener();
+    },
+  };
 }
 
 describe('registerServiceWorker', () => {
@@ -44,5 +54,29 @@ describe('registerServiceWorker', () => {
     await registerServiceWorker(true);
 
     expect(warn).toHaveBeenCalledOnce();
+  });
+
+  it('reloads once when a new worker takes over a controlled page', async () => {
+    const reload = vi.fn();
+    vi.stubGlobal('window', { location: { reload } });
+    const { addEventListener, fireControllerChange } = stubServiceWorker(
+      vi.fn().mockResolvedValue({}),
+      {},
+    );
+
+    await registerServiceWorker(true);
+    fireControllerChange();
+    fireControllerChange();
+
+    expect(addEventListener).toHaveBeenCalledWith('controllerchange', expect.any(Function));
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it('does not reload on the first visit, when no worker controls the page yet', async () => {
+    const { addEventListener } = stubServiceWorker(vi.fn().mockResolvedValue({}));
+
+    await registerServiceWorker(true);
+
+    expect(addEventListener).not.toHaveBeenCalled();
   });
 });

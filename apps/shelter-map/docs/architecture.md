@@ -189,7 +189,7 @@ On `moveend` / `zoomlevelschange`, the app:
 - Always reference static assets using `publicUrl()` (through `import.meta.env.BASE_URL`)
 - Do not use root-absolute paths such as `/favicon.svg`
 - `pnpm run build` runs `scripts/generate-sw.mjs` after `react-router build`, which uses `workbox-build` to write `build/client/sw.js`. It precaches every file in `build/client` (including the GeoJSON) and adds runtime caches for OSM and GSI tiles. See [Offline support](./specification.md#offline-support)
-- `app/lib/register-service-worker.ts` registers `sw.js` from `App` in `root.tsx` in production builds only
+- `app/lib/register-service-worker.ts` registers `sw.js` from `App` in `root.tsx` in production builds only, and reloads the page once on `controllerchange` when a new worker replaces an existing one
 - After changing `public/favicon.svg`, run `node scripts/generate-icons.mjs` (renders with Playwright and Google Chrome) and commit the PNGs in `public/icons/`
 
 ## Data update pipeline

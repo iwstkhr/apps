@@ -221,7 +221,7 @@ The app is a PWA. Production builds register a Workbox Service Worker (`sw.js`);
 | Evacuation site GeoJSON (about 5 MB) | Precached at install; the content hash revision replaces it after the monthly update |
 | Map tiles (OSM / GSI) | Cache first for tiles the user has viewed, up to 1,000 tiles per layer for 30 days; no prefetching |
 
-A new deployment activates on the next load without a prompt (`skipWaiting` / `clientsClaim`). The current location and Google Maps directions still need a network connection.
+A new deployment activates without a prompt (`skipWaiting` / `clientsClaim`): the first load after a deployment is still served from the old precache, and the page reloads once by itself when the new service worker takes over. The current location and Google Maps directions still need a network connection.
 
 ## Nonfunctional requirements
 
