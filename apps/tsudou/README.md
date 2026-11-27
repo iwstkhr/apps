@@ -146,6 +146,7 @@ When changing the D1 schema, run `pnpm exec wrangler d1 migrations create tsudou
    The Worker (`tsudou`) and D1 database (`tsudou`) are created automatically on the first deployment.
    `backend/wrangler.jsonc` resolves the database by name without a `database_id`, so no ID needs to be added to the configuration.
    The Preview database (`tsudou-preview`) must be created once with `wrangler d1 create tsudou-preview --location apac`, and its ID written to `previews.d1_databases` in `backend/wrangler.jsonc` and to `backend/wrangler.preview-migrations.jsonc`.
+
 2. **Configure repository secrets** (Settings → Secrets and variables → Actions).
 
    | Type | Name | Value |
