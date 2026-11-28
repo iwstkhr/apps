@@ -32,7 +32,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup mise
-        uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca  # v5
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78  # v5
         with:
           # Only Node and pnpm are needed; skip lefthook and the hook tools from mise.toml
           install_args: node pnpm
